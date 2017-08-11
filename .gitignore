@@ -1,0 +1,6 @@
+.vscode
+*.pyc
+*.secret
+intelligenttrading-datastore.json
+.idea/
+*credentials.json
