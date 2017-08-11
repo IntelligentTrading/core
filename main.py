@@ -11,6 +11,7 @@ app = Flask(__name__)
 @app.route('/poloniex', methods=['GET'])
 def poloniex():
     """ Poloniex Worker """
+    #todo: secure this route so only the cron can trigger it
     try:
         req = get('https://poloniex.com/public?command=returnTicker')
 

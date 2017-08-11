@@ -1,5 +1,5 @@
-#cron:
-#- description: poloniex data
-#  url: /poloniex
-#  target: beta
-#  schedule: every 1 mins
+cron:
+- description: poloniex data
+  url: /poloniex
+  target: beta
+  schedule: every 1 mins
