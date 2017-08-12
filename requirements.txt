@@ -1,5 +1,6 @@
 Flask==0.12.2
 google-cloud-datastore==1.2.0
+google-cloud-pubsub==0.27.0
 gunicorn==19.7.1
 PyYAML==3.12
 requests==2.18.2

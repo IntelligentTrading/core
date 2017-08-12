@@ -1,11 +1,28 @@
 """ Intelligent Trading Endpoints """
 from google.cloud import datastore
+from google.cloud import pubsub
 from datetime import datetime
-from flask import Flask, jsonify
+import os
+from flask import Flask, jsonify, current_app, request
 from requests import get, RequestException
 
 
 app = Flask(__name__)
+
+app.config['PUBSUB_VERIFICATION_TOKEN'] = os.environ['PUBSUB_VERIFICATION_TOKEN']
+app.config['PUBSUB_TOPIC'] = "indicators-topic"
+
+
+def publish_to_indicators(message):
+    """
+    Publish to GCP Pub/Sub for Indicators to subscribe and update
+    :param message: string
+    :return: None
+    """
+    print("publishing message: \"" + message + "\" to pubsub topic")
+    ps = pubsub.Client()
+    topic = ps.topic(current_app.config['PUBSUB_TOPIC'])
+    topic.publish(b(message))
 
 
 @app.route('/poloniex', methods=['GET'])
@@ -26,7 +43,7 @@ def poloniex():
         })
         client.put(entity)
 
-        # todo: make sure indicators are subscribed to new datastore entities
+        publish_to_indicators("Poloniex data new %d" % entity['timestamp'])
 
     except RequestException as err:
         return jsonify({'error': err.message}), 500
