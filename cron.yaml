@@ -1,5 +1,5 @@
 cron:
 - description: poloniex data
   url: /poloniex
-  target: beta
+  target: data-sources
   schedule: every 1 mins
