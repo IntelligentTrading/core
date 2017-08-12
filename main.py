@@ -22,7 +22,7 @@ def publish_to_indicators(message):
     print("publishing message: \"" + message + "\" to pubsub topic")
     ps = pubsub.Client()
     topic = ps.topic(current_app.config['PUBSUB_TOPIC'])
-    topic.publish(b(message))
+    topic.publish(message.encode())
 
 
 @app.route('/poloniex', methods=['GET'])
