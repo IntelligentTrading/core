@@ -9,7 +9,10 @@ from requests import get, RequestException
 
 app = Flask(__name__)
 
-app.config['PUBSUB_VERIFICATION_TOKEN'] = os.environ['PUBSUB_VERIFICATION_TOKEN']
+try:
+    app.config['PUBSUB_VERIFICATION_TOKEN'] = os.environ['PUBSUB_VERIFICATION_TOKEN']
+except:
+    pass
 app.config['PUBSUB_TOPIC'] = "indicators-topic"
 
 
@@ -28,7 +31,8 @@ def publish_to_indicators(message):
 @app.route('/poloniex', methods=['GET'])
 def poloniex():
     """ Poloniex Worker """
-    #todo: secure this route so only the cron can trigger it
+    # todo: secure this route so only the cron can trigger it - helpful answer on stack overflow v v
+    # todo: https://stackoverflow.com/questions/42767839/how-to-secure-google-cron-service-tasks-on-gap-flexible-env/42770708#42770708
     try:
         req = get('https://poloniex.com/public?command=returnTicker')
 
