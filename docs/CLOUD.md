@@ -31,4 +31,3 @@ insert the instance-id of BigTable created on GCP console:
 
 insert the ITT service account created on GCP console. The Cloud Bigtable Admin API should be enabled:
 `$ echo creds = /Users/firemanxbr/GitHub/data-sources/credentials.json >> ~/.cbtrc`
-
