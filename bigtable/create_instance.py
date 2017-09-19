@@ -7,7 +7,7 @@ from oauth2client.client import GoogleCredentials
 def create_instance(project_id, instance_id, location_id, display_name,
                     serve_nodes):
     """ Wraper to create a new BigTable instance on GCP
-    
+
     Args:
         project_id: Id of GCP Project
         instance_id: BigTable instance id
@@ -19,7 +19,7 @@ def create_instance(project_id, instance_id, location_id, display_name,
         True to created or False with error
     """
     try:
-        credentials = GoogleCredentials.get_application_default()
+        GoogleCredentials.get_application_default()
         client = bigtable.Client(project=project_id, admin=True)
 
         instance = client.instance(instance_id, location_id, display_name, serve_nodes)
