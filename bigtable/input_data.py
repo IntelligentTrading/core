@@ -12,7 +12,7 @@ def input_data(project_id, instance_id, table_id, data):
         instance_id: BigTable instance id
         table_id: just Table id
         columns_family: array with columns family
-        data: dict with 'column_family', 'row_key',
+        data: dict with 'row_key', 'column_family',
               'columns' and 'values'
 
     Returns:
@@ -24,16 +24,14 @@ def input_data(project_id, instance_id, table_id, data):
         instance = client.instance(instance_id)
 
         table = instance.table(table_id)
-
         row = table.row(data['row_key'])
 
-        for column_family in data['data']:
+        for col_f in data['data'].keys():
 
+            for col in data['data'][col_f]:
+                row.set_cell(col_f, col, data['data'][col_f][col])
 
-        """
-        => row.set_cell(column_family[0], col_id1, value1.encode('utf-8'))
-        => row.commit()
-        """
+        row.commit()
 
         return True
     except Exception as error:
@@ -45,22 +43,22 @@ if __name__ == '__main__':
     """
     data = {
         "row_key": "poloniex#1505851997",
-        "data": [{
+        "data": {
             "BTC": {
-                "BTC_ETH_LAST": 0.00000043,
-                "BTC_ETH_CHANGE": 0.00000044,
-                "BTC_ETH_HIGH": 0.00000045,
-                "BTC_ETH_LOW": 0.00000046,
-                "BTC_ETH_VOLUME": 0.00000047
+                "BTC_ETH_LAST": "0.00000043",
+                "BTC_ETH_CHANGE": "0.00000044",
+                "BTC_ETH_HIGH": "0.00000045",
+                "BTC_ETH_LOW": "0.00000046",
+                "BTC_ETH_VOLUME": "0.00000047"
             },
             "USDT": {
-                "USDT_ETH_LAST": 0.00000043,
-                "USDT_ETH_CHANGE": 0.00000044,
-                "USDT_ETH_HIGH": 0.00000045,
-                "USDT_ETH_LOW": 0.00000046,
-                "USDT_ETH_VOLUME": 0.00000047
+                "USDT_ETH_LAST": "0.00000043",
+                "USDT_ETH_CHANGE": "0.00000044",
+                "USDT_ETH_HIGH": "0.00000045",
+                "USDT_ETH_LOW": "0.00000046",
+                "USDT_ETH_VOLUME": "0.00000047"
             }
-        }]
+        }
     }
 
     new_data = input_data(project_id='optimal-oasis-170206',
