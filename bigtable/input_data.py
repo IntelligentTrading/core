@@ -29,7 +29,8 @@ def input_data(project_id, instance_id, table_id, data):
         for col_f in data['data'].keys():
 
             for col in data['data'][col_f]:
-                row.set_cell(col_f, col, data['data'][col_f][col])
+                row.set_cell(col_f, col.encode('utf-8'),
+                             data['data'][col_f][col].encode('utf-8'))
 
         row.commit()
 
@@ -41,7 +42,7 @@ def input_data(project_id, instance_id, table_id, data):
 if __name__ == '__main__':
     """ Creating the schema of BigTable to ITT project
     """
-    data = {
+    input_json = {
         "row_key": "poloniex#1505851997",
         "data": {
             "BTC": {
@@ -64,7 +65,7 @@ if __name__ == '__main__':
     new_data = input_data(project_id='optimal-oasis-170206',
                           instance_id='itt-develop',
                           table_id='channels',
-                          data=data)
+                          data=input_json)
 
     if new_data is True:
         print('Success!')
