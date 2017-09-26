@@ -8,3 +8,4 @@ PyYAML==3.12
 requests==2.18.3
 simplejson==3.11.1
 python-telegram-bot==7.0.1
+google-cloud-happybase
