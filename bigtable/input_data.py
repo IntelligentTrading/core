@@ -40,24 +40,24 @@ def input_data(project_id, instance_id, table_id, data):
 
 
 if __name__ == '__main__':
-    """ Creating the schema of BigTable to ITT project
+    """ Insert new data of BigTable to ITT project
     """
     input_json = {
-        "row_key": "poloniex#1505851997",
+        "row_key": "poloniex#1505851998",
         "data": {
             "BTC": {
-                "BTC_ETH_LAST": "0.00000043",
-                "BTC_ETH_CHANGE": "0.00000044",
-                "BTC_ETH_HIGH": "0.00000045",
-                "BTC_ETH_LOW": "0.00000046",
-                "BTC_ETH_VOLUME": "0.00000047"
+                "BTC_ETH_LAST": "0.00000050",
+                "BTC_ETH_CHANGE": "0.00000050",
+                "BTC_ETH_HIGH": "0.00000050",
+                "BTC_ETH_LOW": "0.00000050",
+                "BTC_ETH_VOLUME": "0.00000050"
             },
             "USDT": {
-                "USDT_ETH_LAST": "0.00000043",
-                "USDT_ETH_CHANGE": "0.00000044",
-                "USDT_ETH_HIGH": "0.00000045",
-                "USDT_ETH_LOW": "0.00000046",
-                "USDT_ETH_VOLUME": "0.00000047"
+                "USDT_ETH_LAST": "0.00000050",
+                "USDT_ETH_CHANGE": "0.00000050",
+                "USDT_ETH_HIGH": "0.00000050",
+                "USDT_ETH_LOW": "0.00000050",
+                "USDT_ETH_VOLUME": "0.00000050"
             }
         }
     }

@@ -4,19 +4,21 @@ from google.cloud import bigtable
 from oauth2client.client import GoogleCredentials
 
 
-def read_data(project_id, instance_id, table_id, data):
+def read_data(project_id, instance_id, table_id, column_family,
+              column, start_row_key=None, end_row_key=None):
     """ Input new data into BigTable
 
     Args:
         project_id: Id of GCP Project
         instance_id: BigTable instance id
         table_id: just Table id
-        columns_family: array with columns family
-        data: dict with 'row_key', 'column_family',
-              'columns' and 'values'
+        column_family: column family name
+        column: column name
+        start_row_key: start name of row key (optional)
+        end_row_key: end name of row key (optional)
 
     Returns:
-        True to inserted or False with error
+        Dictionary with row keys and values or None
     """
     try:
         GoogleCredentials.get_application_default()
@@ -25,47 +27,32 @@ def read_data(project_id, instance_id, table_id, data):
 
         table = instance.table(table_id)
 
-        #key = 'poloniex#1505851997'
-
-        #row = table.read_row(key.encode('utf-8'))
-        #print(row)
-        
-        #value = row.cells['BTC']['BTC_ETH_CHANGE'][0].value
-        #print('\t{}: {}'.format(key, value.decode('utf-8')))
-
-        COLUMN_FAMILY_NAME = 'BTC'
-        COLUMN_NAME = 'BTC_ETH_CHANGE'
-
-        #print('Scan for all greetings:')
-        #for row in table.read_rows():
-        #    print(row.cells[COLUMN_FAMILY_NAME][COLUMN_NAME.encode('UTF-8')][0].decode('UTF-8'))
-
-        
-        print('Scanning for all greetings:')
-        partial_rows = table.read_rows()
+        partial_rows = table.read_rows(start_key=start_row_key,
+                                       end_key=end_row_key)
         partial_rows.consume_all()
+
+        values = {}
 
         for row_key, row in partial_rows.rows.items():
             key = row_key.decode('utf-8')
-            cell = row.cells[COLUMN_FAMILY_NAME][COLUMN_NAME.encode('UTF-8')][0]
+            cell = row.cells[column_family][column.encode('UTF-8')][0]
             value = cell.value.decode('utf-8')
-            print('\t{}: {}'.format(key, value))
-        
+            values[key] = value
 
-        return True
+        return values
     except Exception as error:
         return False, error
 
 
 if __name__ == '__main__':
-    """ Creating the schema of BigTable to ITT project
+    """ Search the data of BigTable to ITT project
     """
     query = read_data(project_id='optimal-oasis-170206',
                       instance_id='itt-develop',
                       table_id='channels',
-                      data="")
+                      column_family="BTC",
+                      column="BTC_ETH_CHANGE",
+                      start_row_key="poloniex#1505851997",
+                      end_row_key="poloniex#1505851999")
 
-    if query is True:
-        print('Success!')
-    else:
-        print('Error: {0}'.format(query))
+    print(query)
