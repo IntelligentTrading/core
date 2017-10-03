@@ -37,37 +37,3 @@ def input_data(project_id, instance_id, table_id, data):
         return True
     except Exception as error:
         return False, error
-
-
-if __name__ == '__main__':
-    """ Insert new data of BigTable to ITT project
-    """
-    input_json = {
-        "row_key": "poloniex#1505851998",
-        "data": {
-            "BTC": {
-                "BTC_ETH_LAST": "0.00000050",
-                "BTC_ETH_CHANGE": "0.00000050",
-                "BTC_ETH_HIGH": "0.00000050",
-                "BTC_ETH_LOW": "0.00000050",
-                "BTC_ETH_VOLUME": "0.00000050"
-            },
-            "USDT": {
-                "USDT_ETH_LAST": "0.00000050",
-                "USDT_ETH_CHANGE": "0.00000050",
-                "USDT_ETH_HIGH": "0.00000050",
-                "USDT_ETH_LOW": "0.00000050",
-                "USDT_ETH_VOLUME": "0.00000050"
-            }
-        }
-    }
-
-    new_data = input_data(project_id='optimal-oasis-170206',
-                          instance_id='itt-develop',
-                          table_id='channels',
-                          data=input_json)
-
-    if new_data is True:
-        print('Success!')
-    else:
-        print('Error: {0}'.format(new_data))

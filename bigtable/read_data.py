@@ -45,7 +45,7 @@ def read_data(project_id, instance_id, table_id, column_family,
 
 
 if __name__ == '__main__':
-    """ Search the data of BigTable to ITT project
+    """ Search the data of BigTable to ITT project (example)
     """
     query = read_data(project_id='optimal-oasis-170206',
                       instance_id='itt-develop',
