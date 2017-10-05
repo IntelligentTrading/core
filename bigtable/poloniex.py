@@ -33,34 +33,24 @@ def poloniex(debug=None):
 
         for aux in sorted(data):
             col_f = aux.split('_')[0]
+            last = int(float(data[aux]['last']) * 10 ** 8)
+            volume = int(float(data[aux]['last']) * 10 ** 8)
 
             if col_f == "BTC":
-                aux_dict["data"]["BTC"]["%s_LAST" % aux] = "%s" % data[aux]['last']
-                aux_dict["data"]["BTC"]["%s_CHANGE" % aux] = "%s" % data[aux]['percentChange']
-                aux_dict["data"]["BTC"]["%s_HIGH" % aux] = "%s" % data[aux]['high24hr']
-                aux_dict["data"]["BTC"]["%s_LOW" % aux] = "%s" % data[aux]['low24hr']
-                aux_dict["data"]["BTC"]["%s_VOLUME" % aux] = "%s" % data[aux]['baseVolume']
+                aux_dict["data"]["BTC"]["%s_LAST" % aux] = last
+                aux_dict["data"]["BTC"]["%s_VOLUME" % aux] = volume
 
             if col_f == "USDT":
-                aux_dict["data"]["USDT"]["%s_LAST" % aux] = "%s" % data[aux]['last']
-                aux_dict["data"]["USDT"]["%s_CHANGE" % aux] = "%s" % data[aux]['percentChange']
-                aux_dict["data"]["USDT"]["%s_HIGH" % aux] = "%s" % data[aux]['high24hr']
-                aux_dict["data"]["USDT"]["%s_LOW" % aux] = "%s" % data[aux]['low24hr']
-                aux_dict["data"]["USDT"]["%s_VOLUME" % aux] = "%s" % data[aux]['baseVolume']
+                aux_dict["data"]["USDT"]["%s_LAST" % aux] = last
+                aux_dict["data"]["USDT"]["%s_VOLUME" % aux] = volume
 
             if col_f == "XMR":
-                aux_dict["data"]["XMR"]["%s_LAST" % aux] = "%s" % data[aux]['last']
-                aux_dict["data"]["XMR"]["%s_CHANGE" % aux] = "%s" % data[aux]['percentChange']
-                aux_dict["data"]["XMR"]["%s_HIGH" % aux] = "%s" % data[aux]['high24hr']
-                aux_dict["data"]["XMR"]["%s_LOW" % aux] = "%s" % data[aux]['low24hr']
-                aux_dict["data"]["XMR"]["%s_VOLUME" % aux] = "%s" % data[aux]['baseVolume']
+                aux_dict["data"]["XMR"]["%s_LAST" % aux] = last
+                aux_dict["data"]["XMR"]["%s_VOLUME" % aux] = volume
 
             if col_f == "ETH":
-                aux_dict["data"]["ETH"]["%s_LAST" % aux] = "%s" % data[aux]['last']
-                aux_dict["data"]["ETH"]["%s_CHANGE" % aux] = "%s" % data[aux]['percentChange']
-                aux_dict["data"]["ETH"]["%s_HIGH" % aux] = "%s" % data[aux]['high24hr']
-                aux_dict["data"]["ETH"]["%s_LOW" % aux] = "%s" % data[aux]['low24hr']
-                aux_dict["data"]["ETH"]["%s_VOLUME" % aux] = "%s" % data[aux]['baseVolume']
+                aux_dict["data"]["ETH"]["%s_LAST" % aux] = last
+                aux_dict["data"]["ETH"]["%s_VOLUME" % aux] = volume
 
         if debug is True:
             print(json.dumps(aux_dict, sort_keys=True, indent=4))

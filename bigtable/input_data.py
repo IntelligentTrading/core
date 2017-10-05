@@ -30,7 +30,7 @@ def input_data(project_id, instance_id, table_id, data):
 
             for col in data['data'][col_f]:
                 row.set_cell(col_f, col.encode('utf-8'),
-                             data['data'][col_f][col].encode('utf-8'))
+                             int(data['data'][col_f][col]))
 
         row.commit()
 
