@@ -36,7 +36,7 @@ def read_data(project_id, instance_id, table_id, column_family,
         for row_key, row in partial_rows.rows.items():
             key = row_key.decode('utf-8')
             cell = row.cells[column_family][column.encode('UTF-8')][0]
-            value = cell.value.decode('utf-8')
+            value = cell.value
             values[key] = value
 
         return values
@@ -45,14 +45,14 @@ def read_data(project_id, instance_id, table_id, column_family,
 
 
 if __name__ == '__main__':
-    """ Search the data of BigTable to ITT project
+    """ Search the data of BigTable to ITT project (example)
     """
     query = read_data(project_id='optimal-oasis-170206',
                       instance_id='itt-develop',
                       table_id='channels',
                       column_family="BTC",
-                      column="BTC_ETH_CHANGE",
-                      start_row_key="poloniex#1505851997",
-                      end_row_key="poloniex#1505851999")
+                      column="BTC_XCP_LAST",
+                      start_row_key="poloniex#1507238652",
+                      end_row_key="")
 
     print(query)

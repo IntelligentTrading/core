@@ -15,7 +15,7 @@ This tool is important to create, managment and publish our infrastructure on GC
 `$ gcloud components install cbt bigtable bq kubectl`
 
 
-# Bigtable
+# BigTable
 Is necessary create the BigTable into GCP console. 
 In this step will create a development environment to implement a new feature
 
