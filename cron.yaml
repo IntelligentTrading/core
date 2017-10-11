@@ -1,5 +1,0 @@
-cron:
-- description: poloniex data
-  url: /poloniex
-  target: data-sources
-  schedule: every 1 mins
