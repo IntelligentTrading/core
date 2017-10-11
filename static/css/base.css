@@ -1,0 +1,18 @@
+
+.itt-blue{color: #3A506D}
+a.itt-blue:hover{color: #1D3251}
+
+.dashhead-title{color: #3A506D}
+
+.nav-link{color: #3A506D}
+.nav-link:hover{color: #1D3251}
+
+.bg-highlight{background-color: lightyellow}
+
+.btn-outline-itt{color:#3A506D;background-image:none;background-color:transparent;border-color:#3A506D}
+.btn-outline-itt:hover{color:#fff;background-color:#3A506D;border-color:#3A506D}
+.btn-outline-itt.focus,.btn-outline-itt:focus{box-shadow:0 0 0 2px rgba(56,79,160,.5)}
+.btn-outline-itt.disabled,.btn-outline-itt:disabled{color:#3A506D;background-color:transparent}
+.btn-outline-itt.active,.btn-outline-itt:active,.show>.btn-outline-itt.dropdown-toggle{color:#fff;background-color:#3A506D;border-color:#3A506D}
+
+img{min-height: 0px;}
