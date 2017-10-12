@@ -9,9 +9,14 @@ Django==1.11
 ipython==5.1.0
 jsonfield==1.0.3
 python-dateutil==2.6.0
+python-telegram-bot==7.0.1
+psycopg2==2.7.3
 pytz==2016.10
+PyYAML==3.12
 requests-oauthlib==0.7.0
-requests==2.12.4
+requests==2.18.3
 schedule==0.4.3
+simplejson==3.11.1
 six==1.10.0
+toolz==0.8.2
 waitress==1.0.1

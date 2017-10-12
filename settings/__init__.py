@@ -13,11 +13,6 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 import os
 import sys
 import logging
-import datetime as dt
-from enum import Enum
-from dotenv import load_dotenv
-from dateutil import relativedelta
-import dj_database_url
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -30,7 +25,7 @@ sys.path.append(BASE_DIR + "/vendorlibs")
 
 # DEFINE THE ENVIRONMENT TYPE
 PRODUCTION = STAGE = DEMO = LOCAL = False
-dt_key = os.environ.get('DEPLOYMENT_TYPE')
+dt_key = os.environ.get('DEPLOYMENT_TYPE', 'LOCAL')
 if dt_key == 'PRODUCTION':
     PRODUCTION = True
 elif dt_key == 'DEMO':
@@ -90,10 +85,8 @@ INSTALLED_APPS = [
     # MAIN APPS
     'apps.common',
     'apps.user',
-    'apps.service',
     'apps.communication',
-    'apps.report',
-    'apps.worker',
+    'apps.channel',
 
     # DJANGO APPS
     'django.contrib.admin',
@@ -106,15 +99,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
 
     # PLUGINS
-    'jstemplate',
-    'parsley',
-    'pinax.stripe',
-    'widget_tweaks',
-    'django_extensions',
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.facebook',
+
 ]
 
 MIDDLEWARE = [
@@ -182,7 +167,6 @@ STATIC_ROOT = STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     os.path.join(SITE_ROOT, 'static'),
     ('user', os.path.join(SITE_ROOT, 'apps/user/static')),
-    ('service', os.path.join(SITE_ROOT, 'apps/service/static')),
 )
 
 ### START DJANGO ALLAUTH SETTINGS ###
@@ -196,15 +180,6 @@ ACCOUNT_ADAPTER = 'apps.user.my_adapter.MyAccountAdapter'
 
 
 # General apps settings
-BLOG_MANIFEST_NAME = 'site_info.json'
-MANIFEST_GENERATION_TRIGGERS = Enum("ManifestGenerationTriggerEnum",
-                                    ["post_delete",
-                                     "post_publish",
-                                     "user_click"])
-MAXIMUM_ATTACHMENT_SIZE_BYTES = 20 * 1024 * 1024
-TASK_TIME_LIMIT = dt.timedelta(hours=72)
-BLOG_INACTIVITY_THRESHOLD = relativedelta.relativedelta(months=6)
-
 
 if PRODUCTION or STAGE:
     DATABASES = {'default': dj_database_url.config()}
