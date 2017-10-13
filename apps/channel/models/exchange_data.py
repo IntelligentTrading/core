@@ -12,7 +12,7 @@ SOURCE_CHOICES = (
 
 class ExchangeData(models.Model):
     source = models.SmallIntegerField(choices=SOURCE_CHOICES, null=False)
-    data = JSONField()
+    data = models.TextField(default="")
     timestamp = UnixTimeStampField(null=False)
 
 

@@ -36,13 +36,13 @@ def pull_poloniex_data():
     try:
         req = get('https://poloniex.com/public?command=returnTicker')
 
-        poloniex_data_point = ExchangeData.objects.create(
-            data=req.json(),
-            timestamp=time.time()
-        )
+        data = req.json()
+        timestamp = time.time()
 
-        data = poloniex_data_point.data
-        timestamp = poloniex_data_point.timestamp
+        poloniex_data_point = ExchangeData.objects.create(
+            data=data.dumps(),
+            timestamp=timestamp
+        )
 
         save_prices(data, timestamp)
         save_volumes(data, timestamp)
