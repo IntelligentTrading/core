@@ -1,5 +1,6 @@
 import json
 import logging
+import schedule
 import time
 
 from django.core.management.base import BaseCommand
@@ -17,34 +18,29 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         logger.info("Getting ready to trawl Poloniex...")
-
-        import schedule
-        import time
-
-        def job():
-            print("I'm working...")
-
         schedule.every(1).minutes.do(pull_poloniex_data)
-
         while True:
-            schedule.run_pending()
-            time.sleep(1)
-
-        logger.info("Poloniex Trawl shut down.")
+            try:
+                schedule.run_pending()
+                time.sleep(1)
+            except:
+                logger.info("Poloniex Trawl shut down.")
 
 
 def pull_poloniex_data():
     try:
+        logger.info("pulling Poloniex data...")
         req = get('https://poloniex.com/public?command=returnTicker')
 
         data = req.json()
         timestamp = time.time()
 
         poloniex_data_point = ExchangeData.objects.create(
+            source=POLONIEX,
             data=json.dumps(data),
             timestamp=timestamp
         )
-
+        logger.info("Saving Poloniex price, volume data...")
         save_prices(data, timestamp)
         save_volumes(data, timestamp)
 
@@ -65,19 +61,6 @@ def save_prices(data, timestamp):
     except KeyError:
         logger.debug("missing BTC in Poloniex data")
 
-    for currency_pair in data:
-        if currency_pair.split('_')[0] == "BTC":
-            Price.objects.create(
-                source=POLONIEX,
-                coin=currency_pair.split('_')[1],
-                satoshis=int(float(data[currency_pair]['last']) * 10 ** 8),
-                timestamp=timestamp
-            )
-
-    # trigger indicators
-
-
-def save_volumes(data, timestamp):
     try:
         usdt_eth = data.pop("USDT_ETH")
         btc_eth = data.pop("USDT_ETH")
@@ -91,6 +74,20 @@ def save_volumes(data, timestamp):
         )
     except KeyError:
         logger.debug("missing ETH in Poloniex data")
+
+    for currency_pair in data:
+        if currency_pair.split('_')[0] == "BTC":
+            Price.objects.create(
+                source=POLONIEX,
+                coin=currency_pair.split('_')[1],
+                satoshis=int(float(data[currency_pair]['last']) * 10 ** 8),
+                timestamp=timestamp
+            )
+
+    # trigger indicators
+
+
+def save_volumes(data, timestamp):
 
     for currency_pair in data:
         if currency_pair.split('_')[0] == "BTC":
