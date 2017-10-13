@@ -183,7 +183,6 @@ ACCOUNT_ADAPTER = 'apps.user.my_adapter.MyAccountAdapter'
 # General apps settings
 
 if PRODUCTION or STAGE:
-    DATABASES = {'default': dj_database_url.config()}
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 logger.info("Importing vendor_services_settings")
