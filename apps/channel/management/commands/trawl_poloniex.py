@@ -17,12 +17,22 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         logger.info("Getting ready to trawl Poloniex...")
 
-        poloniex()
+        import schedule
+        import time
 
-        logger.info("All done.")
+        def job():
+            print("I'm working...")
+
+        schedule.every(1).minutes.do(pull_poloniex_data)
+
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
+
+        logger.info("Poloniex Trawl shut down.")
 
 
-def poloniex():
+def pull_poloniex_data():
     try:
         req = get('https://poloniex.com/public?command=returnTicker')
 
