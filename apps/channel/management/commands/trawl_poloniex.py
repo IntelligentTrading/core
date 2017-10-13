@@ -1,3 +1,4 @@
+import json
 import logging
 import time
 
@@ -40,7 +41,7 @@ def pull_poloniex_data():
         timestamp = time.time()
 
         poloniex_data_point = ExchangeData.objects.create(
-            data=data.dumps(),
+            data=json.dumps(data),
             timestamp=timestamp
         )
 
