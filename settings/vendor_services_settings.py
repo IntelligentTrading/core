@@ -4,18 +4,13 @@ from settings import LOCAL, PRODUCTION, STAGE
 
 # AWS S3 info
 if PRODUCTION:
-    BUCKET_NAME = "itt-production"
-    QUEUE_NAME = "IttQueue-production"
-    DELAYED_QUEUE_NAME = "IttDelayedQueue-production"
-elif STAGE:
-    BUCKET_NAME = "itt-stage"
-    QUEUE_NAME = "IttQueue-stage"
-    DELAYED_QUEUE_NAME = "IttDelayedQueue-stage"
+    BUCKET_NAME = "intelligenttrading-s3-production"
+    QUEUE_NAME = "intelligenttrading-sqs-production"
+    # DELAYED_QUEUE_NAME = "intelligenttrading-delayed-sqs-production"
 else:
-    BUCKET_NAME = os.environ.get("BUCKET_NAME", "itt-stage")
-    BUCKET_NAME = BUCKET_NAME
-    QUEUE_NAME = os.environ.get("QUEUE_NAME", "IttQueue-stage")
-    DELAYED_QUEUE_NAME = os.environ.get("DELAYED_QUEUE_NAME", "IttDelayedQueue-stage")
+    BUCKET_NAME = "intelligenttrading-s3-stage"
+    QUEUE_NAME = "intelligenttrading-sqs-stage"
+    # DELAYED_QUEUE_NAME = "intelligenttrading-delayed-sqs-stage"
 
 
 HOST_URL = 'http://' + BUCKET_NAME + '.s3.amazonaws.com'

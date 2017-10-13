@@ -87,6 +87,7 @@ INSTALLED_APPS = [
     'apps.user',
     'apps.communication',
     'apps.channel',
+    'apps.indicator',
 
     # DJANGO APPS
     'django.contrib.admin',
