@@ -1,6 +1,7 @@
 from django.db import models
 from unixtimestampfield.fields import UnixTimeStampField
 
+from apps.channel.models.exchange_data import SOURCE_CHOICES
 
 class Volume(models.Model):
     source = models.SmallIntegerField(choices=SOURCE_CHOICES, null=False)
