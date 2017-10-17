@@ -87,7 +87,10 @@ def save_prices(data, timestamp):
                     satoshis=int(float(data[currency_pair]['last']) * 10 ** 8),
                     timestamp=timestamp
                 )
-            except: pass
+            except Exception as e:
+                logger.debug(str(e))
+
+    logger.debug("Saved Poloniex price data")
 
     # trigger indicators
 
@@ -126,7 +129,9 @@ def save_volumes(data, timestamp):
                     btc_volume=int(float(data[currency_pair]['baseVolume']) * 10 ** 8),
                     timestamp = timestamp
                 )
-            except: pass
+            except:
+                logger.debug(str(e))
 
+    logger.debug("Saved Poloniex volume data")
 
-                # trigger indicators
+    # trigger indicators
