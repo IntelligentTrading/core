@@ -85,7 +85,6 @@ INSTALLED_APPS = [
     # MAIN APPS
     'apps.common',
     'apps.user',
-    'apps.communication',
     'apps.channel',
     'apps.indicator',
     'apps.api',
