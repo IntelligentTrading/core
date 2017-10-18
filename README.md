@@ -65,6 +65,7 @@ eg.
 
 3. Connect to Database
  - install PostgreSQL server and create local database
+ - run `$ python manage.py migrate` to setup schemas in local database
  - AND/OR
  - connect to read-only Amazon Aurora DB
  - set database connection settings in your `settings/local_settings.py`
