@@ -5,6 +5,7 @@ dj-static==0.0.6
 django-debug-toolbar==1.6
 django-extensions==1.7.5
 django-storages==1.5.1
+django-toolbelt==0.0.1
 django-unixtimestampfield==0.3.9
 Django==1.11
 ipython==5.1.0
