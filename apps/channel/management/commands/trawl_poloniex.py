@@ -102,7 +102,7 @@ def save_volumes(data, timestamp):
         Volume.objects.create(
             source=POLONIEX,
             coin="BTC",
-            btc_volume=int(float(data["USDT_BTC"]['baseVolume']) * 10 ** 8),
+            btc_volume=float(data["USDT_BTC"]['baseVolume']),
             timestamp=timestamp
         )
     except KeyError:
@@ -114,7 +114,7 @@ def save_volumes(data, timestamp):
         Volume.objects.create(
             source=POLONIEX,
             coin="ETH",
-            btc_volume=int(float(data["USDT_ETH"]['baseVolume']) * 10 ** 8),
+            btc_volume=float(data["USDT_ETH"]['baseVolume']),
             timestamp=timestamp
         )
     except KeyError:
@@ -126,7 +126,7 @@ def save_volumes(data, timestamp):
                 Volume.objects.create(
                     source=POLONIEX,
                     coin=currency_pair.split('_')[1],
-                    btc_volume=int(float(data[currency_pair]['baseVolume']) * 10 ** 8),
+                    btc_volume=float(data[currency_pair]['baseVolume']),
                     timestamp = timestamp
                 )
             except:
