@@ -1,9 +1,9 @@
 # ITT Data-Sources
 
 
-### API
+## API
 
-####Price
+###Price
 Get the current trading price for any token
 
 GET /price
@@ -22,7 +22,7 @@ token ticker is <8 chars should be all caps
 
 
 
-####Volume
+###Volume
 Get the current trading volume for any token
 
 GET /volume
