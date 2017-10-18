@@ -83,7 +83,7 @@ eg.
  - `$ python manage.py shell`
  
     ```
-    > from apps.indicators.models import Price
+    > from apps.indicator.models import Price
     > eth_price = Price.objects.filter(coin="ETH").order_by('-timestamp').first()
     > print(eth_price.satoshis)
     ```
