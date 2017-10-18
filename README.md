@@ -3,7 +3,7 @@
 
 ## API
 
-###Price
+### Price
 
 Get the current trading price for any token
 
@@ -23,7 +23,7 @@ token ticker is <8 chars should be all caps
 
 
 
-###Volume
+### Volume
 
 Get the current trading volume for any token
 
