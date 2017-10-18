@@ -1,3 +1,4 @@
+import json
 import logging
 from django.http import HttpResponse
 from django.views.generic import View
@@ -28,3 +29,6 @@ class User(View):
         except Exception as e:
             logger.debug(str(e))
             return HttpResponse(500) # server error
+
+    def get(self, request, *args, **kwargs):
+        return HttpResponse(json.dumps({'error':'POST requests only'}))  # ok

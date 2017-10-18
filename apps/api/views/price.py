@@ -28,4 +28,3 @@ class Price(View):
             }
 
         return HttpResponse(json.dumps(response), content_type="application/json")
-
