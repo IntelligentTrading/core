@@ -22,7 +22,6 @@ eg.
 token ticker is <8 chars should be all caps
 
 
-
 ### Volume
 
 Get the current trading volume for any token
@@ -40,6 +39,25 @@ JSON RESPONSE
 
 eg.
 `{"volume": 63.3236288, "timestamp": "2017-10-18 03:41:17.902490"}`
+
+### User
+
+Save user settings
+
+POST `/user`
+
+PARAMS 
+```
+chat_id: string
+is_subscribed: Boolean
+is_muted: Boolean
+risk: string ['low', 'medium', 'high']
+horizon: string ['short', 'medium', 'long']
+```
+
+RESPONSE `200 ok`
+or `500 {'error': 'error message'}`
+
 
 ## Environment Setup
 

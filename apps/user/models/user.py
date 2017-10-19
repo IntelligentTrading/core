@@ -16,6 +16,22 @@ class User(AbstractUser, Timestampable):
     is_subscribed = models.BooleanField(default=False)
     is_muted = models.BooleanField(default=False)
 
+    (LOW_RISK, MEDIUM_RISK, HIGH_RISK) = list(range(3))
+    RISK_CHOICES = (
+        (LOW_RISK, 'low'),
+        (MEDIUM_RISK, 'medium'),
+        (HIGH_RISK, 'high'),
+    )
+    risk = models.SmallIntegerField(choices=RISK_CHOICES, default=LOW_RISK)
+
+    (SHORT_HORIZON, MEDIUM_HORIZON, LONG_HORIZON) = list(range(3))
+    HORIZON_CHOICES = (
+        (SHORT_HORIZON, 'short'),
+        (MEDIUM_HORIZON, 'medium'),
+        (LONG_HORIZON, 'long'),
+    )
+    horizon = models.SmallIntegerField(choices=HORIZON_CHOICES, default=MEDIUM_HORIZON)
+
 
     # MODEL PROPERTIES
 
