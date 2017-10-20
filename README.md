@@ -47,13 +47,14 @@ Save user settings
 POST `/user`
 
 PARAMS 
-```
-chat_id: string
-is_subscribed: Boolean
-is_muted: Boolean
-risk: string ['low', 'medium', 'high']
-horizon: string ['short', 'medium', 'long']
-```
+
+| required | key | value |
+|---|---|---|
+| yes | chat_id | string |
+| no | is_subscribed | boolean |
+| no | is_muted | boolean |
+| no | risk | string ['low', 'medium', 'high'] |
+| no | horizon | string ['short', 'medium', 'long'] |
 
 RESPONSE `200 ok`
 or `500 {'error': 'error message'}`
