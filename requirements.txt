@@ -11,6 +11,7 @@ Django==1.11
 ipython==5.1.0
 jsonfield==1.0.3
 mysqlclient
+numpy==1.13.3
 python-dateutil==2.6.0
 python-telegram-bot==7.0.1
 psycopg2==2.7.3
