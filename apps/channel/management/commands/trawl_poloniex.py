@@ -44,8 +44,9 @@ def pull_poloniex_data():
             timestamp=timestamp
         )
         logger.info("Saving Poloniex price, volume data...")
-        save_prices(data, timestamp)
-        save_volumes(data, timestamp)
+        p_data = v_data = data
+        save_prices(p_data, timestamp)
+        save_volumes(v_data, timestamp)
 
     except RequestException:
         return 'Error to collect data from Poloniex'
@@ -129,7 +130,7 @@ def save_volumes(data, timestamp):
                     btc_volume=float(data[currency_pair]['baseVolume']),
                     timestamp = timestamp
                 )
-            except:
+            except Exception as e:
                 logger.debug(str(e))
 
     logger.debug("Saved Poloniex volume data")
