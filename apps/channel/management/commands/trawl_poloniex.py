@@ -44,17 +44,16 @@ def pull_poloniex_data():
             timestamp=timestamp
         )
         logger.info("Saving Poloniex price, volume data...")
-        p_data = v_data = data
-        save_prices(p_data, timestamp)
-        save_volumes(v_data, timestamp)
+        save_prices_and_volumes(data, timestamp)
 
     except RequestException:
         return 'Error to collect data from Poloniex'
 
 
-def save_prices(data, timestamp):
+def save_prices_and_volumes(data, timestamp):
     try:
         usdt_btc = data.pop("USDT_BTC")
+
         Price.objects.create(
             source=POLONIEX,
             coin="BTC",
@@ -62,12 +61,21 @@ def save_prices(data, timestamp):
             usdt=float(usdt_btc['last']),
             timestamp=timestamp
         )
+
+        Volume.objects.create(
+            source=POLONIEX,
+            coin="BTC",
+            btc_volume=float(usdt_btc['baseVolume']),
+            timestamp=timestamp
+        )
+
     except KeyError:
         logger.debug("missing BTC in Poloniex data")
 
     try:
         usdt_eth = data.pop("USDT_ETH")
         btc_eth = data.pop("BTC_ETH")
+
         Price.objects.create(
             source=POLONIEX,
             coin="ETH",
@@ -76,8 +84,16 @@ def save_prices(data, timestamp):
             usdt=float(usdt_eth['last']),
             timestamp=timestamp
         )
+
+        Volume.objects.create(
+            source=POLONIEX,
+            coin="ETH",
+            btc_volume=float(btc_eth['baseVolume']),
+            timestamp=timestamp
+        )
+
     except KeyError:
-        logger.debug("missing ETH in Poloniex data")
+        logger.debug("missing ETH in Poloniex price data")
 
     for currency_pair in data:
         if currency_pair.split('_')[0] == "BTC":
@@ -88,42 +104,6 @@ def save_prices(data, timestamp):
                     satoshis=int(float(data[currency_pair]['last']) * 10 ** 8),
                     timestamp=timestamp
                 )
-            except Exception as e:
-                logger.debug(str(e))
-
-    logger.debug("Saved Poloniex price data")
-
-    # trigger indicators
-
-
-def save_volumes(data, timestamp):
-
-    try:
-        usdt_btc = data.pop("USDT_BTC")
-        Volume.objects.create(
-            source=POLONIEX,
-            coin="BTC",
-            btc_volume=float(data["USDT_BTC"]['baseVolume']),
-            timestamp=timestamp
-        )
-    except KeyError:
-        logger.debug("missing BTC in Poloniex data")
-
-    try:
-        usdt_eth = data.pop("USDT_ETH")
-        btc_eth = data.pop("BTC_ETH")
-        Volume.objects.create(
-            source=POLONIEX,
-            coin="ETH",
-            btc_volume=float(data["USDT_ETH"]['baseVolume']),
-            timestamp=timestamp
-        )
-    except KeyError:
-        logger.debug("missing ETH in Poloniex data")
-
-    for currency_pair in data:
-        if currency_pair.split('_')[0] == "BTC":
-            try:
                 Volume.objects.create(
                     source=POLONIEX,
                     coin=currency_pair.split('_')[1],
@@ -133,6 +113,6 @@ def save_volumes(data, timestamp):
             except Exception as e:
                 logger.debug(str(e))
 
-    logger.debug("Saved Poloniex volume data")
+    logger.debug("Saved Poloniex price and volume data")
 
     # trigger indicators
