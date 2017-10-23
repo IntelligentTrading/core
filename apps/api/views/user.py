@@ -1,3 +1,4 @@
+import ast
 import json
 import logging
 from django.http import HttpResponse
@@ -10,21 +11,22 @@ from apps.indicator.models import Price as PriceModel
 logger = logging.getLogger(__name__)
 
 class User(View):
+    @csrf_exempt
     def dispatch(self, request, *args, **kwargs):
         return super(User, self).dispatch(request, *args, **kwargs)
 
-    @csrf_exempt
     def post(self, request, *args, **kwargs):
         try:
-            chat_id = request.POST.get('chat_id')
-            assert len(chat_id)
-            user, u_created = UserModel.objects.get_or_create(chat_id=chat_id)
+            chat_id = request.POST.get('chat_id', "")
+            if not len(chat_id):
+                return HttpResponse(400)  # request error
+            user, u_created = UserModel.objects.get_or_create(telegram_chat_id=chat_id)
 
-            if request.POST.get('is_subscribed', 'n/a') in [True, False]:
-                user.is_subscribed = request.POST['is_subscribed']
+            if request.POST.get('is_subscribed', 'n/a') in ["True", "False"]:
+                user.is_subscribed = ast.literal_eval(request.POST['is_subscribed'])
 
-            if request.POST.get('is_muted', 'n/a') in [True, False]:
-                user.is_muted = request.POST['is_muted']
+            if request.POST.get('is_muted', 'n/a') in ["True", "False"]:
+                user.is_muted = ast.literal_eval(request.POST['is_muted'])
 
             if request.POST.get('risk', 'n/a') in ['low', 'medium', 'high']:
                 risk_string = request.POST['risk']

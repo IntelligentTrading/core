@@ -51,8 +51,8 @@ PARAMS
 | required | key | value |
 |---|---|---|
 | yes | chat_id | string |
-| no | is_subscribed | boolean |
-| no | is_muted | boolean |
+| no | is_subscribed | string ['True', 'False'] |
+| no | is_muted | string ['True', 'False'] |
 | no | risk | string ['low', 'medium', 'high'] |
 | no | horizon | string ['short', 'medium', 'long'] |
 
