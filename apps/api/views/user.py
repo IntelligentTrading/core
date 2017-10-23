@@ -1,6 +1,7 @@
 import json
 import logging
 from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 from apps.user.models import User as UserModel
 
@@ -12,7 +13,7 @@ class User(View):
     def dispatch(self, request, *args, **kwargs):
         return super(User, self).dispatch(request, *args, **kwargs)
 
-
+    @csrf_exempt
     def post(self, request, *args, **kwargs):
         try:
             chat_id = request.POST.get('chat_id')
