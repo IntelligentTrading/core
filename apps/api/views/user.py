@@ -48,7 +48,7 @@ class User(View):
 
             user.save()
 
-            return HttpResponse(200) # ok
+            return HttpResponse(json.dumps(user.get_telegram_settings())) # ok
 
         except Exception as e:
             logger.debug(str(e))

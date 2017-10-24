@@ -38,6 +38,13 @@ class User(AbstractUser, Timestampable):
 
     # MODEL FUNCTIONS
 
+    def get_telegram_settings(self):
+        return {
+            'is_subscribed': self.is_subscribed,
+            'is_muted': self.is_muted,
+            'risk': self.get_risk_display(),
+            'horizon': self.get_horizon_display()
+        }
 
 User._meta.get_field('username')._unique = False
 User._meta.get_field('telegram_chat_id')._unique = True
