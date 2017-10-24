@@ -56,8 +56,11 @@ PARAMS
 | no | risk | string ['low', 'medium', 'high'] |
 | no | horizon | string ['short', 'medium', 'long'] |
 
-RESPONSE `200 ok`
-or `500 {'error': 'error message'}`
+RESPONSE
+
+`200` `{"is_subscribed": false, "is_muted": true, "risk": "medium", "horizon": "long"}`
+
+or `500` `{'error': 'error message'}`
 
 
 ## Environment Setup
