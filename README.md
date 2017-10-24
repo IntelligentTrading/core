@@ -1,71 +1,109 @@
-# Intelligent Trading Development 
-This document describe how works the development and deployment process.
-
-[![Build Status](https://travis-ci.org/IntelligentTrading/IntelligentTrading.svg?branch=master)](https://travis-ci.org/IntelligentTrading/IntelligentTrading)
+# ITT Data-Sources
 
 
-## Configure GCP
-The next steps require the **gcloud** tool, more informations: [gcloud downloads](https://cloud.google.com/sdk/downloads)
+## API
+
+### Price
+
+Get the current trading price for any token
+
+GET `/price`
+PARAMS `coin = <token ticker>`
+
+eg. `/price?=coin=BTC`
+
+JSON RESPONSE
+
+`{'price': <int, satoshis>, 'timestamp': timestamp}`
+
+eg.
+`{"price": 281000, "timestamp": "2017-10-18 04:18:51.269170"}`
+
+token ticker is <8 chars should be all caps
 
 
-Set your account:
+### Volume
 
-`$ gcloud config set account email.account@mydomain.com`
+Get the current trading volume for any token
 
-Set the project:
+GET `/volume`
+PARAMS `coin = <token ticker>`
 
-`$ gcloud config set project project-id`
+eg. `/volume?=coin=BTC`
 
-More informations about [Google App Engine](https://cloud.google.com/appengine/docs/python/) standard environment. 
+token ticker is <8 chars should be all caps
 
+JSON RESPONSE
 
-## Testing locally
+`{'volume': <float, BTC>, 'timestamp': timestamp}`
 
-### Worker Service
+eg.
+`{"volume": 63.3236288, "timestamp": "2017-10-18 03:41:17.902490"}`
 
-Install the dependencies:
+### User
 
-`worker/$ pip3.6 install -t lib -r requirements.txt -U` 
+Save user settings
 
-**NOTE** if run many times the `pip` do you can insert this argument `--upgrade` 
+POST `/user`
 
-Start the development server:
+PARAMS 
 
-`worker/$ python3.6 main.py`
+| required | key | value |
+|---|---|---|
+| yes | chat_id | string |
+| no | is_subscribed | string ['True', 'False'] |
+| no | is_muted | string ['True', 'False'] |
+| no | risk | string ['low', 'medium', 'high'] |
+| no | horizon | string ['short', 'medium', 'long'] |
 
-Access the application:
-
-[http://localhost:8080](http://localhost:8080)
-
-
-### Telegram Service
-
-Install the dependencies:
-
-`telegram/$ pip3.6 install -t lib -r requirements.txt -U` 
-
-**NOTE** if run many times the `pip` do you can insert this argument `--upgrade` 
-
-**TOKEN** will need change the TOKEN in the code: `bot.py`
-
-Start the development server:
-
-`telegram/$ python3.6 bot.py`
-
-Test the application in the Telegram App.
+RESPONSE `200 ok`
+or `500 {'error': 'error message'}`
 
 
-## Deploy to App Engine
-Update the jobs of workers:
+## Environment Setup
 
-### Base of All Services
+1. Install Prerequisites
+ - python3.5 
+ - pip 
+ - [virtualenv](https://virtualenv.pypa.io/en/stable/installation/) 
+ - [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/install.html)
+ - run commands to create virtual env
+    ```
+    $ mkvirtualenv --python=/usr/local/bin/python3 ITT`
+    $ workon ITT
+    ```
+ 
+2. Clone and setup Django env
+ - clone https://github.com/IntelligentTrading/data-sources.git
+ - `$ cd data-sources`
+ - `$ pip install -r requirements.txt`
 
-`/$ gcloud app deploy index.yaml cron.yaml`
+3. Local Env Settings
+ - make a copy of `settings/local_settings_template.py` and save as `settings/local_settings.py`
+ - add private keys and passwords as needed
 
-### Worker Service
+3. Connect to Database
+ - install PostgreSQL server and create local database
+ - run `$ python manage.py migrate` to setup schemas in local database
+ - AND/OR
+ - connect to read-only Amazon Aurora DB
+ - set database connection settings in your `settings/local_settings.py`
+ 
+4. Run Local Server
+ - `$ python manage.py runserver`
+ - open [http://localhost:8000/](http://localhost:8000/)
+ - view logs and debug as needed
 
-`worker/$ gcloud app deploy app.yaml`
-
-### Telegram Service
-
-`telegram/$ gcloud app deploy bot.yaml`
+5. Run Worker Services
+ - `$ python manage.py trawl_poloniex`
+ - ...
+ 
+6. Query DB in Shell
+ - `$ python manage.py shell`
+ 
+    ```
+    > from apps.indicator.models import Price
+    > eth_price = Price.objects.filter(coin="ETH").order_by('-timestamp').first()
+    > print(eth_price.satoshis)
+    ```
+ 
