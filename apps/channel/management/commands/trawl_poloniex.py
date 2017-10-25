@@ -19,6 +19,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         logger.info("Getting ready to trawl Poloniex...")
         schedule.every(1).minutes.do(pull_poloniex_data)
+        # @Alex
+        schedule.every(5).minutes.do(_resample_and_sma(5))
+
         keep_going=True
         while keep_going:
             try:
@@ -44,13 +47,13 @@ def pull_poloniex_data():
             timestamp=timestamp
         )
         logger.info("Saving Poloniex price, volume data...")
-        save_prices_and_volumes(data, timestamp)
+        _save_prices_and_volumes(data, timestamp)
 
     except RequestException:
         return 'Error to collect data from Poloniex'
 
 
-def save_prices_and_volumes(data, timestamp):
+def _save_prices_and_volumes(data, timestamp):
     try:
         usdt_btc = data.pop("USDT_BTC")
 
@@ -115,4 +118,14 @@ def save_prices_and_volumes(data, timestamp):
 
     logger.debug("Saved Poloniex price and volume data")
 
-    # trigger indicators
+# @Alex
+def _resample_and_sma(period):
+    # get all records back in time ( 5 min)
+
+    # calculate mean and max
+
+    # put it into price_resampled_5
+
+    # calculate SMA with ta-lib stream
+
+    pass
