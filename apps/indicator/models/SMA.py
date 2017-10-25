@@ -20,11 +20,11 @@ class SMA(AbstractIndicator):
     # MODEL FUNCTIONS
 
 
-def compile_sma_values_from_price(self, price):
+def compile_sma_values_from_price(price):
 
     for period_size in [5, 30, 120]:
 
-        previous_sma = SMA.objects.filter(coin=self.coin, period_size=self.period_size).order_by('-timestamp').first()
+        previous_sma = SMA.objects.filter(coin=price.coin, period_size=price.period_size).order_by('-timestamp').first()
 
         if previous_sma.timestamp + timedelta(minutes=period_size) <= price.timestamp:
             # now we need to compile and store new MA values for each period count
