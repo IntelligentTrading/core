@@ -7,10 +7,12 @@ if PRODUCTION:
     BUCKET_NAME = "intelligenttrading-s3-production"
     QUEUE_NAME = "intelligenttrading-sqs-production"
     # DELAYED_QUEUE_NAME = "intelligenttrading-delayed-sqs-production"
+    SNS_NAME = "intelligenttrading-sns-production"
 else:
     BUCKET_NAME = "intelligenttrading-s3-stage"
     QUEUE_NAME = "intelligenttrading-sqs-stage"
     # DELAYED_QUEUE_NAME = "intelligenttrading-delayed-sqs-stage"
+    SNS_NAME = "intelligenttrading-sns-stage"
 
 
 HOST_URL = 'http://' + BUCKET_NAME + '.s3.amazonaws.com'
