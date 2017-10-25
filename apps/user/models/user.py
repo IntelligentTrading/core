@@ -12,7 +12,7 @@ class User(AbstractUser, Timestampable):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
-    telegram_chat_id = models.CharField(max_length=128, null=False)
+    telegram_chat_id = models.CharField(max_length=128, null=False, unique=True)
     is_subscribed = models.BooleanField(default=False)
     is_muted = models.BooleanField(default=False)
 
