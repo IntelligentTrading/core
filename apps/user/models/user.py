@@ -38,6 +38,30 @@ class User(AbstractUser, Timestampable):
 
     # MODEL FUNCTIONS
 
+    def get_risk_value(self, display_string=None):
+        if not display_string:
+            display_string = self.get_risk_display()
+
+        if display_string == 'low':
+            return self.LOW_RISK
+        elif display_string == 'medium':
+            return self.MEDIUM_RISK
+        elif display_string == 'high':
+            return self.HIGH_RISK
+        else:
+            raise Exception("no risk setting!?!")
+
+    def get_horizon_value(self, display_string=None):
+        display_string = display_string if display_string else self.get_horizon_display()
+        if display_string == 'short':
+            return self.SHORT_HORIZON
+        elif display_string == 'medium':
+            return self.MEDIUM_HORIZON
+        elif display_string == 'long':
+            return self.LONG_HORIZON
+        else:
+            raise Exception("no horizon setting!?!")
+
     def get_telegram_settings(self):
         return {
             'is_subscribed': self.is_subscribed,
