@@ -29,7 +29,7 @@ class Command(BaseCommand):
 
         # @Alex
         #schedule.every(5).minutes.do(_resample_and_sma, {'period':5} )
-        schedule.every(2).minutes.do(_resample_and_sma, {'period': 15})
+        schedule.every(15).minutes.do(_resample_and_sma, {'period': 15})
         schedule.every(60).minutes.do(_resample_and_sma, {'period': 60})
         schedule.every(360).minutes.do(_resample_and_sma, {'period': 360})
 
