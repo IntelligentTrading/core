@@ -145,6 +145,8 @@ def _resample_and_sma(period_par):
         prices = np.array([ rec['satoshis'] for rec in coin_price_list])
         times = np.array([ rec['timestamp'] for rec in coin_price_list])
         period_mean = prices.mean()
+        period_min = prices.min()
+        period_max = prices.max()
         period_ts = times.max()
         logger.debug('    Time:' + str(period_ts) + ' || ' + str(coin) + ' Average value:::'  + str(period_mean))
 
@@ -154,7 +156,9 @@ def _resample_and_sma(period_par):
             coin=coin,
             timestamp=period_ts,
             period = period,
-            mean_price_satoshis=period_mean
+            mean_price_satoshis=period_mean,
+            min_price_satoshis=period_min,
+            max_price_satoshis=period_max
         )
         logger.debug('     Resampled data has been saved')
 
