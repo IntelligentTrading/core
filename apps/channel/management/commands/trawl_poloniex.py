@@ -2,7 +2,10 @@ import json
 import logging
 import schedule
 import time
+import pandas as pd
+import numpy as np
 
+from datetime import datetime, timedelta
 from django.core.management.base import BaseCommand
 from requests import get, RequestException
 
@@ -20,7 +23,7 @@ class Command(BaseCommand):
         logger.info("Getting ready to trawl Poloniex...")
         schedule.every(1).minutes.do(pull_poloniex_data)
         # @Alex
-        schedule.every(5).minutes.do(_resample_and_sma(5))
+        schedule.every(1).minutes.do(_resample_and_sma, {'period':5} )
 
         keep_going=True
         while keep_going:
@@ -120,12 +123,25 @@ def _save_prices_and_volumes(data, timestamp):
 
 # @Alex
 def _resample_and_sma(period):
+    logger.debug("======== START resampling and SMA ========= ")
+
     # get all records back in time ( 5 min)
+    period_records = Price.objects.filter(timestamp__gte=datetime.now()-timedelta(minutes=10)) # must be period
 
-    # calculate mean and max
+    # ETC: calculate average values for the records 5 min back in time
+    eth = list(period_records.filter(coin="ETH").values('timestamp','satoshis').order_by('-timestamp'))
+    prices = np.array([ rec['satoshis'] for rec in eth])
+    times = np.array([ rec['timestamp'] for rec in eth])
+    period_val = prices.mean()
+    period_ts = times.max()
+    logger.debug('========> Time:' + str(period_ts) + 'Average value:::'  + str(period_val))
 
-    # put it into price_resampled_5
+    # get history data from new table
 
     # calculate SMA with ta-lib stream
+
+    # add new record to a new table price_resampled_5
+
+    logger.debug("Price is resampled and SMA calculated for all currencies")
 
     pass
