@@ -10,11 +10,11 @@ Get the current trading price for any token
 GET `/price`
 PARAMS `coin = <token ticker>`
 
-eg. `/price?=coin=BTC`
+eg. `/price?coin=BTC`
 
 JSON RESPONSE
 
-`{'price': <int, satoshis>, 'timestamp': timestamp}`
+`{"price": <int, satoshis>, 'timestamp': timestamp}`
 
 eg.
 `{"price": 281000, "timestamp": "2017-10-18 04:18:51.269170"}`
@@ -29,13 +29,13 @@ Get the current trading volume for any token
 GET `/volume`
 PARAMS `coin = <token ticker>`
 
-eg. `/volume?=coin=BTC`
+eg. `/volume?coin=BTC`
 
 token ticker is <8 chars should be all caps
 
 JSON RESPONSE
 
-`{'volume': <float, BTC>, 'timestamp': timestamp}`
+`{"volume": <float, BTC>, 'timestamp': timestamp}`
 
 eg.
 `{"volume": 63.3236288, "timestamp": "2017-10-18 03:41:17.902490"}`
@@ -61,6 +61,27 @@ RESPONSE
 `200` `{"is_subscribed": false, "is_muted": true, "risk": "medium", "horizon": "long"}`
 
 or `500` `{'error': 'error message'}`
+
+### Users
+
+Get list of chat ids for all the users with a common set of settings
+
+GET `/user`
+
+PARAMS 
+
+`risk=<risk setting>' '['low', 'medium', 'high']`
+
+`horizon=<horizon setting>' '['low', 'medium', 'high']`
+
+eg. `/users?risk=low&horizon=long` for only users with these setttings
+
+eg. '/users' for all subscribers regardless of risk, horizon settings
+
+JSON RESPONSE
+
+`{"chat_ids": ["id1", "id2", ...]}`
+
 
 
 ## Environment Setup
