@@ -29,7 +29,7 @@ class Command(BaseCommand):
 
         # @Alex
         #schedule.every(5).minutes.do(_resample_and_sma, {'period':5} )
-        schedule.every(15).minutes.do(_resample_and_sma, {'period': 15})
+        schedule.every(2).minutes.do(_resample_and_sma, {'period': 15})
         schedule.every(60).minutes.do(_resample_and_sma, {'period': 60})
         schedule.every(360).minutes.do(_resample_and_sma, {'period': 360})
 
@@ -140,8 +140,15 @@ def _resample_and_sma(period_par):
     period_records = Price.objects.filter(timestamp__gte=datetime.now()-timedelta(minutes=period))
 
     for coin in coins_list:
+        logger.debug('  COIN: '+str(coin))
         # calculate average values for the records 5 min back in time
         coin_price_list = list(period_records.filter(coin=coin).values('timestamp','satoshis').order_by('-timestamp'))
+
+        # skip the currency if there is no information about this currency
+        if not coin_price_list:
+            logger.debug('   ------> Currency skipped')
+            continue
+
         prices = np.array([ rec['satoshis'] for rec in coin_price_list])
         times = np.array([ rec['timestamp'] for rec in coin_price_list])
         period_mean = prices.mean()
@@ -160,7 +167,7 @@ def _resample_and_sma(period_par):
             min_price_satoshis=period_min,
             max_price_satoshis=period_max
         )
-        logger.debug('     Resampled data has been saved')
+        logger.debug(' Resampled data has been saved')
 
         # get resampled data(period=15, coin="ETH")  for SMA calculation
         # TODO: need to limit data back in time.. otherwise in a year it might take too much time in memory...
@@ -179,19 +186,26 @@ def _resample_and_sma(period_par):
     logger.debug("=========> DONE. Price is resampled and SMA calculated for all currencies")
 
     # emit a buy/sell signal to print for now
-    _isEmitSignal()
+    #_isEmitSignal()
 
 
 # check if we need to emit signal
 def _isEmitSignal():
+    logger.debug("EMIT started =========>")
     # for short, medium and long period trading
     periods_list = [15, 60, 360]
     epsilon = 4.5
 
     for period in periods_list:
         for coin in coins_list:
+            logger.debug('  COIN: ' + str(coin))
             # get the last
             last_row = list(PriceResampled.objects.filter(period=period, coin=coin).order_by('-timestamp').values('mean_price_satoshis','SMA50_satoshis','SMA200_satoshis'))[0]
+            # skip the currency if there is no information about this currency
+            if not last_row:
+                logger.debug('----------> EMIT skipped')
+                continue
+
             price = last_row['mean_price_satoshis']
             SMA50 = last_row['SMA50_satoshis']
             SMA200 = last_row['SMA200_satoshis']
