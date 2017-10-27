@@ -1,10 +1,12 @@
 import json
+import logging
 
 import boto
 from boto.sqs.message import Message
 
 from settings import QUEUE_NAME, AWS_OPTIONS
 
+logger = logging.getLogger(__name__)
 
 class TelegramAlert(object):
     def __init__(self, *args, **kwargs):
@@ -38,6 +40,10 @@ class TelegramAlert(object):
         message.set_body(alert_data)
         queue.write(message)
 
+    def print(self):
+        logger.info("          EMITTED SEGNAL: coin=" + str(self.coin) + " signal=" + str(self.signal) +
+                    " trend=" + str(self.trend) + " horizon=" + str(self.horizon) +
+                    " strength_value=" + str(self.strength_value))
 
         # coin=BTC
         # market=Poloniex
