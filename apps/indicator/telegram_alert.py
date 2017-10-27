@@ -27,7 +27,16 @@ class TelegramAlert(object):
         self.volume = kwargs.get('volume', None)
         self.volume_change = kwargs.get('volume_change', None)
 
+    def get_price_info(self):
+        if self.coin:
+            prices = Price.objects.filter(coin=self.coin).order_by("-timestamp")[0:15]
+            self.price = prices[0].satoshis
+            self.price_change = (prices[0].satoshis - prices[14].satoshis) / prices[0].satoshis
+
     def send(self):
+        if not (self.price and self.price_change):
+            self.get_price_info()
+
         alert_data = json.dumps(self.__dict__)
 
         sqs_connection = boto.sqs.connect_to_region("us-east-1",
