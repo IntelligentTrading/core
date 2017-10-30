@@ -31,10 +31,21 @@ class PriceResampled(AbstractIndicator):
     SMA50_satoshis = models.IntegerField(null=True) # satoshis
     SMA200_satoshis = models.IntegerField(null=True) # satoshis
 
-    # EMA50
-    # EMA200
+    EMA50_satoshis = models.IntegerField(null=True) # satoshis
+    EMA200_satoshis = models.IntegerField(null=True) # satoshis
+
+    relative_strength = models.FloatField(null=True) # relative strength
+    # RSI = relative strength index, see property
+
 
     # MODEL PROPERTIES
+
+    @property
+    def relative_strength_index(self): # relative strength index
+        if self.relative_strength is not None:
+            return 100.0 - (100.0 / (1.0 + self.relative_strength))
+
+
     # MODEL FUNCTIONS
 
 
