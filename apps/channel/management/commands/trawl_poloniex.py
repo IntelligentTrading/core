@@ -4,7 +4,7 @@ import schedule
 import time
 import pandas as pd
 import numpy as np
-import talib.stream as tas
+# import talib.stream as tas
 
 from datetime import datetime, timedelta
 from django.core.management.base import BaseCommand
@@ -187,11 +187,11 @@ def _resample_and_sma(period_par):
         if raw_data:  # if we have at least on bin (to avoid SMA error)
             # calculate SMA and save it in the same record
             price_ts = np.array([ rec['mean_price_satoshis'] for rec in raw_data])
-            SMA50 = tas.SMA(price_ts.astype(float), timeperiod=50/time_speed)
-            SMA200 = tas.SMA(price_ts.astype(float), timeperiod=200/time_speed)
+            # SMA50 = tas.SMA(price_ts.astype(float), timeperiod=50/time_speed)
+            # SMA200 = tas.SMA(price_ts.astype(float), timeperiod=200/time_speed)
 
-            if not np.isnan(SMA50): price_resampled_object.SMA50_satoshis = SMA50
-            if not np.isnan(SMA200): price_resampled_object.SMA200_satoshis = SMA200
+            # if not np.isnan(SMA50): price_resampled_object.SMA50_satoshis = SMA50
+            # if not np.isnan(SMA200): price_resampled_object.SMA200_satoshis = SMA200
             price_resampled_object.save()
 
     logger.debug("=========> DONE. Price is resampled and SMA calculated for all currencies")
