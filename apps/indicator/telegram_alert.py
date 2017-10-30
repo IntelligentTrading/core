@@ -4,6 +4,7 @@ import logging
 import boto
 from boto.sqs.message import Message
 
+from apps.indicator.models import Price
 from settings import QUEUE_NAME, AWS_OPTIONS
 
 logger = logging.getLogger(__name__)
@@ -33,7 +34,7 @@ class TelegramAlert(object):
         if self.coin:
             prices = Price.objects.filter(coin=self.coin).order_by("-timestamp")[0:15]
             self.price = prices[0].satoshis
-            self.price_change = (prices[0].satoshis - prices[14].satoshis) / prices[0].satoshis
+            self.price_change = (prices[0].satoshis - prices[14].satoshis) / prices[14].satoshis
 
     def send(self):
         if not (self.price and self.price_change):
