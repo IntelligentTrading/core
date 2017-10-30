@@ -41,7 +41,7 @@ class TelegramAlert(object):
         queue.write(message)
 
     def print(self):
-        logger.info("          EMITTED SEGNAL: coin=" + str(self.coin) + " signal=" + str(self.signal) +
+        logger.info("          EMITTED SIGNAL: coin=" + str(self.coin) + " signal=" + str(self.signal) +
                     " trend=" + str(self.trend) + " horizon=" + str(self.horizon) +
                     " strength_value=" + str(self.strength_value))
 
