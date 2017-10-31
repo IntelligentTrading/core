@@ -14,10 +14,24 @@ eg. `/price?coin=BTC`
 
 JSON RESPONSE
 
-`{"price": <int, satoshis>, 'timestamp': timestamp}`
+`{
+    'source': "Poloniex",
+    'coin': <str, coin_ticker>,
+    'price_satoshis': <int, price_in_satoshis>,
+    'price_usdt': <float, price in USD> (only for BTC ticker),
+    'price_change': <float, 15_min_price_change_ratio>,
+    'timestamp': <str, timestamp>,
+}`
 
 eg.
-`{"price": 281000, "timestamp": "2017-10-18 04:18:51.269170"}`
+`{
+   "source": "Poloniex",
+   "coin": "OMG",
+   "price_sotoshis": 281123, (equivelent to 0.00218123)
+   "price_usdt": null,
+   "price_change": 0.0242342, (equivelent to 2.4% increase)
+   "timestamp": "2017-10-18 04:18:51.269170"
+ }`
 
 token ticker is <8 chars should be all caps
 
