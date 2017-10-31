@@ -4,6 +4,7 @@ import logging
 import boto
 from boto.sqs.message import Message
 
+from apps.indicator.models import Price
 from settings import QUEUE_NAME, AWS_OPTIONS
 
 logger = logging.getLogger(__name__)
