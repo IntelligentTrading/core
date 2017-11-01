@@ -9,7 +9,7 @@ from datetime import timedelta, datetime
 from apps.channel.models.exchange_data import SOURCE_CHOICES
 from apps.indicator.models.abstract_indicator import AbstractIndicator
 
-from apps.indicator.telegram_alert import TelegramAlert
+from apps.signal.models import Signal
 
 # TODO: declare it better
 horizons = {15: "short", 60: "medium", 360: "long"}
@@ -142,7 +142,7 @@ class PriceResampled(AbstractIndicator):
 
                 if np.sum(ind_A) == 0 and any(ind_A) != 0:  # emit a signal if indicator changes its sign
                     logger.debug("Ind_A difference:" +str(ind_A))
-                    alert_A = TelegramAlert(
+                    signal_A = Signal(
                         coin=self.coin,
                         signal=metr['name'],
                         trend=int(ind_A[0]),
@@ -151,8 +151,8 @@ class PriceResampled(AbstractIndicator):
                         strength_max=int(3)
 
                     )
-                    alert_A.print()
-                    alert_A.send()
+                    signal_A.print()
+                    signal_A.send()
 
             if all(prices != None) and all(m_high != None):
                 ind_B = np.sign(prices - m_high)
@@ -162,7 +162,7 @@ class PriceResampled(AbstractIndicator):
 
                 if np.sum(ind_B) == 0 and any(ind_B) != 0:
                     logger.debug("Ind_B difference:" + str(ind_B))
-                    alert_B = TelegramAlert(
+                    signal_B = Signal(
                         coin=self.coin,
                         signal=metr['name'],
                         trend=int(ind_B[0]),
@@ -171,8 +171,8 @@ class PriceResampled(AbstractIndicator):
                         strength_max=int(3)
 
                     )
-                    alert_B.print()
-                    alert_B.send()
+                    signal_B.print()
+                    signal_B.send()
 
             if all(m_high != None) and all(m_low != None) and all(m_high != None):
                 ind_C = np.sign(m_low - m_high)
@@ -182,7 +182,7 @@ class PriceResampled(AbstractIndicator):
 
                 if np.sum(ind_C) == 0 and any(ind_C) != 0:
                     logger.debug("Ind_C difference:" + str(ind_C))
-                    alert_C = TelegramAlert(
+                    signal_C = Signal(
                         coin=self.coin,
                         signal=metr['name'],
                         trend=int(ind_C[0]),
@@ -191,5 +191,5 @@ class PriceResampled(AbstractIndicator):
                         strength_max=int(3)
 
                     )
-                    alert_C.print()
-                    alert_C.send()
+                    signal_C.print()
+                    signal_C.send()

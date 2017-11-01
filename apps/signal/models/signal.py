@@ -4,13 +4,17 @@ import logging
 import boto
 from boto.sqs.message import Message
 
+from apps.common.behaviors import Timestampable
 from apps.indicator.models import Price
 from settings import QUEUE_NAME, AWS_OPTIONS
+from django.db import models
+
 
 logger = logging.getLogger(__name__)
 
-class TelegramAlert(object):
-    def __init__(self, *args, **kwargs):
+
+class Signal(Timestampable, models.Model):
+    def __init__(self, *args, **kwargs): #todo: lookup what is init best practice!!
         self.UI = "Telegram"
         self.subscribers_only = True
         self.text = kwargs.get('text', None)
@@ -30,6 +34,9 @@ class TelegramAlert(object):
         self.price_change = kwargs.get('price_change', None)
         self.volume = kwargs.get('volume', None)
         self.volume_change = kwargs.get('volume_change', None)
+
+        self.print()
+
 
     def send(self):
         try:
@@ -55,6 +62,7 @@ class TelegramAlert(object):
         message = Message()
         message.set_body(alert_data)
         queue.write(message)
+
 
     def print(self):
         logger.info("EMITTED SIGNAL: coin=" + str(self.coin) +
