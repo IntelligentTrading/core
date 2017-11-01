@@ -16,11 +16,15 @@ class Price(View):
         coin = request.GET.get('coin', "BTC").upper()
         assert len(coin) < 8
 
-        price_data = PriceModel.objects.filter(coin=coin).order_by('-timestamp').first()
-        if price_data:
+        price_object = PriceModel.objects.filter(coin=coin).order_by('-timestamp').first()
+        if price_object:
             response = {
-                'price': price_data.satoshis if coin is not "BTC" else price_data.usdt,
-                'timestamp': str(price_data.timestamp)
+                'source': price_object.get_source_display(),
+                'coin': price_object.coin,
+                'price_satoshis': price_object.satoshis,
+                'price_usdt': price_object.usdt,
+                'price_change': price_object.price_change,
+                'timestamp': str(price_object.timestamp),
             }
         else:
             response = {

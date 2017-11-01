@@ -4,6 +4,7 @@ import logging
 import boto
 from boto.sqs.message import Message
 
+from apps.indicator.models import Price
 from settings import QUEUE_NAME, AWS_OPTIONS
 
 logger = logging.getLogger(__name__)
@@ -14,6 +15,7 @@ class TelegramAlert(object):
         self.subscribers_only = True
         self.text = kwargs.get('text', None)
 
+        self.source = kwargs.get('coin', "Poloniex")
         self.coin = kwargs.get('coin', None)
         self.market = kwargs.get('market', None)
         self.signal = kwargs.get('signal', None)
@@ -29,15 +31,21 @@ class TelegramAlert(object):
         self.volume = kwargs.get('volume', None)
         self.volume_change = kwargs.get('volume_change', None)
 
-    def get_price_info(self):
-        if self.coin:
-            prices = Price.objects.filter(coin=self.coin).order_by("-timestamp")[0:15]
-            self.price = prices[0].satoshis
-            self.price_change = (prices[0].satoshis - prices[14].satoshis) / prices[0].satoshis
 
     def send(self):
-        if not (self.price and self.price_change):
-            self.get_price_info()
+        try:
+            if not self.price_change:
+                price_object = Price.objects.filter(coin=self.coin,
+                                                    source=self.source,
+                                                    satoshis=self.price
+                                                    ).order_by('-timestamp')[0]
+                self.price_change = price_object.price_change
+
+            if not self.volume or self.volume_change:
+                pass
+
+        except Exception as e:
+            logging.debug("Problem finding price, volume: " + str(e))
 
         alert_data = json.dumps(self.__dict__)
 
@@ -50,8 +58,10 @@ class TelegramAlert(object):
         queue.write(message)
 
     def print(self):
-        logger.info("          EMITTED SIGNAL: coin=" + str(self.coin) + " signal=" + str(self.signal) +
-                    " trend=" + str(self.trend) + " horizon=" + str(self.horizon) +
+        logger.info("EMITTED SIGNAL: coin=" + str(self.coin) +
+                    " signal=" + str(self.signal) +
+                    " trend=" + str(self.trend) +
+                    " horizon=" + str(self.horizon) +
                     " strength_value=" + str(self.strength_value))
 
         # coin=BTC

@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.db import models
 from unixtimestampfield.fields import UnixTimeStampField
 
@@ -18,3 +20,14 @@ class Price(models.Model):
     # MODEL PROPERTIES
 
     # MODEL FUNCTIONS
+
+
+
+    @property
+    def price_change(self):
+        past_price = Price.objects.filter(
+            source=self.source,
+            coin=self.coin,
+            timestamp__lte=self.timestamp - timedelta(minutes=15)
+        ).order_by("-timestamp")[0]
+        return float(self.price - past_price.satoshis) / past_price.satoshis
