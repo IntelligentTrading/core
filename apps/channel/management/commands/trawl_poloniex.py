@@ -31,9 +31,9 @@ class Command(BaseCommand):
 
         # @Alex
         #schedule.every(5).minutes.do(_resample_and_sma, {'period':5} )
-        schedule.every(15/time_speed).minutes.do(_resample_and_sma, {'period': 15})
-        schedule.every(60/time_speed).minutes.do(_resample_and_sma, {'period': 60})
-        schedule.every(360/time_speed).minutes.do(_resample_and_sma, {'period': 360})
+        schedule.every(15/time_speed).minutes.do(_resample_then_metrics, {'period': 15})
+        schedule.every(60/time_speed).minutes.do(_resample_then_metrics, {'period': 60})
+        schedule.every(360/time_speed).minutes.do(_resample_then_metrics, {'period': 360})
 
         keep_going=True
         while keep_going:
@@ -133,7 +133,7 @@ def _save_prices_and_volumes(data, timestamp):
     logger.debug("Saved Poloniex price and volume data")
 
 # @Alex
-def _resample_and_sma(period_par):
+def _resample_then_metrics(period_par):
     '''
     Shall be ran every 15, 60, 360 min from the scheduler
     First: resampling - create a new price dataset with differend sampling frequency, put 15 minutes into one datapoint (bin)
@@ -147,7 +147,7 @@ def _resample_and_sma(period_par):
     # TODO: need to be refactored... splitted into several methods or classes
 
     period = period_par['period']
-    logger.debug("======== Resampling and SMA, Resampling Period: " + str(period))
+    logger.debug("======== Resampling with Period: " + str(period))
 
     # get all records back in time ( 5 min)
     period_records = Price.objects.filter(timestamp__gte=datetime.now()-timedelta(minutes=period))
@@ -179,9 +179,14 @@ def _resample_and_sma(period_par):
         )
         #logger.debug("  Price is resampled")
 
+        # get last 250 historical point which is enough to calculate any SMA,EMA etc
+        logger.debug("...SMA, EMA")
         price_resampled_object.calc_SMA()
         price_resampled_object.save()
-        #logger.debug("  SMA is calculated")
 
+        price_resampled_object.calc_EMA()
+        price_resampled_object.save()
+
+        logger.debug("...check signals")
         price_resampled_object.check_signal()
-        #logger.debug("  Signals have been checked")
+
