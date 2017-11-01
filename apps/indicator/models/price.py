@@ -21,13 +21,14 @@ class Price(models.Model):
 
     # MODEL FUNCTIONS
 
-
-
     @property
     def price_change(self):
+
         past_price = Price.objects.filter(
             source=self.source,
             coin=self.coin,
             timestamp__lte=self.timestamp - timedelta(minutes=15)
-        ).order_by("-timestamp")[0]
-        return float(self.price - past_price.satoshis) / past_price.satoshis
+        ).order_by("-timestamp").first()
+
+        if past_price:
+            return float(self.satoshis - past_price.satoshis) / past_price.satoshis
