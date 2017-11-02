@@ -2,7 +2,6 @@ import json
 import logging
 import schedule
 import time
-import pandas as pd
 import numpy as np
 
 from datetime import datetime, timedelta
@@ -13,14 +12,11 @@ from apps.channel.models import ExchangeData
 from apps.channel.models.exchange_data import POLONIEX
 from apps.indicator.models import Price, Volume, PriceResampled
 
+from settings import time_speed  # 1 / 10
+from settings import COINS_LIST
+from settings import PERIODS_LIST  # 15 / 60 / 360
+
 logger = logging.getLogger(__name__)
-
-# @Alex
-coins_list = ["ETH", "XRP", "LTC", "DASH", "NEO", "XMR", "OMG"]
-periods_list = [15, 60, 360]
-#horizons = {15:"short", 60:"medium", 360: "long"}
-time_speed = 1      #set to 1 for production, 10 for fast debugging
-
 
 class Command(BaseCommand):
     help = "Polls data from Poloniex on a regular interval"
@@ -30,7 +26,7 @@ class Command(BaseCommand):
         schedule.every(1).minutes.do(pull_poloniex_data)
 
         # @Alex
-        #schedule.every(5).minutes.do(_resample_and_sma, {'period':5} )
+        # run resampling in 15,60,360 bins and calculate indicator values
         schedule.every(15/time_speed).minutes.do(_resample_then_metrics, {'period': 15})
         schedule.every(60/time_speed).minutes.do(_resample_then_metrics, {'period': 60})
         schedule.every(360/time_speed).minutes.do(_resample_then_metrics, {'period': 360})
@@ -152,7 +148,7 @@ def _resample_then_metrics(period_par):
     # get all records back in time ( 5 min)
     period_records = Price.objects.filter(timestamp__gte=datetime.now()-timedelta(minutes=period))
 
-    for coin in coins_list:
+    for coin in COINS_LIST:
         #logger.debug('  COIN: '+ str(coin))
         # calculate average values for the records 5 min back in time
         coin_price_list = list(period_records.filter(coin=coin).values('timestamp','satoshis').order_by('-timestamp'))
@@ -180,13 +176,16 @@ def _resample_then_metrics(period_par):
         #logger.debug("  Price is resampled")
 
         # get last 250 historical point which is enough to calculate any SMA,EMA etc
-        logger.debug("...SMA, EMA")
+        logger.debug(" [ " + str(coin) + " ]: calculate indicators ...")
         price_resampled_object.calc_SMA()
         price_resampled_object.save()
 
         price_resampled_object.calc_EMA()
         price_resampled_object.save()
 
-        logger.debug("...check signals")
+        price_resampled_object.calc_RS()
+        price_resampled_object.save()
+
+        logger.debug(" ...check signals to emit")
         price_resampled_object.check_signal()
 
