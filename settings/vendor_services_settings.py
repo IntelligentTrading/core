@@ -2,7 +2,12 @@ import os
 from settings import LOCAL, PRODUCTION, STAGE
 
 
-# AWS S3 info
+# AWS
+AWS_OPTIONS = {
+    'AWS_ACCESS_KEY_ID' : os.environ.get('AWS_ACCESS_KEY_ID'),
+    'AWS_SECRET_ACCESS_KEY' : os.environ.get('AWS_SECRET_ACCESS_KEY'),
+    'AWS_STORAGE_BUCKET_NAME' : os.environ.get('AWS_STORAGE_BUCKET_NAME'),
+}
 if PRODUCTION:
     BUCKET_NAME = "intelligenttrading-s3-production"
     QUEUE_NAME = "intelligenttrading-sqs-production"
