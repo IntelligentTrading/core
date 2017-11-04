@@ -24,15 +24,15 @@ class PriceResampled(AbstractIndicator):
 
     period = models.PositiveSmallIntegerField(null=False, default=15)  # minutes (eg. 15)
 
-    mean_price_satoshis = models.IntegerField(null=True) # satoshis
-    min_price_satoshis = models.IntegerField(null=True) # satoshis
-    max_price_satoshis = models.IntegerField(null=True) # satoshis
+    mean_price_satoshis = models.IntegerField(null=True) # price_satoshis
+    min_price_satoshis = models.IntegerField(null=True) # price_satoshis
+    max_price_satoshis = models.IntegerField(null=True) # price_satoshis
 
-    SMA50_satoshis = models.IntegerField(null=True) # satoshis
-    SMA200_satoshis = models.IntegerField(null=True) # satoshis
+    SMA50_satoshis = models.IntegerField(null=True) # price_satoshis
+    SMA200_satoshis = models.IntegerField(null=True) # price_satoshis
 
-    EMA50_satoshis = models.IntegerField(null=True) # satoshis
-    EMA200_satoshis = models.IntegerField(null=True) # satoshis
+    EMA50_satoshis = models.IntegerField(null=True) # price_satoshis
+    EMA200_satoshis = models.IntegerField(null=True) # price_satoshis
 
     relative_strength = models.FloatField(null=True) # relative strength
     # RSI = relative strength index, see property

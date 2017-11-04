@@ -97,7 +97,7 @@ def _save_prices_and_volumes(data, timestamp):
             source=POLONIEX,
             coin="ETH",
             satoshis=int(float(btc_eth['last']) * 10 ** 8),
-            wei=int(10 ** 8),
+            price_wei=int(10 ** 8),
             usdt=float(usdt_eth['last']),
             timestamp=timestamp
         )
@@ -155,12 +155,12 @@ def _resample_then_metrics(period_par):
     for coin in coins_list:
         #logger.debug('  COIN: '+ str(coin))
         # calculate average values for the records 5 min back in time
-        coin_price_list = list(period_records.filter(coin=coin).values('timestamp','satoshis').order_by('-timestamp'))
+        coin_price_list = list(period_records.filter(coin=coin).values('timestamp','price_satoshis').order_by('-timestamp'))
 
         # skip the currency if there is no data about this currency
         if not coin_price_list: continue
 
-        prices = np.array([ rec['satoshis'] for rec in coin_price_list])
+        prices = np.array([ rec['price_satoshis'] for rec in coin_price_list])
         times = np.array([ rec['timestamp'] for rec in coin_price_list])
         period_mean = prices.mean()
         period_min = prices.min()

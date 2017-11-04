@@ -23,7 +23,7 @@ class Price(View):
                 'coin': price_object.coin,
                 'price_satoshis': price_object.satoshis,
                 'price_usdt': price_object.usdt,
-                'price_change': price_object.price_change,
+                'price_satoshis_change': price_object.price_satoshis_change,
                 'timestamp': str(price_object.timestamp),
             }
         else:
