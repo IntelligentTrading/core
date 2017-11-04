@@ -87,6 +87,7 @@ INSTALLED_APPS = [
     'apps.user',
     'apps.channel',
     'apps.indicator',
+    'apps.signal',
     'apps.api',
 
     # DJANGO APPS

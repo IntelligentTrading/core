@@ -30,10 +30,15 @@ class Signal(Timestampable, models.Model):
         self.strength_value = kwargs.get('strength_value', None)
         self.strength_max = kwargs.get('strength_max', None)
 
-        self.price = kwargs.get('price', None)
-        self.price_change = kwargs.get('price_change', None)
-        self.volume = kwargs.get('volume', None)
-        self.volume_change = kwargs.get('volume_change', None)
+        self.price_satoshis = kwargs.get('price_satoshis', None)
+        self.price_satoshis_change = kwargs.get('price_satoshis_change', None)
+        self.price_usdt = kwargs.get('price_usdt', None)
+        self.price_usdt_change = kwargs.get('price_usdt_change', None)
+
+        self.volume_btc = kwargs.get('volume', None)
+        self.volume_btc_change = kwargs.get('volume_change', None)
+        self.volume_usdt = kwargs.get('volume', None)
+        self.volume_usdt_change = kwargs.get('volume_change', None)
 
         self.print()
 
@@ -43,9 +48,9 @@ class Signal(Timestampable, models.Model):
             if not self.price_change:
                 price_object = Price.objects.filter(coin=self.coin,
                                                     source=self.source,
-                                                    satoshis=self.price
+                                                    satoshis=self.price_satoshis
                                                     ).order_by('-timestamp')[0]
-                self.price_change = price_object.price_change
+                self.price_satoshis_change = price_object.price_satoshis_change
 
             if not self.volume or self.volume_change:
                 pass
@@ -80,4 +85,4 @@ class Signal(Timestampable, models.Model):
         # strength_value=1
         # strength_max=3
         # price=4814
-        # price_change=0.0028
+        # price_satoshis_change=0.0028
