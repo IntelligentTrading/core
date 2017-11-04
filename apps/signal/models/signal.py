@@ -3,47 +3,64 @@ import logging
 
 import boto
 from boto.sqs.message import Message
+from datetime import datetime
 
 from apps.common.behaviors import Timestampable
 from apps.indicator.models import Price
 from settings import QUEUE_NAME, AWS_OPTIONS
 from django.db import models
-
+from unixtimestampfield.fields import UnixTimeStampField
+from apps.channel.models.exchange_data import SOURCE_CHOICES, POLONIEX
+from apps.user.models.user import RISK_CHOICES, HORIZON_CHOICES
 
 logger = logging.getLogger(__name__)
 
 
+(TELEGRAM, WEB) = list(range(2))
+UI_CHOICES = (
+    (TELEGRAM, 'telegram bot'),
+    (WEB, 'web app'),
+)
+
+
 class Signal(Timestampable, models.Model):
-    def __init__(self, *args, **kwargs): #todo: lookup what is init best practice!!
-        self.UI = "Telegram"
-        self.subscribers_only = True
-        self.text = kwargs.get('text', None)
 
-        self.source = kwargs.get('coin', "Poloniex")
-        self.coin = kwargs.get('coin', None)
-        self.market = kwargs.get('market', None)
-        self.signal = kwargs.get('signal', None)
-        self.trend = kwargs.get('trend', None)
+    UI = models.SmallIntegerField(choices=UI_CHOICES, null=False, default=TELEGRAM)
+    subscribers_only = models.BooleanField(default=True)
+    text = models.TextField(default="")
 
-        self.risk = kwargs.get('risk', None)
-        self.horizon = kwargs.get('horizon', None)
-        self.strength_value = kwargs.get('strength_value', None)
-        self.strength_max = kwargs.get('strength_max', None)
+    source = models.SmallIntegerField(choices=SOURCE_CHOICES, null=False, default=POLONIEX)
+    coin = models.CharField(max_length=6, null=False, blank=False)
 
-        self.price_satoshis = kwargs.get('price_satoshis', None)
-        self.price_satoshis_change = kwargs.get('price_satoshis_change', None)
-        self.price_usdt = kwargs.get('price_usdt', None)
-        self.price_usdt_change = kwargs.get('price_usdt_change', None)
+    signal = models.CharField(max_length=15, null=True)
+    trend = models.CharField(max_length=15, null=True)
 
-        self.volume_btc = kwargs.get('volume', None)
-        self.volume_btc_change = kwargs.get('volume_change', None)
-        self.volume_usdt = kwargs.get('volume', None)
-        self.volume_usdt_change = kwargs.get('volume_change', None)
+    risk = models.SmallIntegerField(choices=RISK_CHOICES, null=True)
+    horizon = models.SmallIntegerField(choices=HORIZON_CHOICES, null=True)
+    strength_value = models.IntegerField(null=True)
+    strength_max = models.IntegerField(null=True)
 
-        self.print()
+    price_satoshis = models.BigIntegerField(null=False)  # Price in satoshis
+    price_satoshis_change = models.FloatField(null=True)
+    price_usdt = models.FloatField(null=True)  # USD value
+    price_usdt_change = models.FloatField(null=True)
 
+    volume_btc = models.FloatField(null=True)  # BTC volume
+    volume_btc_change = models.FloatField(null=True)
+    volume_usdt = models.FloatField(null=True)  # USD value
+    volume_usdt_change = models.FloatField(null=True)
+
+    sent_at = UnixTimeStampField(null=False)
+
+    # MODEL PROPERTIES
+
+
+    # MODEL FUNCTIONS
 
     def send(self):
+
+        # populate all required values
+
         try:
             if not self.price_change:
                 price_object = Price.objects.filter(coin=self.coin,
@@ -60,6 +77,11 @@ class Signal(Timestampable, models.Model):
 
         alert_data = json.dumps(self.__dict__)
 
+
+        # todo: call send in a post_save signal?? is there any reason to delay or schedule a signal?
+
+        # todo: prevent sending again
+
         sqs_connection = boto.sqs.connect_to_region("us-east-1",
                             aws_access_key_id=AWS_OPTIONS['AWS_ACCESS_KEY_ID'],
                             aws_secret_access_key=AWS_OPTIONS['AWS_SECRET_ACCESS_KEY'])
@@ -67,6 +89,8 @@ class Signal(Timestampable, models.Model):
         message = Message()
         message.set_body(alert_data)
         queue.write(message)
+
+        self.sent_at = datetime.now()
 
 
     def print(self):
@@ -76,13 +100,4 @@ class Signal(Timestampable, models.Model):
                     " horizon=" + str(self.horizon) +
                     " strength_value=" + str(self.strength_value))
 
-        # coin=BTC
-        # market=Poloniex
-        # signal=SMA
-        # trend=BEARISH
-        # risk=medium
-        # horizon=medium
-        # strength_value=1
-        # strength_max=3
-        # price=4814
-        # price_satoshis_change=0.0028
+
