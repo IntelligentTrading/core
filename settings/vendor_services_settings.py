@@ -14,12 +14,15 @@ if PRODUCTION:
     # DELAYED_QUEUE_NAME = "intelligenttrading-delayed-sqs-production"
     TEST_QUEUE_NAME = "intelligenttrading-sqs-stage"
     SNS_NAME = "intelligenttrading-sns-production"
-else:
+elif STAGE:
     BUCKET_NAME = "intelligenttrading-s3-stage"
     QUEUE_NAME = "intelligenttrading-sqs-stage"
     # DELAYED_QUEUE_NAME = "intelligenttrading-delayed-sqs-stage"
     TEST_QUEUE_NAME = ""
     SNS_NAME = "intelligenttrading-sns-stage"
+
+else: # LOCAL
+    pass # see local_settings.py
 
 
 HOST_URL = 'http://' + BUCKET_NAME + '.s3.amazonaws.com'
