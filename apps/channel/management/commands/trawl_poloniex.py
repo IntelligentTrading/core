@@ -13,10 +13,11 @@ from apps.channel.models.exchange_data import POLONIEX
 from apps.indicator.models import Price, Volume, PriceResampled
 
 from settings import time_speed  # 1 / 10
-from settings import COINS_LIST
+from settings import COINS_LIST_TO_GENERATE_SIGNALS
 from settings import PERIODS_LIST  # 15 / 60 / 360
 
 logger = logging.getLogger(__name__)
+
 
 class Command(BaseCommand):
     help = "Polls data from Poloniex on a regular interval"
@@ -128,6 +129,7 @@ def _save_prices_and_volumes(data, timestamp):
 
     logger.debug("Saved Poloniex price and volume data")
 
+
 # @Alex
 def _resample_then_metrics(period_par):
     '''
@@ -148,7 +150,7 @@ def _resample_then_metrics(period_par):
     # get all records back in time ( 5 min)
     period_records = Price.objects.filter(timestamp__gte=datetime.now()-timedelta(minutes=period))
 
-    for coin in COINS_LIST:
+    for coin in COINS_LIST_TO_GENERATE_SIGNALS:
         #logger.debug('  COIN: '+ str(coin))
         # calculate average values for the records 5 min back in time
         coin_price_list = list(period_records.filter(coin=coin).values('timestamp','satoshis').order_by('-timestamp'))
@@ -164,15 +166,18 @@ def _resample_then_metrics(period_par):
         period_ts = times.max()
 
         # save new resampled point in the Table
-        price_resampled_object = PriceResampled.objects.create(
-            source=POLONIEX,
-            coin=coin,
-            timestamp=period_ts,
-            period = period,
-            mean_price_satoshis=period_mean,
-            min_price_satoshis=period_min,
-            max_price_satoshis=period_max
-        )
+        try:
+            price_resampled_object = PriceResampled.objects.create(
+                source=POLONIEX,
+                coin=coin,
+                timestamp=period_ts,
+                period = period,
+                mean_price_satoshis=period_mean,
+                min_price_satoshis=period_min,
+                max_price_satoshis=period_max
+            )
+        except Exception as e:
+            logger.debug(str(e))
         #logger.debug("  Price is resampled")
 
         # get last 250 historical point which is enough to calculate any SMA,EMA etc
