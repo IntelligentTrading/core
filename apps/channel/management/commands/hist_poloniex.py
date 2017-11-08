@@ -113,7 +113,6 @@ def _get_satosh_historical_poloniex():
         logger.debug('  =>  ' + btc_pair + ' Data has been downloaded. Import is starting...')
 
         # add to price and volume DB all records for BTC and ETH
-        # TODO: add assert
         for idx, rec in enumerate(list_of_dict):
             sat = int(float(rec["close"]) * 10 ** 8)
 
