@@ -8,12 +8,10 @@ from unixtimestampfield.fields import UnixTimeStampField
 from datetime import timedelta, datetime
 from apps.channel.models.exchange_data import SOURCE_CHOICES
 from apps.indicator.models.abstract_indicator import AbstractIndicator
-
 from apps.signal.models import Signal
 
-# TODO: declare it better
-horizons = {15: "short", 60: "medium", 360: "long"}
-time_speed = 1  # set to 1 for production, 10 for fast debugging
+from settings import HORIZONS   # mapping from bin size to a name short/medium
+from settings import time_speed # speed of the resampling, 10 for fast debug, 1 for prod
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +48,7 @@ class PriceResampled(AbstractIndicator):
     # MODEL FUNCTIONS
     def get_price_ts(self):
         '''
-        Caches from DB the nessesary amount of records to calculate SMA, EMA etc
+        Caches from DB the min nessesary amount of records to calculate SMA, EMA etc
         :return: pd.Series of last 200 time points
         '''
         if self._resampled_price_ts is None:
@@ -83,8 +81,10 @@ class PriceResampled(AbstractIndicator):
             # TALIB:_SMA50 = tas.SMA(price_ts_nd.astype(float), timeperiod=50/time_speed)
             # TALIB:_MA200 = tas.SMA(price_ts_nd.astype(float), timeperiod=200/time_speed)
 
-            if not np.isnan(SMA50): self.SMA50_satoshis = SMA50
-            if not np.isnan(SMA200): self.SMA200_satoshis = SMA200
+            if not np.isnan(SMA50):
+                self.SMA50_satoshis = SMA50
+            if not np.isnan(SMA200):
+                self.SMA200_satoshis = SMA200
 
 
     def calc_EMA(self):
@@ -97,99 +97,136 @@ class PriceResampled(AbstractIndicator):
 
         if price_ts is not None:
             EMA50 = price_ts.ewm(alpha=alpha50, min_periods=5).mean()
-            EMA50 = float(EMA50.tail(1))
+            EMA50 = float(EMA50.tail(1))  # get the last value for "now" time point
             EMA200 = price_ts.ewm(alpha=alpha200, min_periods=5).mean()
             EMA200 = float(EMA200.tail(1))
 
-            if not np.isnan(EMA50): self.EMA50_satoshis = EMA50
-            if not np.isnan(EMA200): self.EMA200_satoshis = EMA200
+            if not np.isnan(EMA50):
+                self.EMA50_satoshis = EMA50
+            if not np.isnan(EMA200):
+                self.EMA200_satoshis = EMA200
+
+
+    def calc_RS(self):
+        '''
+        Relative Strength calculation.
+        The RSI is calculated a a property, we only save RS
+        (RSI is a momentum oscillator that measures the speed and change of price movements.)
+        :return:
+        '''
+        price_ts = self.get_price_ts()
+
+        delta = price_ts.diff()
+        up, down = delta.copy(), delta.copy()
+
+        up[up < 0] = 0
+        down[down > 0] = 0
+
+        rUp = up.ewm(com=self.period - 1, adjust=False).mean()
+        rDown = down.ewm(com=self.period - 1, adjust=False).mean().abs()
+        rs_ts = rUp / rDown   # time series for all values
+        self.relative_strength = float(rs_ts.tail(1))  # get the last element for the last time point
+
+        #rsi = 100 - 100 / (1 + rUp / rDown)
+
 
 
 
     def check_signal(self):
+        """
+        Check and emit all possible signals to SQS
+        :return:
+        """
 
-        # DB records for the last two time points
+        # List of all indicators to calculate signals
+        INDICATORS = [
+            {'low':'SMA50_satoshis', 'high':'SMA200_satoshis', 'name':'SMA'},
+            {'low':'EMA50_satoshis', 'high':'EMA200_satoshis', 'name':'EMA'}
+        ]
+
+        # get DB records for the last two time points
         last_two_rows = list(
             PriceResampled.objects.
                 filter(period=self.period, coin=self.coin).
                 order_by('-timestamp').
                 values('mean_price_satoshis', 'SMA50_satoshis','SMA200_satoshis','EMA50_satoshis','EMA200_satoshis'))[0:2]
 
-        # TODO: do it better! skip the currency if there is no information about this currency
+        # Sanity check:
         if not last_two_rows:
-            logger.debug('----------> EMIT skipped')
+            logger.debug('Signal skipped: There is no information in DB about ' + str(self.coin) + str(self.period))
             exit()
 
         prices = np.array([row['mean_price_satoshis'] for row in last_two_rows])
+        if any(prices) is None: exit()
 
-        # List of all indicators to calculate signals
-        metrics = [
-            {'low':'SMA50_satoshis', 'high':'SMA200_satoshis', 'name':'SMA'},
-            {'low':'EMA50_satoshis', 'high':'EMA200_satoshis', 'name':'EMA'}
-        ]
-
+        # check and emit SMA, EMA signals
         # iterate through all metrics which might generate signals, SMA, EMA etc
-        for metr in metrics:
-            m_low = np.array([row[metr['low']] for row in last_two_rows])
-            m_high = np.array([row[metr['high']] for row in last_two_rows])
 
-            # check for ind_A signal
-            if all(prices != None) and all(m_low != None):
-                ind_A = np.sign(prices - m_low)
-                if ind_A[0] == 0:
-                    logger.debug('Indicator (price-low) did not change since last time, canot emit the signal' +
-                                 str(prices) + str(m_low))
+        for ind in INDICATORS:
+            # get last two time points from indicators ( SMA20, SMA200 etc)
+            m_low  = np.array([row[ind['low']] for row in last_two_rows])
+            m_high = np.array([row[ind['high']] for row in last_two_rows])
 
-                if np.sum(ind_A) == 0 and any(ind_A) != 0:  # emit a signal if indicator changes its sign
-                    logger.debug("Ind_A difference:" +str(ind_A))
+            # check if ind_A signal changes its sign
+            if all(m_low != None):  # now we know both price and low exists
+                ind_A_sign = np.sign(prices - m_low)   # [-1, 1]
+
+                if np.prod(ind_A_sign) < 0:  # emit a signal if indicator changes its sign
+                    #logger.debug("Ind_A sign difference:" + str(ind_A_sign))
                     signal_A = Signal(
                         coin=self.coin,
-                        signal=metr['name'],
-                        trend=int(ind_A[0]),
-                        horizon=horizons[self.period],
-                        strength_value=int(1),
+                        signal=ind['name'],
+                        trend=int(ind_A_sign[0]),
+                        horizon=HORIZONS[self.period],
+                        strength_value=int(1),  # means A indicator
                         strength_max=int(3)
 
                     )
                     signal_A.print()
                     signal_A.send()
 
-            if all(prices != None) and all(m_high != None):
-                ind_B = np.sign(prices - m_high)
-                if ind_B[0] == 0:
-                    logger.debug('Indicator (price-high) did not change since last time, canot emit the signal' +
-                                 str(prices) + str(m_high))
+            if all(m_high != None):
+                ind_B_sign = np.sign(prices - m_high)
 
-                if np.sum(ind_B) == 0 and any(ind_B) != 0:
-                    logger.debug("Ind_B difference:" + str(ind_B))
+                if np.prod(ind_B_sign) < 0:   # if change the sign
+                    #logger.debug("Ind_B sign difference:" + str(ind_B_sign))
                     signal_B = Signal(
                         coin=self.coin,
-                        signal=metr['name'],
-                        trend=int(ind_B[0]),
-                        horizon=horizons[self.period],
-                        strength_value=int(2),
+                        signal=ind['name'],
+                        trend=int(ind_B_sign[0]),
+                        horizon=HORIZONS[self.period],
+                        strength_value=int(2),  # means B indicator
                         strength_max=int(3)
 
                     )
                     signal_B.print()
                     signal_B.send()
 
-            if all(m_high != None) and all(m_low != None) and all(m_high != None):
-                ind_C = np.sign(m_low - m_high)
-                if ind_C[0] == 0:
-                    logger.debug('Indicator (low-high) did not change since last time, canot emit the signal' +
-                                 str(m_low) + str(m_high))
+            if all(m_high != None) and all(m_low != None):
+                ind_C_sign = np.sign(m_low - m_high)
 
-                if np.sum(ind_C) == 0 and any(ind_C) != 0:
-                    logger.debug("Ind_C difference:" + str(ind_C))
+                if np.prod(ind_C_sign) < 0 :
+                    #logger.debug("Ind_C sign difference:" + str(ind_C_sign))
                     signal_C = Signal(
                         coin=self.coin,
-                        signal=metr['name'],
-                        trend=int(ind_C[0]),
-                        horizon=horizons[self.period],
-                        strength_value=int(3),
+                        signal=ind['name'],
+                        trend=int(ind_C_sign[0]),
+                        horizon=HORIZONS[self.period],
+                        strength_value=int(3),   # means C indicator
                         strength_max=int(3)
 
                     )
                     signal_C.print()
                     signal_C.send()
+
+
+        # emit RSI every time I calculate it
+        '''
+        alert_RSI = TelegramAlert(
+            coin=self.coin,
+            signal="RSI",
+
+        )
+        alert_RSI.print()
+        alert_RSI.send()
+        '''
