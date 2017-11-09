@@ -8,7 +8,7 @@ from unixtimestampfield.fields import UnixTimeStampField
 from datetime import timedelta, datetime
 from apps.channel.models.exchange_data import SOURCE_CHOICES
 from apps.indicator.models.abstract_indicator import AbstractIndicator
-from apps.indicator.telegram_alert import TelegramAlert
+from apps.signal.models import Signal
 
 from settings import HORIZONS   # mapping from bin size to a name short/medium
 from settings import time_speed # speed of the resampling, 10 for fast debug, 1 for prod
@@ -22,15 +22,15 @@ class PriceResampled(AbstractIndicator):
 
     period = models.PositiveSmallIntegerField(null=False, default=15)  # minutes (eg. 15)
 
-    mean_price_satoshis = models.IntegerField(null=True) # satoshis
-    min_price_satoshis = models.IntegerField(null=True) # satoshis
-    max_price_satoshis = models.IntegerField(null=True) # satoshis
+    mean_price_satoshis = models.IntegerField(null=True) # price_satoshis
+    min_price_satoshis = models.IntegerField(null=True) # price_satoshis
+    max_price_satoshis = models.IntegerField(null=True) # price_satoshis
 
-    SMA50_satoshis = models.IntegerField(null=True) # satoshis
-    SMA200_satoshis = models.IntegerField(null=True) # satoshis
+    SMA50_satoshis = models.IntegerField(null=True) # price_satoshis
+    SMA200_satoshis = models.IntegerField(null=True) # price_satoshis
 
-    EMA50_satoshis = models.IntegerField(null=True) # satoshis
-    EMA200_satoshis = models.IntegerField(null=True) # satoshis
+    EMA50_satoshis = models.IntegerField(null=True) # price_satoshis
+    EMA200_satoshis = models.IntegerField(null=True) # price_satoshis
 
     relative_strength = models.FloatField(null=True) # relative strength
     # RSI = relative strength index, see property
@@ -161,6 +161,7 @@ class PriceResampled(AbstractIndicator):
 
         # check and emit SMA, EMA signals
         # iterate through all metrics which might generate signals, SMA, EMA etc
+
         for ind in INDICATORS:
             # get last two time points from indicators ( SMA20, SMA200 etc)
             m_low  = np.array([row[ind['low']] for row in last_two_rows])
@@ -172,51 +173,52 @@ class PriceResampled(AbstractIndicator):
 
                 if np.prod(ind_A_sign) < 0:  # emit a signal if indicator changes its sign
                     #logger.debug("Ind_A sign difference:" + str(ind_A_sign))
-                    alert_A = TelegramAlert(
+                    signal_A = Signal(
                         coin=self.coin,
                         signal=ind['name'],
                         trend=int(ind_A_sign[0]),
                         horizon=HORIZONS[self.period],
                         strength_value=int(1),  # means A indicator
-                        strength_max=int(3)
-
+                        strength_max=int(3),
+                        timestamp=self.timestamp
                     )
-                    alert_A.print()
-                    alert_A.send()
+                    signal_A.save() # saving will send immediately if not already sent
+                    signal_A.print()
 
             if all(m_high != None):
                 ind_B_sign = np.sign(prices - m_high)
 
                 if np.prod(ind_B_sign) < 0:   # if change the sign
                     #logger.debug("Ind_B sign difference:" + str(ind_B_sign))
-                    alert_B = TelegramAlert(
+                    signal_B = Signal(
                         coin=self.coin,
                         signal=ind['name'],
                         trend=int(ind_B_sign[0]),
                         horizon=HORIZONS[self.period],
                         strength_value=int(2),  # means B indicator
-                        strength_max=int(3)
-
+                        strength_max=int(3),
+                        timestamp=self.timestamp
                     )
-                    alert_B.print()
-                    alert_B.send()
+                    signal_B.save() # saving will send immediately if not already sent
+                    signal_B.print()
 
             if all(m_high != None) and all(m_low != None):
                 ind_C_sign = np.sign(m_low - m_high)
 
                 if np.prod(ind_C_sign) < 0 :
                     #logger.debug("Ind_C sign difference:" + str(ind_C_sign))
-                    alert_C = TelegramAlert(
+                    signal_C = Signal(
                         coin=self.coin,
                         signal=ind['name'],
                         trend=int(ind_C_sign[0]),
                         horizon=HORIZONS[self.period],
                         strength_value=int(3),   # means C indicator
-                        strength_max=int(3)
-
+                        strength_max=int(3),
+                        timestamp=self.timestamp
                     )
-                    alert_C.print()
-                    alert_C.send()
+                    signal_C.save() # saving will send immediately if not already sent
+                    signal_C.print()
+
 
         # emit RSI every time I calculate it
         '''

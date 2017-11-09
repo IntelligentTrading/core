@@ -70,8 +70,8 @@ def _save_prices_and_volumes(data, timestamp):
         Price.objects.create(
             source=POLONIEX,
             coin="BTC",
-            satoshis=int(10 ** 8),
-            usdt=float(usdt_btc['last']),
+            price_satoshis=int(10 ** 8),
+            price_usdt=float(usdt_btc['last']),
             timestamp=timestamp
         )
 
@@ -92,9 +92,9 @@ def _save_prices_and_volumes(data, timestamp):
         Price.objects.create(
             source=POLONIEX,
             coin="ETH",
-            satoshis=int(float(btc_eth['last']) * 10 ** 8),
-            wei=int(10 ** 8),
-            usdt=float(usdt_eth['last']),
+            price_satoshis=int(float(btc_eth['last']) * 10 ** 8),
+            price_wei=int(10 ** 8),
+            price_usdt=float(usdt_eth['last']),
             timestamp=timestamp
         )
 
@@ -114,7 +114,7 @@ def _save_prices_and_volumes(data, timestamp):
                 Price.objects.create(
                     source=POLONIEX,
                     coin=currency_pair.split('_')[1],
-                    satoshis=int(float(data[currency_pair]['last']) * 10 ** 8),
+                    price_satoshis=int(float(data[currency_pair]['last']) * 10 ** 8),
                     timestamp=timestamp
                 )
                 Volume.objects.create(
@@ -151,12 +151,12 @@ def _resample_then_metrics(period_par):
     for coin in COINS_LIST:
         #logger.debug('  COIN: '+ str(coin))
         # calculate average values for the records 5 min back in time
-        coin_price_list = list(period_records.filter(coin=coin).values('timestamp','satoshis').order_by('-timestamp'))
+        coin_price_list = list(period_records.filter(coin=coin).values('timestamp','price_satoshis').order_by('-timestamp'))
 
         # skip the currency if there is no data about this currency
         if not coin_price_list: continue
 
-        prices = np.array([ rec['satoshis'] for rec in coin_price_list])
+        prices = np.array([ rec['price_satoshis'] for rec in coin_price_list])
         times = np.array([ rec['timestamp'] for rec in coin_price_list])
         period_mean = prices.mean()
         period_min = prices.min()
@@ -186,6 +186,9 @@ def _resample_then_metrics(period_par):
         price_resampled_object.calc_RS()
         price_resampled_object.save()
 
-        logger.debug(" ...check signals to emit")
-        price_resampled_object.check_signal()
+        try:
+            logger.debug(" ...check signals to emit")
+            price_resampled_object.check_signal()
+        except Exception as e:
+            logging.debug("error checking signals: " + str(e))
 
