@@ -9,7 +9,7 @@ from django.db.models.signals import post_save
 
 from apps.common.behaviors import Timestampable
 from apps.indicator.models import Price
-from settings import QUEUE_NAME, AWS_OPTIONS
+from settings import QUEUE_NAME, AWS_OPTIONS, TEST_QUEUE_NAME
 from django.db import models
 from unixtimestampfield.fields import UnixTimeStampField
 from apps.channel.models.exchange_data import SOURCE_CHOICES, POLONIEX
@@ -91,16 +91,18 @@ class Signal(Timestampable, models.Model):
 
         # todo: call send in a post_save signal?? is there any reason to delay or schedule a signal?
 
+        message = Message()
+        message.set_body(alert_data)
+
         sqs_connection = boto.sqs.connect_to_region("us-east-1",
                             aws_access_key_id=AWS_OPTIONS['AWS_ACCESS_KEY_ID'],
                             aws_secret_access_key=AWS_OPTIONS['AWS_SECRET_ACCESS_KEY'])
-        queue = sqs_connection.get_queue(QUEUE_NAME)
-        message = Message()
-        message.set_body(alert_data)
-        queue.write(message)
+        production_queue = sqs_connection.get_queue(QUEUE_NAME)
+        production_queue.write(message)
+        test_queue = sqs_connection.get_queue(TEST_QUEUE_NAME)
+        test_queue.write(message)
 
         self.sent_at = datetime.now()
-
 
     def print(self):
         logger.info("EMITTED SIGNAL: " + str(self.__dict__))
