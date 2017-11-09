@@ -5,7 +5,7 @@ import boto
 from boto.sqs.message import Message
 from datetime import datetime
 
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 
 from apps.common.behaviors import Timestampable
 from apps.indicator.models import Price
@@ -52,6 +52,7 @@ class Signal(Timestampable, models.Model):
     volume_usdt = models.FloatField(null=True)  # USD value
     volume_usdt_change = models.FloatField(null=True)
 
+    timestamp = UnixTimeStampField(null=False)
     sent_at = UnixTimeStampField(null=False)
 
     # MODEL PROPERTIES
@@ -112,8 +113,18 @@ class Signal(Timestampable, models.Model):
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-# method for updating
-@receiver(post_save, sender=Signal, dispatch_uid="update_stock_count")
+
+
+@receiver(pre_save, sender=Signal, dispatch_uid="check_has_price_satoshis")
+def check_has_price_satoshis(sender, instance, **kwargs):
+    price_satoshis = instance.get_price_satoshis()
+    try:
+        assert price_satoshis #see now we have it :)
+    except Exception as e:
+        logging.debug(str(e))
+
+
+@receiver(post_save, sender=Signal, dispatch_uid="send_signal")
 def send_signal(sender, instance, **kwargs):
     if not instance.sent_at:
         try:

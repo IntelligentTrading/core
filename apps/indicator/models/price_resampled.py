@@ -9,6 +9,7 @@ from datetime import timedelta, datetime
 from apps.channel.models.exchange_data import SOURCE_CHOICES
 from apps.indicator.models.abstract_indicator import AbstractIndicator
 from apps.signal.models import Signal
+from apps.user.models.user import get_horizon_value_from_string
 
 from settings import HORIZONS   # mapping from bin size to a name short/medium
 from settings import time_speed # speed of the resampling, 10 for fast debug, 1 for prod
@@ -167,6 +168,8 @@ class PriceResampled(AbstractIndicator):
             m_low  = np.array([row[ind['low']] for row in last_two_rows])
             m_high = np.array([row[ind['high']] for row in last_two_rows])
 
+            horizon = get_horizon_value_from_string(display_string=HORIZONS[self.period])
+
             # check if ind_A signal changes its sign
             if all(m_low != None):  # now we know both price and low exists
                 ind_A_sign = np.sign(prices - m_low)   # [-1, 1]
@@ -177,7 +180,7 @@ class PriceResampled(AbstractIndicator):
                         coin=self.coin,
                         signal=ind['name'],
                         trend=int(ind_A_sign[0]),
-                        horizon=HORIZONS[self.period],
+                        horizon=horizon,
                         strength_value=int(1),  # means A indicator
                         strength_max=int(3),
                         timestamp=self.timestamp
@@ -194,7 +197,7 @@ class PriceResampled(AbstractIndicator):
                         coin=self.coin,
                         signal=ind['name'],
                         trend=int(ind_B_sign[0]),
-                        horizon=HORIZONS[self.period],
+                        horizon=horizon,
                         strength_value=int(2),  # means B indicator
                         strength_max=int(3),
                         timestamp=self.timestamp
@@ -211,7 +214,7 @@ class PriceResampled(AbstractIndicator):
                         coin=self.coin,
                         signal=ind['name'],
                         trend=int(ind_C_sign[0]),
-                        horizon=HORIZONS[self.period],
+                        horizon=horizon,
                         strength_value=int(3),   # means C indicator
                         strength_max=int(3),
                         timestamp=self.timestamp
