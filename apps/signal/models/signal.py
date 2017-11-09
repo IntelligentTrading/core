@@ -99,8 +99,9 @@ class Signal(Timestampable, models.Model):
                             aws_secret_access_key=AWS_OPTIONS['AWS_SECRET_ACCESS_KEY'])
         production_queue = sqs_connection.get_queue(QUEUE_NAME)
         production_queue.write(message)
-        test_queue = sqs_connection.get_queue(TEST_QUEUE_NAME)
-        test_queue.write(message)
+        if TEST_QUEUE_NAME:
+            test_queue = sqs_connection.get_queue(TEST_QUEUE_NAME)
+            test_queue.write(message)
 
         self.sent_at = datetime.now()
 
