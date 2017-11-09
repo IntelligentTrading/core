@@ -186,6 +186,9 @@ def _resample_then_metrics(period_par):
         price_resampled_object.calc_RS()
         price_resampled_object.save()
 
-        logger.debug(" ...check signals to emit")
-        price_resampled_object.check_signal()
+        try:
+            logger.debug(" ...check signals to emit")
+            price_resampled_object.check_signal()
+        except Exception as e:
+            logging.debug("error checking signals: " + str(e))
 
