@@ -5,6 +5,8 @@ import boto
 from boto.sqs.message import Message
 from datetime import datetime
 
+from django.db.models.signals import post_save
+
 from apps.common.behaviors import Timestampable
 from apps.indicator.models import Price
 from settings import QUEUE_NAME, AWS_OPTIONS
@@ -57,20 +59,29 @@ class Signal(Timestampable, models.Model):
 
     # MODEL FUNCTIONS
 
-    def send(self):
+    def get_price_satoshis(self):
+        if self.price_satoshis and self.price_satoshis_change:
+            return self.price_satoshis
+
+        price_object = Price.objects.filter(coin=self.coin,
+                                            source=self.source,
+                                            timestamp__lte=self.timestamp
+                                            ).order_by('-timestamp')[0]
+        self.price_satoshis = price_object.price_satoshis
+        self.price_satoshis_change = price_object.price_satoshis_change
+        return self.price_satoshis
+
+
+    def _send(self):
 
         # populate all required values
 
         try:
-            if not self.price_change:
-                price_object = Price.objects.filter(coin=self.coin,
-                                                    source=self.source,
-                                                    satoshis=self.price_satoshis
-                                                    ).order_by('-timestamp')[0]
-                self.price_satoshis_change = price_object.price_satoshis_change
+            if not self.price_satoshis or not self.price_satoshis_change:
+                self.price_satoshis = self.get_price_satoshis()
 
-            if not self.volume or self.volume_change:
-                pass
+            if not self.volume or not self.volume_change:
+                pass #todo write and call volume getter function
 
         except Exception as e:
             logging.debug("Problem finding price, volume: " + str(e))
@@ -79,8 +90,6 @@ class Signal(Timestampable, models.Model):
 
 
         # todo: call send in a post_save signal?? is there any reason to delay or schedule a signal?
-
-        # todo: prevent sending again
 
         sqs_connection = boto.sqs.connect_to_region("us-east-1",
                             aws_access_key_id=AWS_OPTIONS['AWS_ACCESS_KEY_ID'],
@@ -94,10 +103,19 @@ class Signal(Timestampable, models.Model):
 
 
     def print(self):
-        logger.info("EMITTED SIGNAL: coin=" + str(self.coin) +
-                    " signal=" + str(self.signal) +
-                    " trend=" + str(self.trend) +
-                    " horizon=" + str(self.horizon) +
-                    " strength_value=" + str(self.strength_value))
+        logger.info("EMITTED SIGNAL: " + str(self.__dict__))
 
 
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+# method for updating
+@receiver(post_save, sender=Signal, dispatch_uid="update_stock_count")
+def send_signal(sender, instance, **kwargs):
+    if not instance.sent_at:
+        try:
+            instance._send()
+            assert instance.sent_at
+            instance.save()
+        except Exception as e:
+            logging.debug(str(e))

@@ -179,11 +179,11 @@ class PriceResampled(AbstractIndicator):
                         trend=int(ind_A_sign[0]),
                         horizon=HORIZONS[self.period],
                         strength_value=int(1),  # means A indicator
-                        strength_max=int(3)
-
+                        strength_max=int(3),
+                        timestamp=self.timestamp
                     )
+                    signal_A.save() # saving will send immediately if not already sent
                     signal_A.print()
-                    signal_A.send()
 
             if all(m_high != None):
                 ind_B_sign = np.sign(prices - m_high)
@@ -196,11 +196,11 @@ class PriceResampled(AbstractIndicator):
                         trend=int(ind_B_sign[0]),
                         horizon=HORIZONS[self.period],
                         strength_value=int(2),  # means B indicator
-                        strength_max=int(3)
-
+                        strength_max=int(3),
+                        timestamp=self.timestamp
                     )
+                    signal_B.save() # saving will send immediately if not already sent
                     signal_B.print()
-                    signal_B.send()
 
             if all(m_high != None) and all(m_low != None):
                 ind_C_sign = np.sign(m_low - m_high)
@@ -213,11 +213,11 @@ class PriceResampled(AbstractIndicator):
                         trend=int(ind_C_sign[0]),
                         horizon=HORIZONS[self.period],
                         strength_value=int(3),   # means C indicator
-                        strength_max=int(3)
-
+                        strength_max=int(3),
+                        timestamp=self.timestamp
                     )
+                    signal_C.save() # saving will send immediately if not already sent
                     signal_C.print()
-                    signal_C.send()
 
 
         # emit RSI every time I calculate it
