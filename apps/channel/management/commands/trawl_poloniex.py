@@ -70,8 +70,8 @@ def _save_prices_and_volumes(data, timestamp):
         Price.objects.create(
             source=POLONIEX,
             coin="BTC",
-            satoshis=int(10 ** 8),
-            usdt=float(usdt_btc['last']),
+            price_satoshis=int(10 ** 8),
+            price_usdt=float(usdt_btc['last']),
             timestamp=timestamp
         )
 
@@ -92,9 +92,9 @@ def _save_prices_and_volumes(data, timestamp):
         Price.objects.create(
             source=POLONIEX,
             coin="ETH",
-            satoshis=int(float(btc_eth['last']) * 10 ** 8),
+            price_satoshis=int(float(btc_eth['last']) * 10 ** 8),
             price_wei=int(10 ** 8),
-            usdt=float(usdt_eth['last']),
+            price_usdt=float(usdt_eth['last']),
             timestamp=timestamp
         )
 
@@ -114,7 +114,7 @@ def _save_prices_and_volumes(data, timestamp):
                 Price.objects.create(
                     source=POLONIEX,
                     coin=currency_pair.split('_')[1],
-                    satoshis=int(float(data[currency_pair]['last']) * 10 ** 8),
+                    price_satoshis=int(float(data[currency_pair]['last']) * 10 ** 8),
                     timestamp=timestamp
                 )
                 Volume.objects.create(

@@ -16,6 +16,6 @@ class CSV(View):
 
         writer = csv.writer(response)
         for price in Price.objects.filter(coin="BTC").all():
-            writer.writerow([price.coin, price.satoshis, str(price.timestamp)])
+            writer.writerow([price.coin, price.price_satoshis, str(price.timestamp)])
 
         return response
