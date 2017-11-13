@@ -67,33 +67,51 @@ class Signal(Timestampable, models.Model):
         price_object = Price.objects.filter(coin=self.coin,
                                             source=self.source,
                                             timestamp__lte=self.timestamp
-                                            ).order_by('-timestamp')[0]
-        self.price_satoshis = price_object.price_satoshis
-        self.price_satoshis_change = price_object.price_satoshis_change
+                                            ).order_by('-timestamp').first()
+        if price_object:
+            self.price_satoshis = price_object.price_satoshis
+            self.price_satoshis_change = price_object.price_satoshis_change
+            self.price_usdt = price_object.price_usdt
+            self.price_usdt_change = price_object.price_usdt_change
         return self.price_satoshis
 
 
-    def _send(self):
+    def as_dict(self):
+        data_dict = self.__dict__
+        if "_state" in data_dict:
+            del data_dict["_state"]
+        data_dict.update({
+            "UI": self.get_UI_display(),
+            "source": self.get_source_display(),
+            "risk": self.get_risk_display(),
+            "horizon": self.get_horizon_display(),
+            "created_at": str(self.created_at),
+            "modified_at": str(self.modified_at),
+            "timestamp": str(self.timestamp),
+            "sent_at": str(self.sent_at),
+        })
+        return data_dict
 
+    def _send(self):
         # populate all required values
 
         try:
-            if not self.price_satoshis or not self.price_satoshis_change:
+            if not all([self.price_satoshis, self.price_satoshis_change,
+                        self.price_usdt, self.price_usdt_change]):
                 self.price_satoshis = self.get_price_satoshis()
 
-            if not self.volume or not self.volume_change:
+            if not all([self.volume_btc, self.volume_btc_change,
+                        self.volume_usdt, self.volume_usdt_change]):
                 pass #todo write and call volume getter function
 
         except Exception as e:
             logging.debug("Problem finding price, volume: " + str(e))
 
-        alert_data = json.dumps(self.__dict__)
-
 
         # todo: call send in a post_save signal?? is there any reason to delay or schedule a signal?
 
         message = Message()
-        message.set_body(alert_data)
+        message.set_body(json.dumps(self.as_dict()))
 
         sqs_connection = boto.sqs.connect_to_region("us-east-1",
                             aws_access_key_id=AWS_OPTIONS['AWS_ACCESS_KEY_ID'],
@@ -104,15 +122,17 @@ class Signal(Timestampable, models.Model):
             test_queue = sqs_connection.get_queue(TEST_QUEUE_NAME)
             test_queue.write(message)
 
+        logger.debug("EMITTED SIGNAL: " + str(self.as_dict()))
         self.sent_at = datetime.now()
+        return
+
 
     def print(self):
-        logger.info("EMITTED SIGNAL: " + str(self.__dict__))
+        logger.info("EMITTED SIGNAL: " + str(self.as_dict()))
 
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
 
 
 @receiver(pre_save, sender=Signal, dispatch_uid="check_has_price_satoshis")
