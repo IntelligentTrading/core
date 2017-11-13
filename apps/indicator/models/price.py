@@ -19,8 +19,6 @@ class Price(models.Model):
 
     # MODEL PROPERTIES
 
-    # MODEL FUNCTIONS
-
     @property
     def price_satoshis_change(self):
 
@@ -33,13 +31,29 @@ class Price(models.Model):
         if past_price:
             return float(self.price_satoshis - past_price.price_satoshis) / past_price.price_satoshis
 
+    @property
     def price_usdt_change(self):
+        current_price_usdt = self.price_usdt or self.get_price_usdt()
+        if current_price_usdt:
+            fifteen_min_older_price_usdt = Price.objects.filter(
+                source=self.source,
+                coin=self.coin,
+                timestamp__lte=self.timestamp - timedelta(minutes=15),
+                price_usdt__isnull=False
+            ).order_by('-timestamp').first()
+        if current_price_usdt and fifteen_min_older_price_usdt:
+            return current_price_usdt - fifteen_min_older_price_usdt.price_usdt
+
+
+    # MODEL FUNCTIONS
+    def get_price_usdt(self):
         btc_price = Price.objects.filter(
             source=self.source,
             coin=self.coin,
             timestamp__gte=self.timestamp - timedelta(minutes=1),
             timestamp__lte=self.timestamp + timedelta(minutes=1),
             price_usdt__isnull=False
-        ).first()
+        ).order_by('-timestamp').first()
         if btc_price:
-            return btc_price.price_usdt
+            self.price_usdt = btc_price.price_usdt
+        return self.price_usdt
