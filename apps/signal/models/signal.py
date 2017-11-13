@@ -53,7 +53,7 @@ class Signal(Timestampable, models.Model):
     volume_usdt_change = models.FloatField(null=True)
 
     timestamp = UnixTimeStampField(null=False)
-    sent_at = UnixTimeStampField(null=False)
+    sent_at = UnixTimeStampField(null=True, default=None)
 
     # MODEL PROPERTIES
 
@@ -149,7 +149,7 @@ def send_signal(sender, instance, **kwargs):
     if not instance.sent_at:
         try:
             instance._send()
-            assert instance.sent_at
+            assert instance.sent_at >= instance.timestamp
             instance.save()
         except Exception as e:
-            logging.debug(str(e))
+            logging.error(str(e))
