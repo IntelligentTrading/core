@@ -1,3 +1,4 @@
+import copy
 import json
 import logging
 
@@ -77,7 +78,7 @@ class Signal(Timestampable, models.Model):
 
 
     def as_dict(self):
-        data_dict = self.__dict__
+        data_dict = copy.deepcopy(self.__dict__)
         if "_state" in data_dict:
             del data_dict["_state"]
         data_dict.update({
