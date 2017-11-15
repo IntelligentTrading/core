@@ -194,6 +194,18 @@ except:
     pass
 
 
+# @Alex
+# Global constants
+COINS_LIST = ["ETH", "XRP", "LTC", "DASH", "NEO", "XMR", "OMG"]
+PERIODS_LIST = [15, 60, 360]
+HORIZONS = {15: "short", 60: "medium", 360: "long"}  # mapping from bin size to a name short/medium
+time_speed = 10  # set to 1 for production, 10 for fast debugging
+
+
+A_PRIME_NUMBER = os.environ.get('A_PRIME_NUMBER', 12345)
+TEAM_EMOJIS = os.environ.get('TEAM_EMOJIS', ["🤖",])
+
+
 if LOCAL:
     logger.info("LOCAL environment detected. Importing local_settings.py")
     try:
@@ -201,10 +213,3 @@ if LOCAL:
     except:
         logger.error("Could not successfully import local_settings.py. This is necessary if you are running locally. This file should be in version control.")
         raise
-
-# @Alex
-# Global constants
-COINS_LIST = ["ETH", "XRP", "LTC", "DASH", "NEO", "XMR", "OMG"]
-PERIODS_LIST = [15, 60, 360]
-HORIZONS = {15: "short", 60: "medium", 360: "long"}  # mapping from bin size to a name short/medium
-time_speed = 10  # set to 1 for production, 10 for fast debugging
