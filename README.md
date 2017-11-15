@@ -84,13 +84,21 @@ GET `/user`
 
 PARAMS 
 
+/api/users&is_ITT_team=true
+
+`beta_token_valid=true`
+
+`is_ITT_team=true`
+
 `risk=<risk setting>' '['low', 'medium', 'high']`
 
 `horizon=<horizon setting>' '['low', 'medium', 'high']`
 
-eg. `/users?risk=low&horizon=long` for only users with these setttings
+eg. `/users?beta_token_valid=true,risk=low&horizon=long` for only beta subscribers with these risk and horizon setttings
 
-eg. '/users' for all subscribers regardless of risk, horizon settings
+eg. `/users?is_ITT_team=true` for only ITT team members
+
+eg. '/users' for all subscribers regardless of risk, horizon settings and 
 
 JSON RESPONSE
 

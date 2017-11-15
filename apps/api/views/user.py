@@ -7,6 +7,7 @@ from django.views.generic import View
 from apps.user.models import User as UserModel
 
 from apps.indicator.models import Price as PriceModel
+from settings import TEAM_EMOJIS
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +66,18 @@ class Users(View):
         return super(Users, self).dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
+
+        # Filter for authorized users #
+
         users = UserModel.objects.filter(subscribed_since__isnull=False, is_muted=False)
+
+        if request.GET.get('beta_token_valid', False):
+            users = users.exclude(_beta_subscription_token__exact="")
+
+        if request.GET.get('is_ITT_team', False):
+            users = users.filter(_beta_subscription_token__in=TEAM_EMOJIS)
+
+        # Filter for user preferences #
 
         risk_string = request.GET.get('risk', 'all')
         assert risk_string in ['low', 'medium', 'high', 'all']
@@ -77,6 +89,7 @@ class Users(View):
         if horizon_string is not 'all':
             users = users.filter(horizon=UserModel.get_horizon_value(UserModel, horizon_string))
 
-        chat_id_list = list(users.values_list('telegram_chat_id', flat=True))
+        # Filters done, compile chat ids #
 
+        chat_id_list = list(users.values_list('telegram_chat_id', flat=True))
         return HttpResponse(json.dumps({'chat_ids': chat_id_list}))  # ok
