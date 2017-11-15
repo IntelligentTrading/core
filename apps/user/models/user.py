@@ -1,9 +1,14 @@
+import json
 import uuid
 import logging
+
+from datetime import datetime
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from apps.common.behaviors import Timestampable
+import os
 
+from settings import A_PRIME_NUMBER, TEAM_EMOJIS
 
 (LOW_RISK, MEDIUM_RISK, HIGH_RISK) = list(range(3))
 RISK_CHOICES = (
@@ -28,18 +33,33 @@ class User(AbstractUser, Timestampable):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     telegram_chat_id = models.CharField(max_length=128, null=False, unique=True)
-    is_subscribed = models.BooleanField(default=False)
     is_muted = models.BooleanField(default=False)
 
     risk = models.SmallIntegerField(choices=RISK_CHOICES, default=LOW_RISK)
     horizon = models.SmallIntegerField(choices=HORIZON_CHOICES, default=MEDIUM_HORIZON)
 
+    _beta_subscription_token = models.CharField(max_length=8, null=True, unique=True)
+    subscribed_since = models.DateTimeField(null=True)
+
 
     # MODEL PROPERTIES
+    @property
+    def is_subscribed(self):
+        return True if self.subscribed_since else False
+
+    @is_subscribed.setter
+    def is_subscribed(self, value):
+        if value and not self.subscribed_since:
+            self.subscribed_since = datetime.now()
+        elif not value:
+            self.subscribed_since = None
+
+    @property
+    def is_ITT_team(self):
+        return (self._beta_subscription_token in TEAM_EMOJIS)
 
 
     # MODEL FUNCTIONS
-
     def get_risk_value(self, display_string=None):
         if not display_string:
             display_string = self.get_risk_display()
@@ -53,10 +73,24 @@ class User(AbstractUser, Timestampable):
     def get_telegram_settings(self):
         return {
             'is_subscribed': self.is_subscribed,
+            'beta_token_valid': bool(self._beta_subscription_token),
+            'is_ITT_team': bool(self.is_ITT_team),
             'is_muted': self.is_muted,
             'risk': self.get_risk_display(),
             'horizon': self.get_horizon_display()
         }
+
+    def set_subscribe_token(self, token):
+        token_is_good = False
+        try:
+            if int(token, 16) % A_PRIME_NUMBER == 0:
+            # check no other users using the same token
+                if not User.objects.filter(_beta_subscription_token=token).count():
+                    token_is_good = True
+        except:
+            token_is_good = bool(token in TEAM_EMOJIS)
+
+        self._beta_subscription_token = token if token_is_good else ""
 
 User._meta.get_field('username')._unique = False
 User._meta.get_field('telegram_chat_id')._unique = True
