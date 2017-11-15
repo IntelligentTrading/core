@@ -1,8 +1,11 @@
 import uuid
 import logging
+
+from datetime import datetime
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from apps.common.behaviors import Timestampable
+import os
 
 
 (LOW_RISK, MEDIUM_RISK, HIGH_RISK) = list(range(3))
@@ -28,18 +31,29 @@ class User(AbstractUser, Timestampable):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     telegram_chat_id = models.CharField(max_length=128, null=False, unique=True)
-    is_subscribed = models.BooleanField(default=False)
     is_muted = models.BooleanField(default=False)
 
     risk = models.SmallIntegerField(choices=RISK_CHOICES, default=LOW_RISK)
     horizon = models.SmallIntegerField(choices=HORIZON_CHOICES, default=MEDIUM_HORIZON)
 
+    beta_subscription_token = models.CharField(max_length=8, null=True, unique=True)
+    subscribed_since = models.DateTimeField(null=True)
+
 
     # MODEL PROPERTIES
+    @property
+    def is_subscribed(self):
+        return True if self.subscribed_since else False
+
+    @is_subscribed.setter
+    def is_subscribed(self, value):
+        if value and not self.subscribed_since:
+            self.subscribed_since = datetime.now()
+        elif not value:
+            self.subscribed_since = None
 
 
     # MODEL FUNCTIONS
-
     def get_risk_value(self, display_string=None):
         if not display_string:
             display_string = self.get_risk_display()
@@ -57,6 +71,7 @@ class User(AbstractUser, Timestampable):
             'risk': self.get_risk_display(),
             'horizon': self.get_horizon_display()
         }
+
 
 User._meta.get_field('username')._unique = False
 User._meta.get_field('telegram_chat_id')._unique = True
