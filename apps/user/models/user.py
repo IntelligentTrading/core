@@ -36,7 +36,7 @@ class User(AbstractUser, Timestampable):
     risk = models.SmallIntegerField(choices=RISK_CHOICES, default=LOW_RISK)
     horizon = models.SmallIntegerField(choices=HORIZON_CHOICES, default=MEDIUM_HORIZON)
 
-    beta_subscription_token = models.CharField(max_length=8, null=True, unique=True)
+    _beta_subscription_token = models.CharField(max_length=8, null=True, unique=True)
     subscribed_since = models.DateTimeField(null=True)
 
 
@@ -67,10 +67,18 @@ class User(AbstractUser, Timestampable):
     def get_telegram_settings(self):
         return {
             'is_subscribed': self.is_subscribed,
+            'beta_token_valid': bool(self._beta_subscription_token),
             'is_muted': self.is_muted,
             'risk': self.get_risk_display(),
             'horizon': self.get_horizon_display()
         }
+
+    def set_subscribe_token(self, token):
+        A_PRIME_NUMBER = os.environ.get('A_PRIME_NUMBER')
+        if int(token, 16) % A_PRIME_NUMBER == 0:
+            # check no other users using the same token
+            if not User.objects.filter(_beta_subscription_token=token).count():
+                self._beta_subscription_token = token
 
 
 User._meta.get_field('username')._unique = False

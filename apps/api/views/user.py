@@ -25,6 +25,10 @@ class User(View):
             if request.POST.get('is_subscribed', 'n/a') in ["True", "False"]:
                 user.is_subscribed = ast.literal_eval(request.POST['is_subscribed'])
 
+            if request.POST.get('token', 0):
+                token = int(request.POST.get('token', 0))
+                user.set_subscribe_token(token)
+
             if request.POST.get('is_muted', 'n/a') in ["True", "False"]:
                 user.is_muted = ast.literal_eval(request.POST['is_muted'])
 
@@ -37,6 +41,7 @@ class User(View):
                 horizon_string = request.POST['horizon']
                 user.horizon = user.get_horizon_value(horizon_string)
                 assert user.horizon == user.get_horizon_value()
+
             user.save()
 
             return HttpResponse(json.dumps(user.get_telegram_settings())) # ok
@@ -60,7 +65,7 @@ class Users(View):
         return super(Users, self).dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        users = UserModel.objects.filter(is_subscribed=True, is_muted=False)
+        users = UserModel.objects.filter(subscribed_since__isnull=False, is_muted=False)
 
         risk_string = request.GET.get('risk', 'all')
         assert risk_string in ['low', 'medium', 'high', 'all']
