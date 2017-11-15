@@ -129,7 +129,7 @@ class Signal(Timestampable, models.Model):
 
 
     def print(self):
-        logger.info("EMITTED SIGNAL: " + str(self.as_dict()))
+        logger.info("PRINTING SIGNAL DATA: " + str(self.as_dict()))
 
 
 from django.db.models.signals import post_save
@@ -147,10 +147,13 @@ def check_has_price_satoshis(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Signal, dispatch_uid="send_signal")
 def send_signal(sender, instance, **kwargs):
+    logging.debug("signal saved, checking if signal has been sent yet")
     if not instance.sent_at:
         try:
+            logging.debug("signal not sent yet, sending now...")
             instance._send()
             assert instance.sent_at
             instance.save()
+            logging.debug("signal sent and timstamp saved")
         except Exception as e:
             logging.error(str(e))
