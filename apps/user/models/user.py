@@ -81,15 +81,16 @@ class User(AbstractUser, Timestampable):
         }
 
     def set_subscribe_token(self, token):
+        token_is_good = False
         try:
             if int(token, 16) % A_PRIME_NUMBER == 0:
             # check no other users using the same token
                 if not User.objects.filter(_beta_subscription_token=token).count():
-                    self._beta_subscription_token = token
+                    token_is_good = True
         except:
-            if token in TEAM_EMOJIS:
-                self._beta_subscription_token = token
+            token_is_good = bool(token in TEAM_EMOJIS)
 
+        self._beta_subscription_token = token if token_is_good else ""
 
 User._meta.get_field('username')._unique = False
 User._meta.get_field('telegram_chat_id')._unique = True
