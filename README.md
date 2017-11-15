@@ -66,6 +66,7 @@ PARAMS
 |---|---|---|
 | yes | chat_id | string |
 | no | is_subscribed | string ['True', 'False'] |
+| no | token | string ['2EF92A', '🐼'] |
 | no | is_muted | string ['True', 'False'] |
 | no | risk | string ['low', 'medium', 'high'] |
 | no | horizon | string ['short', 'medium', 'long'] |
