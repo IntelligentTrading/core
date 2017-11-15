@@ -25,8 +25,8 @@ class User(View):
             if request.POST.get('is_subscribed', 'n/a') in ["True", "False"]:
                 user.is_subscribed = ast.literal_eval(request.POST['is_subscribed'])
 
-            if request.POST.get('token', 0):
-                token = int(request.POST.get('token', 0))
+            if request.POST.get('token', ""):
+                token = request.POST.get('token', "")
                 user.set_subscribe_token(token)
 
             if request.POST.get('is_muted', 'n/a') in ["True", "False"]:

@@ -1,3 +1,4 @@
+import json
 import uuid
 import logging
 
@@ -7,6 +8,7 @@ from django.contrib.auth.models import AbstractUser
 from apps.common.behaviors import Timestampable
 import os
 
+from settings import A_PRIME_NUMBER, TEAM_EMOJIS
 
 (LOW_RISK, MEDIUM_RISK, HIGH_RISK) = list(range(3))
 RISK_CHOICES = (
@@ -52,6 +54,10 @@ class User(AbstractUser, Timestampable):
         elif not value:
             self.subscribed_since = None
 
+    @property
+    def is_ITT_team(self):
+        return (self._beta_subscription_token in TEAM_EMOJIS)
+
 
     # MODEL FUNCTIONS
     def get_risk_value(self, display_string=None):
@@ -68,16 +74,20 @@ class User(AbstractUser, Timestampable):
         return {
             'is_subscribed': self.is_subscribed,
             'beta_token_valid': bool(self._beta_subscription_token),
+            'is_ITT_team': bool(self.is_ITT_team),
             'is_muted': self.is_muted,
             'risk': self.get_risk_display(),
             'horizon': self.get_horizon_display()
         }
 
     def set_subscribe_token(self, token):
-        A_PRIME_NUMBER = os.environ.get('A_PRIME_NUMBER')
-        if int(token, 16) % A_PRIME_NUMBER == 0:
+        try:
+            if int(token, 16) % A_PRIME_NUMBER == 0:
             # check no other users using the same token
-            if not User.objects.filter(_beta_subscription_token=token).count():
+                if not User.objects.filter(_beta_subscription_token=token).count():
+                    self._beta_subscription_token = token
+        except:
+            if token in TEAM_EMOJIS:
                 self._beta_subscription_token = token
 
 
