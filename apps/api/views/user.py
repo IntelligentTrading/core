@@ -23,22 +23,26 @@ class User(View):
                 return HttpResponse(400)  # request error
             user, u_created = UserModel.objects.get_or_create(telegram_chat_id=chat_id)
 
-            if request.POST.get('is_subscribed', 'n/a') in ["True", "False"]:
-                user.is_subscribed = ast.literal_eval(request.POST['is_subscribed'])
+            if request.POST.get('is_subscribed', 'NA').upper() == "TRUE":
+                user.is_subscribed = True
+            elif request.POST.get('is_subscribed', 'NA').upper() == "FALSE":
+                user.is_subscribed = False
 
             if request.POST.get('token', None):
                 token = request.POST.get('token')
                 user.set_subscribe_token(token)
 
-            if request.POST.get('is_muted', 'n/a') in ["True", "False"]:
-                user.is_muted = ast.literal_eval(request.POST['is_muted'])
+            if request.POST.get('is_muted', 'NA').upper() == "TRUE":
+                user.is_muted = True
+            elif request.POST.get('is_muted', 'NA').upper() == "FALSE":
+                user.is_muted = False
 
-            if request.POST.get('risk', 'n/a') in ['low', 'medium', 'high']:
+            if request.POST.get('risk', 'NA') in ['low', 'medium', 'high']:
                 risk_string = request.POST['risk']
                 user.risk = user.get_risk_value(risk_string)
                 assert user.risk == user.get_risk_value()
 
-            if request.POST.get('horizon', 'n/a') in ['short', 'medium', 'long']:
+            if request.POST.get('horizon', 'NA') in ['short', 'medium', 'long']:
                 horizon_string = request.POST['horizon']
                 user.horizon = user.get_horizon_value(horizon_string)
                 assert user.horizon == user.get_horizon_value()
@@ -71,11 +75,15 @@ class Users(View):
 
         users = UserModel.objects.filter(subscribed_since__isnull=False, is_muted=False)
 
-        if request.GET.get('beta_token_valid', False):
+        if request.GET.get('beta_token_valid', "NA").upper() == "TRUE":
             users = users.exclude(_beta_subscription_token__exact="")
+        if request.GET.get('beta_token_valid', "NA").upper() == "FALSE":
+            users = users.filter(_beta_subscription_token__exact="")
 
-        if request.GET.get('is_ITT_team', False):
+        if request.GET.get('is_ITT_team', "False").upper() == "TRUE":
             users = users.filter(_beta_subscription_token__in=TEAM_EMOJIS)
+        if request.GET.get('is_ITT_team', "False").upper() == "FALSE":
+            users = users.exclude(_beta_subscription_token__in=TEAM_EMOJIS)
 
         # Filter for user preferences #
 
