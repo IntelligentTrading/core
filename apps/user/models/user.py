@@ -38,7 +38,7 @@ class User(AbstractUser, Timestampable):
     risk = models.SmallIntegerField(choices=RISK_CHOICES, default=LOW_RISK)
     horizon = models.SmallIntegerField(choices=HORIZON_CHOICES, default=MEDIUM_HORIZON)
 
-    _beta_subscription_token = models.CharField(max_length=8, null=True, unique=True)
+    _beta_subscription_token = models.CharField(max_length=8, default="")
     subscribed_since = models.DateTimeField(null=True)
 
 
