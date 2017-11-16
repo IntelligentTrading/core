@@ -85,7 +85,7 @@ class User(AbstractUser, Timestampable):
         token_is_good = False
         try:
             logging.debug("testing token %s" % token)
-            if int(token, 16) % A_PRIME_NUMBER == 0:
+            if int(token, 16) % int(A_PRIME_NUMBER) == 0:
                 logging.debug("token is valid hex")
                 # check no other users using the same token
                 if not User.objects.filter(_beta_subscription_token=token
