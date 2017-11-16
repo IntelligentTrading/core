@@ -81,9 +81,9 @@ class Users(View):
             users = users.filter(_beta_subscription_token__exact="")
 
         if request.GET.get('is_ITT_team', "False").upper() == "TRUE":
-            users = users.filter(_beta_subscription_token__in=TEAM_EMOJIS)
+            users = users.filter(is_ITT_team=True)
         if request.GET.get('is_ITT_team', "False").upper() == "FALSE":
-            users = users.exclude(_beta_subscription_token__in=TEAM_EMOJIS)
+            users = users.filter(is_ITT_team=False)
 
         # Filter for user preferences #
 

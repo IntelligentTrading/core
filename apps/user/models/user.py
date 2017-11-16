@@ -40,6 +40,7 @@ class User(AbstractUser, Timestampable):
 
     _beta_subscription_token = models.CharField(max_length=8, default="")
     subscribed_since = models.DateTimeField(null=True)
+    is_ITT_team = models.BooleanField(default=False)
 
 
     # MODEL PROPERTIES
@@ -53,11 +54,6 @@ class User(AbstractUser, Timestampable):
             self.subscribed_since = datetime.now()
         elif not value:
             self.subscribed_since = None
-
-    @property
-    def is_ITT_team(self):
-        return (self._beta_subscription_token
-                and self._beta_subscription_token in TEAM_EMOJIS)
 
 
     # MODEL FUNCTIONS
@@ -95,7 +91,7 @@ class User(AbstractUser, Timestampable):
                     logging.debug("token is already in use")
         except Exception as e:
             logging.debug(str(e))
-            token_is_good = bool(token and token in TEAM_EMOJIS)
+            self.is_ITT_team = token_is_good = bool(token and token in TEAM_EMOJIS)
 
         self._beta_subscription_token = token if token_is_good else ""
 
