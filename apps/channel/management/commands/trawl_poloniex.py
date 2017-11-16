@@ -187,8 +187,13 @@ def _resample_then_metrics(period_par):
         price_resampled_object.save()
 
         try:
-            logger.debug(" ...check signals to emit")
-            price_resampled_object.check_signal()
+            logger.debug(" ...check cross over signals to emit")
+            price_resampled_object.check_cross_over_signal()
         except Exception as e:
-            logging.debug("error checking signals: " + str(e))
+            logging.debug("error checking cross over signals: " + str(e))
 
+        try:
+            logger.debug(" ...check RSI signal to emit")
+            price_resampled_object.check_rsi_signal()
+        except Exception as e:
+            logging.debug("error checking rsi signals: " + str(e))
