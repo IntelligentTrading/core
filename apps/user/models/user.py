@@ -56,7 +56,8 @@ class User(AbstractUser, Timestampable):
 
     @property
     def is_ITT_team(self):
-        return (self._beta_subscription_token in TEAM_EMOJIS)
+        return (len(self._beta_subscription_token)
+                and self._beta_subscription_token in TEAM_EMOJIS)
 
 
     # MODEL FUNCTIONS
