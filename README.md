@@ -93,7 +93,7 @@ PARAMS
 
 `risk=<risk setting>' '['low', 'medium', 'high']`
 
-`horizon=<horizon setting>' '['low', 'medium', 'high']`
+`horizon=<horizon setting>' '['short', 'medium', 'long']`
 
 eg. `/users?beta_token_valid=true,risk=low&horizon=long` for only beta subscribers with these risk and horizon setttings
 
