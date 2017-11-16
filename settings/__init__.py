@@ -203,7 +203,7 @@ time_speed = 10  # set to 1 for production, 10 for fast debugging
 
 
 A_PRIME_NUMBER = int(os.environ.get('A_PRIME_NUMBER', 12345))
-TEAM_EMOJIS = os.environ.get('TEAM_EMOJIS', ["🤖",])
+TEAM_EMOJIS = os.environ.get('TEAM_EMOJIS', "🤖,").split(",")
 
 
 if LOCAL:
