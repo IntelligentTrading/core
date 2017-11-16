@@ -56,7 +56,7 @@ class User(AbstractUser, Timestampable):
 
     @property
     def is_ITT_team(self):
-        return (len(self._beta_subscription_token)
+        return (self._beta_subscription_token
                 and self._beta_subscription_token in TEAM_EMOJIS)
 
 
@@ -95,7 +95,7 @@ class User(AbstractUser, Timestampable):
                     logging.debug("token is already in use")
         except Exception as e:
             logging.debug(str(e))
-            token_is_good = bool(token in TEAM_EMOJIS)
+            token_is_good = bool(token and token in TEAM_EMOJIS)
 
         self._beta_subscription_token = token if token_is_good else ""
 
