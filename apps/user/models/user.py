@@ -84,11 +84,17 @@ class User(AbstractUser, Timestampable):
     def set_subscribe_token(self, token):
         token_is_good = False
         try:
+            logging.debug("testing token %s" % token)
             if int(token, 16) % A_PRIME_NUMBER == 0:
-            # check no other users using the same token
-                if not User.objects.filter(_beta_subscription_token=token).count():
+                logging.debug("token is valid hex")
+                # check no other users using the same token
+                if not User.objects.filter(_beta_subscription_token=token
+                                           ).exclude(id=self.id).count():
                     token_is_good = True
-        except:
+                else:
+                    logging.debug("token is already in use")
+        except Exception as e:
+            logging.debug(str(e))
             token_is_good = bool(token in TEAM_EMOJIS)
 
         self._beta_subscription_token = token if token_is_good else ""
