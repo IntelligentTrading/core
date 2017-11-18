@@ -293,7 +293,7 @@ class PriceResampled(AbstractIndicator):
                 )
                 signal_rsi.save()  # saving will send immediately if not already sent
                 signal_rsi.print()
-            else:
-                logger.error("RSI out of range!! ")
+        else:
+            logger.error("RSI out of range!! ")
 
 
