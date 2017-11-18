@@ -41,6 +41,7 @@ class PriceResampled(AbstractIndicator):
     # MODEL PROPERTIES
 
     @property
+    # rsi = 100 - 100 / (1 + rUp / rDown)
     def relative_strength_index(self): # relative strength index
         if self.relative_strength is not None:
             return 100.0 - (100.0 / (1.0 + self.relative_strength))
@@ -69,6 +70,7 @@ class PriceResampled(AbstractIndicator):
 
 
     def calc_SMA(self):
+        # period= 15,60,360, this ts is already reflects one of those before we call it
         price_ts = self.get_price_ts()
 
         if price_ts is not None:  # if we have at least one timepoint (to avoid ta-lib SMA error, not nessesary for pandas)
@@ -115,20 +117,30 @@ class PriceResampled(AbstractIndicator):
         (RSI is a momentum oscillator that measures the speed and change of price movements.)
         :return:
         '''
+
+        # get Series of last 200 time points
+        # period= 15,60,360, this ts is already reflects one of those before we call it
         price_ts = self.get_price_ts()
 
+        # difference btw start and close of the day, remove the first NA
         delta = price_ts.diff()
-        up, down = delta.copy(), delta.copy()
+        delta = delta[1:]
 
+        up, down = delta.copy(), delta.copy()
         up[up < 0] = 0
         down[down > 0] = 0
 
-        rUp = up.ewm(com=self.period - 1, adjust=False).mean()
-        rDown = down.ewm(com=self.period - 1, adjust=False).mean().abs()
-        rs_ts = rUp / rDown   # time series for all values
-        self.relative_strength = float(rs_ts.tail(1))  # get the last element for the last time point
+        # Calculate the EWMA
+        # n_rsi = self.period  # 15, 60, 360
+        # alpha = 2.0 / (n_rsi + 1)
+        # roll_up = up.ewm(alpha=alpha, min_periods=3).mean()
 
-        #rsi = 100 - 100 / (1 + rUp / rDown)
+        roll_up = up.ewm(com = self.period - 1, min_periods=3).mean()
+        roll_down = np.abs(down.ewm(com = self.period - 1, min_periods=3).mean())
+
+        rs_ts = roll_up / roll_down
+
+        self.relative_strength = float(rs_ts.tail(1))  # get the last element for the last time point
 
 
     def check_cross_over_signal(self):
@@ -236,25 +248,52 @@ class PriceResampled(AbstractIndicator):
                 signal_weak.save()  # saving will send immediately if not already sent
                 signal_weak.print()
             else:
-                logger.debug(" No signals to generate, no changes in trends")
+                logger.debug(" no changes in trends, so No signals to generate ")
 
 
+    # if they cross a certain level:
+    # RSI below 30 = send signal
+    # RSI above 75 = send signal
+
+    # RSI 70-74 = overbought (weak signal) = 1
+    # RSI 75-79 = overbought (medium signal) = 2
+    # RSI 80+ = overbought (strong signal) = 3
+    #
+    # RSI 30-26 = oversold (medium signal) = -2
+    # RSI 25-20- = oversold (strong signal) = -3
+
+    def check_rsi_signal(self):
+        horizon = get_horizon_value_from_string(display_string=HORIZONS[self.period])
+        rsi_strength = 0
+        rsi = self.relative_strength_index
+
+        # emit signals if rsi is in a certain range
+        if rsi >= 0 and rsi <= 100 :
+            logger.debug("   RSI= " + str(rsi) + ', for period ' + str(self.period))
+            if rsi >= 80:
+                rsi_strength = 3
+            elif rsi >= 75:
+                rsi_strength = 2
+            elif rsi >= 70:
+                rsi_strength = 1
+            elif rsi <= 25:
+                rsi_strength = -3
+            elif rsi <= 30:
+                rsi_strength = -2
+
+            if rsi_strength != 0:
+                signal_rsi = Signal(
+                    coin=self.coin,
+                    signal='RSI',
+                    trend=np.sign(rsi_strength),
+                    horizon=horizon,
+                    strength_value=rsi_strength,
+                    strength_max=int(3),
+                    timestamp=self.timestamp
+                )
+                signal_rsi.save()  # saving will send immediately if not already sent
+                signal_rsi.print()
+            else:
+                logger.error("RSI out of range!! ")
 
 
-    def check_rsi_signnal(self):
-        pass
-
-
-'''
-    
-
-        # emit RSI every time I calculate it
-
-        alert_RSI = TelegramAlert(
-            coin=self.coin,
-            signal="RSI",
-
-        )
-        alert_RSI.print()
-        alert_RSI.send()
-        '''
