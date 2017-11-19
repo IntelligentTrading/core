@@ -130,13 +130,11 @@ class PriceResampled(AbstractIndicator):
         up[up < 0] = 0
         down[down > 0] = 0
 
-        # Calculate the EWMA
-        # n_rsi = self.period  # 15, 60, 360
-        # alpha = 2.0 / (n_rsi + 1)
-        # roll_up = up.ewm(alpha=alpha, min_periods=3).mean()
+        # Calculate the 14 period back EWMA for each up/down trends
+        # QUESTION: shall this 14 perid depends on period 15,60, 360?
 
-        roll_up = up.ewm(com = self.period - 1, min_periods=3).mean()
-        roll_down = np.abs(down.ewm(com = self.period - 1, min_periods=3).mean())
+        roll_up = up.ewm(com = 14, min_periods=3).mean()
+        roll_down = np.abs(down.ewm(com = 14, min_periods=3).mean())
 
         rs_ts = roll_up / roll_down
 
