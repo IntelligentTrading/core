@@ -285,7 +285,7 @@ class PriceResampled(AbstractIndicator):
                     signal='RSI',
                     trend=np.sign(rsi_strength),
                     horizon=horizon,
-                    strength_value=rsi_strength,
+                    strength_value=np.abs(rsi_strength),
                     strength_max=int(3),
                     timestamp=self.timestamp
                 )
