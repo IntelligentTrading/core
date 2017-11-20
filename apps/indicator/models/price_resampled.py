@@ -283,6 +283,7 @@ class PriceResampled(AbstractIndicator):
                 signal_rsi = Signal(
                     coin=self.coin,
                     signal='RSI',
+                    rsi_value=rsi,
                     trend=np.sign(rsi_strength),
                     horizon=horizon,
                     strength_value=np.abs(rsi_strength),
