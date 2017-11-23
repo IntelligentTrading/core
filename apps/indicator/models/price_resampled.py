@@ -16,6 +16,7 @@ from settings import time_speed # speed of the resampling, 10 for fast debug, 1 
 
 logger = logging.getLogger(__name__)
 
+
 class PriceResampled(AbstractIndicator):
     # source inherited from AbstractIndicator
     # coin inherited from AbstractIndicator
@@ -23,15 +24,23 @@ class PriceResampled(AbstractIndicator):
 
     period = models.PositiveSmallIntegerField(null=False, default=15)  # minutes (eg. 15)
 
-    mean_price_satoshis = models.IntegerField(null=True) # price_satoshis
-    min_price_satoshis = models.IntegerField(null=True) # price_satoshis
-    max_price_satoshis = models.IntegerField(null=True) # price_satoshis
+    variance_price = models.FloatField(null=True)   # for future signal smoothing
 
-    SMA50_satoshis = models.IntegerField(null=True) # price_satoshis
-    SMA200_satoshis = models.IntegerField(null=True) # price_satoshis
+    mean_price = models.IntegerField(null=True) # use price_currency for units
+    min_price = models.IntegerField(null=True) #
+    max_price = models.IntegerField(null=True) #
 
-    EMA50_satoshis = models.IntegerField(null=True) # price_satoshis
-    EMA200_satoshis = models.IntegerField(null=True) # price_satoshis
+    SMA_low_period = models.PositiveSmallIntegerField(null=False, default=50)
+    SMA_high_period = models.PositiveSmallIntegerField(null=False, default=200)
+
+    EMA_low_period = models.PositiveSmallIntegerField(null=False, default=50)
+    EMA_high_period = models.PositiveSmallIntegerField(null=False, default=200)
+
+    SMA_low = models.IntegerField(null=True) # price_satoshis
+    SMA_high = models.IntegerField(null=True) # price_satoshis
+
+    EMA_low = models.IntegerField(null=True) # price_satoshis
+    EMA_high = models.IntegerField(null=True) # price_satoshis
 
     relative_strength = models.FloatField(null=True) # relative strength
     # RSI = relative strength index, see property

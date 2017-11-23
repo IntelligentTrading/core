@@ -6,8 +6,17 @@ from unixtimestampfield.fields import UnixTimeStampField
 from apps.channel.models.exchange_data import SOURCE_CHOICES
 
 
+(BTC, ETH, USDT) = list(range(3))
+COIN_CHOICES = (
+    (BTC, 'BTC'),
+    (ETH, 'ETH'),
+    (USDT, 'USDT'),
+)
+
+
 class Price(models.Model):
     source = models.SmallIntegerField(choices=SOURCE_CHOICES, null=False)
+    base_coin = models.SmallIntegerField(choices=COIN_CHOICES, null=False)
     coin = models.CharField(max_length=6, null=False, blank=False)
 
     price_satoshis = models.BigIntegerField(null=False) # price_satoshis
