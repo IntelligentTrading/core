@@ -19,9 +19,7 @@ class Price(models.Model):
     base_coin = models.SmallIntegerField(choices=COIN_CHOICES, null=False)
     coin = models.CharField(max_length=6, null=False, blank=False)
 
-    price_satoshis = models.BigIntegerField(null=False) # price_satoshis
-    price_wei = models.BigIntegerField(null=True)  # wei
-    price_usdt = models.FloatField(null=True) # USD value
+    price = models.BigIntegerField(null=False) # price_satoshis
 
     timestamp = UnixTimeStampField(null=False)
 
