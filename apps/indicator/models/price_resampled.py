@@ -131,19 +131,21 @@ class PriceResampled(AbstractIndicator):
         #rsi = 100 - 100 / (1 + rUp / rDown)
 
 
-
-
-    def check_signal(self):
+    def check_cross_over_signal(self):
         """
-        Check and emit all possible signals to SQS
+        Check and emit cross over SMA (EMA) signals to SQS
         :return:
         """
 
         # List of all indicators to calculate signals
         INDICATORS = [
-            {'low':'SMA50_satoshis', 'high':'SMA200_satoshis', 'name':'SMA'},
-            {'low':'EMA50_satoshis', 'high':'EMA200_satoshis', 'name':'EMA'}
+            {'low':'SMA50_satoshis', 'high':'SMA200_satoshis', 'name':'SMA'}
         ]
+
+        #INDICATORS = [
+        #    {'low':'SMA50_satoshis', 'high':'SMA200_satoshis', 'name':'SMA'},
+        #    {'low':'EMA50_satoshis', 'high':'EMA200_satoshis', 'name':'EMA'}
+        #]
 
         # get DB records for the last two time points
         last_two_rows = list(
@@ -163,68 +165,91 @@ class PriceResampled(AbstractIndicator):
         # check and emit SMA, EMA signals
         # iterate through all metrics which might generate signals, SMA, EMA etc
 
-        for ind in INDICATORS:
+        for ind in INDICATORS:   # only for SMA for now
             # get last two time points from indicators ( SMA20, SMA200 etc)
             m_low  = np.array([row[ind['low']] for row in last_two_rows])
             m_high = np.array([row[ind['high']] for row in last_two_rows])
 
             horizon = get_horizon_value_from_string(display_string=HORIZONS[self.period])
 
-            # check if ind_A signal changes its sign
-            if all(m_low != None):  # now we know both price and low exists
-                ind_A_sign = np.sign(prices - m_low)   # [-1, 1]
+            # ind A
+            # trend = 0 if sign is not changed, -1 if bearish, +1 if bullish
+            if all(m_low != None):  # now we know both the price and low exists
+                ind_A_sign = np.sign(prices - m_low)  # [-1, 1]
+                trend_A = int(ind_A_sign[0]) if np.prod(ind_A_sign) < 0 else 0   #if indicator changes its sign
 
-                if np.prod(ind_A_sign) < 0:  # emit a signal if indicator changes its sign
-                    #logger.debug("Ind_A sign difference:" + str(ind_A_sign))
-                    signal_A = Signal(
-                        coin=self.coin,
-                        signal=ind['name'],
-                        trend=int(ind_A_sign[0]),
-                        horizon=horizon,
-                        strength_value=int(1),  # means A indicator
-                        strength_max=int(3),
-                        timestamp=self.timestamp
-                    )
-                    signal_A.save() # saving will send immediately if not already sent
-                    signal_A.print()
-
+            # ind B
             if all(m_high != None):
                 ind_B_sign = np.sign(prices - m_high)
+                trend_B = int(ind_B_sign[0]) if np.prod(ind_B_sign) < 0 else 0
 
-                if np.prod(ind_B_sign) < 0:   # if change the sign
-                    #logger.debug("Ind_B sign difference:" + str(ind_B_sign))
-                    signal_B = Signal(
-                        coin=self.coin,
-                        signal=ind['name'],
-                        trend=int(ind_B_sign[0]),
-                        horizon=horizon,
-                        strength_value=int(2),  # means B indicator
-                        strength_max=int(3),
-                        timestamp=self.timestamp
-                    )
-                    signal_B.save() # saving will send immediately if not already sent
-                    signal_B.print()
-
+            # ind C
             if all(m_high != None) and all(m_low != None):
                 ind_C_sign = np.sign(m_low - m_high)
+                trend_C = int(ind_C_sign[0]) if np.prod(ind_C_sign) < 0 else 0
 
-                if np.prod(ind_C_sign) < 0 :
-                    #logger.debug("Ind_C sign difference:" + str(ind_C_sign))
-                    signal_C = Signal(
-                        coin=self.coin,
-                        signal=ind['name'],
-                        trend=int(ind_C_sign[0]),
-                        horizon=horizon,
-                        strength_value=int(3),   # means C indicator
-                        strength_max=int(3),
-                        timestamp=self.timestamp
-                    )
-                    signal_C.save() # saving will send immediately if not already sent
-                    signal_C.print()
+            # implement
+            #    if A is BEARISH ,  that's a weak signal
+            #    if A and B are both BEARISH, that's a medium signal
+            #    if A, B, and C are all BEARISH, that's a strong signal
+            # and generate the signals if neccesary
 
+            logger.debug("ind_A trend: " + str(trend_A))
+            logger.debug("ind_B trend: " + str(trend_B))
+            logger.debug("ind_C trend: " + str(trend_C))
+
+            # emit signals
+            if np.abs(trend_A + trend_B + trend_C) == 3:  # if A, B and C all have the same direction
+                signal_strong = Signal(
+                    coin=self.coin,
+                    signal=ind['name'],  # SMA/ EMA
+                    trend=trend_C,   # take any of A or B or C, since they hav the same sign
+                    horizon=horizon,
+                    strength_value=int(3),  # strong signal
+                    strength_max=int(3),
+                    timestamp=self.timestamp
+                )
+                signal_strong.save()  # saving will send immediately if not already sent
+                signal_strong.print()
+            elif (trend_A * trend_B) > 0:   # weak signal
+                signal_medium = Signal(
+                    coin=self.coin,
+                    signal=ind['name'],  # SMA, EMA
+                    trend=trend_B,  # take any of A or B, since they hav the same sign
+                    horizon=horizon,
+                    strength_value=int(2),  # medium signal
+                    strength_max=int(3),
+                    timestamp=self.timestamp
+                )
+                signal_medium.save()  # saving will send immediately if not already sent
+                signal_medium.print()
+            elif np.abs(trend_A) > 0: # weak signal
+                signal_weak = Signal(
+                    coin=self.coin,
+                    signal=ind['name'],  # SMA, EMA
+                    trend=trend_A,
+                    horizon=horizon,
+                    strength_value=int(1),  # weak signal
+                    strength_max=int(3),
+                    timestamp=self.timestamp
+                )
+                signal_weak.save()  # saving will send immediately if not already sent
+                signal_weak.print()
+            else:
+                logger.debug(" No signals to generate, no changes in trends")
+
+
+
+
+    def check_rsi_signnal(self):
+        pass
+
+
+'''
+    
 
         # emit RSI every time I calculate it
-        '''
+
         alert_RSI = TelegramAlert(
             coin=self.coin,
             signal="RSI",
