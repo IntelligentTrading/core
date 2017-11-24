@@ -48,6 +48,8 @@ class Signal(Timestampable, models.Model):
     price_usdt = models.FloatField(null=True)  # USD value
     price_usdt_change = models.FloatField(null=True)
 
+    rsi_value = models.FloatField(null=True)
+
     volume_btc = models.FloatField(null=True)  # BTC volume
     volume_btc_change = models.FloatField(null=True)
     volume_usdt = models.FloatField(null=True)  # USD value

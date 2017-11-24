@@ -192,8 +192,11 @@ def _resample_then_metrics(period_par):
         except Exception as e:
             logging.debug("error checking cross over signals: " + str(e))
 
-        try:
-            logger.debug(" ...check RSI signal to emit")
-            price_resampled_object.check_rsi_signal()
-        except Exception as e:
-            logging.debug("error checking rsi signals: " + str(e))
+        # check RSI if period more then 15 (Vinnie told that it makes not sense
+        # to run RSI for 15 min period, so we calculate it only for 60, 360
+        if period >= 15:  # change to 60 in production
+            try:
+                logger.debug(" ...check RSI signal to emit")
+                price_resampled_object.check_rsi_signal()
+            except Exception as e:
+                logging.debug("error checking rsi signals: " + str(e))
