@@ -6,11 +6,12 @@ from unixtimestampfield.fields import UnixTimeStampField
 from apps.channel.models.exchange_data import SOURCE_CHOICES
 
 
-(BTC, ETH, USDT) = list(range(3))
+(BTC, ETH, USDT, XMR) = list(range(3))
 COIN_CHOICES = (
     (BTC, 'BTC'),
     (ETH, 'ETH'),
     (USDT, 'USDT'),
+    (XMR, 'XMR'),
 )
 
 
