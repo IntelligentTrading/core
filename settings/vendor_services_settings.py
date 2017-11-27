@@ -10,14 +10,14 @@ AWS_OPTIONS = {
 }
 if PRODUCTION:
     BUCKET_NAME = "intelligenttrading-s3-production"
-    QUEUE_NAME = "intelligenttrading-sqs-production"
+    QUEUE_NAME = "intelligenttrading-sqs-production" # for production bot
     # DELAYED_QUEUE_NAME = "intelligenttrading-delayed-sqs-production"
-    BETA_QUEUE_NAME = "intelligenttrading-sqs-beta"
+    BETA_QUEUE_NAME = "intelligenttrading-sqs-beta" # for beta bot
     TEST_QUEUE_NAME = ""
     SNS_NAME = "intelligenttrading-sns-production"
 elif STAGE:
     BUCKET_NAME = "intelligenttrading-s3-stage"
-    QUEUE_NAME = "intelligenttrading-sqs-stage"
+    QUEUE_NAME = "intelligenttrading-sqs-stage" # for stage bot
     BETA_QUEUE_NAME = "" # intelligenttrading-sqs-stage-beta
     # DELAYED_QUEUE_NAME = "intelligenttrading-delayed-sqs-stage"
     TEST_QUEUE_NAME = ""
