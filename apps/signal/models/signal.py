@@ -10,7 +10,7 @@ from django.db.models.signals import post_save, pre_save
 
 from apps.common.behaviors import Timestampable
 from apps.indicator.models import Price
-from settings import QUEUE_NAME, AWS_OPTIONS, TEST_QUEUE_NAME
+from settings import QUEUE_NAME, AWS_OPTIONS, BETA_QUEUE_NAME, TEST_QUEUE_NAME
 from django.db import models
 from unixtimestampfield.fields import UnixTimeStampField
 from apps.channel.models.exchange_data import SOURCE_CHOICES, POLONIEX
@@ -121,6 +121,10 @@ class Signal(Timestampable, models.Model):
                             aws_secret_access_key=AWS_OPTIONS['AWS_SECRET_ACCESS_KEY'])
         production_queue = sqs_connection.get_queue(QUEUE_NAME)
         production_queue.write(message)
+        if BETA_QUEUE_NAME:
+            test_queue = sqs_connection.get_queue(BETA_QUEUE_NAME)
+            test_queue.write(message)
+
         if TEST_QUEUE_NAME:
             test_queue = sqs_connection.get_queue(TEST_QUEUE_NAME)
             test_queue.write(message)

@@ -12,11 +12,13 @@ if PRODUCTION:
     BUCKET_NAME = "intelligenttrading-s3-production"
     QUEUE_NAME = "intelligenttrading-sqs-production"
     # DELAYED_QUEUE_NAME = "intelligenttrading-delayed-sqs-production"
-    TEST_QUEUE_NAME = "intelligenttrading-sqs-stage"
+    BETA_QUEUE_NAME = "intelligenttrading-sqs-beta"
+    TEST_QUEUE_NAME = ""
     SNS_NAME = "intelligenttrading-sns-production"
 elif STAGE:
     BUCKET_NAME = "intelligenttrading-s3-stage"
     QUEUE_NAME = "intelligenttrading-sqs-stage"
+    BETA_QUEUE_NAME = "" # intelligenttrading-sqs-stage-beta
     # DELAYED_QUEUE_NAME = "intelligenttrading-delayed-sqs-stage"
     TEST_QUEUE_NAME = ""
     SNS_NAME = "intelligenttrading-sns-stage"
