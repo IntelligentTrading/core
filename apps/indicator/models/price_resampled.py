@@ -24,7 +24,7 @@ class PriceResampled(AbstractIndicator):
     # timestamp inherited from AbstractIndicator
 
     period = models.PositiveSmallIntegerField(null=False, default=15)  # minutes (eg. 15)
-    base_coin = models.SmallIntegerField(choices=Price.BASE_COIN_CHOICES, null=False)
+    base_coin = models.SmallIntegerField(choices=Price.BASE_COIN_CHOICES, null=False, default=Price.BTC)
 
     price_variance = models.FloatField(null=True)   # for future signal smoothing
     mean_price = models.IntegerField(null=True) # use price_currency for units

@@ -43,7 +43,7 @@ class Signal(Timestampable, models.Model):
     strength_value = models.IntegerField(null=True)
     strength_max = models.IntegerField(null=True)
 
-    base_coin = models.SmallIntegerField(choices=Price.BASE_COIN_CHOICES, null=False)
+    base_coin = models.SmallIntegerField(choices=Price.BASE_COIN_CHOICES, null=False, default=Price.BTC)
     price = models.BigIntegerField(null=False)
     price_change = models.FloatField(null=True)  # in percents, thatis why Float
 

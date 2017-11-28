@@ -15,7 +15,7 @@ class Price(models.Model):
     source = models.SmallIntegerField(choices=SOURCE_CHOICES, null=False)
     coin = models.CharField(max_length=6, null=False, blank=False)
 
-    base_coin = models.SmallIntegerField(choices=BASE_COIN_CHOICES, null=False)
+    base_coin = models.SmallIntegerField(choices=BASE_COIN_CHOICES, null=False, default=BTC)
     price = models.BigIntegerField(null=False)
 
     timestamp = UnixTimeStampField(null=False)
