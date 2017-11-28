@@ -74,7 +74,7 @@ def _save_prices_and_volumes(data, timestamp):
             coin="BTC",
             base_coin= Price.USDT,
             # price_satoshis=int(10 ** 8),
-            price=float(usdt_btc['last'] * 10 ** 8),  # multiply to have int (eliminate float)
+            price=int(float(usdt_btc['last']) * 10 ** 8),  # multiply to have int (eliminate float)
             timestamp=timestamp
         )
 
@@ -100,7 +100,7 @@ def _save_prices_and_volumes(data, timestamp):
             base_coin=Price.USDT,  # 'USDT'
             #price_satoshis=int(float(btc_eth['last']) * 10 ** 8),
             #price_wei=int(10 ** 8),
-            price=float(usdt_eth['last'] * 10 ** 8), # convert usd to int
+            price=int(float(usdt_eth['last']) * 10 ** 8), # convert usd to int
             timestamp=timestamp
         )
 
