@@ -14,7 +14,7 @@ from apps.channel.models.exchange_data import POLONIEX
 from apps.indicator.models import Price, Volume, PriceResampled
 
 from settings import time_speed  # 1 / 10
-from settings import COINS_LIST
+from settings import COINS_LIST_TO_GENERATE_SIGNALS
 from settings import PERIODS_LIST  # PERIODS_LIST = [15, 60, 360]
 
 logger = logging.getLogger(__name__)
@@ -174,7 +174,7 @@ def _resample_then_metrics(period_par):
     BASE_COIN_TO_FILL = [Price.BTC, Price.USDT]
 
     # iterate over all pairs [('ETH', 0), ('ETH', 1), ('XRP', 0), ('XRP', 1) ...
-    for coin, base_coin in itertools.product(COINS_LIST, BASE_COIN_TO_FILL):
+    for coin, base_coin in itertools.product(COINS_LIST_TO_GENERATE_SIGNALS, BASE_COIN_TO_FILL):
         logger.debug('  COIN: '+ str(coin))
 
         # get all price records back in time (according to period)
