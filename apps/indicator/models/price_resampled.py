@@ -13,6 +13,7 @@ from apps.signal.models import Signal
 from apps.user.models.user import get_horizon_value_from_string
 
 from settings import HORIZONS   # mapping from bin size to a name short/medium
+from settings import PERIODS_LIST
 from settings import time_speed # speed of the resampling, 10 for fast debug, 1 for prod
 
 logger = logging.getLogger(__name__)
@@ -23,7 +24,7 @@ class PriceResampled(AbstractIndicator):
     # coin inherited from AbstractIndicator
     # timestamp inherited from AbstractIndicator
 
-    period = models.PositiveSmallIntegerField(null=False, default=15)  # minutes (eg. 15)
+    period = models.PositiveSmallIntegerField(null=False, default=PERIODS_LIST[0])  # minutes (eg. 15)
     base_coin = models.SmallIntegerField(choices=Price.BASE_COIN_CHOICES, null=False, default=Price.BTC)
 
     price_variance = models.FloatField(null=True)   # for future signal smoothing
