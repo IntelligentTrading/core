@@ -220,8 +220,7 @@ def _resample_then_metrics(period_par):
         price_resampled_object.save()
 
         ### check and generate possible signals
-
-
+        # todo: move the check_signal logic from price_resampled to a static method of Signal
         try:
             logger.debug(" ...check cross over signals to emit")
             price_resampled_object.check_cross_over_signal()

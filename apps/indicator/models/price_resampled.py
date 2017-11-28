@@ -180,16 +180,16 @@ class PriceResampled(AbstractIndicator):
         # get DB records for the last two time points
         last_two_rows = list(
             PriceResampled.objects.
-                filter(period=self.period, coin=self.coin).
+                filter(period=self.period, coin=self.coin, base_coin = self.base_coin).
                 order_by('-timestamp').
-                values('mean_price_satoshis', 'SMA50_satoshis','SMA200_satoshis','EMA50_satoshis','EMA200_satoshis'))[0:2]
+                values('mean_price', 'sma_low_price','sma_high_price','ema_low_price','ema_high_price'))[0:2]
 
         # Sanity check:
         if not last_two_rows:
             logger.debug('Signal skipped: There is no information in DB about ' + str(self.coin) + str(self.period))
             exit()
 
-        prices = np.array([row['mean_price_satoshis'] for row in last_two_rows])
+        prices = np.array([row['mean_price'] for row in last_two_rows])
         if any(prices) is None: exit()
 
         # check and emit SMA, EMA signals
