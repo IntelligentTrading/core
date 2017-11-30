@@ -83,6 +83,8 @@ class Signal(Timestampable, models.Model):
         data_dict = copy.deepcopy(self.__dict__)
         if "_state" in data_dict:
             del data_dict["_state"]
+        for key, value in data_dict.items():
+            data_dict[key] = str(value) # cast all as strings
         data_dict.update({
             "UI": self.get_UI_display(),
             "source": self.get_source_display(),
@@ -119,8 +121,11 @@ class Signal(Timestampable, models.Model):
         sqs_connection = boto.sqs.connect_to_region("us-east-1",
                             aws_access_key_id=AWS_OPTIONS['AWS_ACCESS_KEY_ID'],
                             aws_secret_access_key=AWS_OPTIONS['AWS_SECRET_ACCESS_KEY'])
-        production_queue = sqs_connection.get_queue(QUEUE_NAME)
-        production_queue.write(message)
+
+        if QUEUE_NAME:
+            production_queue = sqs_connection.get_queue(QUEUE_NAME)
+            production_queue.write(message)
+
         if BETA_QUEUE_NAME:
             test_queue = sqs_connection.get_queue(BETA_QUEUE_NAME)
             test_queue.write(message)
