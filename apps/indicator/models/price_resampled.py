@@ -281,7 +281,16 @@ class PriceResampled(AbstractIndicator):
             elif rsi <= 30:
                 rsi_strength = -1  # oversold
 
-            if rsi_strength != 0:
+            #did send same signal recently??
+            previous_signal = Signal.objects.filter(
+                coin=self.coin,
+                signal='RSI',
+                strength_value=np.abs(rsi_strength),
+                trend=np.sign(rsi_strength),
+                timestamp__gte=self.timestamp - timedelta(minutes=30)
+            ).first()
+
+            if rsi_strength != 0 and not previous_signal:
                 signal_rsi = Signal(
                     coin=self.coin,
                     signal='RSI',
