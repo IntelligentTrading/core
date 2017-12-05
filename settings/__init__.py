@@ -199,7 +199,7 @@ except Exception as e:
 COINS_LIST = ["ETH", "XRP", "LTC", "DASH", "NEO", "XMR", "OMG"]
 PERIODS_LIST = [15, 60, 360]
 HORIZONS = {15: "short", 60: "medium", 360: "long"}  # mapping from bin size to a name short/medium
-time_speed = 10  # set to 1 for production, 10 for fast debugging
+time_speed = 1  # set to 1 for production, 10 for fast debugging
 
 
 A_PRIME_NUMBER = int(os.environ.get('A_PRIME_NUMBER', 12345))
