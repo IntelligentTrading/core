@@ -88,7 +88,7 @@ def _save_prices_and_volumes(data, timestamp):
     except KeyError:
         logger.debug("missing BTC in Poloniex data")
 
-
+    # crete two objects for ETH in usdt and btc
     try:
         usdt_eth = data.pop("USDT_ETH")
         btc_eth = data.pop("BTC_ETH")
