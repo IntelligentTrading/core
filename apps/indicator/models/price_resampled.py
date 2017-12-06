@@ -58,7 +58,7 @@ class PriceResampled(AbstractIndicator):
                 period=self.period,
                 coin=self.coin,
                 timestamp__gte = datetime.now() - timedelta(minutes=(self.period*200+50)) # 50 is for safety
-            ).values('mean_price_satoshis'))
+            ).values('max_price_satoshis'))  # mean_price_satoshis, it should be closing price
 
             if not back_in_time_records:
                 return None
