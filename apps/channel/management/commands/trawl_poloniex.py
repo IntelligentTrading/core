@@ -122,7 +122,7 @@ def _resample_then_metrics(period_par):
 
     # iterate over all pairs [('ETH', 0), ('ETH', 1), ('XRP', 0), ('XRP', 1) ...
     for coin, base_coin in itertools.product(COINS_LIST_TO_GENERATE_SIGNALS, BASE_COIN_TO_FILL):
-        logger.debug('  COIN: ' + str(coin))
+        logger.debug(' COIN: ' + str(coin))
 
         # get all price records back in time (according to period)
         coin_price_list = list(
@@ -160,14 +160,27 @@ def _resample_then_metrics(period_par):
 
         # calculate additional indicators (sma, ema etc)
         logger.debug(" [ " + str(coin) + " ], price in :" + str(base_coin) + " calculate indicators ...")
-        price_resampled_object.calc_SMA()
-        price_resampled_object.save()
 
-        price_resampled_object.calc_EMA()
-        price_resampled_object.save()
+        try:
+            price_resampled_object.calc_SMA()
+            price_resampled_object.save()
+            logger.debug("EMA calculations done and saved.")
+        except Exception as e:
+            logger.debug(str(e))
 
-        price_resampled_object.calc_RS()
-        price_resampled_object.save()
+        try:
+            price_resampled_object.calc_EMA()
+            price_resampled_object.save()
+            logger.debug("EMA calculations done and saved.")
+        except Exception as e:
+            logger.debug(str(e))
+
+        try:
+            price_resampled_object.calc_RS()
+            price_resampled_object.save()
+            logger.debug("RS calculations done and saved.")
+        except Exception as e:
+            logger.debug(str(e))
 
         ### check and generate possible signals
         # todo: move the check_signal logic from price_resampled to a static method of Signal
