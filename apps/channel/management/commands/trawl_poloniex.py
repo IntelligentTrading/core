@@ -138,9 +138,9 @@ def _resample_then_metrics(period_par):
 
         ### resample price data, i.e. generate one time point for each 15 min
         period_variance = prices.var()
-        period_mean = prices.mean()
-        period_min = prices.min()
-        period_max = prices.max()
+        period_mean = int(prices.mean())  # we need it all int becasue we decided to * 10^8
+        period_min = int(prices.min())
+        period_max = int(prices.max())
         period_closing = prices[-1]
         period_ts = times.max()
 
