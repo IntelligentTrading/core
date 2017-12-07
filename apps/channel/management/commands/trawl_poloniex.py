@@ -12,6 +12,7 @@ from requests import get, RequestException
 from apps.channel.models import ExchangeData
 from apps.channel.models.exchange_data import POLONIEX
 from apps.indicator.models import Price, Volume, PriceResampled
+from apps.indicator.models.price import get_coin_value_from_string
 
 from settings import time_speed  # 1 / 10
 from settings import COINS_LIST_TO_GENERATE_SIGNALS
@@ -66,87 +67,31 @@ def pull_poloniex_data():
 
 
 def _save_prices_and_volumes(data, timestamp):
-    # save BTC/USDT in USD (satoshies)
-    try:
-        usdt_btc = data.pop("USDT_BTC")
-
-        Price.objects.create(
-            source=POLONIEX,
-            coin="BTC",
-            base_coin=Price.USDT,
-            # price_satoshis=int(10 ** 8),
-            price=int(float(usdt_btc['last']) * 10 ** 8),  # multiply to have int (eliminate float)
-            timestamp=timestamp
-        )
-
-        Volume.objects.create(
-            source=POLONIEX,
-            coin="BTC",
-            btc_volume=float(usdt_btc['baseVolume']),
-            timestamp=timestamp
-        )
-
-    except KeyError:
-        logger.debug("missing BTC in Poloniex data")
-
-    # crete two objects for ETH in usdt and btc
-    try:
-        usdt_eth = data.pop("USDT_ETH")
-        btc_eth = data.pop("BTC_ETH")
-
-        # save ETH in USDT
-        Price.objects.create(
-            source=POLONIEX,
-            coin="ETH",
-            base_coin=Price.USDT,  # 'USDT'
-            # price_satoshis=int(float(btc_eth['last']) * 10 ** 8),
-            # price_wei=int(10 ** 8),
-            price=int(float(usdt_eth['last']) * 10 ** 8),  # convert usd to int
-            timestamp=timestamp
-        )
-
-        # save ETH in BTC (satoshies)
-        Price.objects.create(
-            source=POLONIEX,
-            coin="ETH",
-            base_coin=Price.BTC,  # 'BTC'
-            price=int(float(btc_eth['last']) * 10 ** 8),
-            # price_wei=int(10 ** 8),
-            # price=float(usdt_eth['last']),
-            timestamp=timestamp
-        )
-
-        Volume.objects.create(
-            source=POLONIEX,
-            coin="ETH",
-            btc_volume=float(btc_eth['baseVolume']),
-            timestamp=timestamp
-        )
-
-    except KeyError:
-        logger.debug("missing ETH in Poloniex price data")
-
-    # for all other Altcoins ...
     for currency_pair in data:
-        if currency_pair.split('_')[0] == "BTC":
-            try:
-                # save price in BTC (satoshies)
-                Price.objects.create(
-                    source=POLONIEX,
-                    coin=currency_pair.split('_')[1],
-                    base_coin=Price.BTC,  # 'BTC'
-                    price=int(float(data[currency_pair]['last']) * 10 ** 8),
-                    timestamp=timestamp
-                )
-                # save volume
-                Volume.objects.create(
-                    source=POLONIEX,
-                    coin=currency_pair.split('_')[1],
-                    btc_volume=float(data[currency_pair]['baseVolume']),
-                    timestamp=timestamp
-                )
-            except Exception as e:
-                logger.debug(str(e))
+        try:
+            base_coin_string = currency_pair.split('_')[0]
+            base_coin = get_coin_value_from_string(base_coin_string)
+            assert base_coin >= 0
+            coin_string = currency_pair.split('_')[1]
+            assert len(coin_string) > 1 and len(coin_string) <= 6
+
+            Price.objects.create(
+                source=POLONIEX,
+                coin=coin_string,
+                base_coin=base_coin,
+                price=int(float(data[currency_pair]['last']) * 10 ** 8),
+                timestamp=timestamp
+            )
+            
+            Volume.objects.create(
+                source=POLONIEX,
+                coin=coin_string,
+                base_coin=base_coin,
+                btc_volume=float(data[currency_pair]['baseVolume']),
+                timestamp=timestamp
+            )
+        except Exception as e:
+            logger.debug(str(e))
 
     logger.debug("Saved Poloniex price and volume data")
 
