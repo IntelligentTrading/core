@@ -82,12 +82,12 @@ def _save_prices_and_volumes(data, timestamp):
                 price=int(float(data[currency_pair]['last']) * 10 ** 8),
                 timestamp=timestamp
             )
-            
+
             Volume.objects.create(
                 source=POLONIEX,
                 coin=coin_string,
                 base_coin=base_coin,
-                btc_volume=float(data[currency_pair]['baseVolume']),
+                volume=float(data[currency_pair]['baseVolume']),
                 timestamp=timestamp
             )
         except Exception as e:
