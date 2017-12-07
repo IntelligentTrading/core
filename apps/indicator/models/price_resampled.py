@@ -96,9 +96,9 @@ class PriceResampled(AbstractIndicator):
             # time_speed make it faster when in local for dubuging
             # TALIB: price_ts_nd = np.array([ rec['mean_price_satoshis'] for rec in raw_data])
             sma_low = price_ts.rolling(window=int(self.sma_low_period/time_speed), center=False, min_periods=4).mean()
-            sma_low = float(sma_low.tail(1))
+            sma_low = int(sma_low.tail(1))
             sma_high = price_ts.rolling(window=int(self.sma_high_period/time_speed), center=False, min_periods=4).mean()
-            sma_high = float(sma_high.tail(1))
+            sma_high = int(sma_high.tail(1))
 
             # TALIB:_SMA50 = tas.SMA(price_ts_nd.astype(float), timeperiod=50/time_speed)
             # TALIB:_MA200 = tas.SMA(price_ts_nd.astype(float), timeperiod=200/time_speed)
@@ -120,9 +120,9 @@ class PriceResampled(AbstractIndicator):
 
         if price_ts is not None:
             ema_low = price_ts.ewm(alpha=alpha50, min_periods=5).mean()
-            ema_low = float(ema_low.tail(1))  # get the last value for "now" time point
+            ema_low = int(ema_low.tail(1))  # get the last value for "now" time point
             ema_high = price_ts.ewm(alpha=alpha200, min_periods=5).mean()
-            ema_high = float(ema_high.tail(1))
+            ema_high = int(ema_high.tail(1))
 
             if not np.isnan(ema_low):
                 self.ema_low_price = ema_low
