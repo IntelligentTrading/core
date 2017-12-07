@@ -39,11 +39,11 @@ class PriceResampled(AbstractIndicator):
     ema_low_period = models.PositiveSmallIntegerField(null=False, default=50)
     ema_high_period = models.PositiveSmallIntegerField(null=False, default=200)
 
-    sma_low_price = models.IntegerField(null=True) # price_satoshis
-    sma_high_price = models.IntegerField(null=True) # price_satoshis
+    sma_low_price = models.IntegerField(null=True)
+    sma_high_price = models.IntegerField(null=True)
 
-    ema_low_price = models.IntegerField(null=True) # price_satoshis
-    ema_high_price = models.IntegerField(null=True) # price_satoshis
+    ema_low_price = models.IntegerField(null=True)
+    ema_high_price = models.IntegerField(null=True)
 
     relative_strength = models.FloatField(null=True) # relative strength
     # RSI = relative strength index, see property

@@ -21,10 +21,9 @@ class Price(View):
             response = {
                 'source': price_object.get_source_display(),
                 'coin': price_object.coin,
-                'price_satoshis': price_object.price_satoshis,
-                'price_satoshis_change': price_object.price_satoshis_change,
-                'price_usdt_change': price_object.price_usdt_change,
-                'price_usdt': price_object.price_usdt,
+                'base_coin': price_object.base_coin,
+                'price': price_object.price,
+                'price_change': price_object.price_change,
                 'timestamp': str(price_object.timestamp),
             }
         else:

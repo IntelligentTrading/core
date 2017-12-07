@@ -19,6 +19,7 @@ from settings import PERIODS_LIST  # PERIODS_LIST = [15, 60, 360]
 
 logger = logging.getLogger(__name__)
 
+
 class Command(BaseCommand):
     help = "Polls data from Poloniex on a regular interval"
 
@@ -28,11 +29,11 @@ class Command(BaseCommand):
 
         # @Alex
         # run resampling in 15,60,360 bins and calculate indicator values
-        schedule.every(PERIODS_LIST[0]/time_speed).minutes.do(_resample_then_metrics, {'period': PERIODS_LIST[0]})
-        schedule.every(PERIODS_LIST[1]/time_speed).minutes.do(_resample_then_metrics, {'period': PERIODS_LIST[1]})
-        schedule.every(PERIODS_LIST[2]/time_speed).minutes.do(_resample_then_metrics, {'period': PERIODS_LIST[2]})
+        schedule.every(PERIODS_LIST[0] / time_speed).minutes.do(_resample_then_metrics, {'period': PERIODS_LIST[0]})
+        schedule.every(PERIODS_LIST[1] / time_speed).minutes.do(_resample_then_metrics, {'period': PERIODS_LIST[1]})
+        schedule.every(PERIODS_LIST[2] / time_speed).minutes.do(_resample_then_metrics, {'period': PERIODS_LIST[2]})
 
-        keep_going=True
+        keep_going = True
         while keep_going:
             try:
                 schedule.run_pending()
@@ -72,7 +73,7 @@ def _save_prices_and_volumes(data, timestamp):
         Price.objects.create(
             source=POLONIEX,
             coin="BTC",
-            base_coin= Price.USDT,
+            base_coin=Price.USDT,
             # price_satoshis=int(10 ** 8),
             price=int(float(usdt_btc['last']) * 10 ** 8),  # multiply to have int (eliminate float)
             timestamp=timestamp
@@ -98,9 +99,9 @@ def _save_prices_and_volumes(data, timestamp):
             source=POLONIEX,
             coin="ETH",
             base_coin=Price.USDT,  # 'USDT'
-            #price_satoshis=int(float(btc_eth['last']) * 10 ** 8),
-            #price_wei=int(10 ** 8),
-            price=int(float(usdt_eth['last']) * 10 ** 8), # convert usd to int
+            # price_satoshis=int(float(btc_eth['last']) * 10 ** 8),
+            # price_wei=int(10 ** 8),
+            price=int(float(usdt_eth['last']) * 10 ** 8),  # convert usd to int
             timestamp=timestamp
         )
 
@@ -142,12 +143,13 @@ def _save_prices_and_volumes(data, timestamp):
                     source=POLONIEX,
                     coin=currency_pair.split('_')[1],
                     btc_volume=float(data[currency_pair]['baseVolume']),
-                    timestamp = timestamp
+                    timestamp=timestamp
                 )
             except Exception as e:
                 logger.debug(str(e))
 
     logger.debug("Saved Poloniex price and volume data")
+
 
 # @Alex
 def _resample_then_metrics(period_par):
@@ -167,7 +169,7 @@ def _resample_then_metrics(period_par):
     logger.debug("======== Resampling with Period: " + str(period))
 
     # get all records back in [period] time ( 15min, 60min, 360min)
-    period_records = Price.objects.filter(timestamp__gte=datetime.now()-timedelta(minutes=period))
+    period_records = Price.objects.filter(timestamp__gte=datetime.now() - timedelta(minutes=period))
 
     # for all coins destined to be resamples
     # COINS_LIST = ["ETH", "XRP", "LTC", "DASH", "NEO", "XMR", "OMG"]
@@ -175,18 +177,19 @@ def _resample_then_metrics(period_par):
 
     # iterate over all pairs [('ETH', 0), ('ETH', 1), ('XRP', 0), ('XRP', 1) ...
     for coin, base_coin in itertools.product(COINS_LIST_TO_GENERATE_SIGNALS, BASE_COIN_TO_FILL):
-        logger.debug('  COIN: '+ str(coin))
+        logger.debug('  COIN: ' + str(coin))
 
         # get all price records back in time (according to period)
-        coin_price_list = list(period_records.filter(coin=coin, base_coin=base_coin).values('timestamp','price').order_by('-timestamp'))
+        coin_price_list = list(
+            period_records.filter(coin=coin, base_coin=base_coin).values('timestamp', 'price').order_by('-timestamp'))
 
         # skip the currency if there is no given price
         if not coin_price_list: continue
 
         # todo can i do better?
         # get values from django structure
-        prices = np.array([ rec['price'] for rec in coin_price_list])
-        times = np.array([ rec['timestamp'] for rec in coin_price_list])
+        prices = np.array([rec['price'] for rec in coin_price_list])
+        times = np.array([rec['timestamp'] for rec in coin_price_list])
 
         ### resample price data, i.e. generate one time point for each 15 min
         period_variance = prices.var()
@@ -200,14 +203,14 @@ def _resample_then_metrics(period_par):
         price_resampled_object = PriceResampled.objects.create(
             source=POLONIEX,
             coin=coin,
-            base_coin = base_coin,
+            base_coin=base_coin,
             timestamp=period_ts,
-            period = period,
-            price_variance = period_variance,
+            period=period,
+            price_variance=period_variance,
             mean_price=period_mean,
             min_price=period_min,
             max_price=period_max,
-            closing_price = period_closing
+            closing_price=period_closing
         )
 
         # calculate additional indicators (sma, ema etc)
