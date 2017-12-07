@@ -189,9 +189,9 @@ if PRODUCTION or STAGE:
 logger.info("Importing vendor_services_settings")
 try:
     from settings.vendor_services_settings import *
-except:
+except Exception as e:
     logger.warning("Failed to import vendor_services_settings.")
-    pass
+    logger.warning(str(e))
 
 
 # @Alex
