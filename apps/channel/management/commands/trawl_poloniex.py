@@ -3,6 +3,7 @@ import logging
 import schedule
 import time
 import numpy as np
+import itertools
 
 from datetime import datetime, timedelta
 from django.core.management.base import BaseCommand
@@ -13,8 +14,8 @@ from apps.channel.models.exchange_data import POLONIEX
 from apps.indicator.models import Price, Volume, PriceResampled
 
 from settings import time_speed  # 1 / 10
-from settings import COINS_LIST
-from settings import PERIODS_LIST  # 15 / 60 / 360
+from settings import COINS_LIST_TO_GENERATE_SIGNALS
+from settings import PERIODS_LIST  # PERIODS_LIST = [15, 60, 360]
 
 logger = logging.getLogger(__name__)
 
@@ -27,9 +28,9 @@ class Command(BaseCommand):
 
         # @Alex
         # run resampling in 15,60,360 bins and calculate indicator values
-        schedule.every(15/time_speed).minutes.do(_resample_then_metrics, {'period': 15})
-        schedule.every(60/time_speed).minutes.do(_resample_then_metrics, {'period': 60})
-        schedule.every(360/time_speed).minutes.do(_resample_then_metrics, {'period': 360})
+        schedule.every(PERIODS_LIST[0]/time_speed).minutes.do(_resample_then_metrics, {'period': PERIODS_LIST[0]})
+        schedule.every(PERIODS_LIST[1]/time_speed).minutes.do(_resample_then_metrics, {'period': PERIODS_LIST[1]})
+        schedule.every(PERIODS_LIST[2]/time_speed).minutes.do(_resample_then_metrics, {'period': PERIODS_LIST[2]})
 
         keep_going=True
         while keep_going:
@@ -64,14 +65,16 @@ def pull_poloniex_data():
 
 
 def _save_prices_and_volumes(data, timestamp):
+    # save BTC/USDT in USD (satoshies)
     try:
         usdt_btc = data.pop("USDT_BTC")
 
         Price.objects.create(
             source=POLONIEX,
             coin="BTC",
-            price_satoshis=int(10 ** 8),
-            price_usdt=float(usdt_btc['last']),
+            base_coin= Price.USDT,
+            # price_satoshis=int(10 ** 8),
+            price=int(float(usdt_btc['last']) * 10 ** 8),  # multiply to have int (eliminate float)
             timestamp=timestamp
         )
 
@@ -85,16 +88,30 @@ def _save_prices_and_volumes(data, timestamp):
     except KeyError:
         logger.debug("missing BTC in Poloniex data")
 
+    # crete two objects for ETH in usdt and btc
     try:
         usdt_eth = data.pop("USDT_ETH")
         btc_eth = data.pop("BTC_ETH")
 
+        # save ETH in USDT
         Price.objects.create(
             source=POLONIEX,
             coin="ETH",
-            price_satoshis=int(float(btc_eth['last']) * 10 ** 8),
-            price_wei=int(10 ** 8),
-            price_usdt=float(usdt_eth['last']),
+            base_coin=Price.USDT,  # 'USDT'
+            #price_satoshis=int(float(btc_eth['last']) * 10 ** 8),
+            #price_wei=int(10 ** 8),
+            price=int(float(usdt_eth['last']) * 10 ** 8), # convert usd to int
+            timestamp=timestamp
+        )
+
+        # save ETH in BTC (satoshies)
+        Price.objects.create(
+            source=POLONIEX,
+            coin="ETH",
+            base_coin=Price.BTC,  # 'BTC'
+            price=int(float(btc_eth['last']) * 10 ** 8),
+            # price_wei=int(10 ** 8),
+            # price=float(usdt_eth['last']),
             timestamp=timestamp
         )
 
@@ -108,15 +125,19 @@ def _save_prices_and_volumes(data, timestamp):
     except KeyError:
         logger.debug("missing ETH in Poloniex price data")
 
+    # for all other Altcoins ...
     for currency_pair in data:
         if currency_pair.split('_')[0] == "BTC":
             try:
+                # save price in BTC (satoshies)
                 Price.objects.create(
                     source=POLONIEX,
                     coin=currency_pair.split('_')[1],
-                    price_satoshis=int(float(data[currency_pair]['last']) * 10 ** 8),
+                    base_coin=Price.BTC,  # 'BTC'
+                    price=int(float(data[currency_pair]['last']) * 10 ** 8),
                     timestamp=timestamp
                 )
+                # save volume
                 Volume.objects.create(
                     source=POLONIEX,
                     coin=currency_pair.split('_')[1],
@@ -145,38 +166,52 @@ def _resample_then_metrics(period_par):
     period = period_par['period']
     logger.debug("======== Resampling with Period: " + str(period))
 
-    # get all records back in time ( 5 min)
+    # get all records back in [period] time ( 15min, 60min, 360min)
     period_records = Price.objects.filter(timestamp__gte=datetime.now()-timedelta(minutes=period))
 
-    for coin in COINS_LIST:
-        #logger.debug('  COIN: '+ str(coin))
-        # calculate average values for the records 5 min back in time
-        coin_price_list = list(period_records.filter(coin=coin).values('timestamp','price_satoshis').order_by('-timestamp'))
+    # for all coins destined to be resamples
+    # COINS_LIST = ["ETH", "XRP", "LTC", "DASH", "NEO", "XMR", "OMG"]
+    BASE_COIN_TO_FILL = [Price.BTC, Price.USDT]
 
-        # skip the currency if there is no data about this currency
+    # iterate over all pairs [('ETH', 0), ('ETH', 1), ('XRP', 0), ('XRP', 1) ...
+    for coin, base_coin in itertools.product(COINS_LIST_TO_GENERATE_SIGNALS, BASE_COIN_TO_FILL):
+        logger.debug('  COIN: '+ str(coin))
+
+        # get all price records back in time (according to period)
+        coin_price_list = list(period_records.filter(coin=coin, base_coin=base_coin).values('timestamp','price').order_by('-timestamp'))
+
+        # skip the currency if there is no given price
         if not coin_price_list: continue
 
-        prices = np.array([ rec['price_satoshis'] for rec in coin_price_list])
+        # todo can i do better?
+        # get values from django structure
+        prices = np.array([ rec['price'] for rec in coin_price_list])
         times = np.array([ rec['timestamp'] for rec in coin_price_list])
+
+        ### resample price data, i.e. generate one time point for each 15 min
+        period_variance = prices.var()
         period_mean = prices.mean()
         period_min = prices.min()
-        period_max = prices[-1] #prices.max()  temporary fix, it is a closing price now
+        period_max = prices.max()
+        period_closing = prices[-1]
         period_ts = times.max()
 
-        # save new resampled point in the Table
+        # create resampled object
         price_resampled_object = PriceResampled.objects.create(
             source=POLONIEX,
             coin=coin,
+            base_coin = base_coin,
             timestamp=period_ts,
             period = period,
-            mean_price_satoshis=period_mean,
-            min_price_satoshis=period_min,
-            max_price_satoshis=period_max
+            price_variance = period_variance,
+            mean_price=period_mean,
+            min_price=period_min,
+            max_price=period_max,
+            closing_price = period_closing
         )
-        #logger.debug("  Price is resampled")
 
-        # get last 250 historical point which is enough to calculate any SMA,EMA etc
-        logger.debug(" [ " + str(coin) + " ]: calculate indicators ...")
+        # calculate additional indicators (sma, ema etc)
+        logger.debug(" [ " + str(coin) + " ], price in :" + str(base_coin) + " calculate indicators ...")
         price_resampled_object.calc_SMA()
         price_resampled_object.save()
 
@@ -186,6 +221,8 @@ def _resample_then_metrics(period_par):
         price_resampled_object.calc_RS()
         price_resampled_object.save()
 
+        ### check and generate possible signals
+        # todo: move the check_signal logic from price_resampled to a static method of Signal
         try:
             logger.debug(" ...check cross over signals to emit")
             price_resampled_object.check_cross_over_signal()
