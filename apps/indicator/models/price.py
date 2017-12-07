@@ -14,8 +14,8 @@ class Price(models.Model):
     )
     source = models.SmallIntegerField(choices=SOURCE_CHOICES, null=False)
     coin = models.CharField(max_length=6, null=False, blank=False)
-
-    base_coin = models.SmallIntegerField(choices=BASE_COIN_CHOICES, null=False, default=BTC)
+    base_coin = models.SmallIntegerField(choices=BASE_COIN_CHOICES,
+                                         null=False, default=BTC)
     price = models.BigIntegerField(null=False)
 
     timestamp = UnixTimeStampField(null=False)
@@ -37,3 +37,9 @@ class Price(models.Model):
 
 
     # MODEL FUNCTIONS
+
+
+
+def get_coin_value_from_string(coin_string):
+    coin_dict = {str: i for (i, str) in Price.BASE_COIN_CHOICES}
+    return coin_dict.get(coin_string, None)
