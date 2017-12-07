@@ -122,7 +122,7 @@ def _resample_then_metrics(period_par):
 
     # iterate over all pairs [('ETH', 0), ('ETH', 1), ('XRP', 0), ('XRP', 1) ...
     for coin, base_coin in itertools.product(COINS_LIST_TO_GENERATE_SIGNALS, BASE_COIN_TO_FILL):
-        logger.debug(' COIN: ' + str(coin))
+        logger.debug(' ... resampling for COIN: ' + str(coin) + ' and BASE_COIN: ' + str(base_coin))
 
         # get all price records back in time (according to period)
         coin_price_list = list(
@@ -141,7 +141,7 @@ def _resample_then_metrics(period_par):
         period_mean = int(prices.mean())  # we need it all int becasue we decided to * 10^8
         period_min = int(prices.min())
         period_max = int(prices.max())
-        period_closing = prices[-1]
+        period_closing = int(prices[-1])
         period_ts = times.max()
 
         # create resampled object
@@ -188,7 +188,7 @@ def _resample_then_metrics(period_par):
             logger.debug(" ...check cross over signals to emit")
             price_resampled_object.check_cross_over_signal()
         except Exception as e:
-            logging.debug("error checking cross over signals: " + str(e))
+            logging.debug(" ...error checking cross over signals: " + str(e))
 
         # check RSI if period more then 15 (Vinnie told that it makes not sense
         # to run RSI for 15 min period, so we calculate it only for 60, 360

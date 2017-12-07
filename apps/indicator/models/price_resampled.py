@@ -25,10 +25,10 @@ class PriceResampled(AbstractIndicator):
     base_coin = models.SmallIntegerField(choices=Price.BASE_COIN_CHOICES, null=False, default=Price.BTC)
 
     price_variance = models.FloatField(null=True)   # for future signal smoothing
-    mean_price = models.IntegerField(null=True) # use price_currency for units
-    min_price = models.IntegerField(null=True) #
-    max_price = models.IntegerField(null=True) #
-    closing_price = models.IntegerField(null=True) #
+    mean_price = models.BigIntegerField(null=True) # use price_currency for units
+    min_price = models.BigIntegerField(null=True) #
+    max_price = models.BigIntegerField(null=True) #
+    closing_price = models.BigIntegerField(null=True) #
 
     sma_low_period = models.PositiveSmallIntegerField(null=False, default=50)
     sma_high_period = models.PositiveSmallIntegerField(null=False, default=200)
@@ -69,13 +69,13 @@ class PriceResampled(AbstractIndicator):
                 base_coin=self.base_coin,
                 # go only back in time for a nessesary period (max of EMA and SMA)
                 timestamp__gte = datetime.now() - timedelta(minutes=(self.period * max([self.sma_high_period, self.ema_high_period])))
-            ).values('mean_price'))
+            ).values('closing_price'))
 
             if not back_in_time_records:
                 return None
 
             # convert price into a time Series (pandas)
-            self._resampled_price_ts = pd.Series([rec['mean_price'] for rec in back_in_time_records])
+            self._resampled_price_ts = pd.Series([rec['closing_price'] for rec in back_in_time_records])
             # TALIB: price_ts_nd = np.array([ rec['mean_price_satoshis'] for rec in raw_data])
 
         return self._resampled_price_ts
@@ -112,13 +112,13 @@ class PriceResampled(AbstractIndicator):
 
         # alpha is a decay constant which tells how much back in time
         # the decay make the contribution of the time point negledgibly small
-        alpha50 = 2.0 / (self.ema_low_period + 1)
-        alpha200 = 2.0 / (self.ema_high_period + 1)
+        alpha_low = 2.0 / (self.ema_low_period + 1)
+        alpha_high = 2.0 / (self.ema_high_period + 1)
 
         if price_ts is not None:
-            ema_low = price_ts.ewm(alpha=alpha50, min_periods=5).mean()
+            ema_low = price_ts.ewm(alpha=alpha_low, min_periods=5).mean()
             ema_low = int(ema_low.tail(1))  # get the last value for "now" time point
-            ema_high = price_ts.ewm(alpha=alpha200, min_periods=5).mean()
+            ema_high = price_ts.ewm(alpha=alpha_high, min_periods=5).mean()
             ema_high = int(ema_high.tail(1))
 
             if not np.isnan(ema_low):
@@ -168,7 +168,7 @@ class PriceResampled(AbstractIndicator):
 
         # List of all indicators to calculate signals
         INDICATORS = [
-            {'low':'SMA50_satoshis', 'high':'SMA200_satoshis', 'name':'SMA'}
+            {'low':'sma_low_price', 'high':'sma_high_price', 'name':'SMA'}
         ]
 
         #INDICATORS = [
@@ -181,21 +181,22 @@ class PriceResampled(AbstractIndicator):
             PriceResampled.objects.
                 filter(period=self.period, coin=self.coin, base_coin = self.base_coin).
                 order_by('-timestamp').
-                values('mean_price', 'sma_low_price','sma_high_price','ema_low_price','ema_high_price'))[0:2]
+                values('closing_price', 'mean_price', 'sma_low_price','sma_high_price','ema_low_price','ema_high_price'))[0:2]
 
         # Sanity check:
+        # todo: use assert
         if not last_two_rows:
             logger.debug('Signal skipped: There is no information in DB about ' + str(self.coin) + str(self.period))
             exit()
 
-        prices = np.array([row['mean_price'] for row in last_two_rows])
+        prices = np.array([row['closing_price'] for row in last_two_rows])
         if any(prices) is None: exit()
 
         # check and emit SMA, EMA signals
         # iterate through all metrics which might generate signals, SMA, EMA etc
 
         for ind in INDICATORS:   # only for SMA for now
-            # get last two time points from indicators ( SMA20, SMA200 etc)
+            # get last two time points from indicators ( SMA20, SMA200 etc) to compare with prices
             m_low  = np.array([row[ind['low']] for row in last_two_rows])
             m_high = np.array([row[ind['high']] for row in last_two_rows])
 

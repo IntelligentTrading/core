@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='priceresampled',
             name='closing_price',
-            field=models.IntegerField(null=True),
+            field=models.BigIntegerField(null=True),
         ),
     ]
