@@ -63,7 +63,7 @@ class PriceResampled(AbstractIndicator):
             if not back_in_time_records:
                 return None
 
-            self._resampled_price_ts = pd.Series([rec['mean_price_satoshis'] for rec in back_in_time_records])
+            self._resampled_price_ts = pd.Series([rec['max_price_satoshis'] for rec in back_in_time_records])
             # TALIB: price_ts_nd = np.array([ rec['mean_price_satoshis'] for rec in raw_data])
 
         return self._resampled_price_ts
