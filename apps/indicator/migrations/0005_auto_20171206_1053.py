@@ -45,6 +45,11 @@ class Migration(migrations.Migration):
             name='price_variance',
             field=models.FloatField(null=True),
         ),
+        migrations.AddField(
+            model_name='priceresampled',
+            name='closing_price',
+            field=models.PositiveSmallIntegerField(null=True),
+        ),
         migrations.RenameField(
             model_name='priceresampled',
             old_name='EMA200_satoshis',

@@ -31,6 +31,7 @@ class PriceResampled(AbstractIndicator):
     mean_price = models.IntegerField(null=True) # use price_currency for units
     min_price = models.IntegerField(null=True) #
     max_price = models.IntegerField(null=True) #
+    closing_price = models.IntegerField(null=True) #
 
     sma_low_period = models.PositiveSmallIntegerField(null=False, default=50)
     sma_high_period = models.PositiveSmallIntegerField(null=False, default=200)

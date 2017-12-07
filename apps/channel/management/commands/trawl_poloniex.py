@@ -193,6 +193,7 @@ def _resample_then_metrics(period_par):
         period_mean = prices.mean()
         period_min = prices.min()
         period_max = prices.max()
+        period_closing = prices[-1]
         period_ts = times.max()
 
         # create resampled object
@@ -205,7 +206,8 @@ def _resample_then_metrics(period_par):
             price_variance = period_variance,
             mean_price=period_mean,
             min_price=period_min,
-            max_price=period_max
+            max_price=period_max,
+            closing_price = period_closing
         )
 
         # calculate additional indicators (sma, ema etc)
