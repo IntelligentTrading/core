@@ -43,10 +43,9 @@ class Signal(Timestampable, models.Model):
     strength_value = models.IntegerField(null=True)
     strength_max = models.IntegerField(null=True)
 
-    price_satoshis = models.BigIntegerField(null=False)  # Price in satoshis
-    price_satoshis_change = models.FloatField(null=True)
-    price_usdt = models.FloatField(null=True)  # USD value
-    price_usdt_change = models.FloatField(null=True)
+    base_coin = models.SmallIntegerField(choices=Price.BASE_COIN_CHOICES, null=False, default=Price.BTC)
+    price = models.BigIntegerField(null=False)
+    price_change = models.FloatField(null=True)  # in percents, thatis why Float
 
     rsi_value = models.FloatField(null=True)
 
@@ -63,20 +62,19 @@ class Signal(Timestampable, models.Model):
 
     # MODEL FUNCTIONS
 
-    def get_price_satoshis(self):
-        if self.price_satoshis and self.price_satoshis_change:
-            return self.price_satoshis
+    def get_price(self):
+        if self.price and self.price_change:
+            return self.price
 
         price_object = Price.objects.filter(coin=self.coin,
                                             source=self.source,
+                                            base_coin = self.base_coin,
                                             timestamp__lte=self.timestamp
                                             ).order_by('-timestamp').first()
         if price_object:
-            self.price_satoshis = price_object.price_satoshis
-            self.price_satoshis_change = price_object.price_satoshis_change
-            self.price_usdt = price_object.price_usdt
-            self.price_usdt_change = price_object.price_usdt_change
-        return self.price_satoshis
+            self.price = price_object.price
+            self.price_change = price_object.price_change
+        return self.price
 
 
     def as_dict(self):
@@ -101,9 +99,9 @@ class Signal(Timestampable, models.Model):
         # populate all required values
 
         try:
-            if not all([self.price_satoshis, self.price_satoshis_change,
-                        self.price_usdt, self.price_usdt_change]):
-                self.price_satoshis = self.get_price_satoshis()
+            if not all([self.price, self.price_change,
+                        self.price, self.price_change]):
+                self.price = self.get_price()
 
             if not all([self.volume_btc, self.volume_btc_change,
                         self.volume_usdt, self.volume_usdt_change]):
@@ -147,11 +145,11 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 
-@receiver(pre_save, sender=Signal, dispatch_uid="check_has_price_satoshis")
-def check_has_price_satoshis(sender, instance, **kwargs):
-    price_satoshis = instance.get_price_satoshis()
+@receiver(pre_save, sender=Signal, dispatch_uid="check_has_price")
+def check_has_price(sender, instance, **kwargs):
+    price = instance.get_price()
     try:
-        assert price_satoshis #see now we have it :)
+        assert price #see now we have it :)
     except Exception as e:
         logging.debug(str(e))
 
