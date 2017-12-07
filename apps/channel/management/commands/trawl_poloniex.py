@@ -160,7 +160,7 @@ def _resample_then_metrics(period_par):
         times = np.array([ rec['timestamp'] for rec in coin_price_list])
         period_mean = prices.mean()
         period_min = prices.min()
-        period_max = prices.max()
+        period_max = prices[-1] #prices.max()  temporary fix, it is a closing price now
         period_ts = times.max()
 
         # save new resampled point in the Table
