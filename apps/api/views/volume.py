@@ -19,7 +19,7 @@ class Volume(View):
         volume_data = VolumeModel.objects.filter(coin=coin).order_by('-timestamp').first()
         if volume_data:
             response = {
-                'volume': volume_data.btc_volume if coin is not "BTC" else volume_data.usdt,
+                'volume': volume_data.volume if coin is not "BTC" else volume_data.usdt,
                 'timestamp': str(volume_data.timestamp)
             }
         else:
