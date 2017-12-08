@@ -43,3 +43,6 @@ class Price(models.Model):
 def get_coin_value_from_string(coin_string):
     coin_dict = {str: i for (i, str) in Price.BASE_COIN_CHOICES}
     return coin_dict.get(coin_string, None)
+
+def int_price2float(int_price):
+    float_price = float(int_price * 10**-8)

@@ -36,11 +36,11 @@ class PriceResampled(AbstractIndicator):
     ema_low_period = models.PositiveSmallIntegerField(null=False, default=50)
     ema_high_period = models.PositiveSmallIntegerField(null=False, default=200)
 
-    sma_low_price = models.IntegerField(null=True)
-    sma_high_price = models.IntegerField(null=True)
+    sma_low_price = models.BigIntegerField(null=True)
+    sma_high_price = models.BigIntegerField(null=True)
 
-    ema_low_price = models.IntegerField(null=True)
-    ema_high_price = models.IntegerField(null=True)
+    ema_low_price = models.BigIntegerField(null=True)
+    ema_high_price = models.BigIntegerField(null=True)
 
     relative_strength = models.FloatField(null=True) # relative strength
     # RSI = relative strength index, see property
@@ -92,18 +92,16 @@ class PriceResampled(AbstractIndicator):
             # calculate SMA and save it in the same record
             # time_speed make it faster when in local for dubuging
             # TALIB: price_ts_nd = np.array([ rec['mean_price_satoshis'] for rec in raw_data])
-            sma_low = price_ts.rolling(window=int(self.sma_low_period/time_speed), center=False, min_periods=4).mean()
-            sma_low = int(sma_low.tail(1))
-            sma_high = price_ts.rolling(window=int(self.sma_high_period/time_speed), center=False, min_periods=4).mean()
-            sma_high = int(sma_high.tail(1))
+            sma_low = price_ts.rolling(window=int(self.sma_low_period/time_speed), center=False, min_periods=4).mean().iloc[-1]
+            sma_high = price_ts.rolling(window=int(self.sma_high_period/time_speed), center=False, min_periods=4).mean().iloc[-1]
 
             # TALIB:_SMA50 = tas.SMA(price_ts_nd.astype(float), timeperiod=50/time_speed)
             # TALIB:_MA200 = tas.SMA(price_ts_nd.astype(float), timeperiod=200/time_speed)
 
             if not np.isnan(sma_low):
-                self.sma_low_price = sma_low
+                self.sma_low_price = int(sma_low)
             if not np.isnan(sma_high):
-                self.sma_high_price = sma_high
+                self.sma_high_price = int(sma_high)
 
 
     def calc_EMA(self):
@@ -116,15 +114,13 @@ class PriceResampled(AbstractIndicator):
         alpha_high = 2.0 / (self.ema_high_period + 1)
 
         if price_ts is not None:
-            ema_low = price_ts.ewm(alpha=alpha_low, min_periods=5).mean()
-            ema_low = int(ema_low.tail(1))  # get the last value for "now" time point
-            ema_high = price_ts.ewm(alpha=alpha_high, min_periods=5).mean()
-            ema_high = int(ema_high.tail(1))
+            ema_low = price_ts.ewm(alpha=alpha_low, min_periods=5).mean().iloc[-1]
+            ema_high = price_ts.ewm(alpha=alpha_high, min_periods=5).mean().iloc[-1]
 
             if not np.isnan(ema_low):
-                self.ema_low_price = ema_low
+                self.ema_low_price = int(ema_low)
             if not np.isnan(ema_high):
-                self.ema_high_price = ema_high
+                self.ema_high_price = int(ema_high)
 
 
     def calc_RS(self):
@@ -207,26 +203,23 @@ class PriceResampled(AbstractIndicator):
             if all(m_low != None):  # now we know both the price and low exists
                 ind_A_sign = np.sign(prices - m_low)  # [-1, 1]
                 trend_A = int(ind_A_sign[0]) if np.prod(ind_A_sign) < 0 else 0   #if indicator changes its sign
-
+                logger.debug("ind_A trend: " + str(trend_A))
             # ind B
             if all(m_high != None):
                 ind_B_sign = np.sign(prices - m_high)
                 trend_B = int(ind_B_sign[0]) if np.prod(ind_B_sign) < 0 else 0
-
+                logger.debug("ind_B trend: " + str(trend_B))
             # ind C
             if all(m_high != None) and all(m_low != None):
                 ind_C_sign = np.sign(m_low - m_high)
                 trend_C = int(ind_C_sign[0]) if np.prod(ind_C_sign) < 0 else 0
+                logger.debug("ind_C trend: " + str(trend_C))
 
             # implement
             #    if A is BEARISH ,  that's a weak signal
             #    if A and B are both BEARISH, that's a medium signal
             #    if A, B, and C are all BEARISH, that's a strong signal
             # and generate the signals if neccesary
-
-            logger.debug("ind_A trend: " + str(trend_A))
-            logger.debug("ind_B trend: " + str(trend_B))
-            logger.debug("ind_C trend: " + str(trend_C))
 
             # emit signals
             if np.abs(trend_A + trend_B + trend_C) == 3:  # if A, B and C all have the same direction

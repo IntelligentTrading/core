@@ -111,7 +111,7 @@ def _resample_then_metrics(period_par):
     # TODO: need to be refactored... splitted into several methods or classes
 
     period = period_par['period']
-    logger.debug("======== Resampling with Period: " + str(period))
+    logger.debug(" ============== Resampling with Period: " + str(period) + " ====")
 
     # get all records back in [period] time ( 15min, 60min, 360min)
     period_records = Price.objects.filter(timestamp__gte=datetime.now() - timedelta(minutes=period))
@@ -122,14 +122,16 @@ def _resample_then_metrics(period_par):
 
     # iterate over all pairs [('ETH', 0), ('ETH', 1), ('XRP', 0), ('XRP', 1) ...
     for coin, base_coin in itertools.product(COINS_LIST_TO_GENERATE_SIGNALS, BASE_COIN_TO_FILL):
-        logger.debug(' ... resampling for COIN: ' + str(coin) + ' and BASE_COIN: ' + str(base_coin))
+        logger.debug(' ======= resampling: checking COIN: ' + str(coin) + ' with BASE_COIN: ' + str(base_coin))
 
         # get all price records back in time (according to period)
         coin_price_list = list(
             period_records.filter(coin=coin, base_coin=base_coin).values('timestamp', 'price').order_by('-timestamp'))
 
         # skip the currency if there is no given price
-        if not coin_price_list: continue
+        if not coin_price_list:
+            logger.debug(' ======= skipping, no price information')
+            continue
 
         # todo can i do better?
         # get values from django structure
@@ -153,48 +155,49 @@ def _resample_then_metrics(period_par):
             period=period,
             price_variance=period_variance,
             mean_price=period_mean,
+            closing_price=period_closing,
             min_price=period_min,
-            max_price=period_max,
-            closing_price=period_closing
+            max_price=period_max
+
         )
 
         # calculate additional indicators (sma, ema etc)
-        logger.debug(" [ " + str(coin) + " ], price in :" + str(base_coin) + " calculate indicators ...")
+        logger.debug("   calculate indicators for [ " + str(coin) + " ], price in :" + str(base_coin) )
 
         try:
             price_resampled_object.calc_SMA()
             price_resampled_object.save()
-            logger.debug("EMA calculations done and saved.")
+            logger.debug("   ...SMA calculations done and saved.")
         except Exception as e:
-            logger.debug(str(e))
+            logger.debug('---> SMA calculation error: ' + str(e))
 
         try:
             price_resampled_object.calc_EMA()
             price_resampled_object.save()
-            logger.debug("EMA calculations done and saved.")
+            logger.debug("   ...EMA calculations done and saved.")
         except Exception as e:
-            logger.debug(str(e))
+            logger.debug('---> EMA calcultion error: ' +  str(e))
 
         try:
             price_resampled_object.calc_RS()
             price_resampled_object.save()
-            logger.debug("RS calculations done and saved.")
+            logger.debug("   ...RS calculations done and saved.")
         except Exception as e:
             logger.debug(str(e))
 
         ### check and generate possible signals
         # todo: move the check_signal logic from price_resampled to a static method of Signal
         try:
-            logger.debug(" ...check cross over signals to emit")
+            logger.debug("   ...check cross over signals to emit")
             price_resampled_object.check_cross_over_signal()
         except Exception as e:
-            logging.debug(" ...error checking cross over signals: " + str(e))
+            logging.debug(" --> error checking cross over signals: " + str(e))
 
         # check RSI if period more then 15 (Vinnie told that it makes not sense
         # to run RSI for 15 min period, so we calculate it only for 60, 360
         if period >= 15:  # change to 60 in production
             try:
-                logger.debug(" ...check RSI signal to emit")
+                logger.debug("   ...check RSI signal to emit")
                 price_resampled_object.check_rsi_signal()
             except Exception as e:
-                logging.debug("error checking rsi signals: " + str(e))
+                logging.debug(" --> error checking rsi signals: " + str(e))
