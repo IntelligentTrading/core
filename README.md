@@ -1,3 +1,5 @@
+[![Waffle.io - Columns and their card count](https://badge.waffle.io/IntelligentTrading/core.svg?columns=all)](https://waffle.io/IntelligentTrading/core)
+
 # ITT Data-Sources
 
 
