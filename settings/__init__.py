@@ -197,10 +197,18 @@ except Exception as e:
 # @Alex
 # Global constants
 COINS_LIST_TO_GENERATE_SIGNALS = ["BTC", "ETH", "XRP", "LTC", "DASH", "NEO", "XMR", "OMG"]
-PERIODS_LIST = [15, 60, 360]
-HORIZONS = {15: "short", 60: "medium", 360: "long"}  # mapping from bin size to a name short/medium
-time_speed = 1  # set to 1 for production, 10 for fast debugging
 
+# mapping from bin size to a name short/medium
+PERIODS_LIST = list([60,240,1440])
+(SHORT, MEDIUM, LONG) = PERIODS_LIST
+HORIZONS_TIME2NAMES = {
+    SHORT:'short',
+    MEDIUM:'medium',
+    LONG:'long'
+}
+
+
+time_speed = 1  # set to 1 for production, 10 for fast debugging
 
 A_PRIME_NUMBER = int(os.environ.get('A_PRIME_NUMBER', 12345))
 TEAM_EMOJIS = os.environ.get('TEAM_EMOJIS', "🤖,").split(",")

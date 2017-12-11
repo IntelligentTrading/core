@@ -16,7 +16,7 @@ from apps.indicator.models.price import get_coin_value_from_string
 
 from settings import time_speed  # 1 / 10
 from settings import COINS_LIST_TO_GENERATE_SIGNALS
-from settings import PERIODS_LIST  # PERIODS_LIST = [15, 60, 360]
+from settings import PERIODS_LIST
 
 logger = logging.getLogger(__name__)
 
@@ -29,10 +29,10 @@ class Command(BaseCommand):
         schedule.every(1).minutes.do(pull_poloniex_data)
 
         # @Alex
-        # run resampling in 15,60,360 bins and calculate indicator values
-        schedule.every(PERIODS_LIST[0] / time_speed).minutes.do(_resample_then_metrics, {'period': PERIODS_LIST[0]})
-        schedule.every(PERIODS_LIST[1] / time_speed).minutes.do(_resample_then_metrics, {'period': PERIODS_LIST[1]})
-        schedule.every(PERIODS_LIST[2] / time_speed).minutes.do(_resample_then_metrics, {'period': PERIODS_LIST[2]})
+        # run resampling for all periods and calculate indicator values
+        for hor_period in PERIODS_LIST:
+            schedule.every(hor_period / time_speed).minutes.do(_resample_then_metrics, {'period': hor_period})
+
 
         keep_going = True
         while keep_going:

@@ -9,8 +9,10 @@ from apps.indicator.models.abstract_indicator import AbstractIndicator
 from apps.indicator.models.price import Price
 from apps.signal.models import Signal
 from apps.user.models.user import get_horizon_value_from_string
-from settings import HORIZONS  # mapping from bin size to a name short/medium
+from settings import HORIZONS_TIME2NAMES  # mapping from bin size to a name short/medium
 from settings import PERIODS_LIST
+from settings import SHORT, MEDIUM, LONG
+
 from settings import time_speed  # speed of the resampling, 10 for fast debug, 1 for prod
 
 logger = logging.getLogger(__name__)
@@ -196,7 +198,7 @@ class PriceResampled(AbstractIndicator):
             m_low  = np.array([row[ind['low']] for row in last_two_rows])
             m_high = np.array([row[ind['high']] for row in last_two_rows])
 
-            horizon = get_horizon_value_from_string(display_string=HORIZONS[self.period])
+            horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[self.period])
 
             # ind A
             # trend = 0 if sign is not changed, -1 if bearish, +1 if bullish
@@ -274,7 +276,7 @@ class PriceResampled(AbstractIndicator):
     # RSI 25-20- = oversold (strong signal) = -3
 
     def check_rsi_signal(self):
-        horizon = get_horizon_value_from_string(display_string=HORIZONS[self.period])
+        horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[self.period])
         rsi_strength = 0
         rsi = self.relative_strength_index
 
