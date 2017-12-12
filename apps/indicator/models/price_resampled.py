@@ -234,7 +234,6 @@ class PriceResampled(AbstractIndicator):
                     timestamp=self.timestamp
                 )
                 signal_strong.save()  # saving will send immediately if not already sent
-                signal_strong.print()
             elif (trend_A * trend_B) > 0:   # weak signal
                 signal_medium = Signal(
                     transaction_currency=self.transaction_currency,
@@ -246,7 +245,6 @@ class PriceResampled(AbstractIndicator):
                     timestamp=self.timestamp
                 )
                 signal_medium.save()  # saving will send immediately if not already sent
-                signal_medium.print()
             elif np.abs(trend_A) > 0: # weak signal
                 signal_weak = Signal(
                     transaction_currency=self.transaction_currency,
@@ -258,7 +256,6 @@ class PriceResampled(AbstractIndicator):
                     timestamp=self.timestamp
                 )
                 signal_weak.save()  # saving will send immediately if not already sent
-                signal_weak.print()
             else:
                 logger.debug(" no changes in trends, so No signals to generate ")
 
@@ -307,7 +304,6 @@ class PriceResampled(AbstractIndicator):
                     timestamp=self.timestamp
                 )
                 signal_rsi.save()  # saving will send immediately if not already sent
-                signal_rsi.print()
         else:
             logger.error(" RSI out of range!!  RSI= " + str(rsi))
 
