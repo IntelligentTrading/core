@@ -199,7 +199,7 @@ except Exception as e:
 COINS_LIST_TO_GENERATE_SIGNALS = ["BTC", "ETH", "XRP", "LTC", "DASH", "NEO", "XMR", "OMG"]
 
 # mapping from bin size to a name short/medium
-PERIODS_LIST = list([60,240,1440])
+PERIODS_LIST = list([15, 60, 360])  #list([60,240,1440])
 (SHORT, MEDIUM, LONG) = PERIODS_LIST
 HORIZONS_TIME2NAMES = {
     SHORT:'short',
