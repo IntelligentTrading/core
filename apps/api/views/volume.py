@@ -13,13 +13,20 @@ class Volume(View):
 
     def get(self, request, *args, **kwargs):
 
-        coin = request.GET.get('coin', "BTC").upper()
-        assert len(coin) < 8
+        transaction_currency = request.GET.get('transaction_currency', 'NA').upper()
 
-        volume_data = VolumeModel.objects.filter(coin=coin).order_by('-timestamp').first()
+        if transaction_currency == 'NA':
+            return HttpResponse(json.dumps({'error': 'transaction_currency parameter is required'}),
+                                content_type="application/json")
+
+        assert len(transaction_currency) > 1
+        assert len(transaction_currency) < 8
+
+        volume_data = VolumeModel.objects.filter(transaction_currency=transaction_currency
+                                                 ).order_by('-timestamp').first()
         if volume_data:
             response = {
-                'volume': volume_data.volume if coin is not "BTC" else volume_data.usdt,
+                'volume': volume_data.volume if transaction_currency is not "BTC" else volume_data.usdt,
                 'timestamp': str(volume_data.timestamp)
             }
         else:

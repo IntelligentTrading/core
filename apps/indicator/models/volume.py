@@ -6,8 +6,8 @@ from apps.indicator.models.price import Price
 
 class Volume(models.Model):
     source = models.SmallIntegerField(choices=SOURCE_CHOICES, null=False)
-    coin = models.CharField(max_length=6, null=False, blank=False)
-    base_coin = models.SmallIntegerField(choices=Price.BASE_COIN_CHOICES,
+    transaction_currency = models.CharField(max_length=6, null=False, blank=False)
+    counter_currency = models.SmallIntegerField(choices=Price.COUNTER_CURRENCY_CHOICES,
                                          null=False, default=Price.BTC)
 
     volume = models.FloatField(null=False)
