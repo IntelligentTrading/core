@@ -99,8 +99,7 @@ class Signal(Timestampable, models.Model):
         # populate all required values
 
         try:
-            if not all([self.price, self.price_change,
-                        self.price, self.price_change]):
+            if not all([self.price, self.price_change]):
                 self.price = self.get_price()
 
             if not all([self.volume_btc, self.volume_btc_change,
@@ -121,20 +120,24 @@ class Signal(Timestampable, models.Model):
                             aws_secret_access_key=AWS_OPTIONS['AWS_SECRET_ACCESS_KEY'])
 
         if QUEUE_NAME:
+            logging.debug("emitted to QUEUE_NAME queue :" + QUEUE_NAME)
             production_queue = sqs_connection.get_queue(QUEUE_NAME)
             production_queue.write(message)
 
         if BETA_QUEUE_NAME:
+            logging.debug("emitted to BETA_QUEUE_NAME queue :" + BETA_QUEUE_NAME)
             test_queue = sqs_connection.get_queue(BETA_QUEUE_NAME)
             test_queue.write(message)
 
         if TEST_QUEUE_NAME:
+            logging.debug("emitted to TEST_QUEUE_NAME queue :" + TEST_QUEUE_NAME)
             test_queue = sqs_connection.get_queue(TEST_QUEUE_NAME)
             test_queue.write(message)
 
         logger.debug("EMITTED SIGNAL: " + str(self.as_dict()))
         self.sent_at = datetime.now()
         return
+
 
 
     def print(self):
