@@ -12,7 +12,7 @@ from requests import get, RequestException
 from apps.channel.models import ExchangeData
 from apps.channel.models.exchange_data import POLONIEX
 from apps.indicator.models import Price, Volume, PriceResampled
-from apps.indicator.models.price import get_coin_value_from_string
+from apps.indicator.models.price import get_currency_value_from_string
 
 from settings import time_speed  # 1 / 10
 from settings import COINS_LIST_TO_GENERATE_SIGNALS
@@ -69,24 +69,24 @@ def pull_poloniex_data():
 def _save_prices_and_volumes(data, timestamp):
     for currency_pair in data:
         try:
-            base_coin_string = currency_pair.split('_')[0]
-            base_coin = get_coin_value_from_string(base_coin_string)
-            assert base_coin >= 0
-            coin_string = currency_pair.split('_')[1]
-            assert len(coin_string) > 1 and len(coin_string) <= 6
+            counter_currency_string = currency_pair.split('_')[0]
+            counter_currency = get_currency_value_from_string(counter_currency_string)
+            assert counter_currency >= 0
+            transaction_currency_string = currency_pair.split('_')[1]
+            assert len(transaction_currency_string) > 1 and len(transaction_currency_string) <= 6
 
             Price.objects.create(
                 source=POLONIEX,
-                coin=coin_string,
-                base_coin=base_coin,
+                transaction_currency=transaction_currency_string,
+                counter_currency=counter_currency,
                 price=int(float(data[currency_pair]['last']) * 10 ** 8),
                 timestamp=timestamp
             )
 
             Volume.objects.create(
                 source=POLONIEX,
-                coin=coin_string,
-                base_coin=base_coin,
+                transaction_currency=transaction_currency_string,
+                counter_currency=counter_currency,
                 volume=float(data[currency_pair]['baseVolume']),
                 timestamp=timestamp
             )
@@ -116,27 +116,27 @@ def _resample_then_metrics(period_par):
     # get all records back in [period] time ( 15min, 60min, 360min)
     period_records = Price.objects.filter(timestamp__gte=datetime.now() - timedelta(minutes=period))
 
-    # for all coins destined to be resamples
+    # for all transaction_currencys destined to be resamples
     # COINS_LIST = ["ETH", "XRP", "LTC", "DASH", "NEO", "XMR", "OMG"]
     BASE_COIN_TO_FILL = [Price.BTC, Price.USDT]
 
     # iterate over all pairs [('ETH', 0), ('ETH', 1), ('XRP', 0), ('XRP', 1) ...
-    for coin, base_coin in itertools.product(COINS_LIST_TO_GENERATE_SIGNALS, BASE_COIN_TO_FILL):
-        logger.debug(' ======= resampling: checking COIN: ' + str(coin) + ' with BASE_COIN: ' + str(base_coin))
+    for transaction_currency, counter_currency in itertools.product(COINS_LIST_TO_GENERATE_SIGNALS, BASE_COIN_TO_FILL):
+        logger.debug(' ======= resampling: checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
 
         # get all price records back in time (according to period)
-        coin_price_list = list(
-            period_records.filter(coin=coin, base_coin=base_coin).values('timestamp', 'price').order_by('-timestamp'))
+        transaction_currency_price_list = list(
+            period_records.filter(transaction_currency=transaction_currency, counter_currency=counter_currency).values('timestamp', 'price').order_by('-timestamp'))
 
         # skip the currency if there is no given price
-        if not coin_price_list:
+        if not transaction_currency_price_list:
             logger.debug(' ======= skipping, no price information')
             continue
 
         # todo can i do better?
         # get values from django structure
-        prices = np.array([rec['price'] for rec in coin_price_list])
-        times = np.array([rec['timestamp'] for rec in coin_price_list])
+        prices = np.array([rec['price'] for rec in transaction_currency_price_list])
+        times = np.array([rec['timestamp'] for rec in transaction_currency_price_list])
 
         ### resample price data, i.e. generate one time point for each 15 min
         period_variance = prices.var()
@@ -149,8 +149,8 @@ def _resample_then_metrics(period_par):
         # create resampled object
         price_resampled_object = PriceResampled.objects.create(
             source=POLONIEX,
-            coin=coin,
-            base_coin=base_coin,
+            transaction_currency=transaction_currency,
+            counter_currency=counter_currency,
             timestamp=period_ts,
             period=period,
             price_variance=period_variance,
@@ -162,7 +162,7 @@ def _resample_then_metrics(period_par):
         )
 
         # calculate additional indicators (sma, ema etc)
-        logger.debug("   calculate indicators for [ " + str(coin) + " ], price in :" + str(base_coin) )
+        logger.debug("   calculate indicators for [ " + str(transaction_currency) + " ], price in :" + str(counter_currency) )
 
         try:
             price_resampled_object.calc_SMA()

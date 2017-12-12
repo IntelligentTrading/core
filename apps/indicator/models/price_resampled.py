@@ -20,14 +20,13 @@ logger = logging.getLogger(__name__)
 
 class PriceResampled(AbstractIndicator):
     # source inherited from AbstractIndicator
-    # coin inherited from AbstractIndicator
+    # transaction_currency inherited from AbstractIndicator
     # timestamp inherited from AbstractIndicator
 
     period = models.PositiveSmallIntegerField(null=False, default=PERIODS_LIST[0])  # minutes (eg. 15)
-    base_coin = models.SmallIntegerField(choices=Price.BASE_COIN_CHOICES, null=False, default=Price.BTC)
 
     price_variance = models.FloatField(null=True)   # for future signal smoothing
-    mean_price = models.BigIntegerField(null=True) # use price_currency for units
+    mean_price = models.BigIntegerField(null=True) # use counter_currency (10^8) for units
     min_price = models.BigIntegerField(null=True) #
     max_price = models.BigIntegerField(null=True) #
     closing_price = models.BigIntegerField(null=True) #
@@ -67,8 +66,8 @@ class PriceResampled(AbstractIndicator):
         if self._resampled_price_ts is None:
             back_in_time_records = list(PriceResampled.objects.filter(
                 period=self.period,
-                coin=self.coin,
-                base_coin=self.base_coin,
+                transaction_currency=self.transaction_currency,
+                counter_currency=self.counter_currency,
                 # go only back in time for a nessesary period (max of EMA and SMA)
                 timestamp__gte = datetime.now() - timedelta(minutes=(self.period * max([self.sma_high_period, self.ema_high_period])))
             ).values('closing_price'))
@@ -177,14 +176,14 @@ class PriceResampled(AbstractIndicator):
         # get DB records for the last two time points
         last_two_rows = list(
             PriceResampled.objects.
-                filter(period=self.period, coin=self.coin, base_coin = self.base_coin).
+                filter(period=self.period, transaction_currency=self.transaction_currency, counter_currency = self.counter_currency).
                 order_by('-timestamp').
                 values('closing_price', 'mean_price', 'sma_low_price','sma_high_price','ema_low_price','ema_high_price'))[0:2]
 
         # Sanity check:
         # todo: use assert
         if not last_two_rows:
-            logger.debug('Signal skipped: There is no information in DB about ' + str(self.coin) + str(self.period))
+            logger.debug('Signal skipped: There is no information in DB about ' + str(self.transaction_currency) + str(self.period))
             exit()
 
         prices = np.array([row['closing_price'] for row in last_two_rows])
@@ -226,7 +225,7 @@ class PriceResampled(AbstractIndicator):
             # emit signals
             if np.abs(trend_A + trend_B + trend_C) == 3:  # if A, B and C all have the same direction
                 signal_strong = Signal(
-                    coin=self.coin,
+                    transaction_currency=self.transaction_currency,
                     signal=ind['name'],  # SMA/ EMA
                     trend=trend_C,   # take any of A or B or C, since they hav the same sign
                     horizon=horizon,
@@ -238,7 +237,7 @@ class PriceResampled(AbstractIndicator):
                 signal_strong.print()
             elif (trend_A * trend_B) > 0:   # weak signal
                 signal_medium = Signal(
-                    coin=self.coin,
+                    transaction_currency=self.transaction_currency,
                     signal=ind['name'],  # SMA, EMA
                     trend=trend_B,  # take any of A or B, since they hav the same sign
                     horizon=horizon,
@@ -250,7 +249,7 @@ class PriceResampled(AbstractIndicator):
                 signal_medium.print()
             elif np.abs(trend_A) > 0: # weak signal
                 signal_weak = Signal(
-                    coin=self.coin,
+                    transaction_currency=self.transaction_currency,
                     signal=ind['name'],  # SMA, EMA
                     trend=trend_A,
                     horizon=horizon,
@@ -298,7 +297,7 @@ class PriceResampled(AbstractIndicator):
 
             if rsi_strength != 0:
                 signal_rsi = Signal(
-                    coin=self.coin,
+                    transaction_currency=self.transaction_currency,
                     signal='RSI',
                     rsi_value=rsi,
                     trend=np.sign(rsi_strength),

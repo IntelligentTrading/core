@@ -33,7 +33,7 @@ class Signal(Timestampable, models.Model):
     text = models.TextField(default="")
 
     source = models.SmallIntegerField(choices=SOURCE_CHOICES, null=False, default=POLONIEX)
-    coin = models.CharField(max_length=6, null=False, blank=False)
+    transaction_currency = models.CharField(max_length=6, null=False, blank=False)
 
     signal = models.CharField(max_length=15, null=True)
     trend = models.CharField(max_length=15, null=True)
@@ -43,7 +43,7 @@ class Signal(Timestampable, models.Model):
     strength_value = models.IntegerField(null=True)
     strength_max = models.IntegerField(null=True)
 
-    base_coin = models.SmallIntegerField(choices=Price.BASE_COIN_CHOICES, null=False, default=Price.BTC)
+    counter_currency = models.SmallIntegerField(choices=Price.COUNTER_CURRENCY_CHOICES, null=False, default=Price.BTC)
     price = models.BigIntegerField(null=False)
     price_change = models.FloatField(null=True)  # in percents, thatis why Float
 
@@ -66,9 +66,9 @@ class Signal(Timestampable, models.Model):
         if self.price and self.price_change:
             return self.price
 
-        price_object = Price.objects.filter(coin=self.coin,
+        price_object = Price.objects.filter(transaction_currency=self.transaction_currency,
                                             source=self.source,
-                                            base_coin = self.base_coin,
+                                            counter_currency = self.counter_currency,
                                             timestamp__lte=self.timestamp
                                             ).order_by('-timestamp').first()
         if price_object:
