@@ -226,6 +226,7 @@ class PriceResampled(AbstractIndicator):
             if np.abs(trend_A + trend_B + trend_C) == 3:  # if A, B and C all have the same direction
                 signal_strong = Signal(
                     transaction_currency=self.transaction_currency,
+                    counter_currency=self.counter_currency,
                     signal=ind['name'],  # SMA/ EMA
                     trend=trend_C,   # take any of A or B or C, since they hav the same sign
                     horizon=horizon,
@@ -237,6 +238,7 @@ class PriceResampled(AbstractIndicator):
             elif (trend_A * trend_B) > 0:   # weak signal
                 signal_medium = Signal(
                     transaction_currency=self.transaction_currency,
+                    counter_currency=self.counter_currency,
                     signal=ind['name'],  # SMA, EMA
                     trend=trend_B,  # take any of A or B, since they hav the same sign
                     horizon=horizon,
@@ -248,6 +250,7 @@ class PriceResampled(AbstractIndicator):
             elif np.abs(trend_A) > 0: # weak signal
                 signal_weak = Signal(
                     transaction_currency=self.transaction_currency,
+                    counter_currency=self.counter_currency,
                     signal=ind['name'],  # SMA, EMA
                     trend=trend_A,
                     horizon=horizon,
@@ -295,6 +298,7 @@ class PriceResampled(AbstractIndicator):
             if rsi_strength != 0:
                 signal_rsi = Signal(
                     transaction_currency=self.transaction_currency,
+                    counter_currency=self.counter_currency,
                     signal='RSI',
                     rsi_value=rsi,
                     trend=np.sign(rsi_strength),
