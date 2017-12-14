@@ -314,8 +314,9 @@ class PriceResampled(AbstractIndicator):
 
             if prev_signals:   # if previous signal exists, get it
                 previous_rsi_strength = int(prev_signals.last()['trend']) * int(prev_signals.last()['strength_value'])
+                logger.debug("  previous rsi_strength= " + str(previous_rsi_strength))
             else:
-                logger.debug("Previous signal does not exist")
+                logger.debug("  Previous signal does not exist")
 
             # emit rsi signal if it exists and different from previous one
             if rsi_strength != 0 & previous_rsi_strength != rsi_strength:
@@ -332,7 +333,7 @@ class PriceResampled(AbstractIndicator):
                 )
                 signal_rsi.save()  # saving will send immediately if not already sent
             else:
-                logger.debug(" no RSI signal: no trends or the same as the previous rsi: old rsi_level=" + str(previous_rsi_strength) + " new one=" + str(rsi_strength))
+                logger.debug(" no RSI signal: no trends or the same as the previous rsi: new rsi_level=" + str(rsi_strength))
         else:
             logger.error(" RSI out of range!!  RSI= " + str(rsi))
 
