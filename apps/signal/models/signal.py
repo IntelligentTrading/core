@@ -134,11 +134,9 @@ class Signal(Timestampable, models.Model):
             test_queue = sqs_connection.get_queue(TEST_QUEUE_NAME)
             test_queue.write(message)
 
-        logger.debug("EMITTED SIGNAL: " + str(self.as_dict()))
-        self.sent_at = datetime.now()
+        logger.info("EMITTED SIGNAL: " + str(self.as_dict()))
+        self.sent_at = datetime.now()  # to prevent emitting the same signal twice
         return
-
-
 
     def print(self):
         logger.info("PRINTING SIGNAL DATA: " + str(self.as_dict()))
@@ -160,7 +158,7 @@ def check_has_price(sender, instance, **kwargs):
 @receiver(post_save, sender=Signal, dispatch_uid="send_signal")
 def send_signal(sender, instance, **kwargs):
     logging.debug("signal saved, checking if signal has been sent yet")
-    if not instance.sent_at:
+    if not instance.sent_at:   # to prevent emitting the same signal twice
         try:
             logging.debug("signal not sent yet, sending now...")
             instance._send()

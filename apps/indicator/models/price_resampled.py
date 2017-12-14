@@ -103,6 +103,8 @@ class PriceResampled(AbstractIndicator):
                 self.sma_low_price = int(sma_low)
             if not np.isnan(sma_high):
                 self.sma_high_price = int(sma_high)
+        else:
+            logger.debug('Not enough closing prices for SMA calculation')
 
 
     def calc_EMA(self):
@@ -122,6 +124,8 @@ class PriceResampled(AbstractIndicator):
                 self.ema_low_price = int(ema_low)
             if not np.isnan(ema_high):
                 self.ema_high_price = int(ema_high)
+        else:
+            logger.debug('Not enough closing prices for EMA calculation')
 
 
     def calc_RS(self):
@@ -136,23 +140,26 @@ class PriceResampled(AbstractIndicator):
         # period= 15,60,360, this ts is already reflects one of those before we call it
         price_ts = self.get_price_ts()
 
-        # difference btw start and close of the day, remove the first NA
-        delta = price_ts.diff()
-        delta = delta[1:]
+        if price_ts is not None:
+            # difference btw start and close of the day, remove the first NA
+            delta = price_ts.diff()
+            delta = delta[1:]
 
-        up, down = delta.copy(), delta.copy()
-        up[up < 0] = 0
-        down[down > 0] = 0
+            up, down = delta.copy(), delta.copy()
+            up[up < 0] = 0
+            down[down > 0] = 0
 
-        # Calculate the 14 period back EWMA for each up/down trends
-        # QUESTION: shall this 14 perid depends on period 15,60, 360?
+            # Calculate the 14 period back EWMA for each up/down trends
+            # QUESTION: shall this 14 perid depends on period 15,60, 360?
 
-        roll_up = up.ewm(com = 14, min_periods=3).mean()
-        roll_down = np.abs(down.ewm(com = 14, min_periods=3).mean())
+            roll_up = up.ewm(com = 14, min_periods=3).mean()
+            roll_down = np.abs(down.ewm(com = 14, min_periods=3).mean())
 
-        rs_ts = roll_up / roll_down
+            rs_ts = roll_up / roll_down
 
-        self.relative_strength = float(rs_ts.tail(1))  # get the last element for the last time point
+            self.relative_strength = float(rs_ts.tail(1))  # get the last element for the last time point
+        else:
+            logger.debug('Not enough closing prices for RS calculation')
 
 
 
@@ -295,7 +302,19 @@ class PriceResampled(AbstractIndicator):
             elif rsi <= 30:
                 rsi_strength = -1  # oversold
 
-            if rsi_strength != 0:
+            # get the previous strength_value for the same curency
+            prev_signals = Signal.objects.filter(
+                transaction_currency=self.transaction_currency,
+                counter_currency=self.counter_currency,
+                signal='RSI',
+                horizon=horizon,
+                timestamp__gte=datetime.now() - timedelta(minutes=(self.period * 20))  # 15 is amount of period bck for RSI
+            ).values('trend', 'strength_value')
+
+            previous_rsi_strength = int(prev_signals.last()['trend']) * int(prev_signals.last()['strength_value'])
+
+            # emit rsi signal if it exists and different from previous one
+            if rsi_strength != 0 & previous_rsi_strength != rsi_strength:
                 signal_rsi = Signal(
                     transaction_currency=self.transaction_currency,
                     counter_currency=self.counter_currency,
@@ -308,6 +327,8 @@ class PriceResampled(AbstractIndicator):
                     timestamp=self.timestamp
                 )
                 signal_rsi.save()  # saving will send immediately if not already sent
+            else:
+                logger.debug(" Emitting RSI skipped: it does not exist or the same as the previous rsi")
         else:
             logger.error(" RSI out of range!!  RSI= " + str(rsi))
 
