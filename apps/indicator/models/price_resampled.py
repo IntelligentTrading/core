@@ -284,6 +284,7 @@ class PriceResampled(AbstractIndicator):
     def check_rsi_signal(self):
         horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[self.period])
         rsi_strength = 0
+        previous_rsi_strength = 0
         rsi = self.relative_strength_index
 
         # emit signals if rsi is in a certain range
@@ -311,7 +312,8 @@ class PriceResampled(AbstractIndicator):
                 timestamp__gte=datetime.now() - timedelta(minutes=(self.period * 20))  # 15 is amount of period bck for RSI
             ).values('trend', 'strength_value')
 
-            previous_rsi_strength = int(prev_signals.last()['trend']) * int(prev_signals.last()['strength_value'])
+            if prev_signals:   # if previous signal exists, get it
+                previous_rsi_strength = int(prev_signals.last()['trend']) * int(prev_signals.last()['strength_value'])
 
             # emit rsi signal if it exists and different from previous one
             if rsi_strength != 0 & previous_rsi_strength != rsi_strength:
