@@ -2,6 +2,8 @@ from datetime import timedelta
 from django.db import models
 from unixtimestampfield.fields import UnixTimeStampField
 from apps.channel.models.exchange_data import SOURCE_CHOICES
+from datetime import timedelta, datetime
+import pandas as pd
 
 
 class Price(models.Model):
@@ -36,8 +38,12 @@ class Price(models.Model):
             return float(current_price - fifteen_min_older_price.price)  / fifteen_min_older_price.price
 
 
-    # MODEL FUNCTIONS
+# get n last price records
+def get_last_prices_ts(period, n_periods):
+    back_in_time_records = Price.objects.filter(timestamp__gte=datetime.now() - timedelta(minutes=period*n_periods +10))
 
+    if back_in_time_records:
+        return pd.Series([rec['price'] for rec in back_in_time_records])
 
 
 def get_currency_value_from_string(currency_string):
