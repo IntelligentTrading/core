@@ -96,47 +96,6 @@ def _save_prices_and_volumes(data, timestamp):
     logger.debug("Saved Poloniex price and volume data")
 
 
-def _compure_indicators(resample_period):
-    from apps.indicator.models.price_resampl import PriceResampl
-    from apps.indicator.models.sma import Sma
-
-    BASE_COIN_TO_FILL = [Price.BTC, Price.USDT]
-    for transaction_currency, counter_currency in itertools.product(COINS_LIST_TO_GENERATE_SIGNALS, BASE_COIN_TO_FILL):
-
-        logger.debug(' ======= resampling: checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
-        try:
-            resample_object = PriceResampl.objects.create(
-                source=POLONIEX,
-                transaction_currency=transaction_currency,
-                counter_currency=counter_currency,
-                period=resample_period,
-            )
-            resample_object.compute()
-        except Exception as e:
-            logger.debug(str(e))
-
-
-        indicators_list = [Sma]
-        for ind in indicators_list:
-            ind_object = ind.objects.create(
-                source=POLONIEX,
-                transaction_currency=transaction_currency,
-                counter_currency=counter_currency,
-                period=resample_period,
-            )
-            ind_object.compute()
-
-
-
-
-
-
-
-
-
-
-
-### to be removed
 # @Alex
 def _resample_then_metrics(period_par):
     '''
