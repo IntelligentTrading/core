@@ -100,6 +100,8 @@ def _save_prices_and_volumes(data, timestamp):
 def _compure_and_save_indicators(resample_period_par):
     from apps.indicator.models.price_resampl import PriceResampl
     from apps.indicator.models.sma import Sma
+    from apps.indicator.models.rsi import Rsi
+    from apps.indicator.models.events_rsi import EventsRsi
 
     timestamp = time.time()
     resample_period = resample_period_par['period']
@@ -129,29 +131,22 @@ def _compure_and_save_indicators(resample_period_par):
             logger.debug(str(e))
 
         # calculate and save simple indicators
-        indicators_list = [Sma]
+        indicators_list = [Sma, Rsi]
         try:
             for ind in indicators_list:
                 ind.run_all(ind, timestamp, POLONIEX, transaction_currency, counter_currency, resample_period)
         except Exception as e:
             logger.debug("Exception: " + str(e))
 
-        # TODO calculate and save events
+        # check for events and save if any
         events_list = [EventsRsi]
         try:
             for event in events_list:
-                event_object = event.objects.create(
-                    timestamp=timestamp,
-                    source=POLONIEX,
-                    transaction_currency=transaction_currency,
-                    counter_currency=counter_currency,
-                    resample_period=resample_period,
-                )
-                event_object.check_event()
-                event_object.save()
+                event.run_event_check(event, timestamp, POLONIEX, transaction_currency, counter_currency, resample_period)
         except Exception as e:
-            logger.debug(str(e))
+            logger.debug("Exception: " + str(e))
 
+        # check if we need to emit any signals out of events generated
 
 
 

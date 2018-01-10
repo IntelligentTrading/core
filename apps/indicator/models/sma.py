@@ -15,7 +15,7 @@ class Sma(AbstractIndicator):
     sma_period = models.PositiveSmallIntegerField(null=False, default=50)
     sma_close_price = models.BigIntegerField(null=True)
 
-    def compute_sma(self):
+    def _compute_sma(self):
         time_back = int(np.max(SMA_LIST) * self.resample_period)
         resampl_close_price_ts = price_resampl.get_last_close_price_ts(self.resample_period, self.transaction_currency, self.counter_currency, time_back )
 
@@ -39,6 +39,7 @@ class Sma(AbstractIndicator):
                 resample_period=resample_period,
                 sma_period = sma_period,
             )
-            new_instance.compute_sma()
+            new_instance._compute_sma()
             new_instance.save()
+        logger.debug("   ...SMA calculations done and saved.")
 
