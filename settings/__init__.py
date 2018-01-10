@@ -196,7 +196,8 @@ except Exception as e:
 
 # @Alex
 # Global constants
-COINS_LIST_TO_GENERATE_SIGNALS = ["BTC", "ETH", "XRP", "LTC", "DASH", "NEO", "XMR", "OMG"]
+COINS_LIST_TO_GENERATE_SIGNALS = ["BTC", "ETH", "XRP", "LTC", "DASH", "NEO", "XMR", "OMG", "STR", "BCH", "XEM", "ETC", "DOGE"]
+
 
 # mapping from bin size to a name short/medium
 PERIODS_LIST = list([15, 60, 360])  #list([60,240,1440])
