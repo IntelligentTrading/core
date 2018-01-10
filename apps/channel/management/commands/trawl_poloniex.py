@@ -11,7 +11,7 @@ from requests import get, RequestException
 
 from apps.channel.models import ExchangeData
 from apps.channel.models.exchange_data import POLONIEX
-from apps.indicator.models import Price, Volume, PriceResampled
+from apps.indicator.models import Price, Volume, PriceResampled, EventsRsi
 from apps.indicator.models.price import get_currency_value_from_string
 
 from settings import time_speed  # 1 / 10
@@ -26,12 +26,13 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         logger.info("Getting ready to trawl Poloniex...")
-        schedule.every(1).minutes.do(pull_poloniex_data)
+        schedule.every(1/time_speed).minutes.do(pull_poloniex_data)
 
         # @Alex
         # run resampling for all periods and calculate indicator values
+        # TODO synchronize the start with beginning of hours / days / etc
         for hor_period in PERIODS_LIST:
-            schedule.every(hor_period / time_speed).minutes.do(_resample_then_metrics, {'period': hor_period})
+            schedule.every(hor_period / time_speed).minutes.do(_compure_and_save_indicators, {'period': hor_period})
 
 
         keep_going = True
@@ -96,36 +97,60 @@ def _save_prices_and_volumes(data, timestamp):
     logger.debug("Saved Poloniex price and volume data")
 
 
-def _compure_indicators(resample_period):
+def _compure_and_save_indicators(resample_period_par):
     from apps.indicator.models.price_resampl import PriceResampl
     from apps.indicator.models.sma import Sma
 
+    timestamp = time.time()
+    resample_period = resample_period_par['period']
     BASE_COIN_TO_FILL = [Price.BTC, Price.USDT]
-    for transaction_currency, counter_currency in itertools.product(COINS_LIST_TO_GENERATE_SIGNALS, BASE_COIN_TO_FILL):
+    logger.debug(" ============== Resampling with Period: " + str(resample_period) + " ====")
 
-        logger.debug(' ======= resampling: checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
+    for transaction_currency, counter_currency in itertools.product(COINS_LIST_TO_GENERATE_SIGNALS, BASE_COIN_TO_FILL):
+        # todo get constants in a better way
+        if (transaction_currency == 'BTC') & (counter_currency == 0):
+            continue
+
+        logger.debug('          checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
+
+        # calculate and save resampling price
+        # todo - prevent adding an empty record if no value was computed
         try:
             resample_object = PriceResampl.objects.create(
+                timestamp = timestamp,
                 source=POLONIEX,
                 transaction_currency=transaction_currency,
                 counter_currency=counter_currency,
-                period=resample_period,
+                resample_period=resample_period,
             )
             resample_object.compute()
+            resample_object.save()
         except Exception as e:
             logger.debug(str(e))
 
-
+        # calculate and save simple indicators
         indicators_list = [Sma]
-        for ind in indicators_list:
-            ind_object = ind.objects.create(
-                source=POLONIEX,
-                transaction_currency=transaction_currency,
-                counter_currency=counter_currency,
-                period=resample_period,
-            )
-            ind_object.compute()
+        try:
+            for ind in indicators_list:
+                ind.run_all(ind, timestamp, POLONIEX, transaction_currency, counter_currency, resample_period)
+        except Exception as e:
+            logger.debug("Exception: " + str(e))
 
+        # TODO calculate and save events
+        events_list = [EventsRsi]
+        try:
+            for event in events_list:
+                event_object = event.objects.create(
+                    timestamp=timestamp,
+                    source=POLONIEX,
+                    transaction_currency=transaction_currency,
+                    counter_currency=counter_currency,
+                    resample_period=resample_period,
+                )
+                event_object.check_event()
+                event_object.save()
+        except Exception as e:
+            logger.debug(str(e))
 
 
 
@@ -148,8 +173,6 @@ def _resample_then_metrics(period_par):
     :param period_par: a dictionary with the only key period_par['period'] which is a bin size(period) one of 15,60,360
     :return: void
     '''
-
-    # TODO: need to be refactored... splitted into several methods or classes
 
     period = period_par['period']
     logger.debug(" ============== Resampling with Period: " + str(period) + " ====")
