@@ -196,7 +196,14 @@ except Exception as e:
 
 # @Alex
 # Global constants
-COINS_LIST_TO_GENERATE_SIGNALS = ["BTC", "ETH", "XRP", "LTC", "DASH", "NEO", "XMR", "OMG", "STR", "BCH", "XEM", "ETC", "DOGE"]
+COINS_LIST_TO_GENERATE_SIGNALS = [
+    "BTC", "ETH", "XRP", "LTC", "DASH", "NEO", "XMR", "OMG", "STR", "BCH", "XEM", "ETC", "DOGE",
+    "ZRX", "LSK", "DGB", "BTS", "SC", "ZEC", "STRAT", "BCN", "FCT", "GAME", "REP", "VRC", "NXT",
+    "STEEM", "MAID", "STORJ", "GNT", "GAS", "AMP", "SYS", "EMC2", "VTC", "BURST", "LBC", "GNO",
+    "DCR", "FLO", "POT", "OMNI", "CVC", "PASC", "ARDR", "BCY", "GRC", "CLAM", "XCP", "VIA", "BTCD",
+    "FLDC", "NAV", "NEOS", "PPC", "BLK","EXP","RIC","NXC","BELA","XPM","XVC","XBC","RADS","SBD",
+    "PINK", "NMC", "HUC", "BTM"
+]
 
 
 # mapping from bin size to a name short/medium
