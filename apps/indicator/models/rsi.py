@@ -13,7 +13,7 @@ class Rsi(AbstractIndicator):
 
     @property
     # rsi = 100 - 100 / (1 + rUp / rDown)
-    def relative_strength_index(self):  # relative strength index
+    def rsi(self):  # relative strength index
         if self.relative_strength is not None:
             return 100.0 - (100.0 / (1.0 + self.relative_strength))
 
@@ -29,9 +29,11 @@ class Rsi(AbstractIndicator):
         # period= 15,60,360, this ts is already reflects one of those before we call it
         #price_ts = self.get_price_ts()
 
-        time_back = int(15 * self.resample_period)
-        resampl_close_price_ts = price_resampl.get_last_close_price_ts(self.resample_period, self.transaction_currency,
-                                                                       self.counter_currency, time_back)
+        #time_back = int(15 * self.resample_period)
+        resampl_close_price_ts = price_resampl.get_n_last_close_price_ts(
+            20 * self.resample_period,
+            self.source, self.transaction_currency, self.counter_currency, self.resample_period
+        )
 
         if resampl_close_price_ts is not None:
             # difference btw start and close of the day, remove the first NA
@@ -53,6 +55,27 @@ class Rsi(AbstractIndicator):
         else:
             logger.debug('Not enough closing prices for RS calculation')
 
+    def get_rsi_bracket_value(self):
+        rsi = self.rsi
+        assert (rsi>=0.0) & (rsi<=100.0)
+
+        rsi_strength = 0
+        if rsi >= 0 and rsi <= 100 :
+            logger.debug("   RSI= " + str(rsi))
+            if rsi >= 80:
+                rsi_strength = 3  # Extremely overbought
+            elif rsi >= 75:
+                rsi_strength = 2  # very overbought
+            elif rsi >= 70:
+                rsi_strength = 1  # overbought
+            elif rsi <= 20:
+                rsi_strength = -3  # Extremely oversold
+            elif rsi <= 25:
+                rsi_strength = -2   # very oversold
+            elif rsi <= 30:
+                rsi_strength = -1  # oversold
+        return rsi_strength
+
     @staticmethod
     def run_all(cls, timestamp, source, transaction_currency, counter_currency, resample_period):
         # todo - avoid creation empty record if no rsi was computed
@@ -70,13 +93,13 @@ class Rsi(AbstractIndicator):
 
 
 
-def get_last_rs_value(timestamp, source, transaction_currency, counter_currency, resample_period):
+def get_last_rs_object(timestamp, source, transaction_currency, counter_currency, resample_period):
     rs = Rsi.objects.filter(
         timestamp=timestamp,
         source=source,
         transaction_currency=transaction_currency,
         counter_currency=counter_currency,
         resample_period=resample_period,
-    ).order_by('-timestamp').values("relative_strength").last()
+    ).order_by('-timestamp').last()
 
-    return float(rs['relative_strength'])
+    return rs

@@ -56,22 +56,27 @@ class PriceResampl(AbstractIndicator):
         self.price_variance = prices.var()
 
 
-def get_last_close_price_ts(resample_period, transaction_currency, counter_currency, time_back ):
+def get_n_last_close_price_ts(n, source, transaction_currency, counter_currency, resample_period):
     '''
     Caches from DB the min nessesary amount of records to calculate SMA, EMA etc
     :return: pd.Series of last ~200 time points
     '''
     back_in_time_records = list(PriceResampl.objects.filter(
+        source=source,
         resample_period=resample_period,
         transaction_currency=transaction_currency,
         counter_currency=counter_currency,
         # go only back in time for a nessesary period (max of EMA and SMA)
-        timestamp__gte = datetime.now() - timedelta(minutes=time_back) # todo add ema_list
-    ).values('close_price'))
+        timestamp__gte = datetime.now() - timedelta(minutes=resample_period * n) # todo add ema_list
+    ).values('timestamp', 'close_price'))
 
     if not back_in_time_records:
         return None
 
+    ts = pd.Series([rec['close_price'] for rec in back_in_time_records])
+    t = pd.Series([rec['timestamp'] for rec in back_in_time_records])
+    ts.index = pd.to_datetime(t, unit='s')
+
     # convert price into a time Series (pandas)
-    return pd.Series([rec['close_price'] for rec in back_in_time_records])
+    return ts
 

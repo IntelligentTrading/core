@@ -11,7 +11,7 @@ from requests import get, RequestException
 
 from apps.channel.models import ExchangeData
 from apps.channel.models.exchange_data import POLONIEX
-from apps.indicator.models import Price, Volume, PriceResampled, EventsRsi
+from apps.indicator.models import Price, Volume, PriceResampled
 from apps.indicator.models.price import get_currency_value_from_string
 
 from settings import time_speed  # 1 / 10
@@ -101,7 +101,8 @@ def _compure_and_save_indicators(resample_period_par):
     from apps.indicator.models.price_resampl import PriceResampl
     from apps.indicator.models.sma import Sma
     from apps.indicator.models.rsi import Rsi
-    from apps.indicator.models.events_rsi import EventsRsi
+    from apps.indicator.models.events_elementary import EventsElementary
+    #from apps.indicator.models.events_boolean import
 
     timestamp = time.time()
     resample_period = resample_period_par['period']
@@ -138,15 +139,17 @@ def _compure_and_save_indicators(resample_period_par):
         except Exception as e:
             logger.debug("Exception: " + str(e))
 
-        # check for events and save if any
-        events_list = [EventsRsi]
+        # check for elementary events and save if any
+        events_list = [EventsElementary]
         try:
             for event in events_list:
-                event.run_event_check(event, timestamp, POLONIEX, transaction_currency, counter_currency, resample_period)
+                event.run_events_check(event, timestamp, POLONIEX, transaction_currency, counter_currency, resample_period)
         except Exception as e:
             logger.debug("Exception: " + str(e))
 
-        # check if we need to emit any signals out of events generated
+        # check for recent complex (boolean) events, save and fire Signal
+        # EventsBoolean.run_events_check()
+
 
 
 
