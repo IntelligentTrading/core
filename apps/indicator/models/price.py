@@ -39,13 +39,15 @@ class Price(models.Model):
 
 
 # get n last price records
+# todo - return dataframe of al prices
+'''
 def get_last_prices_ts(transaction_currency, counter_currency, time_back ):
     period_records = list(Price.objects.filter(timestamp__gte=datetime.now() - timedelta(minutes=time_back)))
 
     if back_in_time_records:
         return pd.Series([rec['price'] for rec in back_in_time_records])
     # todo - add a transaction_currency and counter_currency here
-
+'''
 
 def get_currency_value_from_string(currency_string):
     currency_dict = {str: i for (i, str) in Price.COUNTER_CURRENCY_CHOICES}

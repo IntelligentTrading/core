@@ -25,15 +25,12 @@ class Rsi(AbstractIndicator):
         :return:
         '''
 
-        # get Series of last 200 time points
-        # period= 15,60,360, this ts is already reflects one of those before we call it
-        #price_ts = self.get_price_ts()
-
-        #time_back = int(15 * self.resample_period)
-        resampl_close_price_ts = price_resampl.get_n_last_close_price_ts(
+        resampl_price_df = price_resampl.get_n_last_resampl_df(
             20 * self.resample_period,
             self.source, self.transaction_currency, self.counter_currency, self.resample_period
         )
+
+        resampl_close_price_ts = resampl_price_df.close_price
 
         if resampl_close_price_ts is not None:
             # difference btw start and close of the day, remove the first NA
@@ -54,6 +51,7 @@ class Rsi(AbstractIndicator):
             self.relative_strength = float(rs_ts.tail(1))  # get the last element for the last time point
         else:
             logger.debug('Not enough closing prices for RS calculation')
+
 
     def get_rsi_bracket_value(self):
         rsi = self.rsi
@@ -76,30 +74,18 @@ class Rsi(AbstractIndicator):
                 rsi_strength = -1  # oversold
         return rsi_strength
 
-    @staticmethod
-    def run_all(cls, timestamp, source, transaction_currency, counter_currency, resample_period):
-        # todo - avoid creation empty record if no rsi was computed
 
-        new_instance = cls.objects.create(
-            timestamp=timestamp,
-            source=source,
-            transaction_currency=transaction_currency,
-            counter_currency=counter_currency,
-            resample_period=resample_period,
-        )
+    @staticmethod
+    def compute_all(cls, **kwargs):
+        new_instance = cls.objects.create(**kwargs)
         new_instance.compute_rs()
         new_instance.save()
         logger.debug("   ...RS calculations done and saved.")
 
 
 
-def get_last_rs_object(timestamp, source, transaction_currency, counter_currency, resample_period):
-    rs = Rsi.objects.filter(
-        timestamp=timestamp,
-        source=source,
-        transaction_currency=transaction_currency,
-        counter_currency=counter_currency,
-        resample_period=resample_period,
-    ).order_by('-timestamp').last()
-
+#################
+# get last RS value object
+def get_last_rs_object(**kwargs):
+    rs = Rsi.objects.filter(**kwargs).order_by('-timestamp').last()
     return rs

@@ -10,7 +10,7 @@ from django.db.models.signals import post_save, pre_save
 
 from apps.common.behaviors import Timestampable
 from apps.indicator.models import Price
-from settings import QUEUE_NAME, AWS_OPTIONS, BETA_QUEUE_NAME, TEST_QUEUE_NAME
+from settings import QUEUE_NAME, AWS_OPTIONS, BETA_QUEUE_NAME, TEST_QUEUE_NAME, PERIODS_LIST
 from django.db import models
 from unixtimestampfield.fields import UnixTimeStampField
 from apps.channel.models.exchange_data import SOURCE_CHOICES, POLONIEX
@@ -32,8 +32,11 @@ class Signal(Timestampable, models.Model):
     subscribers_only = models.BooleanField(default=True)
     text = models.TextField(default="")
 
+    timestamp = UnixTimeStampField(null=False)
     source = models.SmallIntegerField(choices=SOURCE_CHOICES, null=False, default=POLONIEX)
     transaction_currency = models.CharField(max_length=6, null=False, blank=False)
+    counter_currency = models.SmallIntegerField(choices=Price.COUNTER_CURRENCY_CHOICES, null=False, default=Price.BTC)
+    resample_period = models.PositiveSmallIntegerField(null=False, default=PERIODS_LIST[0])
 
     signal = models.CharField(max_length=15, null=True)
     trend = models.CharField(max_length=15, null=True)
@@ -43,7 +46,6 @@ class Signal(Timestampable, models.Model):
     strength_value = models.IntegerField(null=True)
     strength_max = models.IntegerField(null=True)
 
-    counter_currency = models.SmallIntegerField(choices=Price.COUNTER_CURRENCY_CHOICES, null=False, default=Price.BTC)
     price = models.BigIntegerField(null=False)
     price_change = models.FloatField(null=True)  # in percents, thatis why Float
 
@@ -54,7 +56,6 @@ class Signal(Timestampable, models.Model):
     volume_usdt = models.FloatField(null=True)  # USD value
     volume_usdt_change = models.FloatField(null=True)
 
-    timestamp = UnixTimeStampField(null=False)
     sent_at = UnixTimeStampField(use_numeric=True)
 
     # MODEL PROPERTIES

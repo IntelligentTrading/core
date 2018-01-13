@@ -102,7 +102,7 @@ def _compure_and_save_indicators(resample_period_par):
     from apps.indicator.models.sma import Sma
     from apps.indicator.models.rsi import Rsi
     from apps.indicator.models.events_elementary import EventsElementary
-    #from apps.indicator.models.events_boolean import
+    from apps.indicator.models.events_complex import EventsComplex
 
     timestamp = time.time()
     resample_period = resample_period_par['period']
@@ -116,150 +116,39 @@ def _compure_and_save_indicators(resample_period_par):
 
         logger.debug('          checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
 
+        # create a dictionary of parameters to improve readability
+        indicat_param_dict = {
+            'timestamp' : timestamp,
+            'source' : POLONIEX,
+            'transaction_currency' : transaction_currency,
+            'counter_currency' : counter_currency,
+            'resample_period' : resample_period
+        }
+
         # calculate and save resampling price
-        # todo - prevent adding an empty record if no value was computed
+        # todo - prevent adding an empty record if no value was computed (static method below)
         try:
-            resample_object = PriceResampl.objects.create(
-                timestamp = timestamp,
-                source=POLONIEX,
-                transaction_currency=transaction_currency,
-                counter_currency=counter_currency,
-                resample_period=resample_period,
-            )
+            resample_object = PriceResampl.objects.create(**indicat_param_dict)
             resample_object.compute()
             resample_object.save()
         except Exception as e:
-            logger.debug(str(e))
+            logger.error("RESAMPLE EXCEPTION: " + str(e))
 
         # calculate and save simple indicators
         indicators_list = [Sma, Rsi]
         try:
             for ind in indicators_list:
-                ind.run_all(ind, timestamp, POLONIEX, transaction_currency, counter_currency, resample_period)
+                ind.compute_all(ind, **indicat_param_dict)
         except Exception as e:
-            logger.debug("Exception: " + str(e))
+            logger.error("Indicator Exception: " + str(e))
 
-        # check for elementary events and save if any
-        events_list = [EventsElementary]
+        # check for events and save if any
+        # todo: make sure EventsElementary runs first
+        events_list = [EventsElementary, EventsComplex]
         try:
             for event in events_list:
-                event.run_events_check(event, timestamp, POLONIEX, transaction_currency, counter_currency, resample_period)
+                event.check_events(event, **indicat_param_dict)
         except Exception as e:
-            logger.debug("Exception: " + str(e))
-
-        # check for recent complex (boolean) events, save and fire Signal
-        # EventsBoolean.run_events_check()
+            logger.error("Event Exception: " + str(e))
 
 
-
-
-
-
-
-
-
-
-### to be removed
-# @Alex
-def _resample_then_metrics(period_par):
-    '''
-    Shall be ran every 15, 60, 360 min from the scheduler
-    First: resampling - create a new price dataset with differend sampling frequency, put 15 minutes into one datapoint (bin)
-    Second: calculate additional metrics SMA 50 and SMA 200 and put them into the same table
-    Finally: run signal detection and emit a signal if nessesary
-
-    :param period_par: a dictionary with the only key period_par['period'] which is a bin size(period) one of 15,60,360
-    :return: void
-    '''
-
-    period = period_par['period']
-    logger.debug(" ============== Resampling with Period: " + str(period) + " ====")
-
-    # get all records back in [period] time ( 15min, 60min, 360min)
-    period_records = Price.objects.filter(timestamp__gte=datetime.now() - timedelta(minutes=period))
-
-    # for all transaction_currencys destined to be resamples
-    # COINS_LIST = ["ETH", "XRP", "LTC", "DASH", "NEO", "XMR", "OMG"]
-    BASE_COIN_TO_FILL = [Price.BTC, Price.USDT]
-
-    # iterate over all pairs [('ETH', 0), ('ETH', 1), ('XRP', 0), ('XRP', 1) ...
-    for transaction_currency, counter_currency in itertools.product(COINS_LIST_TO_GENERATE_SIGNALS, BASE_COIN_TO_FILL):
-        logger.debug(' ======= resampling: checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
-
-        # get all price records back in time (according to period)
-        transaction_currency_price_list = list(
-            period_records.filter(transaction_currency=transaction_currency, counter_currency=counter_currency).values('timestamp', 'price').order_by('-timestamp'))
-
-        # skip the currency if there is no given price
-        if not transaction_currency_price_list:
-            logger.debug(' ======= skipping, no price information')
-            continue
-
-        # todo can i do better?
-        # get values from django structure
-        prices = np.array([rec['price'] for rec in transaction_currency_price_list])
-        times = np.array([rec['timestamp'] for rec in transaction_currency_price_list])
-
-        ### resample price data, i.e. generate one time point for each 15 min
-        period_variance = prices.var()
-        period_mean = int(prices.mean())  # we need it all int becasue we decided to * 10^8
-        period_min = int(prices.min())
-        period_max = int(prices.max())
-        period_closing = int(prices[-1])
-        period_ts = times.max()
-
-        # create resampled object
-        price_resampled_object = PriceResampled.objects.create(
-            source=POLONIEX,
-            transaction_currency=transaction_currency,
-            counter_currency=counter_currency,
-            timestamp=period_ts,
-            period=period,
-            price_variance=period_variance,
-            mean_price=period_mean,
-            closing_price=period_closing,
-            min_price=period_min,
-            max_price=period_max
-
-        )
-
-        # calculate additional indicators (sma, ema etc)
-        logger.debug("   calculate indicators for [ " + str(transaction_currency) + " ], price in :" + str(counter_currency) )
-
-        try:
-            price_resampled_object.calc_SMA()
-            price_resampled_object.save()
-            logger.debug("   ...SMA calculations done and saved.")
-        except Exception as e:
-            logger.debug('---> SMA calculation error: ' + str(e))
-
-        try:
-            price_resampled_object.calc_EMA()
-            price_resampled_object.save()
-            logger.debug("   ...EMA calculations done and saved.")
-        except Exception as e:
-            logger.debug('---> EMA calcultion error: ' +  str(e))
-
-        try:
-            price_resampled_object.calc_RS()
-            price_resampled_object.save()
-            logger.debug("   ...RS calculations done and saved.")
-        except Exception as e:
-            logger.debug(str(e))
-
-        ### check and generate possible signals
-        # todo: move the check_signal logic from price_resampled to a static method of Signal
-        try:
-            logger.debug("   ...check cross over signals to emit")
-            price_resampled_object.check_cross_over_signal()
-        except Exception as e:
-            logging.debug(" --> error checking cross over signals: " + str(e))
-
-        # check RSI if period more then 15 (Vinnie told that it makes not sense
-        # to run RSI for 15 min period, so we calculate it only for 60, 360
-        if period >= 15:  # change to 60 in production
-            try:
-                logger.debug("   ...check RSI signal to emit")
-                price_resampled_object.check_rsi_signal()
-            except Exception as e:
-                logging.debug(" --> error checking rsi signals: " + str(e))

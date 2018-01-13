@@ -1,10 +1,7 @@
-import logging
 from datetime import timedelta, datetime
-
 import numpy as np
 import pandas as pd
 from django.db import models
-
 from apps.indicator.models.abstract_indicator import AbstractIndicator
 from apps.indicator.models import price
 from apps.indicator.models.price import Price
@@ -14,8 +11,8 @@ from apps.user.models.user import get_horizon_value_from_string
 from settings import HORIZONS_TIME2NAMES  # mapping from bin size to a name short/medium
 from settings import PERIODS_LIST
 from settings import SHORT, MEDIUM, LONG
-
 from settings import time_speed  # speed of the resampling, 10 for fast debug, 1 for prod
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -34,49 +31,51 @@ class PriceResampl(AbstractIndicator):
 
     # compute resampled prices
     def compute(self):
+        # get all prices for one resample period (15/60/360 min)
         period_records = Price.objects.filter(timestamp__gte=datetime.now() - timedelta(minutes=self.resample_period))
-
         transaction_currency_price_list = list(
-            period_records.filter(transaction_currency=self.transaction_currency, counter_currency=self.counter_currency).values(
-                'timestamp', 'price').order_by('-timestamp'))
+            period_records.filter(
+                transaction_currency=self.transaction_currency,
+                counter_currency=self.counter_currency).values('timestamp', 'price').order_by('-timestamp'))
 
         # skip the currency if there is no given price
-        if not transaction_currency_price_list:
+        if transaction_currency_price_list:
+            prices = np.array([rec['price'] for rec in transaction_currency_price_list])
+
+            self.open_price = int(prices[0])
+            self.close_price = int(prices[-1])
+            self.low_price = int(prices.min())
+            self.high_price = int(prices.max())
+            self.midpoint_price = int((self.high_price + self.low_price) / 2)
+            self.mean_price = int(prices.mean())
+            self.price_variance = prices.var()
+        else:
             logger.debug(' ======= skipping, no price information')
-            return
-
-        prices = np.array([rec['price'] for rec in transaction_currency_price_list])
-
-        self.open_price = int(prices[0])
-        self.close_price = int(prices[-1])
-        self.low_price = int(prices.min())
-        self.high_price = int(prices.max())
-        self.midpoint_price = None  #todo
-        self.mean_price = int(prices.mean())
-        self.price_variance = prices.var()
 
 
-def get_n_last_close_price_ts(n, source, transaction_currency, counter_currency, resample_period):
-    '''
-    Caches from DB the min nessesary amount of records to calculate SMA, EMA etc
-    :return: pd.Series of last ~200 time points
-    '''
-    back_in_time_records = list(PriceResampl.objects.filter(
+
+############## get n last records from resampled table as a DataFrame
+# NOTE: no kwargs because we dont have timestamp here
+def get_n_last_resampl_df(n, source, transaction_currency, counter_currency, resample_period):
+
+    last_prices = list(PriceResampl.objects.filter(
         source=source,
         resample_period=resample_period,
         transaction_currency=transaction_currency,
         counter_currency=counter_currency,
-        # go only back in time for a nessesary period (max of EMA and SMA)
-        timestamp__gte = datetime.now() - timedelta(minutes=resample_period * n) # todo add ema_list
-    ).values('timestamp', 'close_price'))
+        timestamp__gte = datetime.now() - timedelta(minutes=resample_period * n)
+    ).values('timestamp', 'close_price', 'midpoint_price').order_by('-timestamp'))
 
-    if not back_in_time_records:
+    if last_prices:
+        # todo - reverse order or make sure I get values in the same order!
+        ts = [rec['timestamp'] for rec in last_prices]
+        close_prices = pd.Series(data=[rec['close_price'] for rec in last_prices], index=ts)
+        midpoint_prices = pd.Series([rec['midpoint_price'] for rec in last_prices], index=ts)
+
+        df = pd.DataFrame()
+        df['close_price'] = close_prices
+        df['midpoint_price'] = midpoint_prices
+        return df
+    else:
         return None
-
-    ts = pd.Series([rec['close_price'] for rec in back_in_time_records])
-    t = pd.Series([rec['timestamp'] for rec in back_in_time_records])
-    ts.index = pd.to_datetime(t, unit='s')
-
-    # convert price into a time Series (pandas)
-    return ts
 
