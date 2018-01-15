@@ -26,13 +26,17 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         logger.info("Getting ready to trawl Poloniex...")
-        schedule.every(1/time_speed).minutes.do(pull_poloniex_data)
+
+        schedule.every(1/time_speed).minutes.do(_pull_poloniex_data)
 
         # @Alex
         # run resampling for all periods and calculate indicator values
         # TODO synchronize the start with beginning of hours / days / etc
         for hor_period in PERIODS_LIST:
-            schedule.every(hor_period / time_speed).minutes.do(_compure_and_save_indicators, {'period': hor_period})
+            schedule.every(hor_period / time_speed).minutes.do(
+                _compute_and_save_indicators,
+                {'period': hor_period}
+            )
 
 
         keep_going = True
@@ -46,7 +50,7 @@ class Command(BaseCommand):
                 keep_going = False
 
 
-def pull_poloniex_data():
+def _pull_poloniex_data():
     try:
         logger.info("pulling Poloniex data...")
         req = get('https://poloniex.com/public?command=returnTicker')
@@ -97,7 +101,7 @@ def _save_prices_and_volumes(data, timestamp):
     logger.debug("Saved Poloniex price and volume data")
 
 
-def _compure_and_save_indicators(resample_period_par):
+def _compute_and_save_indicators(resample_period_par):
     from apps.indicator.models.price_resampl import PriceResampl
     from apps.indicator.models.sma import Sma
     from apps.indicator.models.rsi import Rsi
@@ -106,6 +110,7 @@ def _compure_and_save_indicators(resample_period_par):
 
     timestamp = time.time()
     resample_period = resample_period_par['period']
+
     BASE_COIN_TO_FILL = [Price.BTC, Price.USDT]
     logger.debug(" ============== Resampling with Period: " + str(resample_period) + " ====")
 

@@ -64,15 +64,17 @@ def get_n_last_resampl_df(n, source, transaction_currency, counter_currency, res
         transaction_currency=transaction_currency,
         counter_currency=counter_currency,
         timestamp__gte = datetime.now() - timedelta(minutes=resample_period * n)
-    ).values('timestamp', 'close_price', 'midpoint_price').order_by('-timestamp'))
+    ).values('timestamp', 'high_price', 'close_price', 'midpoint_price').order_by('-timestamp'))
 
     if last_prices:
         # todo - reverse order or make sure I get values in the same order!
         ts = [rec['timestamp'] for rec in last_prices]
+        high_prices = pd.Series(data=[rec['high_price'] for rec in last_prices], index=ts)
         close_prices = pd.Series(data=[rec['close_price'] for rec in last_prices], index=ts)
         midpoint_prices = pd.Series([rec['midpoint_price'] for rec in last_prices], index=ts)
 
         df = pd.DataFrame()
+        df['high_price'] = high_prices
         df['close_price'] = close_prices
         df['midpoint_price'] = midpoint_prices
         return df

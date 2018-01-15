@@ -13,6 +13,7 @@ SMA_LIST = [9, 20, 26, 30, 50, 52, 60, 120, 200]
 class Sma(AbstractIndicator):
 
     sma_period = models.PositiveSmallIntegerField(null=False, default=50)
+    sma_high_price = models.BigIntegerField(null=True)
     sma_close_price = models.BigIntegerField(null=True)
     sma_midpoint_price = models.BigIntegerField(null=True)
 
@@ -25,22 +26,31 @@ class Sma(AbstractIndicator):
             self.counter_currency,
             self.resample_period
         )
+        resampl_high_price_ts = resampl_prices_df.high_price
         resampl_close_price_ts = resampl_prices_df.close_price
         resampl_midpoint_price_ts = resampl_prices_df.midpoint_price
+
+        if not resampl_high_price_ts.empty:
+            sma_high_ts = resampl_high_price_ts.rolling(window=int(self.sma_period/time_speed), center=False).mean()
+            time_max = sma_high_ts.idxmax()
+            self.sma_high_price = int(sma_high_ts[time_max])
+        else:
+            logger.debug(' Not enough HIGH prices for SMA calculation, resample_period=' + str(self.resample_period) )
+
 
         if not resampl_close_price_ts.empty:
             sma_close_ts = resampl_close_price_ts.rolling(window=int(self.sma_period/time_speed), center=False).mean()
             time_max = sma_close_ts.idxmax()
-            self.sma_close_price = sma_close_ts[time_max]
+            self.sma_close_price = int(sma_close_ts[time_max])
         else:
-            logger.debug(' Not enough close prices for SMA calculation, resample_period=' + str(self.resample_period) )
+            logger.debug(' Not enough CLOSE prices for SMA calculation, resample_period=' + str(self.resample_period) )
 
         if not resampl_midpoint_price_ts.empty:
             sma_midpoint_ts = resampl_midpoint_price_ts.rolling(window=int(self.sma_period / time_speed), center=False).mean()
             time_max = sma_midpoint_ts.idxmax()
-            self.sma_midpoint_price = sma_midpoint_ts[time_max]
+            self.sma_midpoint_price = int(sma_midpoint_ts[time_max])
         else:
-            logger.debug(' Not enough midpoint prices for SMA calculation, resample_period=' + str(self.resample_period))
+            logger.debug(' Not enough MIDPOINT prices for SMA calculation, resample_period=' + str(self.resample_period))
 
 
     @staticmethod
@@ -57,7 +67,7 @@ class Sma(AbstractIndicator):
 ####################### get n last sma records as a DataFrame
 # NOTE : dont use **kwarg because we dont use time parameter here, to avoid confusion
 def get_n_last_sma_df(n, sma_period, source, transaction_currency, counter_currency, resample_period):
-
+    df = None
     last_prices = list(Sma.objects.filter(
         timestamp__gte=datetime.now() - timedelta(minutes=(resample_period * sma_period * n)),
         source=source,
@@ -75,9 +85,9 @@ def get_n_last_sma_df(n, sma_period, source, transaction_currency, counter_curre
         df = pd.DataFrame()
         df['sma_close_price'] = sma_close_prices
         df['sma_midpoint_price'] = sma_midpoint_prices
-        return df
-    else:
-        return None
+
+    return df
+
 
 
 
