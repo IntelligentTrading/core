@@ -67,7 +67,7 @@ class Sma(AbstractIndicator):
 ####################### get n last sma records as a DataFrame
 # NOTE : dont use **kwarg because we dont use time parameter here, to avoid confusion
 def get_n_last_sma_df(n, sma_period, source, transaction_currency, counter_currency, resample_period):
-    df = None
+
     last_prices = list(Sma.objects.filter(
         timestamp__gte=datetime.now() - timedelta(minutes=(resample_period * sma_period * n)),
         source=source,
@@ -77,12 +77,13 @@ def get_n_last_sma_df(n, sma_period, source, transaction_currency, counter_curre
         sma_period=sma_period,
     ).order_by('-timestamp').values('timestamp','sma_close_price','sma_midpoint_price'))
 
+    df = pd.DataFrame()
     if last_prices:
         ts = [rec['timestamp'] for rec in last_prices]
         sma_close_prices = pd.Series(data=[rec['sma_close_price'] for rec in last_prices], index=ts)
         sma_midpoint_prices = pd.Series(data=[rec['sma_midpoint_price'] for rec in last_prices], index=ts)
 
-        df = pd.DataFrame()
+
         df['sma_close_price'] = sma_close_prices
         df['sma_midpoint_price'] = sma_midpoint_prices
 

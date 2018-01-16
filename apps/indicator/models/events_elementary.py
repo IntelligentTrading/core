@@ -14,11 +14,60 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+ALL_POSSIBLE_ELEMENTARY_EVENTS = [
+    'sma50_cross_price_down',
+    'sma200_cross_price_down',
+    'sma50_cross_sma200_down',
+    'sma50_cross_price_up',
+    'sma200_cross_price_up',
+    'sma50_cross_sma200_up',
+    'rsi_bracket',
+    'closing_cloud_breakout_up_extended',
+    'lagging_above_cloud',
+    'lagging_above_highest',
+    'conversion_above_base'
+]
+
+# plot Ichi for debug
+def _draw_cloud(df,**kwargs):
+    import matplotlib.pyplot as plt
+    from matplotlib.ticker import ScalarFormatter, OldScalarFormatter
+    from matplotlib.dates import DateFormatter, WeekdayLocator, DayLocator, MONDAY
+    import matplotlib.ticker as plticker
+
+    transaction_currency = kwargs['transaction_currency']
+    counter_currency = kwargs['counter_currency']
+    resample_period = kwargs['resample_period']
+
+    fig, ax1 = plt.subplots(nrows=1, ncols=1, figsize=(16, 5))
+    fig.suptitle("%s/%d Ichimoku Cloud" % (transaction_currency, counter_currency))
+    #ax1.xaxis.set_major_formatter(DateFormatter("%d-%m"))
+
+    fmt = ScalarFormatter(useOffset=False)
+    fmt.set_scientific(False)
+    ax1.yaxis.set_major_formatter(fmt)
+
+    ax1.grid(True)
+    loc = plticker.MultipleLocator(base=1.0)  # this locator puts ticks at regular intervals
+    ax1.xaxis.set_major_locator(loc)
+
+    # candlestick_ohlc(ax1, df_candle)
+
+    ax1.plot(df.high, color='black', linewidth=2)
+    #ax1.plot(df.low, color='black', linewidth=2)
+    ax1.plot(df.conversion, linestyle=':', color='orange')
+    ax1.plot(df.base, linestyle=':', color='orange')
+    ax1.plot(df.leading_a, linestyle='--', color='magenta')
+    ax1.plot(df.leading_b, linestyle='-', color='magenta')
+    ax1.fill_between(df.senkou_span_a_leading.index, df.leading_a, df.leading_b, color='lightskyblue')
+
+    ax1.plot(df.hikou_span_lagging, linestyle='-', color='lightblue')
+
+
 class EventsElementary(AbstractIndicator):
     event_name = models.CharField(max_length=32, null=False, blank=False, default="none")
     event_value = models.IntegerField(null=True)
     event_second_value = models.FloatField(null=True)
-
 
 
     @staticmethod
@@ -40,8 +89,15 @@ class EventsElementary(AbstractIndicator):
         horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[resample_period])
         time_current = pd.to_datetime(timestamp, unit='s')
 
+        par_1_9 = 9
+        par_2_26 = 26
+        par_3_52 = 52
+        par_4_26 = 26
+
         # load nessesary timeseries
-        prices_df = get_n_last_resampl_df(10, source, transaction_currency, counter_currency, resample_period)
+
+        records = par_4_26 * par_4_26 + 20
+        prices_df = get_n_last_resampl_df(records, source, transaction_currency, counter_currency, resample_period)
 
         ##### check for rsi events, save and emit signal
         # todo: move it to separate function
@@ -68,7 +124,7 @@ class EventsElementary(AbstractIndicator):
                 )
                 signal_rsi.save()
                 logger.debug("   ...Events_RSI calculations done and saved.")
-        logger.debug("   ... No RSI signals.")
+        #logger.debug("   ... No RSI events.")
 
 
         ###### check SMA cross over events
@@ -76,8 +132,8 @@ class EventsElementary(AbstractIndicator):
         # todo : refactor, move to a separate method or class
         SMA_LOW = 50
         SMA_HIGN = 200
-        sma_low_df = get_n_last_sma_df(10, SMA_LOW, source, transaction_currency, counter_currency, resample_period)
-        sma_high_df = get_n_last_sma_df(10, SMA_HIGN, source, transaction_currency, counter_currency, resample_period)
+        sma_low_df = get_n_last_sma_df(records, SMA_LOW, source, transaction_currency, counter_currency, resample_period)
+        sma_high_df = get_n_last_sma_df(records, SMA_HIGN, source, transaction_currency, counter_currency, resample_period)
 
         # todo: make sure the code still work of no high_sma
         # create DF in advance wtih NA then fill the rows
@@ -103,11 +159,13 @@ class EventsElementary(AbstractIndicator):
             # if events is TRUE
             if event_value[0]:
                 trend = _col2trend[event_name]
-                new_instance = cls.objects.create(
+                sma_event = cls.objects.create(
                     **kwargs,
                     event_name=event_name,
                     event_value=int(1),
                 )
+                sma_event.save()
+
                 signal_sma_cross = Signal(
                     **kwargs,
                     signal='SMA',
@@ -118,15 +176,12 @@ class EventsElementary(AbstractIndicator):
                 )
                 signal_sma_cross.save()
                 logger.debug("   ...FIRED - Event " + event_name)
-            logger.debug("   ...No Events for " + event_name)
+            #logger.debug("   ...No Events for " + event_name)
 
 
         ####### calculate and save ichimoku elementary events
         # no signal emitting
-        par_1_9 = 9
-        par_2_26 = 26
-        par_3_52 = 52
-        par_4_26 = 26
+
 
         price_high_ts = prices_df['high_price']
         closing_price_ts = prices_df['close_price']
@@ -151,7 +206,9 @@ class EventsElementary(AbstractIndicator):
             'base': kijun_sen_base,
             'leading_a': senkou_span_a_leading,
             'leading_b': senkou_span_b_leading,
-            'lagging': hikou_span_lagging
+            'lagging': hikou_span_lagging,
+            'senkou_span_a_leading' : senkou_span_a_leading,
+            'hikou_span_lagging' :hikou_span_lagging
         })
 
         df['closing_above_cloud'] = np.where(((df.closing > df.leading_a) & (df.closing > df.leading_b)), 1, 0)
@@ -173,6 +230,9 @@ class EventsElementary(AbstractIndicator):
         df['conversion_above_base'] = np.where(df.conversion > df.base, 1, 0)
         #df['conversion_cross_base_down'] = np.sign(df.conversion - df.base).diff().lt(0)
 
+        # plot - for debug
+        #_draw_cloud(df, **kwargs)
+
         # get the last element and save as an event
         events2save = ['closing_cloud_breakout_up_extended',
                        'lagging_above_cloud',
@@ -187,12 +247,14 @@ class EventsElementary(AbstractIndicator):
         for event_name in events2save:
             event_value = last_events[event_name]
             if event_value[0]:
-                cls.objects.create(
+                ichi_event = cls.objects.create(
                     **kwargs,
                     event_name=event_name,
                     event_value=int(1),
                 )
-            logger.debug('   ... Ichimoku event saved:' + str(event_name))
+                ichi_event.save()
+                logger.debug('   ... Ichimoku event saved:' + str(event_name))
+            #logger.debug('   ... NO Ichi event: ' + event_name )
 
 
 
@@ -200,25 +262,27 @@ class EventsElementary(AbstractIndicator):
 
 
 ###################
-def get_most_recent_events_df(timestamp, source, transaction_currency, counter_currency, resample_period):
+def get_last_elementory_events_df(timestamp, source, transaction_currency, counter_currency, resample_period):
 
-    last_events_obj = EventsElementary.objects.filter(
+    last_events = list(EventsElementary.objects.filter(
         timestamp = timestamp,
         source=source,
         transaction_currency=transaction_currency,
         counter_currency=counter_currency,
         resample_period=resample_period,
-    )
+    ).order_by('-timestamp').values('timestamp','event_name','event_value'))
 
-    if not last_events_obj:
-        logger.debug("    No recent events found!")
-        return None
-
-    # convert several records to a df with columns
     df = pd.DataFrame()
-    for event in last_events_obj:
-        df[event.event_name] = pd.Series(event.event_value)
-    # {'idx_col': pd.DatetimeIndex(timestamp)}
+    if last_events:
+        ts = [rec['timestamp'] for rec in last_events]
+        event_names = pd.Series(data=[rec['event_name'] for rec in last_events], index=ts)
+        event_values = pd.Series(data=[rec['event_value'] for rec in last_events], index=ts)
+
+        df = pd.DataFrame(columns = ALL_POSSIBLE_ELEMENTARY_EVENTS, index=ts)
+        df[event_names] = event_values
+        df = df.fillna(value=0)
+    else:
+        logger.debug("    No recent events found!")
 
     return df
 

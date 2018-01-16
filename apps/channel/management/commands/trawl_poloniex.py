@@ -106,7 +106,7 @@ def _compute_and_save_indicators(resample_period_par):
     from apps.indicator.models.sma import Sma
     from apps.indicator.models.rsi import Rsi
     from apps.indicator.models.events_elementary import EventsElementary
-    from apps.indicator.models.events_complex import EventsComplex
+    from apps.indicator.models.events_logical import EventsLogical
 
     timestamp = time.time()
     resample_period = resample_period_par['period']
@@ -149,7 +149,7 @@ def _compute_and_save_indicators(resample_period_par):
 
         # check for events and save if any
         # todo: make sure EventsElementary runs first
-        events_list = [EventsElementary, EventsComplex]
+        events_list = [EventsElementary, EventsLogical]
         try:
             for event in events_list:
                 event.check_events(event, **indicat_param_dict)
