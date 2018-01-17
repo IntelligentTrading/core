@@ -63,11 +63,39 @@ def _draw_cloud(df,**kwargs):
 
     ax1.plot(df.hikou_span_lagging, linestyle='-', color='lightblue')
 
+def _process_rsi(horizon, **kwargs):
+    # todo: move it to separate function
+    rs_obj = get_last_rs_object(**kwargs)
+    if (rs_obj is not None) & (rs_obj.rsi is not None):
+        rsi_bracket = rs_obj.get_rsi_bracket_value()
+        if rsi_bracket != 0:
+            # save the event
+            new_instance = EventsElementary.objects.create(
+                **kwargs,
+                event_name = "rsi_bracket",
+                event_value = rsi_bracket,
+                event_second_value = rs_obj.rsi,
+            )
+            # emit signal
+            signal_rsi = Signal(
+                **kwargs,
+                signal='RSI',
+                rsi_value=rs_obj.rsi,
+                trend=np.sign(rsi_bracket),
+                horizon=horizon,
+                strength_value=np.abs(rsi_bracket),
+                strength_max=int(3),
+            )
+            signal_rsi.save()
+            logger.debug("   ...Events_RSI calculations done and saved.")
+    #logger.debug("   ... No RSI events.")
+
 
 class EventsElementary(AbstractIndicator):
     event_name = models.CharField(max_length=32, null=False, blank=False, default="none")
     event_value = models.IntegerField(null=True)
     event_second_value = models.FloatField(null=True)
+
 
 
     @staticmethod
@@ -100,31 +128,7 @@ class EventsElementary(AbstractIndicator):
         prices_df = get_n_last_resampl_df(records, source, transaction_currency, counter_currency, resample_period)
 
         ##### check for rsi events, save and emit signal
-        # todo: move it to separate function
-        rs_obj = get_last_rs_object(**kwargs)
-        if (rs_obj is not None) & (rs_obj.rsi is not None):
-            rsi_bracket = rs_obj.get_rsi_bracket_value()
-            if rsi_bracket != 0:
-                # save the event
-                new_instance = cls.objects.create(
-                    **kwargs,
-                    event_name = "rsi_bracket",
-                    event_value = rsi_bracket,
-                    event_second_value = rs_obj.rsi,
-                )
-                # emit signal
-                signal_rsi = Signal(
-                    **kwargs,
-                    signal='RSI',
-                    rsi_value=rs_obj.rsi,
-                    trend=np.sign(rsi_bracket),
-                    horizon=horizon,
-                    strength_value=np.abs(rsi_bracket),
-                    strength_max=int(3),
-                )
-                signal_rsi.save()
-                logger.debug("   ...Events_RSI calculations done and saved.")
-        #logger.debug("   ... No RSI events.")
+        _process_rsi(horizon, **kwargs)
 
 
         ###### check SMA cross over events
