@@ -196,6 +196,7 @@ except Exception as e:
 
 # @Alex
 # Global constants
+
 COINS_LIST_TO_GENERATE_SIGNALS = [
     "BTC", "ETH", "XRP", "LTC", "DASH", "NEO", "XMR", "OMG", "STR", "BCH", "XEM", "ETC", "DOGE",
     "ZRX", "LSK", "DGB", "BTS", "SC", "ZEC", "STRAT", "BCN", "FCT", "GAME", "REP", "VRC", "NXT",
@@ -214,6 +215,8 @@ HORIZONS_TIME2NAMES = {
     MEDIUM:'medium',
     LONG:'long'
 }
+
+time_speed = 1  # set to 1 for production, 10 for fast debugging
 
 
 time_speed = 1  # set to 1 for production, 10 for fast debugging
