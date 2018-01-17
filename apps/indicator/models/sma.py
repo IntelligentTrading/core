@@ -29,26 +29,27 @@ class Sma(AbstractIndicator):
         resampl_high_price_ts = resampl_prices_df.high_price
         resampl_close_price_ts = resampl_prices_df.close_price
         resampl_midpoint_price_ts = resampl_prices_df.midpoint_price
+        time_max = np.max(resampl_prices_df.index)
 
         if not resampl_high_price_ts.empty:
+            # calculate SMA
             sma_high_ts = resampl_high_price_ts.rolling(window=int(self.sma_period/time_speed), center=False).mean()
-            time_max = sma_high_ts.idxmax()
-            self.sma_high_price = int(sma_high_ts[time_max])
+            if not np.isnan(sma_high_ts[time_max]):
+                self.sma_high_price = int(sma_high_ts[time_max])
         else:
             logger.debug(' Not enough HIGH prices for SMA calculation, resample_period=' + str(self.resample_period) )
 
-
         if not resampl_close_price_ts.empty:
             sma_close_ts = resampl_close_price_ts.rolling(window=int(self.sma_period/time_speed), center=False).mean()
-            time_max = sma_close_ts.idxmax()
-            self.sma_close_price = int(sma_close_ts[time_max])
+            if not np.isnan(sma_close_ts[time_max]):
+                self.sma_close_price = int(sma_close_ts[time_max])
         else:
             logger.debug(' Not enough CLOSE prices for SMA calculation, resample_period=' + str(self.resample_period) )
 
         if not resampl_midpoint_price_ts.empty:
             sma_midpoint_ts = resampl_midpoint_price_ts.rolling(window=int(self.sma_period / time_speed), center=False).mean()
-            time_max = sma_midpoint_ts.idxmax()
-            self.sma_midpoint_price = int(sma_midpoint_ts[time_max])
+            if not np.isnan(sma_midpoint_ts[time_max]):
+                self.sma_midpoint_price = int(sma_midpoint_ts[time_max])
         else:
             logger.debug(' Not enough MIDPOINT prices for SMA calculation, resample_period=' + str(self.resample_period))
 

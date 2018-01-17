@@ -102,7 +102,7 @@ class EventsElementary(AbstractIndicator):
         ##### check for rsi events, save and emit signal
         # todo: move it to separate function
         rs_obj = get_last_rs_object(**kwargs)
-        if rs_obj is not None:
+        if (rs_obj is not None) & (rs_obj.rsi is not None):
             rsi_bracket = rs_obj.get_rsi_bracket_value()
             if rsi_bracket != 0:
                 # save the event
@@ -139,6 +139,9 @@ class EventsElementary(AbstractIndicator):
         # create DF in advance wtih NA then fill the rows
         prices_df['low_sma'] = sma_low_df.sma_close_price
         prices_df['high_sma'] = sma_high_df.sma_close_price
+
+        # todo: that is not right fron statistical view point!!! remove later when anough values
+        prices_df = prices_df.fillna(value=0)
 
         # calculate all events and place them to one DF
         events_df = pd.DataFrame()
