@@ -13,18 +13,25 @@ class Price(View):
 
     def get(self, request, *args, **kwargs):
 
-        coin = request.GET.get('coin', "BTC").upper()
-        assert len(coin) < 8
+        transaction_currency = request.GET.get('transaction_currency', 'NA').upper()
+        counter_currency = PriceModel.BTC  # it is default one, get in from GET in futore
 
-        price_object = PriceModel.objects.filter(coin=coin).order_by('-timestamp').first()
+        if transaction_currency == 'NA':
+            return HttpResponse(json.dumps({'error': 'transaction_currency parameter is required'}),
+                                content_type="application/json")
+
+        assert len(transaction_currency) > 1
+        assert len(transaction_currency) < 8
+
+        price_object = PriceModel.objects.filter(transaction_currency=transaction_currency, counter_currency=counter_currency
+                                                 ).order_by('-timestamp').first()
         if price_object:
             response = {
                 'source': price_object.get_source_display(),
-                'coin': price_object.coin,
-                'price_satoshis': price_object.price_satoshis,
-                'price_satoshis_change': price_object.price_satoshis_change,
-                'price_usdt_change': price_object.price_usdt_change,
-                'price_usdt': price_object.price_usdt,
+                'transaction_currency': price_object.transaction_currency,
+                'counter_currency': price_object.counter_currency,
+                'price': price_object.price,
+                'price_change': price_object.price_change,
                 'timestamp': str(price_object.timestamp),
             }
         else:

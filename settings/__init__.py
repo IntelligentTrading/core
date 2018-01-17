@@ -189,18 +189,37 @@ if PRODUCTION or STAGE:
 logger.info("Importing vendor_services_settings")
 try:
     from settings.vendor_services_settings import *
-except:
+except Exception as e:
     logger.warning("Failed to import vendor_services_settings.")
-    pass
+    logger.warning(str(e))
 
 
 # @Alex
 # Global constants
-COINS_LIST = ["ETH", "XRP", "LTC", "DASH", "NEO", "XMR", "OMG"]
-PERIODS_LIST = [15, 60, 360]
-HORIZONS = {15: "short", 60: "medium", 360: "long"}  # mapping from bin size to a name short/medium
+
+COINS_LIST_TO_GENERATE_SIGNALS = [
+    "BTC", "ETH", "XRP", "LTC", "DASH", "NEO", "XMR", "OMG", "STR", "BCH", "XEM", "ETC", "DOGE",
+    "ZRX", "LSK", "DGB", "BTS", "SC", "ZEC", "STRAT", "BCN", "FCT", "GAME", "REP", "VRC", "NXT",
+    "STEEM", "MAID", "STORJ", "GNT", "GAS", "AMP", "SYS", "EMC2", "VTC", "BURST", "LBC", "GNO",
+    "DCR", "FLO", "POT", "OMNI", "CVC", "PASC", "ARDR", "BCY", "GRC", "CLAM", "XCP", "VIA", "BTCD",
+    "FLDC", "NAV", "NEOS", "PPC", "BLK","EXP","RIC","NXC","BELA","XPM","XVC","XBC","RADS","SBD",
+    "PINK", "NMC", "HUC", "BTM"
+]
+
+
+# mapping from bin size to a name short/medium
+PERIODS_LIST = list([15, 60, 360])  #list([60,240,1440])
+(SHORT, MEDIUM, LONG) = PERIODS_LIST
+HORIZONS_TIME2NAMES = {
+    SHORT:'short',
+    MEDIUM:'medium',
+    LONG:'long'
+}
+
 time_speed = 1  # set to 1 for production, 10 for fast debugging
 
+
+time_speed = 1  # set to 1 for production, 10 for fast debugging
 
 A_PRIME_NUMBER = int(os.environ.get('A_PRIME_NUMBER', 12345))
 TEAM_EMOJIS = os.environ.get('TEAM_EMOJIS', "🤖,").split(",")

@@ -2,22 +2,17 @@ import os
 from settings import LOCAL, PRODUCTION, STAGE
 
 
-# AWS
-AWS_OPTIONS = {
-    'AWS_ACCESS_KEY_ID' : os.environ.get('AWS_ACCESS_KEY_ID'),
-    'AWS_SECRET_ACCESS_KEY' : os.environ.get('AWS_SECRET_ACCESS_KEY'),
-    'AWS_STORAGE_BUCKET_NAME' : os.environ.get('AWS_STORAGE_BUCKET_NAME'),
-}
 if PRODUCTION:
     BUCKET_NAME = "intelligenttrading-s3-production"
-    QUEUE_NAME = "intelligenttrading-sqs-production"
+    QUEUE_NAME = "intelligenttrading-sqs-production" # for production bot
     # DELAYED_QUEUE_NAME = "intelligenttrading-delayed-sqs-production"
-    BETA_QUEUE_NAME = "intelligenttrading-sqs-beta"
+    BETA_QUEUE_NAME = "intelligenttrading-sqs-beta" # for beta bot
     TEST_QUEUE_NAME = ""
     SNS_NAME = "intelligenttrading-sns-production"
+
 elif STAGE:
     BUCKET_NAME = "intelligenttrading-s3-stage"
-    QUEUE_NAME = "intelligenttrading-sqs-stage"
+    QUEUE_NAME = "intelligenttrading-sqs-stage" # for stage bot
     BETA_QUEUE_NAME = "" # intelligenttrading-sqs-stage-beta
     # DELAYED_QUEUE_NAME = "intelligenttrading-delayed-sqs-stage"
     TEST_QUEUE_NAME = ""
@@ -27,20 +22,25 @@ else: # LOCAL
     pass # see local_settings.py
 
 
-HOST_URL = 'http://' + BUCKET_NAME + '.s3.amazonaws.com'
-
-
 if not LOCAL:
-    AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
-    MEDIA_URL = 'http://' + AWS_STORAGE_BUCKET_NAME + '.s3.amazonaws.com/'
-    AWS_STATIC_URL = 'http://' + AWS_STORAGE_BUCKET_NAME + '.s3.amazonaws.com/'
+
+    # AWS
+    AWS_OPTIONS = {
+        'AWS_ACCESS_KEY_ID': os.environ.get('AWS_ACCESS_KEY_ID'),
+        'AWS_SECRET_ACCESS_KEY': os.environ.get('AWS_SECRET_ACCESS_KEY'),
+        'AWS_STORAGE_BUCKET_NAME': BUCKET_NAME,
+    }
+
+    HOST_URL = 'http://' + BUCKET_NAME + '.s3.amazonaws.com'
+    MEDIA_URL = 'http://' + BUCKET_NAME + '.s3.amazonaws.com/'
+    AWS_STATIC_URL = 'http://' + BUCKET_NAME + '.s3.amazonaws.com/'
     STATIC_ROOT = STATIC_URL = AWS_STATIC_URL
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
     STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.mysql',
+            'ENGINE': 'django.db.backends.mysql' if PRODUCTION else 'django.db.backends.postgresql_psycopg2',
             'NAME': os.environ['RDS_DB_NAME'],
             'USER': os.environ['RDS_USERNAME'],
             'PASSWORD': os.environ['RDS_PASSWORD'],

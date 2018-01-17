@@ -3,6 +3,7 @@ import logging
 import schedule
 import time
 import numpy as np
+import itertools
 
 from datetime import datetime, timedelta
 from django.core.management.base import BaseCommand
@@ -11,12 +12,14 @@ from requests import get, RequestException
 from apps.channel.models import ExchangeData
 from apps.channel.models.exchange_data import POLONIEX
 from apps.indicator.models import Price, Volume, PriceResampled
+from apps.indicator.models.price import get_currency_value_from_string
 
 from settings import time_speed  # 1 / 10
-from settings import COINS_LIST
-from settings import PERIODS_LIST  # 15 / 60 / 360
+from settings import COINS_LIST_TO_GENERATE_SIGNALS
+from settings import PERIODS_LIST
 
 logger = logging.getLogger(__name__)
+
 
 class Command(BaseCommand):
     help = "Polls data from Poloniex on a regular interval"
@@ -26,12 +29,12 @@ class Command(BaseCommand):
         schedule.every(1).minutes.do(pull_poloniex_data)
 
         # @Alex
-        # run resampling in 15,60,360 bins and calculate indicator values
-        schedule.every(15/time_speed).minutes.do(_resample_then_metrics, {'period': 15})
-        schedule.every(60/time_speed).minutes.do(_resample_then_metrics, {'period': 60})
-        schedule.every(360/time_speed).minutes.do(_resample_then_metrics, {'period': 360})
+        # run resampling for all periods and calculate indicator values
+        for hor_period in PERIODS_LIST:
+            schedule.every(hor_period / time_speed).minutes.do(_resample_then_metrics, {'period': hor_period})
 
-        keep_going=True
+
+        keep_going = True
         while keep_going:
             try:
                 schedule.run_pending()
@@ -64,69 +67,34 @@ def pull_poloniex_data():
 
 
 def _save_prices_and_volumes(data, timestamp):
-    try:
-        usdt_btc = data.pop("USDT_BTC")
-
-        Price.objects.create(
-            source=POLONIEX,
-            coin="BTC",
-            price_satoshis=int(10 ** 8),
-            price_usdt=float(usdt_btc['last']),
-            timestamp=timestamp
-        )
-
-        Volume.objects.create(
-            source=POLONIEX,
-            coin="BTC",
-            btc_volume=float(usdt_btc['baseVolume']),
-            timestamp=timestamp
-        )
-
-    except KeyError:
-        logger.debug("missing BTC in Poloniex data")
-
-    try:
-        usdt_eth = data.pop("USDT_ETH")
-        btc_eth = data.pop("BTC_ETH")
-
-        Price.objects.create(
-            source=POLONIEX,
-            coin="ETH",
-            price_satoshis=int(float(btc_eth['last']) * 10 ** 8),
-            price_wei=int(10 ** 8),
-            price_usdt=float(usdt_eth['last']),
-            timestamp=timestamp
-        )
-
-        Volume.objects.create(
-            source=POLONIEX,
-            coin="ETH",
-            btc_volume=float(btc_eth['baseVolume']),
-            timestamp=timestamp
-        )
-
-    except KeyError:
-        logger.debug("missing ETH in Poloniex price data")
-
     for currency_pair in data:
-        if currency_pair.split('_')[0] == "BTC":
-            try:
-                Price.objects.create(
-                    source=POLONIEX,
-                    coin=currency_pair.split('_')[1],
-                    price_satoshis=int(float(data[currency_pair]['last']) * 10 ** 8),
-                    timestamp=timestamp
-                )
-                Volume.objects.create(
-                    source=POLONIEX,
-                    coin=currency_pair.split('_')[1],
-                    btc_volume=float(data[currency_pair]['baseVolume']),
-                    timestamp = timestamp
-                )
-            except Exception as e:
-                logger.debug(str(e))
+        try:
+            counter_currency_string = currency_pair.split('_')[0]
+            counter_currency = get_currency_value_from_string(counter_currency_string)
+            assert counter_currency >= 0
+            transaction_currency_string = currency_pair.split('_')[1]
+            assert len(transaction_currency_string) > 1 and len(transaction_currency_string) <= 6
+
+            Price.objects.create(
+                source=POLONIEX,
+                transaction_currency=transaction_currency_string,
+                counter_currency=counter_currency,
+                price=int(float(data[currency_pair]['last']) * 10 ** 8),
+                timestamp=timestamp
+            )
+
+            Volume.objects.create(
+                source=POLONIEX,
+                transaction_currency=transaction_currency_string,
+                counter_currency=counter_currency,
+                volume=float(data[currency_pair]['baseVolume']),
+                timestamp=timestamp
+            )
+        except Exception as e:
+            logger.debug(str(e))
 
     logger.debug("Saved Poloniex price and volume data")
+
 
 # @Alex
 def _resample_then_metrics(period_par):
@@ -143,60 +111,93 @@ def _resample_then_metrics(period_par):
     # TODO: need to be refactored... splitted into several methods or classes
 
     period = period_par['period']
-    logger.debug("======== Resampling with Period: " + str(period))
+    logger.debug(" ============== Resampling with Period: " + str(period) + " ====")
 
-    # get all records back in time ( 5 min)
-    period_records = Price.objects.filter(timestamp__gte=datetime.now()-timedelta(minutes=period))
+    # get all records back in [period] time ( 15min, 60min, 360min)
+    period_records = Price.objects.filter(timestamp__gte=datetime.now() - timedelta(minutes=period))
 
-    for coin in COINS_LIST:
-        #logger.debug('  COIN: '+ str(coin))
-        # calculate average values for the records 5 min back in time
-        coin_price_list = list(period_records.filter(coin=coin).values('timestamp','price_satoshis').order_by('-timestamp'))
+    # for all transaction_currencys destined to be resamples
+    # COINS_LIST = ["ETH", "XRP", "LTC", "DASH", "NEO", "XMR", "OMG"]
+    BASE_COIN_TO_FILL = [Price.BTC, Price.USDT]
 
-        # skip the currency if there is no data about this currency
-        if not coin_price_list: continue
+    # iterate over all pairs [('ETH', 0), ('ETH', 1), ('XRP', 0), ('XRP', 1) ...
+    for transaction_currency, counter_currency in itertools.product(COINS_LIST_TO_GENERATE_SIGNALS, BASE_COIN_TO_FILL):
+        logger.debug(' ======= resampling: checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
 
-        prices = np.array([ rec['price_satoshis'] for rec in coin_price_list])
-        times = np.array([ rec['timestamp'] for rec in coin_price_list])
-        period_mean = prices.mean()
-        period_min = prices.min()
-        period_max = prices.max()
+        # get all price records back in time (according to period)
+        transaction_currency_price_list = list(
+            period_records.filter(transaction_currency=transaction_currency, counter_currency=counter_currency).values('timestamp', 'price').order_by('-timestamp'))
+
+        # skip the currency if there is no given price
+        if not transaction_currency_price_list:
+            logger.debug(' ======= skipping, no price information')
+            continue
+
+        # todo can i do better?
+        # get values from django structure
+        prices = np.array([rec['price'] for rec in transaction_currency_price_list])
+        times = np.array([rec['timestamp'] for rec in transaction_currency_price_list])
+
+        ### resample price data, i.e. generate one time point for each 15 min
+        period_variance = prices.var()
+        period_mean = int(prices.mean())  # we need it all int becasue we decided to * 10^8
+        period_min = int(prices.min())
+        period_max = int(prices.max())
+        period_closing = int(prices[-1])
         period_ts = times.max()
 
-        # save new resampled point in the Table
+        # create resampled object
         price_resampled_object = PriceResampled.objects.create(
             source=POLONIEX,
-            coin=coin,
+            transaction_currency=transaction_currency,
+            counter_currency=counter_currency,
             timestamp=period_ts,
-            period = period,
-            mean_price_satoshis=period_mean,
-            min_price_satoshis=period_min,
-            max_price_satoshis=period_max
+            period=period,
+            price_variance=period_variance,
+            mean_price=period_mean,
+            closing_price=period_closing,
+            min_price=period_min,
+            max_price=period_max
+
         )
-        #logger.debug("  Price is resampled")
 
-        # get last 250 historical point which is enough to calculate any SMA,EMA etc
-        logger.debug(" [ " + str(coin) + " ]: calculate indicators ...")
-        price_resampled_object.calc_SMA()
-        price_resampled_object.save()
-
-        price_resampled_object.calc_EMA()
-        price_resampled_object.save()
-
-        price_resampled_object.calc_RS()
-        price_resampled_object.save()
+        # calculate additional indicators (sma, ema etc)
+        logger.debug("   calculate indicators for [ " + str(transaction_currency) + " ], price in :" + str(counter_currency) )
 
         try:
-            logger.debug(" ...check cross over signals to emit")
+            price_resampled_object.calc_SMA()
+            price_resampled_object.save()
+            logger.debug("   ...SMA calculations done and saved.")
+        except Exception as e:
+            logger.debug('---> SMA calculation error: ' + str(e))
+
+        try:
+            price_resampled_object.calc_EMA()
+            price_resampled_object.save()
+            logger.debug("   ...EMA calculations done and saved.")
+        except Exception as e:
+            logger.debug('---> EMA calcultion error: ' +  str(e))
+
+        try:
+            price_resampled_object.calc_RS()
+            price_resampled_object.save()
+            logger.debug("   ...RS calculations done and saved.")
+        except Exception as e:
+            logger.debug(str(e))
+
+        ### check and generate possible signals
+        # todo: move the check_signal logic from price_resampled to a static method of Signal
+        try:
+            logger.debug("   ...check cross over signals to emit")
             price_resampled_object.check_cross_over_signal()
         except Exception as e:
-            logging.debug("error checking cross over signals: " + str(e))
+            logging.debug(" --> error checking cross over signals: " + str(e))
 
         # check RSI if period more then 15 (Vinnie told that it makes not sense
         # to run RSI for 15 min period, so we calculate it only for 60, 360
         if period >= 15:  # change to 60 in production
             try:
-                logger.debug(" ...check RSI signal to emit")
+                logger.debug("   ...check RSI signal to emit")
                 price_resampled_object.check_rsi_signal()
             except Exception as e:
-                logging.debug("error checking rsi signals: " + str(e))
+                logging.debug(" --> error checking rsi signals: " + str(e))

@@ -15,7 +15,7 @@ class CSV(View):
         response['Content-Disposition'] = 'attachment; filename="somefilename.csv"'
 
         writer = csv.writer(response)
-        for price in Price.objects.filter(coin="BTC").all():
-            writer.writerow([price.coin, price.price_satoshis, str(price.timestamp)])
+        for price in Price.objects.filter(transaction_currency="BTC").all():
+            writer.writerow([price.transaction_currency, price.price, str(price.timestamp)])
 
         return response

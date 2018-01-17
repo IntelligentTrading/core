@@ -1,3 +1,5 @@
+[![Waffle.io - Columns and their card count](https://badge.waffle.io/IntelligentTrading/core.svg?columns=all)](https://waffle.io/IntelligentTrading/core)
+
 # ITT Data-Sources
 
 
@@ -8,15 +10,15 @@
 Get the current trading price for any token
 
 GET `/price`
-PARAMS `coin = <token ticker>`
+PARAMS `transaction_currency = <ticker>`
 
-eg. `/price?coin=BTC`
+eg. `/price?transaction_currency=BTC`
 
 JSON RESPONSE
 
 `{
     'source': "Poloniex",
-    'coin': <str, coin_ticker>,
+    'transaction_currency': <str, transaction_currency_ticker>,
     'price_satoshis': <int, price_in_satoshis>,
     'price_usdt': <float, price in USD> (only for BTC ticker),
     'price_satoshis_change': <float, 15_min_price_change_ratio>,
@@ -26,7 +28,7 @@ JSON RESPONSE
 eg.
 `{
    "source": "Poloniex",
-   "coin": "OMG",
+   "transaction_currency": "OMG",
    "price_sotoshis": 281123, (equivelent to 0.00218123)
    "price_usdt": null,
    "price_satoshis_change": 0.0242342, (equivelent to 2.4% increase)
@@ -41,9 +43,9 @@ token ticker is <8 chars should be all caps
 Get the current trading volume for any token
 
 GET `/volume`
-PARAMS `coin = <token ticker>`
+PARAMS `transaction_currency = <token ticker>`
 
-eg. `/volume?coin=BTC`
+eg. `/volume?transaction_currency=BTC`
 
 token ticker is <8 chars should be all caps
 
@@ -150,7 +152,7 @@ JSON RESPONSE
  
     ```
     > from apps.indicator.models import Price
-    > eth_price = Price.objects.filter(coin="ETH").order_by('-timestamp').first()
+    > eth_price = Price.objects.filter(currency="ETH").order_by('-timestamp').first()
     > print(eth_price.satoshis)
     ```
  

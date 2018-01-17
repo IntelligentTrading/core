@@ -33,7 +33,7 @@ class Signal(Timestampable, models.Model):
     text = models.TextField(default="")
 
     source = models.SmallIntegerField(choices=SOURCE_CHOICES, null=False, default=POLONIEX)
-    coin = models.CharField(max_length=6, null=False, blank=False)
+    transaction_currency = models.CharField(max_length=6, null=False, blank=False)
 
     signal = models.CharField(max_length=15, null=True)
     trend = models.CharField(max_length=15, null=True)
@@ -43,10 +43,9 @@ class Signal(Timestampable, models.Model):
     strength_value = models.IntegerField(null=True)
     strength_max = models.IntegerField(null=True)
 
-    price_satoshis = models.BigIntegerField(null=False)  # Price in satoshis
-    price_satoshis_change = models.FloatField(null=True)
-    price_usdt = models.FloatField(null=True)  # USD value
-    price_usdt_change = models.FloatField(null=True)
+    counter_currency = models.SmallIntegerField(choices=Price.COUNTER_CURRENCY_CHOICES, null=False, default=Price.BTC)
+    price = models.BigIntegerField(null=False)
+    price_change = models.FloatField(null=True)  # in percents, thatis why Float
 
     rsi_value = models.FloatField(null=True)
 
@@ -63,26 +62,27 @@ class Signal(Timestampable, models.Model):
 
     # MODEL FUNCTIONS
 
-    def get_price_satoshis(self):
-        if self.price_satoshis and self.price_satoshis_change:
-            return self.price_satoshis
+    def get_price(self):
+        if self.price and self.price_change:
+            return self.price
 
-        price_object = Price.objects.filter(coin=self.coin,
+        price_object = Price.objects.filter(transaction_currency=self.transaction_currency,
                                             source=self.source,
+                                            counter_currency = self.counter_currency,
                                             timestamp__lte=self.timestamp
                                             ).order_by('-timestamp').first()
         if price_object:
-            self.price_satoshis = price_object.price_satoshis
-            self.price_satoshis_change = price_object.price_satoshis_change
-            self.price_usdt = price_object.price_usdt
-            self.price_usdt_change = price_object.price_usdt_change
-        return self.price_satoshis
+            self.price = price_object.price
+            self.price_change = price_object.price_change
+        return self.price
 
 
     def as_dict(self):
         data_dict = copy.deepcopy(self.__dict__)
         if "_state" in data_dict:
             del data_dict["_state"]
+        for key, value in data_dict.items():
+            data_dict[key] = str(value) # cast all as strings
         data_dict.update({
             "UI": self.get_UI_display(),
             "source": self.get_source_display(),
@@ -99,9 +99,8 @@ class Signal(Timestampable, models.Model):
         # populate all required values
 
         try:
-            if not all([self.price_satoshis, self.price_satoshis_change,
-                        self.price_usdt, self.price_usdt_change]):
-                self.price_satoshis = self.get_price_satoshis()
+            if not all([self.price, self.price_change]):
+                self.price = self.get_price()
 
             if not all([self.volume_btc, self.volume_btc_change,
                         self.volume_usdt, self.volume_usdt_change]):
@@ -119,20 +118,25 @@ class Signal(Timestampable, models.Model):
         sqs_connection = boto.sqs.connect_to_region("us-east-1",
                             aws_access_key_id=AWS_OPTIONS['AWS_ACCESS_KEY_ID'],
                             aws_secret_access_key=AWS_OPTIONS['AWS_SECRET_ACCESS_KEY'])
-        production_queue = sqs_connection.get_queue(QUEUE_NAME)
-        production_queue.write(message)
+
+        if QUEUE_NAME:
+            logging.debug("emitted to QUEUE_NAME queue :" + QUEUE_NAME)
+            production_queue = sqs_connection.get_queue(QUEUE_NAME)
+            production_queue.write(message)
+
         if BETA_QUEUE_NAME:
+            logging.debug("emitted to BETA_QUEUE_NAME queue :" + BETA_QUEUE_NAME)
             test_queue = sqs_connection.get_queue(BETA_QUEUE_NAME)
             test_queue.write(message)
 
         if TEST_QUEUE_NAME:
+            logging.debug("emitted to TEST_QUEUE_NAME queue :" + TEST_QUEUE_NAME)
             test_queue = sqs_connection.get_queue(TEST_QUEUE_NAME)
             test_queue.write(message)
 
-        logger.debug("EMITTED SIGNAL: " + str(self.as_dict()))
-        self.sent_at = datetime.now()
+        logger.info("EMITTED SIGNAL: " + str(self.as_dict()))
+        self.sent_at = datetime.now()  # to prevent emitting the same signal twice
         return
-
 
     def print(self):
         logger.info("PRINTING SIGNAL DATA: " + str(self.as_dict()))
@@ -142,11 +146,11 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 
-@receiver(pre_save, sender=Signal, dispatch_uid="check_has_price_satoshis")
-def check_has_price_satoshis(sender, instance, **kwargs):
-    price_satoshis = instance.get_price_satoshis()
+@receiver(pre_save, sender=Signal, dispatch_uid="check_has_price")
+def check_has_price(sender, instance, **kwargs):
+    price = instance.get_price()
     try:
-        assert price_satoshis #see now we have it :)
+        assert price #see now we have it :)
     except Exception as e:
         logging.debug(str(e))
 
@@ -154,7 +158,7 @@ def check_has_price_satoshis(sender, instance, **kwargs):
 @receiver(post_save, sender=Signal, dispatch_uid="send_signal")
 def send_signal(sender, instance, **kwargs):
     logging.debug("signal saved, checking if signal has been sent yet")
-    if not instance.sent_at:
+    if not instance.sent_at:   # to prevent emitting the same signal twice
         try:
             logging.debug("signal not sent yet, sending now...")
             instance._send()
