@@ -122,7 +122,7 @@ def _compute_and_save_indicators(resample_period_par):
         logger.debug('          checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
 
         # create a dictionary of parameters to improve readability
-        indicat_param_dict = {
+        indicator_params_dict = {
             'timestamp' : timestamp,
             'source' : POLONIEX,
             'transaction_currency' : transaction_currency,
@@ -133,7 +133,7 @@ def _compute_and_save_indicators(resample_period_par):
         # calculate and save resampling price
         # todo - prevent adding an empty record if no value was computed (static method below)
         try:
-            resample_object = PriceResampl.objects.create(**indicat_param_dict)
+            resample_object = PriceResampl.objects.create(**indicator_params_dict)
             resample_object.compute()
             resample_object.save()
         except Exception as e:
@@ -143,7 +143,7 @@ def _compute_and_save_indicators(resample_period_par):
         indicators_list = [Sma, Rsi]
         try:
             for ind in indicators_list:
-                ind.compute_all(ind, **indicat_param_dict)
+                ind.compute_all(ind, **indicator_params_dict)
         except Exception as e:
             logger.error("Indicator Exception: " + str(e))
 
@@ -152,7 +152,7 @@ def _compute_and_save_indicators(resample_period_par):
         events_list = [EventsElementary, EventsLogical]
         try:
             for event in events_list:
-                event.check_events(event, **indicat_param_dict)
+                event.check_events(event, **indicator_params_dict)
         except Exception as e:
             logger.error("Event Exception: " + str(e))
 
