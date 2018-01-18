@@ -88,13 +88,7 @@ def get_n_last_sma_df(n, sma_period, source, transaction_currency, counter_curre
         sma_close_prices = pd.Series(data=[rec['sma_close_price'] for rec in last_prices], index=ts)
         sma_midpoint_prices = pd.Series(data=[rec['sma_midpoint_price'] for rec in last_prices], index=ts)
 
-
         df['sma_close_price'] = sma_close_prices
         df['sma_midpoint_price'] = sma_midpoint_prices
 
     return df
-
-
-
-
-

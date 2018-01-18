@@ -135,9 +135,9 @@ class EventsElementary(AbstractIndicator):
         # NOTE - correct df names if change sma_low!
         # todo : refactor, move to a separate method or class
         SMA_LOW = 50
-        SMA_HIGN = 200
+        SMA_HIGH = 200
         sma_low_df = get_n_last_sma_df(records, SMA_LOW, source, transaction_currency, counter_currency, resample_period)
-        sma_high_df = get_n_last_sma_df(records, SMA_HIGN, source, transaction_currency, counter_currency, resample_period)
+        sma_high_df = get_n_last_sma_df(records, SMA_HIGH, source, transaction_currency, counter_currency, resample_period)
 
         # todo: make sure the code still work of no high_sma
         # create DF in advance wtih NA then fill the rows
@@ -265,9 +265,6 @@ class EventsElementary(AbstractIndicator):
 
 
 
-
-
-
 ###################
 def get_last_elementory_events_df(timestamp, source, transaction_currency, counter_currency, resample_period):
 
@@ -292,6 +289,3 @@ def get_last_elementory_events_df(timestamp, source, transaction_currency, count
         logger.debug("    No recent events found!")
 
     return df
-
-
-

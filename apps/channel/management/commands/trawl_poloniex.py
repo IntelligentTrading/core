@@ -156,5 +156,3 @@ def _compute_and_save_indicators(resample_period_par):
                 event.check_events(event, **indicator_params_dict)
             except Exception as e:
                 logger.error("Event Exception: " + str(e))
-
-
