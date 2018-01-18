@@ -141,19 +141,20 @@ def _compute_and_save_indicators(resample_period_par):
 
         # calculate and save simple indicators
         indicators_list = [Sma, Rsi]
-        try:
-            for ind in indicators_list:
+        for ind in indicators_list:
+            try:
                 ind.compute_all(ind, **indicator_params_dict)
-        except Exception as e:
-            logger.error("Indicator Exception: " + str(e))
+            except Exception as e:
+                logger.error("Indicator Exception: " + str(e))
 
         # check for events and save if any
         # todo: make sure EventsElementary runs first
+
         events_list = [EventsElementary, EventsLogical]
-        try:
-            for event in events_list:
+        for event in events_list:
+            try:
                 event.check_events(event, **indicator_params_dict)
-        except Exception as e:
-            logger.error("Event Exception: " + str(e))
+            except Exception as e:
+                logger.error("Event Exception: " + str(e))
 
 
