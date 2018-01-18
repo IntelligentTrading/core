@@ -70,7 +70,8 @@ def get_n_last_resampl_df(n, source, transaction_currency, counter_currency, res
         df['high_price'] = high_prices
         df['close_price'] = close_prices
         df['midpoint_price'] = midpoint_prices
-        return df
+        # we need df in a right order (from past to future) to make sma rolling work righ
+        return df.iloc[::-1]
     else:
         return None
 

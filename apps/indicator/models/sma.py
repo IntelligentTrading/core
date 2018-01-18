@@ -98,4 +98,4 @@ def get_n_last_sma_df(n, sma_period, source, transaction_currency, counter_curre
         df['sma_close_price'] = sma_close_prices
         df['sma_midpoint_price'] = sma_midpoint_prices
 
-    return df
+    return df.iloc[::-1]
