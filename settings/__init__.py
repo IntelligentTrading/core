@@ -196,7 +196,6 @@ except Exception as e:
 
 # @Alex
 # Global constants
-
 COINS_LIST_TO_GENERATE_SIGNALS = [
     "BTC", "ETH", "XRP", "LTC", "DASH", "NEO", "XMR", "OMG", "STR", "BCH", "XEM", "ETC", "DOGE",
     "ZRX", "LSK", "DGB", "BTS", "SC", "ZEC", "STRAT", "BCN", "FCT", "GAME", "REP", "VRC", "NXT",
@@ -206,7 +205,6 @@ COINS_LIST_TO_GENERATE_SIGNALS = [
     "PINK", "NMC", "HUC", "BTM"
 ]
 
-
 # mapping from bin size to a name short/medium
 PERIODS_LIST = list([15, 60, 360])  #list([60,240,1440])
 (SHORT, MEDIUM, LONG) = PERIODS_LIST
@@ -215,8 +213,6 @@ HORIZONS_TIME2NAMES = {
     MEDIUM:'medium',
     LONG:'long'
 }
-
-time_speed = 1  # set to 1 for production, 10 for fast debugging
 
 
 time_speed = 1  # set to 1 for production, 10 for fast debugging
