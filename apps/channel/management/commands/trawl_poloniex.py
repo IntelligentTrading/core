@@ -2,7 +2,6 @@ import json
 import logging
 import schedule
 import time
-import numpy as np
 import itertools
 
 from django.core.management.base import BaseCommand
@@ -10,7 +9,7 @@ from requests import get, RequestException
 
 from apps.channel.models import ExchangeData
 from apps.channel.models.exchange_data import POLONIEX
-from apps.indicator.models import Price, Volume, PriceResampled
+from apps.indicator.models import Price, Volume
 from apps.indicator.models.price import get_currency_value_from_string
 
 from settings import time_speed  # 1 / 10
