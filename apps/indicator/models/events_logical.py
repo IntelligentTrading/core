@@ -27,8 +27,8 @@ class EventsLogical(AbstractIndicator):
 
         #######  calculate logical  Ichimoku signals
         if not e_df.empty:
-            for column in e_df:
-                logger.debug('    ... event: ' + column + ' = ' + str(e_df[column].values))
+            #for column in e_df:
+            #    logger.debug('    ... event: ' + column + ' = ' + str(e_df[column].values))
 
             e_df['kumo_breakout_up_rules'] = np.where(
                 (e_df.closing_cloud_breakout_up_extended &

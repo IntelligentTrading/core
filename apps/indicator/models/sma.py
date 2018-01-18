@@ -19,6 +19,7 @@ class Sma(AbstractIndicator):
 
     def _compute_sma(self):
         # get neccesary records from price_resample
+        logger.debug(" compute SMA starts")
         resampl_prices_df = price_resampl.get_n_last_resampl_df(
             self.resample_period * self.sma_period + 5,
             self.source,
@@ -31,9 +32,13 @@ class Sma(AbstractIndicator):
         resampl_midpoint_price_ts = resampl_prices_df.midpoint_price
         time_max = np.max(resampl_prices_df.index)
 
+        logger.debug(" max time=" + str(time_max))
+        logger.debug(" close price= " + str(resampl_close_price_ts))
+
         if not resampl_high_price_ts.empty:
             # calculate SMA
             sma_high_ts = resampl_high_price_ts.rolling(window=int(self.sma_period/time_speed), center=False).mean()
+            logger.debug(" sma_high_ts=" + str(sma_high_ts))
             if not np.isnan(sma_high_ts[time_max]):
                 self.sma_high_price = int(sma_high_ts[time_max])
         else:
@@ -59,12 +64,12 @@ class Sma(AbstractIndicator):
         # todo - avoid creation empty record if no sma was computed..it also mith be fine
         for sma_period in SMA_LIST:
             try:
-                new_instance = cls.objects.create(**kwargs, sma_period = sma_period)
-                new_instance._compute_sma()
-                new_instance.save()
+                sma_instance = cls.objects.create(**kwargs, sma_period = sma_period)
+                sma_instance._compute_sma()
+                sma_instance.save()
                 logger.debug("   ...SMA calculations done and saved.")
             except Exception as e:
-                logger.error("SMA Compute Exception: " + str(e))
+                logger.error(" SMA Compute Exception: " + str(e))
 
 
 
