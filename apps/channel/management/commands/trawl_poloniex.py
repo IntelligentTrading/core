@@ -5,7 +5,6 @@ import time
 import numpy as np
 import itertools
 
-from datetime import datetime, timedelta
 from django.core.management.base import BaseCommand
 from requests import get, RequestException
 

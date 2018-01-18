@@ -28,6 +28,16 @@ ALL_POSSIBLE_ELEMENTARY_EVENTS = [
     'conversion_above_base'
 ]
 
+_col2trend = {
+    'sma50_cross_price_down': -1,
+    'sma200_cross_price_down': -2,
+    'sma50_cross_sma200_down': -3,
+    'sma50_cross_price_up': 1,
+    'sma200_cross_price_up': 2,
+    'sma50_cross_sma200_up': 3
+}
+
+
 # plot Ichi for debug
 def _draw_cloud(df,**kwargs):
     import matplotlib.pyplot as plt
@@ -64,7 +74,6 @@ def _draw_cloud(df,**kwargs):
     ax1.plot(df.hikou_span_lagging, linestyle='-', color='lightblue')
 
 def _process_rsi(horizon, **kwargs):
-    # todo: move it to separate function
     rs_obj = get_last_rs_object(**kwargs)
     if (rs_obj is not None) & (rs_obj.rsi is not None):
         rsi_bracket = rs_obj.get_rsi_bracket_value()
@@ -91,12 +100,58 @@ def _process_rsi(horizon, **kwargs):
     #logger.debug("   ... No RSI events.")
 
 
+def _process_sma_crossovers(time_current, horizon, prices_df, **kwargs):
+
+    # NOTE - correct df names if change sma_low!
+    # sma50_cross_price_down
+
+    # calculate all events and place them to one DF
+    events_df = pd.DataFrame()
+    events_df['sma50_cross_price_down'] = np.sign(prices_df.low_sma - prices_df.close_price).diff().lt(0)  # -1
+    events_df['sma200_cross_price_down'] = np.sign(prices_df.high_sma - prices_df.close_price).diff().lt(0)  # -2
+    events_df['sma50_cross_sma200_down'] = np.sign(prices_df.low_sma - prices_df.high_sma).diff().lt(0)  # -3
+    events_df['sma50_cross_price_up'] = np.sign(prices_df.low_sma - prices_df.close_price).diff().gt(0)  # 1
+    events_df['sma200_cross_price_up'] = np.sign(prices_df.high_sma - prices_df.close_price).diff().gt(0)  # 2
+    events_df['sma50_cross_sma200_up'] = np.sign(prices_df.low_sma - prices_df.high_sma).diff().gt(0)  # 3
+
+    # time_max2 = events_df.idxmax()[0]
+    # get the last events row and account for a small timestamp rounding error
+    last_event_row = events_df.loc[
+                     (time_current + timedelta(milliseconds=1)): (time_current - timedelta(milliseconds=1))]
+    # events_df.loc[time_current]
+
+    # for each event in last row of all recents events
+    for event_name, event_value in last_event_row.iteritems():
+        # if events is TRUE
+        if event_value[0]:
+            trend = _col2trend[event_name]
+            sma_event = EventsElementary.objects.create(
+                **kwargs,
+                event_name=event_name,
+                event_value=int(1),
+            )
+            sma_event.save()
+
+            signal_sma_cross = Signal(
+                **kwargs,
+                signal='SMA',
+                trend=np.sign(trend),  # -1 / 1
+                horizon=horizon,
+                strength_value=np.abs(trend),  # 1,2,3
+                strength_max=int(3)
+            )
+            signal_sma_cross.save()
+            logger.debug("   ...FIRED - Event " + event_name)
+            # logger.debug("   ...No Events for " + event_name)
+
+
+
+
+
 class EventsElementary(AbstractIndicator):
     event_name = models.CharField(max_length=32, null=False, blank=False, default="none")
     event_value = models.IntegerField(null=True)
     event_second_value = models.FloatField(null=True)
-
-
 
     @staticmethod
     def check_events(cls, **kwargs):
@@ -106,14 +161,7 @@ class EventsElementary(AbstractIndicator):
         counter_currency = kwargs['counter_currency']
         resample_period = kwargs['resample_period']
 
-        _col2trend = {
-            'sma50_cross_price_down': -1,
-            'sma200_cross_price_down': -2,
-            'sma50_cross_sma200_down': -3,
-            'sma50_cross_price_up': 1,
-            'sma200_cross_price_up': 2,
-            'sma50_cross_sma200_up': 3
-        }
+
         horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[resample_period])
         time_current = pd.to_datetime(timestamp, unit='s')
 
@@ -128,68 +176,30 @@ class EventsElementary(AbstractIndicator):
         last_records = ichi_param_4_26 * ichi_param_4_26 + 20
         prices_df = get_n_last_resampl_df(last_records, source, transaction_currency, counter_currency, resample_period)
 
-        ##### check for rsi events, save and emit signal
+        ###### check for rsi events, save and emit signal
         _process_rsi(horizon, **kwargs)
 
 
         ###### check SMA cross over events
-        # NOTE - correct df names if change sma_low!
-        # todo : refactor, move to a separate method or class
         SMA_LOW = 50
         SMA_HIGH = 200
-        sma_low_df = get_n_last_sma_df(last_records, SMA_LOW, source, transaction_currency, counter_currency, resample_period)
-        sma_high_df = get_n_last_sma_df(last_records, SMA_HIGH, source, transaction_currency, counter_currency, resample_period)
+        sma_low_df = get_n_last_sma_df(last_records, SMA_LOW, source, transaction_currency, counter_currency,
+                                       resample_period)
+        sma_high_df = get_n_last_sma_df(last_records, SMA_HIGH, source, transaction_currency, counter_currency,
+                                        resample_period)
 
         # todo: make sure the code still work of no high_sma
         # create DF in advance wtih NA then fill the rows
         prices_df['low_sma'] = sma_low_df.sma_close_price
         prices_df['high_sma'] = sma_high_df.sma_close_price
-
         # todo: that is not right fron statistical view point!!! remove later when anough values
         prices_df = prices_df.fillna(value=0)
 
-        # calculate all events and place them to one DF
-        events_df = pd.DataFrame()
-        events_df['sma50_cross_price_down'] = np.sign(prices_df.low_sma - prices_df.close_price).diff().lt(0)  # -1
-        events_df['sma200_cross_price_down'] = np.sign(prices_df.high_sma - prices_df.close_price).diff().lt(0) # -2
-        events_df['sma50_cross_sma200_down'] = np.sign(prices_df.low_sma - prices_df.high_sma).diff().lt(0) # -3
-        events_df['sma50_cross_price_up'] = np.sign(prices_df.low_sma - prices_df.close_price).diff().gt(0) # 1
-        events_df['sma200_cross_price_up'] = np.sign(prices_df.high_sma - prices_df.close_price).diff().gt(0) # 2
-        events_df['sma50_cross_sma200_up'] = np.sign(prices_df.low_sma - prices_df.high_sma).diff().gt(0)  # 3
-
-        #time_max2 = events_df.idxmax()[0]
-        # get the last events row and account for a small timestamp rounding error
-        last_event_row = events_df.loc[ (time_current+timedelta(milliseconds=1)) : (time_current-timedelta(milliseconds=1)) ]
-        #events_df.loc[time_current]
-
-        # for each event in last row of all recents events
-        for event_name, event_value in last_event_row.iteritems():
-            # if events is TRUE
-            if event_value[0]:
-                trend = _col2trend[event_name]
-                sma_event = cls.objects.create(
-                    **kwargs,
-                    event_name=event_name,
-                    event_value=int(1),
-                )
-                sma_event.save()
-
-                signal_sma_cross = Signal(
-                    **kwargs,
-                    signal='SMA',
-                    trend=np.sign(trend), # -1 / 1
-                    horizon=horizon,
-                    strength_value=np.abs(trend), # 1,2,3
-                    strength_max=int(3)
-                )
-                signal_sma_cross.save()
-                logger.debug("   ...FIRED - Event " + event_name)
-            #logger.debug("   ...No Events for " + event_name)
+        _process_sma_crossovers(time_current, horizon, prices_df, **kwargs)
 
 
         ####### calculate and save ichimoku elementary events
         # no signal emitting
-
 
         price_high_ts = prices_df['high_price']
         closing_price_ts = prices_df['close_price']

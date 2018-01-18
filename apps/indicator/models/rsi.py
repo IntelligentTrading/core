@@ -4,7 +4,6 @@ from apps.indicator.models.abstract_indicator import AbstractIndicator
 import numpy as np
 
 from apps.indicator.models import price_resampl
-from settings import time_speed
 
 logger = logging.getLogger(__name__)
 
