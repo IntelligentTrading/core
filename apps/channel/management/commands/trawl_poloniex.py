@@ -117,7 +117,7 @@ def _compute_and_save_indicators(resample_period_par):
         if (transaction_currency == 'BTC') & (counter_currency == 0):
             continue
 
-        logger.debug('          checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
+        logger.debug('======== checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
 
         # create a dictionary of parameters to improve readability
         indicator_params_dict = {
@@ -135,7 +135,7 @@ def _compute_and_save_indicators(resample_period_par):
             resample_object.compute()
             resample_object.save()
         except Exception as e:
-            logger.error("RESAMPLE EXCEPTION: " + str(e))
+            logger.error(" -> RESAMPLE EXCEPTION: " + str(e))
 
         # calculate and save simple indicators
         indicators_list = [Sma, Rsi]
@@ -143,7 +143,7 @@ def _compute_and_save_indicators(resample_period_par):
             try:
                 ind.compute_all(ind, **indicator_params_dict)
             except Exception as e:
-                logger.error("Indicator Exception: " + str(e))
+                logger.error(str(ind) + " Indicator Exception: " + str(e))
 
         # check for events and save if any
         # todo: make sure EventsElementary runs first

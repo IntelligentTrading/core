@@ -62,10 +62,11 @@ class Sma(AbstractIndicator):
                 new_instance = cls.objects.create(**kwargs, sma_period = sma_period)
                 new_instance._compute_sma()
                 new_instance.save()
+                logger.debug("   ...SMA calculations done and saved.")
             except Exception as e:
                 logger.error("SMA Compute Exception: " + str(e))
 
-        logger.debug("   ...SMA calculations done and saved.")
+
 
 
 

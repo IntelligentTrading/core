@@ -52,4 +52,5 @@ class EventsLogical(AbstractIndicator):
                     horizon=horizon,
                 )
         else:
-            logger.debug("   ... No Ichimoku elementary event at all!")
+            return pd.DataFrame()
+            #logger.debug("   ... No Ichimoku elementary event at all!")

@@ -297,6 +297,7 @@ def get_last_elementory_events_df(timestamp, source, transaction_currency, count
         df[event_names] = event_values
         df = df.fillna(value=0)
     else:
-        logger.debug("    No recent events found!")
+        pass
+        #logger.debug("    No recent events found!")
 
     return df
