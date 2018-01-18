@@ -117,15 +117,16 @@ class EventsElementary(AbstractIndicator):
         horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[resample_period])
         time_current = pd.to_datetime(timestamp, unit='s')
 
-        par_1_9 = 9
-        par_2_26 = 26
-        par_3_52 = 52
-        par_4_26 = 26
+        # set Ichimoku parameters
+        ichi_param_1_9 = 9
+        ichi_param_2_26 = 26
+        ichi_param_3_52 = 52
+        ichi_param_4_26 = 26
 
-        # load nessesary timeseries
-
-        records = par_4_26 * par_4_26 + 20
-        prices_df = get_n_last_resampl_df(records, source, transaction_currency, counter_currency, resample_period)
+        # load nessesary resampled prices from price resampled
+        # we only need last_records back in time
+        last_records = ichi_param_4_26 * ichi_param_4_26 + 20
+        prices_df = get_n_last_resampl_df(last_records, source, transaction_currency, counter_currency, resample_period)
 
         ##### check for rsi events, save and emit signal
         _process_rsi(horizon, **kwargs)
@@ -136,8 +137,8 @@ class EventsElementary(AbstractIndicator):
         # todo : refactor, move to a separate method or class
         SMA_LOW = 50
         SMA_HIGH = 200
-        sma_low_df = get_n_last_sma_df(records, SMA_LOW, source, transaction_currency, counter_currency, resample_period)
-        sma_high_df = get_n_last_sma_df(records, SMA_HIGH, source, transaction_currency, counter_currency, resample_period)
+        sma_low_df = get_n_last_sma_df(last_records, SMA_LOW, source, transaction_currency, counter_currency, resample_period)
+        sma_high_df = get_n_last_sma_df(last_records, SMA_HIGH, source, transaction_currency, counter_currency, resample_period)
 
         # todo: make sure the code still work of no high_sma
         # create DF in advance wtih NA then fill the rows
@@ -195,14 +196,14 @@ class EventsElementary(AbstractIndicator):
         midpoint_price_ts = prices_df['midpoint_price']
 
         # calculate new line indicators as time series
-        tenkan_sen_conversion = midpoint_price_ts.rolling(window=par_1_9, center=False, min_periods=5).mean()
-        kijun_sen_base = midpoint_price_ts.rolling(window=par_2_26, center=False, min_periods=15).mean()
+        tenkan_sen_conversion = midpoint_price_ts.rolling(window=ichi_param_1_9, center=False, min_periods=5).mean()
+        kijun_sen_base = midpoint_price_ts.rolling(window=ichi_param_2_26, center=False, min_periods=15).mean()
 
-        senkou_span_a_leading = ((tenkan_sen_conversion + kijun_sen_base) / 2).shift(par_2_26)
-        period52 = midpoint_price_ts.rolling(window=par_3_52, center=False, min_periods=25).mean()
+        senkou_span_a_leading = ((tenkan_sen_conversion + kijun_sen_base) / 2).shift(ichi_param_2_26)
+        period52 = midpoint_price_ts.rolling(window=ichi_param_3_52, center=False, min_periods=25).mean()
 
-        senkou_span_b_leading = period52.shift(par_2_26)
-        hikou_span_lagging = closing_price_ts.shift(-par_2_26)
+        senkou_span_b_leading = period52.shift(ichi_param_2_26)
+        hikou_span_lagging = closing_price_ts.shift(-ichi_param_2_26)
 
         # combine everythin into one dataFrame
         df = pd.DataFrame({
@@ -228,8 +229,8 @@ class EventsElementary(AbstractIndicator):
             df['closing_cloud_breakout_up'].shift(2)
 
         df['lagging_above_cloud'] = np.where(
-            ((df.lagging.shift(par_4_26) > df.leading_a.shift(par_4_26)) &
-             (df.lagging.shift(par_4_26) > df.leading_b.shift(par_4_26))),
+            ((df.lagging.shift(ichi_param_4_26) > df.leading_a.shift(ichi_param_4_26)) &
+             (df.lagging.shift(ichi_param_4_26) > df.leading_b.shift(ichi_param_4_26))),
             1, 0)
 
         df['lagging_above_highest'] = np.where(df.lagging > df.high, 1, 0)
