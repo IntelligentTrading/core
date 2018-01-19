@@ -23,9 +23,13 @@ ALL_POSSIBLE_ELEMENTARY_EVENTS = [
     'sma50_cross_sma200_up',
     'rsi_bracket',
     'closing_cloud_breakout_up_extended',
+    'closing_cloud_breakout_down_extended',
     'lagging_above_cloud',
+    'lagging_below_cloud',
     'lagging_above_highest',
-    'conversion_above_base'
+    'lagging_below_highest',
+    'conversion_above_base',
+    'conversion_below_base'
 ]
 
 _col2trend = {
