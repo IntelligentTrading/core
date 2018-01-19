@@ -166,10 +166,10 @@ class EventsElementary(AbstractIndicator):
         time_current = pd.to_datetime(timestamp, unit='s')
 
         # set Ichimoku parameters
-        ichi_param_1_9 = 9
-        ichi_param_2_26 = 26
-        ichi_param_3_52 = 52
-        ichi_param_4_26 = 26
+        ichi_param_1_9 = 20
+        ichi_param_2_26 = 60
+        ichi_param_3_52 = 120
+        ichi_param_4_26 = 30
 
         # load nessesary resampled prices from price resampled
         # we only need last_records back in time
@@ -177,6 +177,7 @@ class EventsElementary(AbstractIndicator):
         prices_df = get_n_last_resampl_df(last_records, source, transaction_currency, counter_currency, resample_period)
 
         ###### check for rsi events, save and emit signal
+        logger.debug("   ... Check RSI Events: ")
         _process_rsi(horizon, **kwargs)
 
 
@@ -195,22 +196,24 @@ class EventsElementary(AbstractIndicator):
         # todo: that is not right fron statistical view point!!! remove later when anough values
         prices_df = prices_df.fillna(value=0)
 
+        logger.debug("   ... Check SMA Events: ")
         _process_sma_crossovers(time_current, horizon, prices_df, **kwargs)
 
 
         ####### calculate and save ichimoku elementary events
         # no signal emitting
 
+        logger.debug("   ... Check Ichimoku Elementary Events: ")
         price_high_ts = prices_df['high_price']
         closing_price_ts = prices_df['close_price']
         midpoint_price_ts = prices_df['midpoint_price']
 
         # calculate new line indicators as time series
-        tenkan_sen_conversion = midpoint_price_ts.rolling(window=ichi_param_1_9, center=False, min_periods=5).mean()
-        kijun_sen_base = midpoint_price_ts.rolling(window=ichi_param_2_26, center=False, min_periods=15).mean()
+        tenkan_sen_conversion = midpoint_price_ts.rolling(window=ichi_param_1_9, center=False, min_periods=4).mean()
+        kijun_sen_base = midpoint_price_ts.rolling(window=ichi_param_2_26, center=False, min_periods=9).mean()
 
         senkou_span_a_leading = ((tenkan_sen_conversion + kijun_sen_base) / 2).shift(ichi_param_2_26)
-        period52 = midpoint_price_ts.rolling(window=ichi_param_3_52, center=False, min_periods=25).mean()
+        period52 = midpoint_price_ts.rolling(window=ichi_param_3_52, center=False, min_periods=9).mean()
 
         senkou_span_b_leading = period52.shift(ichi_param_2_26)
         hikou_span_lagging = closing_price_ts.shift(-ichi_param_2_26)

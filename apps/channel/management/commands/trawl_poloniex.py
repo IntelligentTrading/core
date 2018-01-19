@@ -2,7 +2,6 @@ import json
 import logging
 import schedule
 import time
-import itertools
 
 from django.core.management.base import BaseCommand
 from requests import get, RequestException
@@ -109,13 +108,12 @@ def _compute_and_save_indicators(resample_period_par):
     timestamp = time.time()
     resample_period = resample_period_par['period']
 
-    BASE_COIN_TO_FILL = [Price.BTC, Price.USDT]
-    logger.debug(" ============== Resampling with Period: " + str(resample_period) + " ====")
+    logger.debug(" ################# Resampling with Period: " + str(resample_period) + " #######################")
 
     pairs_to_iterate = [(itm,Price.USDT) for itm in USDT_COINS] + [(itm,Price.BTC) for itm in BTC_COINS]
     for transaction_currency, counter_currency in pairs_to_iterate:
 
-        logger.debug('======== checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
+        logger.debug('   ======== checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
 
         # create a dictionary of parameters to improve readability
         indicator_params_dict = {

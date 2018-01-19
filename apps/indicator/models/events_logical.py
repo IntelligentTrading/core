@@ -26,6 +26,7 @@ class EventsLogical(AbstractIndicator):
         e_df = get_last_elementory_events_df(**kwargs)
 
         #######  calculate logical  Ichimoku signals
+        logger.debug("   ... Check Logical Ichimoku Events: ")
         if not e_df.empty:
             #for column in e_df:
             #    logger.debug('    ... event: ' + column + ' = ' + str(e_df[column].values))

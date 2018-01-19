@@ -19,7 +19,7 @@ class Sma(AbstractIndicator):
 
     def _compute_sma(self):
         # get neccesary records from price_resample
-        logger.debug(" compute SMA starts")
+        #logger.debug(" compute SMA starts")
         resampl_prices_df = price_resampl.get_n_last_resampl_df(
             self.resample_period * self.sma_period + 5,
             self.source,
@@ -32,15 +32,15 @@ class Sma(AbstractIndicator):
         resampl_midpoint_price_ts = resampl_prices_df.midpoint_price
         time_max = np.max(resampl_prices_df.index)
 
-        logger.debug(" .max time=" + str(time_max))
-        logger.debug(" .close price= " + str(resampl_close_price_ts))
+        #logger.debug(" .max time=" + str(time_max))
+        #logger.debug(" .close price= " + str(resampl_close_price_ts))
 
         if not resampl_close_price_ts.empty:
             sma_close_ts = resampl_close_price_ts.rolling(window=int(self.sma_period/time_speed), center=False).mean()
-            logger.debug(" .sma_close_ts= " + str(sma_close_ts))
+            #logger.debug(" .sma_close_ts= " + str(sma_close_ts))
             if not np.isnan(sma_close_ts[time_max]):
                 self.sma_close_price = int(sma_close_ts[time_max])
-            logger.debug("  .self.sma_close_price= " + str(self.sma_close_price))
+            #logger.debug("  .self.sma_close_price= " + str(self.sma_close_price))
         else:
             logger.debug(' Not enough CLOSE prices for SMA calculation, resample_period=' + str(self.resample_period) )
 
@@ -69,9 +69,9 @@ class Sma(AbstractIndicator):
                 sma_instance = cls.objects.create(**kwargs, sma_period = sma_period)
                 sma_instance._compute_sma()
                 sma_instance.save()
-                logger.debug("   ...SMA calculations done and saved.")
+                logger.debug("   ...SMA_" + str(sma_period) +" calculation done and saved.")
             except Exception as e:
-                logger.error(" SMA Compute Exception: " + str(e))
+                logger.error(" SMA " + str(sma_period) + "Compute Exception: " + str(e))
 
 
 

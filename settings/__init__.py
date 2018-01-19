@@ -212,7 +212,7 @@ BTC_COINS = [
 
 
 # mapping from bin size to a name short/medium
-PERIODS_LIST = list([15, 60, 360])  #list([60,240,1440])
+PERIODS_LIST = list([60,240,1440]) #list([15, 60, 360])  #
 (SHORT, MEDIUM, LONG) = PERIODS_LIST
 HORIZONS_TIME2NAMES = {
     SHORT:'short',
