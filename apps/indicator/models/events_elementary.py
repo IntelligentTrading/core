@@ -233,32 +233,61 @@ class EventsElementary(AbstractIndicator):
         })
 
         df['closing_above_cloud'] = np.where(((df.closing > df.leading_a) & (df.closing > df.leading_b)), 1, 0)
-        df['closing_cloud_breakout_up'] = \
-            np.sign(df.closing - pd.concat([df.leading_a, df.leading_b], axis=1).max(axis=1)).fillna(0).diff().gt(0)
+        df['closing_below_cloud'] = np.where(((df.closing < df.leading_a) & (df.closing < df.leading_b)), 1, 0)
 
-        df['closing_cloud_breakout_up_extended'] = \
-            df['closing_cloud_breakout_up'] | \
-            df['closing_cloud_breakout_up'].shift(1) | \
-            df['closing_cloud_breakout_up'].shift(2)
+        df['closing_cloud_breakout_up'] = np.sign(
+            df.closing - pd.concat([df.leading_a, df.leading_b], axis=1).max(axis=1)
+        ).diff().fillna(0).gt(0)
 
+        df['closing_cloud_breakout_down'] = np.sign(
+            df.closing - pd.concat([df.leading_a, df.leading_b], axis=1).min(axis=1)
+        ).diff().fillna(0).lt(0)
+
+
+        # to avoid up and down noise
+        df['closing_cloud_breakout_up_extended'] = df['closing_cloud_breakout_up'] | \
+                                                   df['closing_cloud_breakout_up'].shift(1)
+
+        df['closing_cloud_breakout_down_extended'] = df['closing_cloud_breakout_down'] |\
+                                                     df['closing_cloud_breakout_down'].shift(1)
+
+
+        # check it ichi_param_4_26 hours ago
         df['lagging_above_cloud'] = np.where(
             ((df.lagging.shift(ichi_param_4_26) > df.leading_a.shift(ichi_param_4_26)) &
              (df.lagging.shift(ichi_param_4_26) > df.leading_b.shift(ichi_param_4_26))),
             1, 0)
+        # shift back to current day
+        df['lagging_above_cloud'] = df['lagging_above_cloud'].shift(ichi_param_4_26)
 
-        df['lagging_above_highest'] = np.where(df.lagging > df.high, 1, 0)
+        df['lagging_below_cloud'] = np.where(
+            ((df.lagging.shift(ichi_param_4_26) < df.leading_a.shift(ichi_param_4_26)) &
+             (df.lagging.shift(ichi_param_4_26) < df.leading_b.shift(ichi_param_4_26))),
+            1, 0)
+        df['lagging_below_cloud'] = df['lagging_below_cloud'].shift(ichi_param_4_26)
+
+
+        df['lagging_above_highest'] = np.where(df.lagging.shift(ichi_param_4_26) > df.high.shift(ichi_param_4_26), 1, 0)
+        df['lagging_above_highest'] = df['lagging_above_highest'].shift(ichi_param_4_26)
+
+        df['lagging_below_highest'] = np.where(df.lagging.shift(ichi_param_4_26) < df.high.shift(ichi_param_4_26), 1, 0)
+        df['lagging_below_highest'] = df['lagging_below_highest'].shift(ichi_param_4_26)
 
         df['conversion_above_base'] = np.where(df.conversion > df.base, 1, 0)
-        #df['conversion_cross_base_down'] = np.sign(df.conversion - df.base).diff().lt(0)
+        df['conversion_below_base'] = np.where(df.conversion < df.base, 1, 0)
 
         # plot - for debug
         #_draw_cloud(df, **kwargs)
 
         # get the last element and save as an event
         events2save = ['closing_cloud_breakout_up_extended',
+                       'closing_cloud_breakout_down_extended',
                        'lagging_above_cloud',
+                       'lagging_below_cloud',
                        'lagging_above_highest',
-                       'conversion_above_base'
+                       'lagging_below_highest',
+                       'conversion_above_base',
+                       'conversion_below_base'
                        ]
 
         #get the last event line in DF

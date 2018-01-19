@@ -23,14 +23,16 @@ class EventsLogical(AbstractIndicator):
         resample_period = kwargs['resample_period']
         horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[resample_period])
 
+        # get all elementory events
         e_df = get_last_elementory_events_df(**kwargs)
 
-        #######  calculate logical  Ichimoku signals
-        logger.debug("   ... Check Logical Ichimoku Events: ")
         if not e_df.empty:
-            #for column in e_df:
-            #    logger.debug('    ... event: ' + column + ' = ' + str(e_df[column].values))
+            # print all events if any
+            for column in e_df:
+                logger.debug('    ... event: ' + column + ' = ' + str(e_df[column].values))
 
+            ################# Ichi kumo breakout UP
+            logger.debug("   ... Check Ichimoku Breakout UP Event ")
             e_df['kumo_breakout_up_rules'] = np.where(
                 (e_df.closing_cloud_breakout_up_extended &
                  e_df.lagging_above_cloud &
@@ -40,8 +42,9 @@ class EventsLogical(AbstractIndicator):
                 1, 0)
 
             e_df['kumo_breakout_up_signals'] = e_df.kumo_breakout_up_rules.diff().gt(0)
+
             if e_df['kumo_breakout_up_signals'].values:
-                logger.debug('    YOH! Kumo breakout FIRED!')
+                logger.debug('    YOH! Kumo breakout UP FIRED!')
                 kumo_event = cls.objects.create(
                     **kwargs,
                     event_name='kumo_breakout_up_signals',
@@ -53,6 +56,32 @@ class EventsLogical(AbstractIndicator):
                     trend = int(1),  # positive trend means it is UP / bullish signal
                     horizon=horizon,
                 )
+
+                ################# Ichi kumo breakout DOWN
+                logger.debug("   ... Check Ichimoku Breakout DOWN Event ")
+                e_df['kumo_breakout_down_rules'] = np.where(
+                    (e_df.closing_cloud_breakout_down_extended &
+                     e_df.lagging_below_cloud &
+                     e_df.lagging_below_highest &
+                     e_df.conversion_below_base
+                     ) == True,
+                    1, 0)
+
+                e_df['kumo_breakout_down_signals'] = e_df.kumo_breakout_down_rules.diff().gt(0)
+
+                if e_df['kumo_breakout_down_signals'].values:
+                    logger.debug('    YOH! Kumo breakout DOWN FIRED!')
+                    kumo_event = cls.objects.create(
+                        **kwargs,
+                        event_name='kumo_breakout_down_signals',
+                        event_value=int(1),
+                    )
+                    signal_kumo = Signal(
+                        **kwargs,
+                        signal='kumo_breakout',
+                        trend=int(-1),  # negative is bearish
+                        horizon=horizon,
+                    )
         else:
             return pd.DataFrame()
             #logger.debug("   ... No Ichimoku elementary event at all!")
