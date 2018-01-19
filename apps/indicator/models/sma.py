@@ -40,6 +40,7 @@ class Sma(AbstractIndicator):
             logger.debug(" .sma_close_ts= " + str(sma_close_ts))
             if not np.isnan(sma_close_ts[time_max]):
                 self.sma_close_price = int(sma_close_ts[time_max])
+            logger.debug("  .self.sma_close_price= " + str(self.sma_close_price))
         else:
             logger.debug(' Not enough CLOSE prices for SMA calculation, resample_period=' + str(self.resample_period) )
 

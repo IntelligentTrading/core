@@ -48,7 +48,8 @@ class EventsLogical(AbstractIndicator):
                 )
                 signal_kumo = Signal(
                     **kwargs,
-                    signal='kumo_breakout_up_signals',
+                    signal='kumo_breakout',
+                    trend = int(1),  # positive trend means it is UP / bullish signal
                     horizon=horizon,
                 )
         else:

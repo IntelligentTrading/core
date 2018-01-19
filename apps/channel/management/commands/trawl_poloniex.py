@@ -13,7 +13,7 @@ from apps.indicator.models import Price, Volume
 from apps.indicator.models.price import get_currency_value_from_string
 
 from settings import time_speed  # 1 / 10
-from settings import COINS_LIST_TO_GENERATE_SIGNALS
+from settings import USDT_COINS, BTC_COINS
 from settings import PERIODS_LIST
 
 logger = logging.getLogger(__name__)
@@ -112,10 +112,8 @@ def _compute_and_save_indicators(resample_period_par):
     BASE_COIN_TO_FILL = [Price.BTC, Price.USDT]
     logger.debug(" ============== Resampling with Period: " + str(resample_period) + " ====")
 
-    for transaction_currency, counter_currency in itertools.product(COINS_LIST_TO_GENERATE_SIGNALS, BASE_COIN_TO_FILL):
-        # todo get constants in a better way
-        if (transaction_currency == 'BTC') & (counter_currency == 0):
-            continue
+    pairs_to_iterate = [(itm,Price.USDT) for itm in USDT_COINS] + [(itm,Price.BTC) for itm in BTC_COINS]
+    for transaction_currency, counter_currency in pairs_to_iterate:
 
         logger.debug('======== checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
 
