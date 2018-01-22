@@ -196,9 +196,8 @@ except Exception as e:
 
 # @Alex
 # Global constants
-USDT_COINS = [
-    "BTC", "XRP", "ETH", "ETC", "STR", "BCH", "LTC", "XMR", "ZEC", "NXT", "REP", "DASH"
-]
+USDT_COINS = 'BTC XRP ETH ETC STR BCH LTC XMR ZEC NXT REP DASH'.split()
+
 
 BTC_COINS = [
     "XRP" , "ETH" , "ETC", "STR",  "XMR",  "BCH", "LTC", "XEM", "DOGE", "ZRX", "LSK", "DASH",

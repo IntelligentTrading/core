@@ -27,7 +27,7 @@ ALL_POSSIBLE_ELEMENTARY_EVENTS = [
     'lagging_above_cloud',
     'lagging_below_cloud',
     'lagging_above_highest',
-    'lagging_below_highest',
+    'lagging_below_lowest',
     'conversion_above_base',
     'conversion_below_base'
 ]
@@ -274,8 +274,8 @@ class EventsElementary(AbstractIndicator):
         df['lagging_above_highest'] = np.where(df.lagging.shift(ichi_param_4_26) > df.high.shift(ichi_param_4_26), 1, 0)
         df['lagging_above_highest'] = df['lagging_above_highest'].shift(ichi_param_4_26)
 
-        df['lagging_below_highest'] = np.where(df.lagging.shift(ichi_param_4_26) < df.high.shift(ichi_param_4_26), 1, 0)
-        df['lagging_below_highest'] = df['lagging_below_highest'].shift(ichi_param_4_26)
+        df['lagging_below_lowest'] = np.where(df.lagging.shift(ichi_param_4_26) < df.low.shift(ichi_param_4_26), 1, 0)
+        df['lagging_below_lowest'] = df['lagging_below_lowest'].shift(ichi_param_4_26)
 
         df['conversion_above_base'] = np.where(df.conversion > df.base, 1, 0)
         df['conversion_below_base'] = np.where(df.conversion < df.base, 1, 0)
@@ -284,12 +284,13 @@ class EventsElementary(AbstractIndicator):
         #_draw_cloud(df, **kwargs)
 
         # get the last element and save as an event
+        # todo: add consistency with all this event, save them in one place!
         events2save = ['closing_cloud_breakout_up_extended',
                        'closing_cloud_breakout_down_extended',
                        'lagging_above_cloud',
                        'lagging_below_cloud',
                        'lagging_above_highest',
-                       'lagging_below_highest',
+                       'lagging_below_lowest',
                        'conversion_above_base',
                        'conversion_below_base'
                        ]
@@ -336,4 +337,4 @@ def get_last_elementory_events_df(timestamp, source, transaction_currency, count
         pass
         #logger.debug("    No recent events found!")
 
-    return df.iloc[::-1]
+    return df.iloc[::-1] # reverse sorting, so that the last is on the bottom
