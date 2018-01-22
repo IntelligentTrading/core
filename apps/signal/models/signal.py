@@ -163,7 +163,7 @@ def check_has_price(sender, instance, **kwargs):
 @receiver(post_save, sender=Signal, dispatch_uid="send_signal")
 def send_signal(sender, instance, **kwargs):
     logging.debug("signal saved, checking if signal has been sent yet")
-    if not instance._same_as_previous():   # to prevent emitting the same signal twice
+    if not instance.sent_at:   # to prevent emitting the same signal twice
         try:
             logging.debug("signal not sent yet, sending now...")
             instance._send()
