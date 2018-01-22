@@ -79,6 +79,7 @@ def _draw_cloud(df,**kwargs):
 
 def _process_rsi(horizon, **kwargs):
     rs_obj = get_last_rs_object(**kwargs)
+
     if (rs_obj is not None) & (rs_obj.rsi is not None):
         rsi_bracket = rs_obj.get_rsi_bracket_value()
         if rsi_bracket != 0:

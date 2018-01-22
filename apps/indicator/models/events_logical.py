@@ -101,7 +101,7 @@ class EventsLogical(AbstractIndicator):
 
 
             ##### check for ITT Cummulative RSI Signal
-            logger.debug("   ... Check RSI Cummulative Event ")
+            logger.debug("   ... Check RSI Cumulative Event ")
 
             curr_event_df['RSI_Cummulative'] = np.where(
                 (
@@ -114,12 +114,12 @@ class EventsLogical(AbstractIndicator):
                 logger.debug('    YOH! RSI_Cummulative has been FIRED!')
                 rsi_cum = cls.objects.create(
                     **kwargs,
-                    event_name='RSI_Cummulative',
+                    event_name='RSI_Cumulative',
                     event_value=np.sign(curr_event_df['rsi_bracket']),
                 )
                 signal_rsi_cum = Signal(
                     **kwargs,
-                    signal='RSI_Cummulative',
+                    signal='RSI_Cumulative',
                     trend=np.sign(curr_event_df['rsi_bracket']),
                     horizon=horizon,
                 )

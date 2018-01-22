@@ -72,7 +72,7 @@ class Sma(AbstractIndicator):
                 #logger.debug("   ...SMA_" + str(sma_period) +" calculation done and saved.")
             except Exception as e:
                 logger.error(" SMA " + str(sma_period) + "Compute Exception: " + str(e))
-            logger.debug("   ...All SMA calculations have been done and saved.")
+        logger.debug("   ...All SMA calculations have been done and saved.")
 
 
 

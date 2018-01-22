@@ -142,6 +142,10 @@ class Signal(Timestampable, models.Model):
     def print(self):
         logger.info("PRINTING SIGNAL DATA: " + str(self.as_dict()))
 
+    def _same_as_previous(self):
+        # todo: get one day back in time and check if all fileds are the same - no reason to send it twice
+        return False
+
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -159,7 +163,7 @@ def check_has_price(sender, instance, **kwargs):
 @receiver(post_save, sender=Signal, dispatch_uid="send_signal")
 def send_signal(sender, instance, **kwargs):
     logging.debug("signal saved, checking if signal has been sent yet")
-    if not instance.sent_at:   # to prevent emitting the same signal twice
+    if not instance._same_as_previous():   # to prevent emitting the same signal twice
         try:
             logging.debug("signal not sent yet, sending now...")
             instance._send()
