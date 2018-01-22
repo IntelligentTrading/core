@@ -4,7 +4,7 @@ from settings import HORIZONS_TIME2NAMES, LONG
 from apps.indicator.models.abstract_indicator import AbstractIndicator
 from apps.signal.models.signal import Signal
 from apps.indicator.models.events_elementary import get_last_elementory_events_df
-from apps.indicator.models.price_resampl import get_n_last_resampl_df
+from apps.indicator.models.rsi import get_last_rs_object
 from apps.user.models.user import get_horizon_value_from_string
 
 import pandas as pd
@@ -103,23 +103,25 @@ class EventsLogical(AbstractIndicator):
             ##### check for ITT Cummulative RSI Signal
             logger.debug("   ... Check RSI Cumulative Event ")
 
-            curr_event_df['RSI_Cummulative'] = np.where(
+            curr_event_df['RSI_Cumulative'] = np.where(
                 (
                     curr_event_df['long_sma50_cross_sma200_up'] &
                     np.abs(curr_event_df['rsi_bracket']) == 3
                  ) == True,
                 1, 0)
 
-            if curr_event_df['RSI_Cummulative'].values:
+            if curr_event_df['RSI_Cumulative'].values:
                 logger.debug('    YOH! RSI_Cummulative has been FIRED!')
                 rsi_cum = cls.objects.create(
                     **kwargs,
                     event_name='RSI_Cumulative',
                     event_value=np.sign(curr_event_df['rsi_bracket']),
                 )
+                rs_obj = get_last_rs_object(**kwargs)
                 signal_rsi_cum = Signal(
                     **kwargs,
                     signal='RSI_Cumulative',
+                    rsi_value=rs_obj.rsi,
                     trend=np.sign(curr_event_df['rsi_bracket']),
                     horizon=horizon,
                 )
