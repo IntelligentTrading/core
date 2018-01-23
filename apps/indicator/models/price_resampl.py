@@ -4,6 +4,7 @@ import pandas as pd
 from django.db import models
 from apps.indicator.models.abstract_indicator import AbstractIndicator
 from apps.indicator.models.price import Price
+import time
 
 import logging
 
@@ -24,12 +25,18 @@ class PriceResampl(AbstractIndicator):
 
     # compute resampled prices
     def compute(self):
+        # set the current time, it might differ from real current time if we calculate prices for old time point
+        datetime_now = self.timestamp #datetime.now()
+
         # get all prices for one resample period (15/60/360 min)
-        period_records = Price.objects.filter(timestamp__gte=datetime.now() - timedelta(minutes=self.resample_period))
         transaction_currency_price_list = list(
-            period_records.filter(
+            Price.objects.filter(
+                source=self.source,
                 transaction_currency=self.transaction_currency,
-                counter_currency=self.counter_currency).values('timestamp', 'price').order_by('-timestamp'))
+                counter_currency=self.counter_currency,
+                timestamp__lte=datetime_now,
+                timestamp__gte=datetime_now - timedelta(minutes=self.resample_period)
+            ).values('timestamp', 'price').order_by('-timestamp'))
 
         # skip the currency if there is no given price
         if transaction_currency_price_list:
@@ -42,8 +49,10 @@ class PriceResampl(AbstractIndicator):
             self.midpoint_price = int((self.high_price + self.low_price) / 2)
             self.mean_price = int(prices.mean())
             self.price_variance = prices.var()
+            return True
         else:
-            logger.debug(' ======= skipping, no price information')
+            #logger.debug(' ======= skipping, no price information')
+            return False
 
 
 
@@ -59,6 +68,7 @@ def get_n_last_resampl_df(n, source, transaction_currency, counter_currency, res
         timestamp__gte = datetime.now() - timedelta(minutes=resample_period * n)
     ).values('timestamp', 'high_price', 'close_price', 'midpoint_price').order_by('-timestamp'))
 
+    df = pd.DataFrame()
     if last_prices:
         # todo - reverse order or make sure I get values in the same order!
         ts = [rec['timestamp'] for rec in last_prices]
@@ -66,12 +76,25 @@ def get_n_last_resampl_df(n, source, transaction_currency, counter_currency, res
         close_prices = pd.Series(data=[rec['close_price'] for rec in last_prices], index=ts)
         midpoint_prices = pd.Series([rec['midpoint_price'] for rec in last_prices], index=ts)
 
-        df = pd.DataFrame()
+
         df['high_price'] = high_prices
         df['close_price'] = close_prices
         df['midpoint_price'] = midpoint_prices
         # we need df in a right order (from past to future) to make sma rolling work righ
-        return df.iloc[::-1]
-    else:
-        return None
+        df = df.iloc[::-1]
 
+    return df
+
+# get the first element ever resampled
+def get_first_resampled_time(source, transaction_currency, counter_currency, resample_period):
+    first_time = PriceResampl.objects.filter(
+       source=source,
+       resample_period=resample_period,
+       transaction_currency=transaction_currency,
+       counter_currency=counter_currency
+   ).values('timestamp').order_by('timestamp').first()
+
+    if first_time :
+        return first_time['timestamp'].timestamp()
+    else:
+        return time.time()

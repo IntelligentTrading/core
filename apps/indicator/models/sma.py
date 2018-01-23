@@ -63,6 +63,7 @@ class Sma(AbstractIndicator):
 
     @staticmethod
     def compute_all(cls,**kwargs):
+
         # todo - avoid creation empty record if no sma was computed..it also mith be fine
         for sma_period in SMA_LIST:
             try:
