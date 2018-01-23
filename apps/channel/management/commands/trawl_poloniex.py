@@ -5,8 +5,7 @@ import time
 
 from django.core.management.base import BaseCommand
 from requests import get, RequestException
-from datetime import timedelta, datetime
-import numpy as np
+
 
 from apps.channel.models import ExchangeData
 from apps.channel.models.exchange_data import POLONIEX
@@ -16,7 +15,7 @@ from apps.indicator.models.price_resampl import get_n_last_resampl_df, get_first
 
 from settings import time_speed  # 1 / 10
 from settings import USDT_COINS, BTC_COINS
-from settings import PERIODS_LIST
+from settings import PERIODS_LIST, SHORT, MEDIUM, LONG
 
 logger = logging.getLogger(__name__)
 
@@ -128,9 +127,9 @@ def _compute_and_save_indicators(resample_period_par):
         }
         ################# BACK CALCULATION (need only once when run first time)
         # first time run only for low period
-        if resample_period == 60:
+        if resample_period == MEDIUM:
             # calculate at least 200 records back in time to give sma enough information
-            BACK_REC = 210
+            BACK_REC = 220
             BACK_TIME = timestamp - BACK_REC * resample_period * 60  # shall be in sec
 
             last_time_computed = get_first_resampled_time(POLONIEX, transaction_currency, counter_currency, resample_period)

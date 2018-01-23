@@ -32,21 +32,21 @@ class Sma(AbstractIndicator):
         resampl_midpoint_price_ts = resampl_prices_df.midpoint_price
         time_max = np.max(resampl_prices_df.index)
 
-        #logger.debug(" .max time=" + str(time_max))
-        #logger.debug(" .close price= " + str(resampl_close_price_ts))
+        # reduce smawindow if we are in test mode
+        sma_window = int(self.sma_period/time_speed)
+        #calculte sma if half of the nessesary time points are present
+        min_per = int(sma_window/2) if sma_window > 10 else None
 
         if not resampl_close_price_ts.empty:
-            sma_close_ts = resampl_close_price_ts.rolling(window=int(self.sma_period/time_speed), center=False).mean()
-            #logger.debug(" .sma_close_ts= " + str(sma_close_ts))
+            sma_close_ts = resampl_close_price_ts.rolling(window=sma_window, center=False, min_periods=min_per).mean()
             if not np.isnan(sma_close_ts[time_max]):
                 self.sma_close_price = int(sma_close_ts[time_max])
-            #logger.debug("  .self.sma_close_price= " + str(self.sma_close_price))
         else:
             logger.debug(' Not enough CLOSE prices for SMA calculation, resample_period=' + str(self.resample_period) )
 
         if not resampl_high_price_ts.empty:
             # calculate SMA
-            sma_high_ts = resampl_high_price_ts.rolling(window=int(self.sma_period/time_speed), center=False).mean()
+            sma_high_ts = resampl_high_price_ts.rolling(window=sma_window, center=False, min_periods=min_per).mean()
             if not np.isnan(sma_high_ts[time_max]):
                 self.sma_high_price = int(sma_high_ts[time_max])
         else:
@@ -54,7 +54,7 @@ class Sma(AbstractIndicator):
 
 
         if not resampl_midpoint_price_ts.empty:
-            sma_midpoint_ts = resampl_midpoint_price_ts.rolling(window=int(self.sma_period / time_speed), center=False).mean()
+            sma_midpoint_ts = resampl_midpoint_price_ts.rolling(window=sma_window, center=False, min_periods=min_per).mean()
             if not np.isnan(sma_midpoint_ts[time_max]):
                 self.sma_midpoint_price = int(sma_midpoint_ts[time_max])
         else:
