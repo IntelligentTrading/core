@@ -16,6 +16,30 @@ class Rsi(AbstractIndicator):
         if self.relative_strength is not None:
             return 100.0 - (100.0 / (1.0 + self.relative_strength))
 
+
+    def get_rsi_bracket_value(self):
+        rsi = self.rsi
+        assert (rsi>=0.0) & (rsi<=100.0)
+
+        rsi_strength = 0
+        if rsi >= 0 and rsi <= 100 :
+            logger.debug("   RSI= " + str(rsi))
+            if rsi >= 80:
+                rsi_strength = 3  # Extremely overbought
+            elif rsi >= 75:
+                rsi_strength = 2  # very overbought
+            elif rsi >= 70:
+                rsi_strength = 1  # overbought
+            elif rsi <= 20:
+                rsi_strength = -3  # Extremely oversold
+            elif rsi <= 25:
+                rsi_strength = -2   # very oversold
+            elif rsi <= 30:
+                rsi_strength = -1  # oversold
+        return rsi_strength
+
+
+
     def compute_rs(self):
         '''
         Relative Strength calculation.
@@ -51,27 +75,6 @@ class Rsi(AbstractIndicator):
         else:
             logger.debug('Not enough closing prices for RS calculation')
 
-
-    def get_rsi_bracket_value(self):
-        rsi = self.rsi
-        assert (rsi>=0.0) & (rsi<=100.0)
-
-        rsi_strength = 0
-        if rsi >= 0 and rsi <= 100 :
-            logger.debug("   RSI= " + str(rsi))
-            if rsi >= 80:
-                rsi_strength = 3  # Extremely overbought
-            elif rsi >= 75:
-                rsi_strength = 2  # very overbought
-            elif rsi >= 70:
-                rsi_strength = 1  # overbought
-            elif rsi <= 20:
-                rsi_strength = -3  # Extremely oversold
-            elif rsi <= 25:
-                rsi_strength = -2   # very oversold
-            elif rsi <= 30:
-                rsi_strength = -1  # oversold
-        return rsi_strength
 
 
     @staticmethod

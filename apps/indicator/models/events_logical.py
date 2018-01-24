@@ -24,12 +24,14 @@ class EventsLogical(AbstractIndicator):
         horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[resample_period])
 
         # get all elementory events
-        curr_event_df = get_last_elementory_events_df(**kwargs)
+        all_events_df = get_last_elementory_events_df(**kwargs)
+        curr_event_df = all_events_df.iloc[-1]
 
         # get events for long time period (not for current)
         long_param_dict = kwargs
         long_param_dict['resample_period'] = LONG
-        long_period_events_df = get_last_elementory_events_df(**long_param_dict)
+        all_long_period_events_df = get_last_elementory_events_df(**long_param_dict)
+        long_period_events_df = all_long_period_events_df.iloc[-1]
 
         # add a long period signal to the current signals
         if not long_period_events_df.empty:

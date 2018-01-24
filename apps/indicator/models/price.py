@@ -32,7 +32,7 @@ class Price(models.Model):
                 source=self.source,
                 transaction_currency=self.transaction_currency,
                 counter_currency=self.counter_currency,
-                timestamp__lte=self.timestamp - timedelta(minutes=15)
+                timestamp__lte=self.timestamp - timedelta(minutes=1440)
             ).order_by('-timestamp').first()
         if current_price and fifteen_min_older_price:
             return float(current_price - fifteen_min_older_price.price)  / fifteen_min_older_price.price

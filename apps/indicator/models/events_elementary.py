@@ -176,7 +176,7 @@ class EventsElementary(AbstractIndicator):
 
         # load nessesary resampled prices from price resampled
         # we only need last_records back in time
-        last_records = ichi_param_4_26 * ichi_param_4_26 + 20
+        last_records = ichi_param_4_26 + ichi_param_4_26 + 10
         prices_df = get_n_last_resampl_df(last_records, source, transaction_currency, counter_currency, resample_period)
 
         ###### check for rsi events, save and emit signal
@@ -184,7 +184,7 @@ class EventsElementary(AbstractIndicator):
         _process_rsi(horizon, **kwargs)
 
 
-        ###### check SMA cross over events
+        ############## check SMA cross over events
         SMA_LOW = 50
         SMA_HIGH = 200
         sma_low_df = get_n_last_sma_df(last_records, SMA_LOW, source, transaction_currency, counter_currency,
@@ -192,8 +192,7 @@ class EventsElementary(AbstractIndicator):
         sma_high_df = get_n_last_sma_df(last_records, SMA_HIGH, source, transaction_currency, counter_currency,
                                         resample_period)
 
-        # todo: make sure the code still work of no high_sma
-        # create DF in advance wtih NA then fill the rows
+        # add SMA to price column to dataframe
         prices_df['low_sma'] = sma_low_df.sma_close_price
         prices_df['high_sma'] = sma_high_df.sma_close_price
         # todo: that is not right fron statistical view point!!! remove later when anough values
@@ -204,7 +203,7 @@ class EventsElementary(AbstractIndicator):
         _process_sma_crossovers(time_current, horizon, prices_df, **kwargs)
 
 
-        ####### calculate and save ichimoku elementary events
+        ############## calculate and save ICHIMOKU elementary events
         # no signal emitting
 
         logger.debug("   ... Check Ichimoku Elementary Events: ")
@@ -237,6 +236,10 @@ class EventsElementary(AbstractIndicator):
             'senkou_span_a_leading' : senkou_span_a_leading,
             'hikou_span_lagging' :hikou_span_lagging
         })
+
+        # emit warning if any NAN is present
+        if any(df.isnull()):
+            logger.warning("  Ichi: some of the elementory events are NaN, the result might be INCORRECT! ")
 
         df['closing_above_cloud'] = np.where(((df.closing > df.leading_a) & (df.closing > df.leading_b)), 1, 0)
         df['closing_below_cloud'] = np.where(((df.closing < df.leading_a) & (df.closing < df.leading_b)), 1, 0)
@@ -312,7 +315,7 @@ class EventsElementary(AbstractIndicator):
                     event_value=int(1),
                 )
                 ichi_event.save()
-                logger.debug('   ... Ichimoku elementary event :' + str(event_name))
+                logger.debug('   ... Ichimoku elementary event FIRED : ' + str(event_name))
             #logger.debug('   ... NO Ichi event: ' + event_name )
 
 
