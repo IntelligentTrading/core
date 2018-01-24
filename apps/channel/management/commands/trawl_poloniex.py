@@ -126,35 +126,32 @@ def _compute_and_save_indicators(resample_period_par):
             'resample_period' : resample_period
         }
         ################# BACK CALCULATION (need only once when run first time)
-        # first time run only for low period
-        if resample_period == MEDIUM:
-            # calculate at least 200 records back in time to give sma enough information
-            BACK_REC = 220
-            BACK_TIME = timestamp - BACK_REC * resample_period * 60  # shall be in sec
+        BACK_REC = 220   # how many records to calculate back in time
+        BACK_TIME = timestamp - BACK_REC * resample_period * 60  # same in sec
 
-            last_time_computed = get_first_resampled_time(POLONIEX, transaction_currency, counter_currency, resample_period)
-            records_to_compute = int((last_time_computed-BACK_TIME)/(resample_period * 60))
+        last_time_computed = get_first_resampled_time(POLONIEX, transaction_currency, counter_currency, resample_period)
+        records_to_compute = int((last_time_computed-BACK_TIME)/(resample_period * 60))
 
-            if records_to_compute >= 0:
-                logger.debug("  ... calculate resampl back in time, needed records: " + str(records_to_compute))
-                for idx in range(1, records_to_compute):
-                    time_point_back = last_time_computed - idx * (resample_period * 60)
-                    indicator_params_dict['timestamp'] = time_point_back
-                    try:
-                        resample_object = PriceResampl.objects.create(**indicator_params_dict)
-                        status = resample_object.compute()
-                        if status or (idx == records_to_compute-1) : # leave the last empty record
-                            resample_object.save()
-                        else:
-                            resample_object.delete()  # delete record if no price was added
-                    except Exception as e:
-                        logger.error(" -> Back RESAMPLE EXCEPTION: " + str(e))
-                logger.debug("... resample back  - DONE.")
-            else:
-                logger.debug("   ... No back calculation needed")
+        if records_to_compute >= 0:
+            logger.debug("  ... calculate resampl back in time, needed records: " + str(records_to_compute))
+            for idx in range(1, records_to_compute):
+                time_point_back = last_time_computed - idx * (resample_period * 60)
+                indicator_params_dict['timestamp'] = time_point_back
+                try:
+                    resample_object = PriceResampl.objects.create(**indicator_params_dict)
+                    status = resample_object.compute()
+                    if status or (idx == records_to_compute-1) : # leave the last empty record
+                        resample_object.save()
+                    else:
+                        resample_object.delete()  # delete record if no price was added
+                except Exception as e:
+                    logger.error(" -> Back RESAMPLE EXCEPTION: " + str(e))
+            logger.debug("... resample back  - DONE.")
+        else:
+            logger.debug("   ... No back calculation needed")
 
-            # set time back to a current time
-            indicator_params_dict['timestamp'] = timestamp
+        # set time back to a current time
+        indicator_params_dict['timestamp'] = timestamp
 
         ################# Can be commented after first time run
 
