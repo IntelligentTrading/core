@@ -239,7 +239,7 @@ class EventsElementary(AbstractIndicator):
 
         # emit warning if any NAN is present
         if any(df.isnull()):
-            logger.warning("  Ichi: some of the elementory events are NaN, the result might be INCORRECT! ")
+            logger.warning("  Ichi: some of the elem_events are NaN, result might be INCORRECT! ")
 
         df['closing_above_cloud'] = np.where(((df.closing > df.leading_a) & (df.closing > df.leading_b)), 1, 0)
         df['closing_below_cloud'] = np.where(((df.closing < df.leading_a) & (df.closing < df.leading_b)), 1, 0)
@@ -304,6 +304,7 @@ class EventsElementary(AbstractIndicator):
         last_events = df.iloc[-1]
         time_of_last_row = df.index[-1]
         assert (abs(time_current - time_of_last_row).value < 1800000)  # check if difference with now now > 30min
+        last_events = last_events.fillna(False)
 
         # save event in DB
         for event_name in events2save:
