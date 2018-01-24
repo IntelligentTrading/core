@@ -121,14 +121,13 @@ def _process_sma_crossovers(time_current, horizon, prices_df, **kwargs):
 
     # time_max2 = events_df.idxmax()[0]
     # get the last events row and account for a small timestamp rounding error
-    last_event_row = events_df.loc[
-                     (time_current + timedelta(milliseconds=1)): (time_current - timedelta(milliseconds=1))]
-    # events_df.loc[time_current]
+    last_event_row = events_df.iloc[-1]
+    time_of_last_row = events_df.index[-1]
+    assert(abs(time_current-time_of_last_row).value < 1800000)  # check if difference with now now > 30min
 
     # for each event in last row of all recents events
     for event_name, event_value in last_event_row.iteritems():
-        # if events is TRUE
-        if event_value[0]:
+        if event_value:    # if one of SMA events is TRUE, save and emit
             trend = _col2trend[event_name]
             sma_event = EventsElementary.objects.create(
                 **kwargs,
@@ -148,7 +147,6 @@ def _process_sma_crossovers(time_current, horizon, prices_df, **kwargs):
             signal_sma_cross.save()
             logger.debug("   ...FIRED - Event " + event_name)
             # logger.debug("   ...No Events for " + event_name)
-
 
 
 
@@ -202,6 +200,7 @@ class EventsElementary(AbstractIndicator):
         prices_df = prices_df.fillna(value=0)
 
         logger.debug("   ... Check SMA Events: ")
+        # todo - add return value, and say if any crossovers have happend
         _process_sma_crossovers(time_current, horizon, prices_df, **kwargs)
 
 
@@ -209,16 +208,17 @@ class EventsElementary(AbstractIndicator):
         # no signal emitting
 
         logger.debug("   ... Check Ichimoku Elementary Events: ")
+        price_low_ts = prices_df['low_price']
         price_high_ts = prices_df['high_price']
         closing_price_ts = prices_df['close_price']
         midpoint_price_ts = prices_df['midpoint_price']
 
         # calculate new line indicators as time series
         tenkan_sen_conversion = midpoint_price_ts.rolling(window=ichi_param_1_9, center=False, min_periods=4).mean()
-        kijun_sen_base = midpoint_price_ts.rolling(window=ichi_param_2_26, center=False, min_periods=9).mean()
+        kijun_sen_base = midpoint_price_ts.rolling(window=ichi_param_2_26, center=False, min_periods=12).mean()
 
         senkou_span_a_leading = ((tenkan_sen_conversion + kijun_sen_base) / 2).shift(ichi_param_2_26)
-        period52 = midpoint_price_ts.rolling(window=ichi_param_3_52, center=False, min_periods=9).mean()
+        period52 = midpoint_price_ts.rolling(window=ichi_param_3_52, center=False, min_periods=25).mean()
 
         senkou_span_b_leading = period52.shift(ichi_param_2_26)
         hikou_span_lagging = closing_price_ts.shift(-ichi_param_2_26)
@@ -226,6 +226,7 @@ class EventsElementary(AbstractIndicator):
         # combine everythin into one dataFrame
         df = pd.DataFrame({
             'idx_col': closing_price_ts.index,
+            'low': price_low_ts,
             'high': price_high_ts,
             'closing': closing_price_ts,
             'conversion': tenkan_sen_conversion,
@@ -297,19 +298,21 @@ class EventsElementary(AbstractIndicator):
                        ]
 
         #get the last event line in DF
-        last_events = df.loc[ (time_current+timedelta(milliseconds=1)) : (time_current-timedelta(milliseconds=1)) ]
+        last_events = df.iloc[-1]
+        time_of_last_row = df.index[-1]
+        assert (abs(time_current - time_of_last_row).value < 1800000)  # check if difference with now now > 30min
 
         # save event in DB
         for event_name in events2save:
             event_value = last_events[event_name]
-            if event_value[0]:
+            if event_value:
                 ichi_event = cls.objects.create(
                     **kwargs,
                     event_name=event_name,
                     event_value=int(1),
                 )
                 ichi_event.save()
-                logger.debug('   ... Ichimoku event saved:' + str(event_name))
+                logger.debug('   ... Ichimoku elementary event :' + str(event_name))
             #logger.debug('   ... NO Ichi event: ' + event_name )
 
 
