@@ -316,7 +316,7 @@ class EventsElementary(AbstractIndicator):
                     event_value=int(1),
                 )
                 ichi_event.save()
-                logger.debug('   ... Ichimoku elementary event FIRED : ' + str(event_name))
+                logger.debug('   >>> Ichimoku elementary event FIRED : ' + str(event_name))
             #logger.debug('   ... NO Ichi event: ' + event_name )
 
 

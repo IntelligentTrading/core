@@ -30,10 +30,10 @@ class EventsLogical(AbstractIndicator):
             curr_events_df = all_events_df.iloc[-1]   # get the last row
             # print all events if any
             for name, values in curr_events_df.iteritems():
-                logger.debug('    ... event: ' + name + ' = ' + str(curr_events_df[values]))
+                logger.debug('    ... event: ' + name + ' = ' + str(values) )
 
             ###################### Ichi kumo breakout UP
-            logger.debug("   ... Check Ichimoku Breakout UP Event ")
+            #logger.debug("   ... Check Ichimoku Breakout UP Event ")
             all_events_df['kumo_breakout_up_rules'] = np.where(
                 (all_events_df.closing_cloud_breakout_up_extended &
                  all_events_df.lagging_above_cloud &
@@ -64,7 +64,7 @@ class EventsLogical(AbstractIndicator):
                 logger.debug("   ... No kumo_breakout_up_signals")
 
             ######################## Ichi kumo breakout DOWN
-            logger.debug("   ... Check Ichimoku Breakout DOWN Event ")
+            #logger.debug("   ... Check Ichimoku Breakout DOWN Event ")
             all_events_df['kumo_breakout_down_rules'] = np.where(
                 (all_events_df.closing_cloud_breakout_down_extended &
                  all_events_df.lagging_below_cloud &
@@ -96,7 +96,7 @@ class EventsLogical(AbstractIndicator):
 
 
             ########## check for ITT Cummulative RSI Signal
-            logger.debug("   ... Check RSI Cumulative Event ")
+            #logger.debug("   ... Check RSI Cumulative Event ")
 
             # get events for long time period (not for current)
             long_param_dict = kwargs
