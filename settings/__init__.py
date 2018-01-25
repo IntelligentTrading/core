@@ -206,7 +206,7 @@ BTC_COINS = [
     "VTC", "BURST", "LBC", "GNO", "DCR", "FLO", "POT", "OMNI",
     "CVC", "PASC", "ARDR", "BCY", "GRC", "CLAM", "XCP", "VIA",
     "BTCD", "FLDC", "NAV", "NEOS", "PPC", "BLK", "EXP", "RIC",
-    "NXC", "BELA", "XPM", "XVC", "XBC", "RADS", "SBD", "PINK", "NMC", "HUC", "BTM"
+    "NXC", "BELA", "XPM", "XVC", "XBC", "RADS", "SBD", "PINK", "NMC", "HUC", "BTM", "VEN", "ADA", "EOS", "CND", "NEO", "IOST", "ICX", "XLM",
 ]
 
 
