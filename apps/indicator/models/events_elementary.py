@@ -176,7 +176,7 @@ class EventsElementary(AbstractIndicator):
 
         # load nessesary resampled prices from price resampled
         # we only need last_records back in time
-        last_records = ichi_param_4_26 + ichi_param_4_26 + 10
+        last_records = ichi_param_4_26 * ichi_param_4_26 + 10
         prices_df = get_n_last_resampl_df(last_records, source, transaction_currency, counter_currency, resample_period)
 
         ###### check for rsi events, save and emit signal
@@ -216,15 +216,16 @@ class EventsElementary(AbstractIndicator):
         tenkan_sen_conversion = midpoint_price_ts.rolling(window=ichi_param_1_9, center=False, min_periods=4).mean()
         kijun_sen_base = midpoint_price_ts.rolling(window=ichi_param_2_26, center=False, min_periods=12).mean()
 
-        logger.debug('===== tenkan_sen_conversion =====')
-        logger.debug(tenkan_sen_conversion.tail(7))
-        logger.debug('===== kijun_sen_basen =====')
-        logger.debug(kijun_sen_base.tail(7))
+        #logger.debug('===== tenkan_sen_conversion =====')
+        #logger.debug(tenkan_sen_conversion.tail(7))
+        #logger.debug('===== kijun_sen_basen =====')
+        #logger.debug(kijun_sen_base.tail(7))
 
         senkou_span_a_leading = ((tenkan_sen_conversion + kijun_sen_base) / 2).shift(ichi_param_2_26)
-        logger.debug('===== senkou_span_a_leading =====')
-        logger.debug(senkou_span_a_leading.tail(7))
-        logger.debug(('======================================'))
+
+        #logger.debug('===== senkou_span_a_leading =====')
+        #logger.debug(senkou_span_a_leading.tail(7))
+        #logger.debug(('======================================'))
 
 
         period52 = midpoint_price_ts.rolling(window=ichi_param_3_52, center=False, min_periods=25).mean()
@@ -317,9 +318,9 @@ class EventsElementary(AbstractIndicator):
         assert (abs(time_current - time_of_last_row).value < 1800000)  # check if difference with now now > 30min
         last_events = last_events.fillna(False)
 
-        logger.debug('===== last df row with all events =====')
-        logger.debug(last_events)
-        logger.debug(('======================================'))
+        #logger.debug('===== last df row with all events =====')
+        #logger.debug(last_events)
+        #logger.debug(('======================================'))
 
         # save event in DB
         for event_name in events2save:
