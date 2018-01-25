@@ -217,13 +217,13 @@ class EventsElementary(AbstractIndicator):
         kijun_sen_base = midpoint_price_ts.rolling(window=ichi_param_2_26, center=False, min_periods=12).mean()
 
         logger.debug('===== tenkan_sen_conversion =====')
-        logger.debug(tenkan_sen_conversion.tail(5))
+        logger.debug(tenkan_sen_conversion.tail(7))
         logger.debug('===== kijun_sen_basen =====')
-        logger.debug(kijun_sen_base.tail(5))
+        logger.debug(kijun_sen_base.tail(7))
 
         senkou_span_a_leading = ((tenkan_sen_conversion + kijun_sen_base) / 2).shift(ichi_param_2_26)
         logger.debug('===== senkou_span_a_leading =====')
-        logger.debug(senkou_span_a_leading.tail(5))
+        logger.debug(senkou_span_a_leading.tail(7))
         logger.debug(('======================================'))
 
 
