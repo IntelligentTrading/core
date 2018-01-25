@@ -145,7 +145,7 @@ def _process_sma_crossovers(time_current, horizon, prices_df, **kwargs):
                 strength_max=int(3)
             )
             signal_sma_cross.save()
-            logger.debug("   ...FIRED - Event " + event_name)
+            logger.debug("   >>> FIRED - Event " + event_name)
             # logger.debug("   ...No Events for " + event_name)
 
 
@@ -216,20 +216,11 @@ class EventsElementary(AbstractIndicator):
         tenkan_sen_conversion = midpoint_price_ts.rolling(window=ichi_param_1_9, center=False, min_periods=4).mean()
         kijun_sen_base = midpoint_price_ts.rolling(window=ichi_param_2_26, center=False, min_periods=12).mean()
 
-        #logger.debug('===== tenkan_sen_conversion =====')
-        #logger.debug(tenkan_sen_conversion.tail(7))
-        #logger.debug('===== kijun_sen_basen =====')
-        #logger.debug(kijun_sen_base.tail(7))
-
         senkou_span_a_leading = ((tenkan_sen_conversion + kijun_sen_base) / 2).shift(ichi_param_2_26)
-
-        logger.debug('===== senkou_span_a_leading =====')
-        logger.debug(senkou_span_a_leading.tail(7))
-        logger.debug(('======================================'))
-
 
         period52 = midpoint_price_ts.rolling(window=ichi_param_3_52, center=False, min_periods=25).mean()
         senkou_span_b_leading = period52.shift(ichi_param_2_26)
+
         hikou_span_lagging = closing_price_ts.shift(-ichi_param_2_26)
 
         # combine everythin into one dataFrame
