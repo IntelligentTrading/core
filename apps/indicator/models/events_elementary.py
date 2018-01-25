@@ -223,9 +223,9 @@ class EventsElementary(AbstractIndicator):
 
         senkou_span_a_leading = ((tenkan_sen_conversion + kijun_sen_base) / 2).shift(ichi_param_2_26)
 
-        #logger.debug('===== senkou_span_a_leading =====')
-        #logger.debug(senkou_span_a_leading.tail(7))
-        #logger.debug(('======================================'))
+        logger.debug('===== senkou_span_a_leading =====')
+        logger.debug(senkou_span_a_leading.tail(7))
+        logger.debug(('======================================'))
 
 
         period52 = midpoint_price_ts.rolling(window=ichi_param_3_52, center=False, min_periods=25).mean()
