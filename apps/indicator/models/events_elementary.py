@@ -288,6 +288,8 @@ class EventsElementary(AbstractIndicator):
         # plot - for debug
         #_draw_cloud(df, **kwargs)
 
+
+
         # get the last element and save as an event
         # todo: add consistency with all this event, save them in one place!
         events2save = ['closing_cloud_breakout_up_extended',
@@ -305,6 +307,10 @@ class EventsElementary(AbstractIndicator):
         time_of_last_row = df.index[-1]
         assert (abs(time_current - time_of_last_row).value < 1800000)  # check if difference with now now > 30min
         last_events = last_events.fillna(False)
+
+        logger.debug('===== last df row with all events =====')
+        logger.debug(last_events)
+        logger.debug(('======================================'))
 
         # save event in DB
         for event_name in events2save:
