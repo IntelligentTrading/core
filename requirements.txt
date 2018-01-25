@@ -23,6 +23,7 @@ requests-oauthlib==0.7.0
 requests==2.18.3
 schedule==0.4.3
 simplejson==3.11.1
-six==1.10.0
+six==1.11.0
 toolz==0.8.2
 waitress==1.0.1
+wheel==0.30.0
