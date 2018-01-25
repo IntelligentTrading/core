@@ -31,11 +31,14 @@ class Command(BaseCommand):
         # @Alex
         # run resampling for all periods and calculate indicator values
         # TODO synchronize the start with beginning of hours / days / etc
-        for hor_period in PERIODS_LIST:
-            schedule.every(hor_period / time_speed).minutes.do(
-                compute_and_save_indicators,
-                {'period': hor_period, 'channel': BINANCE}
-            )
+
+        ###### temporarily disable because Poloniex signals are still running ######
+        # for hor_period in PERIODS_LIST:
+        #     schedule.every(hor_period / time_speed).minutes.do(
+        #         compute_and_save_indicators,
+        #         {'period': hor_period, 'channel': BINANCE}
+        #     )
+        ###### temporarily disable because Poloniex signals are still running ######
 
         keep_going = True
         while keep_going:
