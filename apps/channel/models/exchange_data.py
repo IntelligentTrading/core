@@ -3,10 +3,11 @@ from django.contrib.postgres.fields import JSONField
 from unixtimestampfield.fields import UnixTimeStampField
 
 
-(POLONIEX, BITTREX) = list(range(2))
+(POLONIEX, BITTREX, BINANCE) = list(range(3))
 SOURCE_CHOICES = (
     (POLONIEX, 'poloniex'),
     (BITTREX, 'bittrex'),
+    (BINANCE, 'binance'),
 )
 
 
