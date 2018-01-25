@@ -47,4 +47,5 @@ class Migration(migrations.Migration):
             name='resample_period',
             field=models.PositiveSmallIntegerField(default=60),
         ),
+
     ]
