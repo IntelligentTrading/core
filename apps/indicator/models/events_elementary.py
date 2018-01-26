@@ -242,6 +242,10 @@ class EventsElementary(AbstractIndicator):
         if any(df.isnull()):
             logger.warning("  Ichi: some of the elem_events are NaN, result might be INCORRECT! ")
 
+        logger.debug('======= df elementary events =======')
+        logger.debug(df.tail(2))
+        logger.debug('====================================')
+
         df['closing_above_cloud'] = np.where(((df.closing > df.leading_a) & (df.closing > df.leading_b)), 1, 0)
         df['closing_below_cloud'] = np.where(((df.closing < df.leading_a) & (df.closing < df.leading_b)), 1, 0)
 
@@ -293,7 +297,9 @@ class EventsElementary(AbstractIndicator):
 
         # get the last element and save as an event
         # todo: add consistency with all this event, save them in one place!
-        events2save = ['closing_cloud_breakout_up_extended',
+        events2save = ['closing_cloud_breakout_up',
+                       'closing_cloud_breakout_down',
+                       'closing_cloud_breakout_up_extended',
                        'closing_cloud_breakout_down_extended',
                        'lagging_above_cloud',
                        'lagging_below_cloud',
