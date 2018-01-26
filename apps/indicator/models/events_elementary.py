@@ -22,12 +22,12 @@ ALL_POSSIBLE_ELEMENTARY_EVENTS = [
     'sma200_cross_price_up',
     'sma50_cross_sma200_up',
     'rsi_bracket',
-    'closing_above_cloud',
-    'closing_below_cloud',
-    'closing_cloud_breakout_up',
-    'closing_cloud_breakout_down',
-    'closing_cloud_breakout_up_extended',
-    'closing_cloud_breakout_down_extended',
+    'close_above_cloud',
+    'close_below_cloud',
+    'close_cloud_breakout_up',
+    'close_cloud_breakout_down',
+    'close_cloud_breakout_up_ext',
+    'close_cloud_breakout_down_ext',
     'lagging_above_cloud',
     'lagging_below_cloud',
     'lagging_above_highest',
@@ -248,30 +248,29 @@ class EventsElementary(AbstractIndicator):
 
 
 
-        df['closing_above_cloud'] = np.where(((df.closing > df.leading_a) & (df.closing > df.leading_b)), 1, 0)
-        df['closing_below_cloud'] = np.where(((df.closing < df.leading_a) & (df.closing < df.leading_b)), 1, 0)
+        df['close_above_cloud'] = np.where(((df.closing > df.leading_a) & (df.closing > df.leading_b)), 1, 0)
+        df['close_below_cloud'] = np.where(((df.closing < df.leading_a) & (df.closing < df.leading_b)), 1, 0)
 
-        df['closing_cloud_breakout_up'] = np.sign(
+        df['close_cloud_breakout_up'] = np.sign(
             df.closing - pd.concat([df.leading_a, df.leading_b], axis=1).max(axis=1)
         ).diff().fillna(0).gt(0)
 
-        df['closing_cloud_breakout_down'] = np.sign(
+        df['close_cloud_breakout_down'] = np.sign(
             df.closing - pd.concat([df.leading_a, df.leading_b], axis=1).min(axis=1)
         ).diff().fillna(0).lt(0)
 
 
         # to avoid up and down noise
-        df['closing_cloud_breakout_up_extended'] = df['closing_cloud_breakout_up'] | \
-                                                   df['closing_cloud_breakout_up'].shift(1)
+        df['close_cloud_breakout_up_ext'] = df['close_cloud_breakout_up'] | \
+                                                   df['close_cloud_breakout_up'].shift(1)
 
-        df['closing_cloud_breakout_down_extended'] = df['closing_cloud_breakout_down'] |\
-                                                     df['closing_cloud_breakout_down'].shift(1)
+        df['close_cloud_breakout_down_ext'] = df['close_cloud_breakout_down'] |\
+                                                     df['close_cloud_breakout_down'].shift(1)
 
         logger.debug('======= df elementary events =======')
-        logger.debug(df.tail(4))
+        logger.debug(df.tail(6))
         logger.debug('====================================')
-        logger.debug( df.closing - pd.concat([df.leading_a, df.leading_b], axis=1).min(axis=1) )
-        logger.debug('====================================')
+
 
         # check it ichi_param_4_26 hours ago
         df['lagging_above_cloud'] = np.where(
@@ -304,18 +303,18 @@ class EventsElementary(AbstractIndicator):
 
         # get the last element and save as an event
         # todo: add consistency with all this event, save them in one place!
-        events2save = ['closing_cloud_breakout_up',
-                       'closing_cloud_breakout_down',
-                       'closing_cloud_breakout_up_extended',
-                       'closing_cloud_breakout_down_extended',
+        events2save = ['close_cloud_breakout_up',
+                       'close_cloud_breakout_down',
+                       'close_cloud_breakout_up_ext',
+                       'close_cloud_breakout_down_ext',
                        'lagging_above_cloud',
                        'lagging_below_cloud',
                        'lagging_above_highest',
                        'lagging_below_lowest',
                        'conversion_above_base',
                        'conversion_below_base',
-                       'closing_above_cloud',
-                       'closing_below_cloud',
+                       'close_above_cloud',
+                       'close_below_cloud',
                        ]
 
         #get the last event line in DF
@@ -324,21 +323,21 @@ class EventsElementary(AbstractIndicator):
         assert (abs(time_current - time_of_last_row).value < 1800000)  # check if difference with now now > 30min
         last_events = last_events.fillna(False)
 
-        #logger.debug('===== last df row with all events =====')
-        #logger.debug(last_events)
-        #logger.debug(('======================================'))
-
         # save event in DB
         for event_name in events2save:
             event_value = last_events[event_name]
             if event_value:
-                ichi_event = cls.objects.create(
-                    **kwargs,
-                    event_name=event_name,
-                    event_value=int(1),
-                )
-                ichi_event.save()
-                logger.debug('   >>> Ichimoku elementary event FIRED : ' + str(event_name))
+                logger.debug('   >>> Ichimoku elementary event has been FIRED : ' + str(event_name))
+                try:
+                    ichi_event = cls.objects.create(
+                        **kwargs,
+                        event_name=event_name,
+                        event_value=int(1),
+                    )
+                    ichi_event.save()
+                except Exception as e:
+                    logger.error(" Error saving  " + event_name + " elementary event ")
+
             #logger.debug('   ... NO Ichi event: ' + event_name )
 
 

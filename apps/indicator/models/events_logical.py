@@ -35,7 +35,7 @@ class EventsLogical(AbstractIndicator):
             ###################### Ichi kumo breakout UP
             #logger.debug("   ... Check Ichimoku Breakout UP Event ")
             all_events_df['kumo_breakout_up_rules'] = np.where(
-                (all_events_df.closing_cloud_breakout_up_extended &
+                (all_events_df.close_cloud_breakout_up_ext &
                  all_events_df.lagging_above_cloud &
                  all_events_df.lagging_above_highest &
                  all_events_df.conversion_above_base
@@ -49,24 +49,27 @@ class EventsLogical(AbstractIndicator):
             # save logical event and emit signal
             if curr_events_df['kumo_breakout_up_signals']:
                 logger.debug('    YOH! Kumo breakout UP has been FIRED!')
-                kumo_event = cls.objects.create(
-                    **kwargs,
-                    event_name='kumo_breakout_up_signals',
-                    event_value=int(1),
-                )
-                signal_kumo = Signal(
-                    **kwargs,
-                    signal='kumo_breakout',
-                    trend = int(1),  # positive trend means it is UP / bullish signal
-                    horizon=horizon,
-                )
+                try:
+                    kumo_event = cls.objects.create(
+                        **kwargs,
+                        event_name='kumo_breakout_up_signals',
+                        event_value=int(1),
+                    )
+                    signal_kumo = Signal(
+                        **kwargs,
+                        signal='kumo_breakout',
+                        trend = int(1),  # positive trend means it is UP / bullish signal
+                        horizon=horizon,
+                    )
+                except Exception as e:
+                    logger.error(" Error saving kumo_breakout_up_signal ")
             else:
                 logger.debug("   ... No kumo_breakout_up_signals")
 
             ######################## Ichi kumo breakout DOWN
             #logger.debug("   ... Check Ichimoku Breakout DOWN Event ")
             all_events_df['kumo_breakout_down_rules'] = np.where(
-                (all_events_df.closing_cloud_breakout_down_extended &
+                (all_events_df.close_cloud_breakout_down_ext &
                  all_events_df.lagging_below_cloud &
                  all_events_df.lagging_below_lowest &
                  all_events_df.conversion_below_base
@@ -80,17 +83,20 @@ class EventsLogical(AbstractIndicator):
             # save logical event and emit signal
             if curr_events_df['kumo_breakout_down_signals']:
                 logger.debug('    YOH! Kumo breakout DOWN has been FIRED!')
-                kumo_event = cls.objects.create(
-                    **kwargs,
-                    event_name='kumo_breakout_down_signals',
-                    event_value=int(1),
-                )
-                signal_kumo = Signal(
-                    **kwargs,
-                    signal='kumo_breakout',
-                    trend=int(-1),  # negative is bearish
-                    horizon=horizon,
-                )
+                try:
+                    kumo_event = cls.objects.create(
+                        **kwargs,
+                        event_name='kumo_breakout_down_signals',
+                        event_value=int(1),
+                    )
+                    signal_kumo = Signal(
+                        **kwargs,
+                        signal='kumo_breakout',
+                        trend=int(-1),  # negative is bearish
+                        horizon=horizon,
+                    )
+                except Exception as e:
+                    logger.error(" Error saving kumo_breakout_down_signal ")
             else:
                 logger.debug("   ... No kumo_breakout_down events.")
 
@@ -119,19 +125,22 @@ class EventsLogical(AbstractIndicator):
 
                 if curr_events_df['RSI_Cumulative']:
                     logger.debug('    YOH! RSI_Cummulative has been FIRED!')
-                    rsi_cum = cls.objects.create(
-                        **kwargs,
-                        event_name='RSI_Cumulative',
-                        event_value=np.sign(curr_events_df['rsi_bracket']),
-                    )
-                    rs_obj = get_last_rs_object(**kwargs)
-                    signal_rsi_cum = Signal(
-                        **kwargs,
-                        signal='RSI_Cumulative',
-                        rsi_value=rs_obj.rsi,
-                        trend=np.sign(curr_events_df['rsi_bracket']),
-                        horizon=horizon,
-                    )
+                    try:
+                        rsi_cum = cls.objects.create(
+                            **kwargs,
+                            event_name='RSI_Cumulative',
+                            event_value=np.sign(curr_events_df['rsi_bracket']),
+                        )
+                        rs_obj = get_last_rs_object(**kwargs)
+                        signal_rsi_cum = Signal(
+                            **kwargs,
+                            signal='RSI_Cumulative',
+                            rsi_value=rs_obj.rsi,
+                            trend=np.sign(curr_events_df['rsi_bracket']),
+                            horizon=horizon,
+                        )
+                    except Exception as e:
+                        logger.error(" Error saving RSI Cumulative signal ")
             else:
                 logger.debug("   ... No RSI Cumulative events.")
 
