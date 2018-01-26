@@ -22,6 +22,10 @@ ALL_POSSIBLE_ELEMENTARY_EVENTS = [
     'sma200_cross_price_up',
     'sma50_cross_sma200_up',
     'rsi_bracket',
+    'closing_above_cloud',
+    'closing_below_cloud',
+    'closing_cloud_breakout_up',
+    'closing_cloud_breakout_down',
     'closing_cloud_breakout_up_extended',
     'closing_cloud_breakout_down_extended',
     'lagging_above_cloud',
@@ -242,9 +246,7 @@ class EventsElementary(AbstractIndicator):
         if any(df.isnull()):
             logger.warning("  Ichi: some of the elem_events are NaN, result might be INCORRECT! ")
 
-        logger.debug('======= df elementary events =======')
-        logger.debug(df.tail(2))
-        logger.debug('====================================')
+
 
         df['closing_above_cloud'] = np.where(((df.closing > df.leading_a) & (df.closing > df.leading_b)), 1, 0)
         df['closing_below_cloud'] = np.where(((df.closing < df.leading_a) & (df.closing < df.leading_b)), 1, 0)
@@ -265,6 +267,11 @@ class EventsElementary(AbstractIndicator):
         df['closing_cloud_breakout_down_extended'] = df['closing_cloud_breakout_down'] |\
                                                      df['closing_cloud_breakout_down'].shift(1)
 
+        logger.debug('======= df elementary events =======')
+        logger.debug(df.tail(4))
+        logger.debug('====================================')
+        logger.debug( df.closing - pd.concat([df.leading_a, df.leading_b], axis=1).min(axis=1) )
+        logger.debug('====================================')
 
         # check it ichi_param_4_26 hours ago
         df['lagging_above_cloud'] = np.where(
@@ -306,7 +313,9 @@ class EventsElementary(AbstractIndicator):
                        'lagging_above_highest',
                        'lagging_below_lowest',
                        'conversion_above_base',
-                       'conversion_below_base'
+                       'conversion_below_base',
+                       'closing_above_cloud',
+                       'closing_below_cloud',
                        ]
 
         #get the last event line in DF
