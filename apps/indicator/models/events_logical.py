@@ -23,6 +23,7 @@ class EventsLogical(AbstractIndicator):
         resample_period = kwargs['resample_period']
         horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[resample_period])
 
+        logger.debug('---- Start analysing LOGICAL events ----------')
         # get all elementory events
         all_events_df = get_last_elementory_events_df(**kwargs)
 
@@ -64,7 +65,7 @@ class EventsLogical(AbstractIndicator):
                 except Exception as e:
                     logger.error(" Error saving kumo_breakout_up_signal ")
             else:
-                logger.debug("   ... No kumo_breakout_up_signals")
+                logger.debug("   .. No kumo_breakout_up_signals")
 
             ######################## Ichi kumo breakout DOWN
             #logger.debug("   ... Check Ichimoku Breakout DOWN Event ")
@@ -98,7 +99,7 @@ class EventsLogical(AbstractIndicator):
                 except Exception as e:
                     logger.error(" Error saving kumo_breakout_down_signal ")
             else:
-                logger.debug("   ... No kumo_breakout_down events.")
+                logger.debug("   .. No kumo_breakout_down events.")
 
 
             ########## check for ITT Cummulative RSI Signal
@@ -142,7 +143,7 @@ class EventsLogical(AbstractIndicator):
                     except Exception as e:
                         logger.error(" Error saving RSI Cumulative signal ")
             else:
-                logger.debug("   ... No RSI Cumulative events.")
+                logger.debug("   .. No RSI Cumulative events.")
 
         else:
             logger.debug("   ... No elementary events found at all, skip processing !")

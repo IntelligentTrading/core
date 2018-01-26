@@ -7,7 +7,6 @@ from apps.indicator.models.price_resampl import get_n_last_resampl_df
 from apps.user.models.user import get_horizon_value_from_string
 from settings import HORIZONS_TIME2NAMES
 
-from datetime import timedelta, datetime
 import pandas as pd
 import numpy as np
 import logging
@@ -36,6 +35,7 @@ ALL_POSSIBLE_ELEMENTARY_EVENTS = [
     'conversion_below_base'
 ]
 
+# dictionary to convert name of sma event to one-number trend
 _col2trend = {
     'sma50_cross_price_down': -1,
     'sma200_cross_price_down': -2,
@@ -45,41 +45,28 @@ _col2trend = {
     'sma50_cross_sma200_up': 3
 }
 
+# Ichimoku parameters
+ichi_param_1_9 = 20
+ichi_param_2_26 = 60
+ichi_param_3_52 = 120
+ichi_param_4_26 = 30
 
-# plot Ichi for debug
-def _draw_cloud(df,**kwargs):
-    import matplotlib.pyplot as plt
-    from matplotlib.ticker import ScalarFormatter, OldScalarFormatter
-    from matplotlib.dates import DateFormatter, WeekdayLocator, DayLocator, MONDAY
-    import matplotlib.ticker as plticker
 
-    transaction_currency = kwargs['transaction_currency']
-    counter_currency = kwargs['counter_currency']
-    resample_period = kwargs['resample_period']
+events2save = [
+    'close_cloud_breakout_up',
+    'close_cloud_breakout_down',
+    'close_cloud_breakout_up_ext',
+    'close_cloud_breakout_down_ext',
+    'lagging_above_cloud',
+    'lagging_below_cloud',
+    'lagging_above_highest',
+    'lagging_below_lowest',
+    'conversion_above_base',
+    'conversion_below_base',
+    'close_above_cloud',
+    'close_below_cloud',
+]
 
-    fig, ax1 = plt.subplots(nrows=1, ncols=1, figsize=(16, 5))
-    fig.suptitle("%s/%d Ichimoku Cloud" % (transaction_currency, counter_currency))
-    #ax1.xaxis.set_major_formatter(DateFormatter("%d-%m"))
-
-    fmt = ScalarFormatter(useOffset=False)
-    fmt.set_scientific(False)
-    ax1.yaxis.set_major_formatter(fmt)
-
-    ax1.grid(True)
-    loc = plticker.MultipleLocator(base=1.0)  # this locator puts ticks at regular intervals
-    ax1.xaxis.set_major_locator(loc)
-
-    # candlestick_ohlc(ax1, df_candle)
-
-    ax1.plot(df.high, color='black', linewidth=2)
-    #ax1.plot(df.low, color='black', linewidth=2)
-    ax1.plot(df.conversion, linestyle=':', color='orange')
-    ax1.plot(df.base, linestyle=':', color='orange')
-    ax1.plot(df.leading_a, linestyle='--', color='magenta')
-    ax1.plot(df.leading_b, linestyle='-', color='magenta')
-    ax1.fill_between(df.senkou_span_a_leading.index, df.leading_a, df.leading_b, color='lightskyblue')
-
-    ax1.plot(df.hikou_span_lagging, linestyle='-', color='lightblue')
 
 def _process_rsi(horizon, **kwargs):
     rs_obj = get_last_rs_object(**kwargs)
@@ -88,25 +75,27 @@ def _process_rsi(horizon, **kwargs):
         rsi_bracket = rs_obj.get_rsi_bracket_value()
         if rsi_bracket != 0:
             # save the event
-            new_instance = EventsElementary.objects.create(
-                **kwargs,
-                event_name = "rsi_bracket",
-                event_value = rsi_bracket,
-                event_second_value = rs_obj.rsi,
-            )
-            # emit signal
-            signal_rsi = Signal(
-                **kwargs,
-                signal='RSI',
-                rsi_value=rs_obj.rsi,
-                trend=np.sign(rsi_bracket),
-                horizon=horizon,
-                strength_value=np.abs(rsi_bracket),
-                strength_max=int(3),
-            )
-            signal_rsi.save()
-            logger.debug("   ...Events_RSI calculations done and saved.")
-    #logger.debug("   ... No RSI events.")
+            try:
+                new_instance = EventsElementary.objects.create(
+                    **kwargs,
+                    event_name = "rsi_bracket",
+                    event_value = rsi_bracket,
+                    event_second_value = rs_obj.rsi,
+                )
+                # emit signal
+                signal_rsi = Signal(
+                    **kwargs,
+                    signal='RSI',
+                    rsi_value=rs_obj.rsi,
+                    trend=np.sign(rsi_bracket),
+                    horizon=horizon,
+                    strength_value=np.abs(rsi_bracket),
+                    strength_max=int(3),
+                )
+                signal_rsi.save()
+                logger.debug("   >>> RSI bracket event FIRED!")
+            except Exception as e:
+                logger.error(" Error saving/emitting RSI Event ")
 
 
 def _process_sma_crossovers(time_current, horizon, prices_df, **kwargs):
@@ -123,7 +112,6 @@ def _process_sma_crossovers(time_current, horizon, prices_df, **kwargs):
     events_df['sma200_cross_price_up'] = np.sign(prices_df.high_sma - prices_df.close_price).diff().gt(0)  # 2
     events_df['sma50_cross_sma200_up'] = np.sign(prices_df.low_sma - prices_df.high_sma).diff().gt(0)  # 3
 
-    # time_max2 = events_df.idxmax()[0]
     # get the last events row and account for a small timestamp rounding error
     last_event_row = events_df.iloc[-1]
     time_of_last_row = events_df.index[-1]
@@ -133,25 +121,26 @@ def _process_sma_crossovers(time_current, horizon, prices_df, **kwargs):
     for event_name, event_value in last_event_row.iteritems():
         if event_value:    # if one of SMA events is TRUE, save and emit
             trend = _col2trend[event_name]
-            sma_event = EventsElementary.objects.create(
-                **kwargs,
-                event_name=event_name,
-                event_value=int(1),
-            )
-            sma_event.save()
+            try:
+                sma_event = EventsElementary.objects.create(
+                    **kwargs,
+                    event_name=event_name,
+                    event_value=int(1),
+                )
+                sma_event.save()
 
-            signal_sma_cross = Signal(
-                **kwargs,
-                signal='SMA',
-                trend=np.sign(trend),  # -1 / 1
-                horizon=horizon,
-                strength_value=np.abs(trend),  # 1,2,3
-                strength_max=int(3)
-            )
-            signal_sma_cross.save()
-            logger.debug("   >>> FIRED - Event " + event_name)
-            # logger.debug("   ...No Events for " + event_name)
-
+                signal_sma_cross = Signal(
+                    **kwargs,
+                    signal='SMA',
+                    trend=np.sign(trend),  # -1 / 1
+                    horizon=horizon,
+                    strength_value=np.abs(trend),  # 1,2,3
+                    strength_max=int(3)
+                )
+                signal_sma_cross.save()
+                logger.debug("   >>> FIRED - Event " + event_name)
+            except Exception as e:
+                logger.error(" Error saving/firing SMA signal ")
 
 
 
@@ -168,20 +157,21 @@ class EventsElementary(AbstractIndicator):
         counter_currency = kwargs['counter_currency']
         resample_period = kwargs['resample_period']
 
+        no_time_params = {
+            'source' : source,
+            'transaction_currency' : transaction_currency,
+            'counter_currency' : counter_currency,
+            'resample_period' : resample_period
+        }
 
         horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[resample_period])
         time_current = pd.to_datetime(timestamp, unit='s')
 
-        # set Ichimoku parameters
-        ichi_param_1_9 = 20
-        ichi_param_2_26 = 60
-        ichi_param_3_52 = 120
-        ichi_param_4_26 = 30
 
         # load nessesary resampled prices from price resampled
         # we only need last_records back in time
         last_records = ichi_param_4_26 * ichi_param_4_26 + 10
-        prices_df = get_n_last_resampl_df(last_records, source, transaction_currency, counter_currency, resample_period)
+        prices_df = get_n_last_resampl_df(last_records, **no_time_params)
 
         ###### check for rsi events, save and emit signal
         logger.debug("   ... Check RSI Events: ")
@@ -191,10 +181,8 @@ class EventsElementary(AbstractIndicator):
         ############## check SMA cross over events
         SMA_LOW = 50
         SMA_HIGH = 200
-        sma_low_df = get_n_last_sma_df(last_records, SMA_LOW, source, transaction_currency, counter_currency,
-                                       resample_period)
-        sma_high_df = get_n_last_sma_df(last_records, SMA_HIGH, source, transaction_currency, counter_currency,
-                                        resample_period)
+        sma_low_df = get_n_last_sma_df(last_records, SMA_LOW, **no_time_params)
+        sma_high_df = get_n_last_sma_df(last_records, SMA_HIGH, **no_time_params)
 
         # add SMA to price column to dataframe
         prices_df['low_sma'] = sma_low_df.sma_close_price
@@ -268,7 +256,7 @@ class EventsElementary(AbstractIndicator):
                                                      df['close_cloud_breakout_down'].shift(1)
 
         logger.debug('======= df elementary events =======')
-        logger.debug(df.tail(6))
+        logger.debug(df.tail(7))
         logger.debug('====================================')
 
 
@@ -296,26 +284,7 @@ class EventsElementary(AbstractIndicator):
         df['conversion_above_base'] = np.where(df.conversion > df.base, 1, 0)
         df['conversion_below_base'] = np.where(df.conversion < df.base, 1, 0)
 
-        # plot - for debug
-        #_draw_cloud(df, **kwargs)
 
-
-
-        # get the last element and save as an event
-        # todo: add consistency with all this event, save them in one place!
-        events2save = ['close_cloud_breakout_up',
-                       'close_cloud_breakout_down',
-                       'close_cloud_breakout_up_ext',
-                       'close_cloud_breakout_down_ext',
-                       'lagging_above_cloud',
-                       'lagging_below_cloud',
-                       'lagging_above_highest',
-                       'lagging_below_lowest',
-                       'conversion_above_base',
-                       'conversion_below_base',
-                       'close_above_cloud',
-                       'close_below_cloud',
-                       ]
 
         #get the last event line in DF
         last_events = df.iloc[-1]
