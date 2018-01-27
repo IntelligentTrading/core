@@ -255,9 +255,9 @@ class EventsElementary(AbstractIndicator):
         df['close_cloud_breakout_down_ext'] = df['close_cloud_breakout_down'] |\
                                                      df['close_cloud_breakout_down'].shift(1)
 
-        logger.debug('======= df elementary events =======')
-        logger.debug(df.tail(7))
-        logger.debug('====================================')
+        #logger.debug('======= df elementary events =======')
+        #logger.debug(df.tail(7))
+        #logger.debug('====================================')
 
 
         # check it ichi_param_4_26 hours ago

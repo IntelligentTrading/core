@@ -34,7 +34,9 @@ class EventsLogical(AbstractIndicator):
                 logger.debug('    ... event: ' + name + ' = ' + str(values) )
 
             ###################### Ichi kumo breakout UP
-            #logger.debug("   ... Check Ichimoku Breakout UP Event ")
+            logger.debug("   ... Check Ichimoku Breakout UP Event ")
+
+
             all_events_df['kumo_breakout_up_rules'] = np.where(
                 (all_events_df.close_cloud_breakout_up_ext &
                  all_events_df.lagging_above_cloud &
@@ -45,6 +47,16 @@ class EventsLogical(AbstractIndicator):
 
             # detect the fact of the break out and add the column event to DF
             all_events_df['kumo_breakout_up_signals'] = all_events_df.kumo_breakout_up_rules.diff().gt(0)
+
+            logger.debug(all_events_df[[
+                'close_cloud_breakout_up_ext',
+                'lagging_above_cloud',
+                'lagging_above_cloud',
+                'conversion_above_base',
+                'kumo_breakout_up_rules',
+                'kumo_breakout_up_signals'
+            ]])
+
             curr_events_df = all_events_df.iloc[-1]  # again
 
             # save logical event and emit signal
@@ -68,18 +80,31 @@ class EventsLogical(AbstractIndicator):
                 logger.debug("   .. No kumo_breakout_up_signals")
 
             ######################## Ichi kumo breakout DOWN
-            #logger.debug("   ... Check Ichimoku Breakout DOWN Event ")
+            logger.debug("   ... Check Ichimoku Breakout DOWN Event ")
+
+
             all_events_df['kumo_breakout_down_rules'] = np.where(
                 (all_events_df.close_cloud_breakout_down_ext &
                  all_events_df.lagging_below_cloud &
-                 all_events_df.lagging_below_lowest &
+                 all_events_df.lagging_below_cloud &
                  all_events_df.conversion_below_base
                  ) == True,
                 1, 0)
 
+
+
             # detect the fact of the break out, so emit signal only once
             all_events_df['kumo_breakout_down_signals'] = all_events_df.kumo_breakout_down_rules.diff().gt(0)
             curr_events_df = all_events_df.iloc[-1]  # again
+
+            logger.debug(all_events_df[[
+                'close_cloud_breakout_down_ext',
+                'lagging_below_cloud',
+                'lagging_below_cloud',
+                'conversion_below_base',
+                'kumo_breakout_down_rules',
+                'kumo_breakout_down_signals'
+            ]])
 
             # save logical event and emit signal
             if curr_events_df['kumo_breakout_down_signals']:
