@@ -37,6 +37,10 @@ class Price(models.Model):
         if current_price and fifteen_min_older_price:
             return float(current_price - fifteen_min_older_price.price)  / fifteen_min_older_price.price
 
+    @property
+    def price_humanized(self):
+        return "BTC {:,.8f}".format(self.price / 100000000)
+
 
 # get n last price records
 

@@ -6,30 +6,18 @@ from google.cloud import datastore
 @telegram_command("coins")
 def coins():
     try:
-        client = datastore.Client()
-        query = client.query(kind='Channels', order=['-timestamp'])
-        content = list(query.fetch(limit=1))[0]['content']
 
-        result = json.loads(content.replace("'", "\""))
-        msg = []
+        from settings import BTC_COINS, USDT_COINS
+        coins_list = set(BTC_COINS + USDT_COINS)
 
-        for key in result.keys():
-            msg.append(key)
-
-
-
-
-        data = sorted(req.json())
-        result = str(data).replace("[", "").replace("]", "").replace("'", "")
+        coin_list_string = " ".join(coins_list)
 
         return "\n".join([
-            "Do you can choice the coin price with comparison below:",
-            result,
-            "for example: /price USDT_BTC",
+            "Coins currently being tracked:",
+            coin_list_string,
         ])
 
     except Exception as e:
-        return "Worker service in maintenance!"
-
+        return "Problem with coins command: " + str(e)
 
 coins.help_text = "list of all coins for using /price command"

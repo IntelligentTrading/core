@@ -34,27 +34,22 @@ public_commands = [
     start.start,
     help.help_command_list,
 
-    # legacy commands
+    # CONFIG COMMANDS
     coins.coins,
-    poloniex.poloniex,
 
-    # settings
-    exchange.exchanges,
-    exchange.exchange,
-
-    # indicator commands
+    # INFO COMMANDS
     price.price,
+
+    # TA COMMANDS
+    sma.sma,
+    # rsi.rsi,
 
 ]
 
 commands = public_commands + [
 
-    # test example commands
+    # TEST EXAMPLE COMMANDS
     hello,
     echo,
-    tokensale.tokensale,
-
-    sma.sma,
-    # ema.ema,
 
 ]
