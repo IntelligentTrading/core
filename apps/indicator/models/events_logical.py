@@ -42,19 +42,21 @@ class EventsLogical(AbstractIndicator):
 
             # save logical event and emit signal - we need all because it is s Series
             if all(last_events_df['kumo_breakout_up_signal']):
-                logger.debug('    YOH! Kumo breakout UP has been FIRED!')
+
                 try:
                     kumo_event = cls.objects.create(
                         **kwargs,
                         event_name='kumo_breakout_up_signal',
                         event_value=int(1),
                     )
-                    signal_kumo = Signal(
+                    signal_kumo_up = Signal(
                         **kwargs,
                         signal='kumo_breakout',
                         trend = int(1),  # positive trend means it is UP / bullish signal
                         horizon=horizon,
                     )
+                    signal_kumo_up.save()
+                    logger.debug('  >>> YOH! Kumo breakout UP has been FIRED!')
                 except Exception as e:
                     logger.error(" Error saving kumo_breakout_up_signal ")
             else:
@@ -74,21 +76,24 @@ class EventsLogical(AbstractIndicator):
 
             # save logical event and emit signal
             if all(last_events_df['kumo_breakout_down_signal']):
-                logger.debug('    YOH! Kumo breakout DOWN has been FIRED!')
+
                 try:
                     kumo_event = cls.objects.create(
                         **kwargs,
                         event_name='kumo_breakout_down_signal',
                         event_value=int(1),
                     )
-                    signal_kumo = Signal(
+                    signal_kumo_down = Signal(
                         **kwargs,
                         signal='kumo_breakout',
                         trend=int(-1),  # negative is bearish
                         horizon=horizon,
                     )
+                    signal_kumo_down.save()
+                    logger.debug('   >>> YOH! Kumo breakout DOWN has been FIRED!')
                 except Exception as e:
                     logger.error(" Error saving kumo_breakout_down_signal ")
+
             else:
                 logger.debug("   .. No kumo_breakout_down events.")
 
@@ -119,7 +124,7 @@ class EventsLogical(AbstractIndicator):
 
 
                 if last_events_df['RSI_Cumulative']:
-                    logger.debug('    YOH! RSI_Cummulative has been FIRED!')
+
                     try:
                         rsi_cum = cls.objects.create(
                             **kwargs,
@@ -134,8 +139,11 @@ class EventsLogical(AbstractIndicator):
                             trend=np.sign(last_events_df['rsi_bracket']),
                             horizon=horizon,
                         )
+                        signal_rsi_cum.save()
+                        logger.debug('    YOH! RSI_Cummulative has been FIRED!')
                     except Exception as e:
                         logger.error(" Error saving RSI Cumulative signal ")
+
             else:
                 logger.debug("   .. No RSI Cumulative events.")
 
