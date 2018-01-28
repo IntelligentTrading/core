@@ -6,7 +6,6 @@ import time
 from django.core.management.base import BaseCommand
 from requests import get, RequestException
 
-
 from apps.channel.models import ExchangeData
 from apps.channel.models.exchange_data import POLONIEX
 from apps.indicator.models import Price, Volume
@@ -137,6 +136,7 @@ def _compute_and_save_indicators(resample_period_par):
             for idx in range(1, records_to_compute):
                 time_point_back = last_time_computed - idx * (resample_period * 60)
                 indicator_params_dict['timestamp'] = time_point_back
+
                 try:
                     resample_object = PriceResampl.objects.create(**indicator_params_dict)
                     status = resample_object.compute()
@@ -146,13 +146,13 @@ def _compute_and_save_indicators(resample_period_par):
                         resample_object.delete()  # delete record if no price was added
                 except Exception as e:
                     logger.error(" -> Back RESAMPLE EXCEPTION: " + str(e))
+
             logger.debug("... resample back  - DONE.")
         else:
             logger.debug("   ... No back calculation needed")
 
         # set time back to a current time
         indicator_params_dict['timestamp'] = timestamp
-
         ################# Can be commented after first time run
 
         # calculate and save resampling price

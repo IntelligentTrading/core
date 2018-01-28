@@ -6,6 +6,7 @@ from apps.indicator.models.sma import get_n_last_sma_df
 from apps.indicator.models.price_resampl import get_n_last_resampl_df
 from apps.user.models.user import get_horizon_value_from_string
 from settings import HORIZONS_TIME2NAMES
+from datetime import timedelta, datetime
 
 import pandas as pd
 import numpy as np
@@ -313,26 +314,29 @@ class EventsElementary(AbstractIndicator):
 
 ###################
 def get_last_elementory_events_df(timestamp, source, transaction_currency, counter_currency, resample_period):
-
+    '''
+    get all elementary events happened in the one timestamp
+    NOTE - DB request returns several records for one timestamp!
+    '''
     last_events = list(EventsElementary.objects.filter(
         timestamp = timestamp,
+        #timestamp__gte=timestamp - timedelta(minutes=(resample_period)).seconds, # for local debug
         source=source,
         transaction_currency=transaction_currency,
         counter_currency=counter_currency,
         resample_period=resample_period,
     ).order_by('-timestamp').values('timestamp','event_name','event_value'))
 
+    # convert several records into one line of dataFrame
     df = pd.DataFrame()
     if last_events:
+        # assert all timestamps are the same
         ts = [rec['timestamp'] for rec in last_events]
-        event_names = pd.Series(data=[rec['event_name'] for rec in last_events], index=ts)
-        event_values = pd.Series(data=[rec['event_value'] for rec in last_events], index=ts)
+        event_names = [rec['event_name'] for rec in last_events]
+        event_values = [rec['event_value'] for rec in last_events]
 
-        df = pd.DataFrame(columns = ALL_POSSIBLE_ELEMENTARY_EVENTS, index=ts)
+        df = pd.DataFrame(columns = ALL_POSSIBLE_ELEMENTARY_EVENTS, index=pd.Series(ts[0]))
         df[event_names] = event_values
         df = df.fillna(value=0)
-    else:
-        pass
-        #logger.debug("    No recent events found!")
 
-    return df.iloc[::-1] # reverse sorting, so that the last is on the bottom
+    return df

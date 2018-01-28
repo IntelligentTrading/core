@@ -25,47 +25,28 @@ class EventsLogical(AbstractIndicator):
 
         logger.debug('---- Start analysing LOGICAL events ----------')
         # get all elementory events
-        all_events_df = get_last_elementory_events_df(**kwargs)
+        # always one line!
+        last_events_df = get_last_elementory_events_df(**kwargs)
 
-        if not all_events_df.empty:
-            curr_events_df = all_events_df.iloc[-1]   # get the last row
-            # print all events if any
-            for name, values in curr_events_df.iteritems():
-                logger.debug('    ... event: ' + name + ' = ' + str(values) )
-
+        if not last_events_df.empty:
             ###################### Ichi kumo breakout UP
             logger.debug("   ... Check Ichimoku Breakout UP Event ")
 
-
-            all_events_df['kumo_breakout_up_rules'] = np.where(
-                (all_events_df.close_cloud_breakout_up_ext &
-                 all_events_df.lagging_above_cloud &
-                 all_events_df.lagging_above_highest &
-                 all_events_df.conversion_above_base
+            last_events_df['kumo_breakout_up_signal'] = np.where(
+                (last_events_df.close_cloud_breakout_up_ext &
+                 last_events_df.lagging_above_cloud &
+                 last_events_df.lagging_above_highest &
+                 last_events_df.conversion_above_base
                  ) == True,
                 1, 0)
 
-            # detect the fact of the break out and add the column event to DF
-            all_events_df['kumo_breakout_up_signals'] = all_events_df.kumo_breakout_up_rules.diff().gt(0)
-
-            logger.debug(all_events_df[[
-                'close_cloud_breakout_up_ext',
-                'lagging_above_cloud',
-                'lagging_above_cloud',
-                'conversion_above_base',
-                'kumo_breakout_up_rules',
-                'kumo_breakout_up_signals'
-            ]])
-
-            curr_events_df = all_events_df.iloc[-1]  # again
-
-            # save logical event and emit signal
-            if curr_events_df['kumo_breakout_up_signals']:
+            # save logical event and emit signal - we need all because it is s Series
+            if all(last_events_df['kumo_breakout_up_signal']):
                 logger.debug('    YOH! Kumo breakout UP has been FIRED!')
                 try:
                     kumo_event = cls.objects.create(
                         **kwargs,
-                        event_name='kumo_breakout_up_signals',
+                        event_name='kumo_breakout_up_signal',
                         event_value=int(1),
                     )
                     signal_kumo = Signal(
@@ -79,40 +60,25 @@ class EventsLogical(AbstractIndicator):
             else:
                 logger.debug("   .. No kumo_breakout_up_signals")
 
+
             ######################## Ichi kumo breakout DOWN
             logger.debug("   ... Check Ichimoku Breakout DOWN Event ")
 
-
-            all_events_df['kumo_breakout_down_rules'] = np.where(
-                (all_events_df.close_cloud_breakout_down_ext &
-                 all_events_df.lagging_below_cloud &
-                 all_events_df.lagging_below_cloud &
-                 all_events_df.conversion_below_base
+            last_events_df['kumo_breakout_down_signal'] = np.where(
+                (last_events_df.close_cloud_breakout_down_ext &
+                 last_events_df.lagging_below_cloud &
+                 last_events_df.lagging_below_cloud &
+                 last_events_df.conversion_below_base
                  ) == True,
                 1, 0)
 
-
-
-            # detect the fact of the break out, so emit signal only once
-            all_events_df['kumo_breakout_down_signals'] = all_events_df.kumo_breakout_down_rules.diff().gt(0)
-            curr_events_df = all_events_df.iloc[-1]  # again
-
-            logger.debug(all_events_df[[
-                'close_cloud_breakout_down_ext',
-                'lagging_below_cloud',
-                'lagging_below_cloud',
-                'conversion_below_base',
-                'kumo_breakout_down_rules',
-                'kumo_breakout_down_signals'
-            ]])
-
             # save logical event and emit signal
-            if curr_events_df['kumo_breakout_down_signals']:
+            if all(last_events_df['kumo_breakout_down_signal']):
                 logger.debug('    YOH! Kumo breakout DOWN has been FIRED!')
                 try:
                     kumo_event = cls.objects.create(
                         **kwargs,
-                        event_name='kumo_breakout_down_signals',
+                        event_name='kumo_breakout_down_signal',
                         event_value=int(1),
                     )
                     signal_kumo = Signal(
@@ -126,6 +92,10 @@ class EventsLogical(AbstractIndicator):
             else:
                 logger.debug("   .. No kumo_breakout_down events.")
 
+            # DEBUG: print all events if any
+            for name, values in last_events_df.iteritems():
+                logger.debug('    ... event: ' + name + ' = ' + str(values) )
+
 
             ########## check for ITT Cummulative RSI Signal
             #logger.debug("   ... Check RSI Cumulative Event ")
@@ -133,36 +103,35 @@ class EventsLogical(AbstractIndicator):
             # get events for long time period (not for current)
             long_param_dict = kwargs
             long_param_dict['resample_period'] = LONG
-            all_long_period_events_df = get_last_elementory_events_df(**long_param_dict)
+            long_period_events_df = get_last_elementory_events_df(**long_param_dict)
 
             # add a long period signal to the current signals
-            if not all_long_period_events_df.empty:
-                long_period_events_df = all_long_period_events_df.iloc[-1]  # get the last record
-                all_long_period_events_df['long_sma50_cross_sma200_up'] = long_period_events_df['sma50_cross_sma200_up']
+            if not long_period_events_df.empty:
+                long_period_events_df = long_period_events_df.iloc[-1]  # get the last record
+                long_period_events_df['long_sma50_cross_sma200_up'] = long_period_events_df['sma50_cross_sma200_up']
 
-                all_long_period_events_df['RSI_Cumulative'] = np.where(
+                long_period_events_df['RSI_Cumulative'] = np.where(
                 (
-                    all_long_period_events_df['long_sma50_cross_sma200_up'] &
-                    np.abs(all_long_period_events_df['rsi_bracket']) == 3
+                    long_period_events_df['long_sma50_cross_sma200_up'] &
+                    np.abs(long_period_events_df['rsi_bracket']) == 3
                  ) == True,
                 1, 0)
 
-                curr_events_df = all_events_df.iloc[-1]  # again
 
-                if curr_events_df['RSI_Cumulative']:
+                if last_events_df['RSI_Cumulative']:
                     logger.debug('    YOH! RSI_Cummulative has been FIRED!')
                     try:
                         rsi_cum = cls.objects.create(
                             **kwargs,
                             event_name='RSI_Cumulative',
-                            event_value=np.sign(curr_events_df['rsi_bracket']),
+                            event_value=np.sign(last_events_df['rsi_bracket']),
                         )
                         rs_obj = get_last_rs_object(**kwargs)
                         signal_rsi_cum = Signal(
                             **kwargs,
                             signal='RSI_Cumulative',
                             rsi_value=rs_obj.rsi,
-                            trend=np.sign(curr_events_df['rsi_bracket']),
+                            trend=np.sign(last_events_df['rsi_bracket']),
                             horizon=horizon,
                         )
                     except Exception as e:
