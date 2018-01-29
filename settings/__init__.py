@@ -196,27 +196,30 @@ except Exception as e:
 
 # @Alex
 # Global constants
+USDT_COINS = 'BTC XRP ETH ETC STR BCH LTC XMR ZEC NXT REP DASH'.split()
 
-COINS_LIST_TO_GENERATE_SIGNALS = [
-    "BTC", "ETH", "XRP", "LTC", "DASH", "NEO", "XMR", "OMG", "STR", "BCH", "XEM", "ETC", "DOGE",
-    "ZRX", "LSK", "DGB", "BTS", "SC", "ZEC", "STRAT", "BCN", "FCT", "GAME", "REP", "VRC", "NXT",
-    "STEEM", "MAID", "STORJ", "GNT", "GAS", "AMP", "SYS", "EMC2", "VTC", "BURST", "LBC", "GNO",
-    "DCR", "FLO", "POT", "OMNI", "CVC", "PASC", "ARDR", "BCY", "GRC", "CLAM", "XCP", "VIA", "BTCD",
-    "FLDC", "NAV", "NEOS", "PPC", "BLK","EXP","RIC","NXC","BELA","XPM","XVC","XBC","RADS","SBD",
-    "PINK", "NMC", "HUC", "BTM"
+
+BTC_COINS = [
+    "XRP" , "ETH" , "ETC", "STR",  "XMR",  "BCH", "LTC", "XEM", "DOGE", "ZRX", "LSK", "DASH",
+    "DGB", "BTS", "SC", "ZEC", "STRAT", "BCN", "FCT", "GAME", "REP", "OMG", "VRC",
+    "NXT", "STEEM", "MAID", "STORJ", "GNT", "GAS", "AMP", "SYS", "EMC2",
+    "VTC", "BURST", "LBC", "GNO", "DCR", "FLO", "POT", "OMNI",
+    "CVC", "PASC", "ARDR", "BCY", "GRC", "CLAM", "XCP", "VIA",
+    "BTCD", "FLDC", "NAV", "NEOS", "PPC", "BLK", "EXP", "RIC",
+    "NXC", "BELA", "XPM", "XVC", "XBC", "RADS", "SBD", "PINK", "NMC", "HUC", "BTM"
 ]
 
 
 # mapping from bin size to a name short/medium
-PERIODS_LIST = list([15, 60, 360])  #list([60,240,1440])
+# CHANGES TO THESE VALUES REQUIRE MAKING AND RUNNING DB MIGRATIONS
+PERIODS_LIST = list([60,240,1440]) #list([15, 60, 360])
+# CHANGES TO THESE VALUES REQUIRE MAKING AND RUNNING DB MIGRATIONS
 (SHORT, MEDIUM, LONG) = PERIODS_LIST
 HORIZONS_TIME2NAMES = {
     SHORT:'short',
     MEDIUM:'medium',
     LONG:'long'
 }
-
-time_speed = 1  # set to 1 for production, 10 for fast debugging
 
 
 time_speed = 1  # set to 1 for production, 10 for fast debugging
