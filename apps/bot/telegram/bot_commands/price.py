@@ -13,7 +13,7 @@ def price(args):
 
         return "\n".join([
             coin_ticker + " Price",
-            price_object.price_humanized
+            price_object.price_humanized,
             "as of %ds ago" % int(time.time() - datastore['timestamp'])
         ])
 
