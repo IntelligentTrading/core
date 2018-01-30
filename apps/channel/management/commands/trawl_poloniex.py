@@ -109,12 +109,12 @@ def _compute_and_save_indicators(resample_period_par):
     timestamp = time.time()
     resample_period = resample_period_par['period']
 
-    logger.debug(" ################# Resampling with Period: " + str(resample_period) + " #######################")
+    logger.info(" ################# Resampling with Period: " + str(resample_period) + " #######################")
 
     pairs_to_iterate = [(itm,Price.USDT) for itm in USDT_COINS] + [(itm,Price.BTC) for itm in BTC_COINS]
     for transaction_currency, counter_currency in pairs_to_iterate:
 
-        logger.debug('   ======== checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
+        logger.info('   ======== checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
 
         # create a dictionary of parameters to improve readability
         indicator_params_dict = {
@@ -125,14 +125,14 @@ def _compute_and_save_indicators(resample_period_par):
             'resample_period' : resample_period
         }
         ################# BACK CALCULATION (need only once when run first time)
-        BACK_REC = 210   # how many records to calculate back in time
+        BACK_REC = 90   # how many records to calculate back in time
         BACK_TIME = timestamp - BACK_REC * resample_period * 60  # same in sec
 
         last_time_computed = get_first_resampled_time(POLONIEX, transaction_currency, counter_currency, resample_period)
         records_to_compute = int((last_time_computed-BACK_TIME)/(resample_period * 60))
 
         if records_to_compute >= 0:
-            logger.debug("  ... calculate resampl back in time, needed records: " + str(records_to_compute))
+            logger.info("  ... calculate resampl back in time, needed records: " + str(records_to_compute))
             for idx in range(1, records_to_compute):
                 time_point_back = last_time_computed - idx * (resample_period * 60)
                 indicator_params_dict['timestamp'] = time_point_back

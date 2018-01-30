@@ -23,7 +23,7 @@ class EventsLogical(AbstractIndicator):
         resample_period = kwargs['resample_period']
         horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[resample_period])
 
-        logger.debug('---- Start analysing LOGICAL events ----------')
+        logger.info('---- Start analysing LOGICAL events ----------')
         # get all elementory events
         # always one line!
         last_events_df = get_last_elementory_events_df(**kwargs)
@@ -56,7 +56,7 @@ class EventsLogical(AbstractIndicator):
                         horizon=horizon,
                     )
                     signal_kumo_up.save()
-                    logger.debug('  >>> YOH! Kumo breakout UP has been FIRED!')
+                    logger.info('  >>> YOH! Kumo breakout UP has been FIRED!')
                 except Exception as e:
                     logger.error(" Error saving kumo_breakout_up_signal ")
             else:
@@ -90,7 +90,7 @@ class EventsLogical(AbstractIndicator):
                         horizon=horizon,
                     )
                     signal_kumo_down.save()
-                    logger.debug('   >>> YOH! Kumo breakout DOWN has been FIRED!')
+                    logger.info('   >>> YOH! Kumo breakout DOWN has been FIRED!')
                 except Exception as e:
                     logger.error(" Error saving kumo_breakout_down_signal ")
 
@@ -139,7 +139,7 @@ class EventsLogical(AbstractIndicator):
                             horizon=horizon,
                         )
                         signal_rsi_cum.save()
-                        logger.debug('    YOH! RSI_Cummulative has been FIRED!')
+                        logger.info('    YOH! RSI_Cummulative has been FIRED!')
                     except Exception as e:
                         logger.error(" Error saving RSI Cumulative signal ")
 
