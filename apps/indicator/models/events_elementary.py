@@ -14,6 +14,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# list of all events to return by get_last_elementory_events_df
 ALL_POSSIBLE_ELEMENTARY_EVENTS = [
     'sma50_cross_price_down',
     'sma200_cross_price_down',
@@ -21,6 +22,8 @@ ALL_POSSIBLE_ELEMENTARY_EVENTS = [
     'sma50_cross_price_up',
     'sma200_cross_price_up',
     'sma50_cross_sma200_up',
+    'sma50_above_sma200',
+    'sma50_below_sma200',
     'rsi_bracket',
     'close_above_cloud',
     'close_below_cloud',
@@ -113,7 +116,8 @@ def _process_sma_crossovers(time_current, horizon, prices_df, **kwargs):
     events_df['sma200_cross_price_up'] = np.sign(prices_df.high_sma - prices_df.close_price).diff().gt(0)  # 2
     events_df['sma50_cross_sma200_up'] = np.sign(prices_df.low_sma - prices_df.high_sma).diff().gt(0)  # 3
 
-    #events_df['sma50_above_sma200'] = np.sign(prices_df.low_sma - prices_df.high_sma).gt(0)
+    events_df['sma50_above_sma200'] = np.sign(prices_df.low_sma - prices_df.high_sma).gt(0)
+    events_df['sma50_below_sma200'] = np.sign(prices_df.low_sma - prices_df.high_sma).lt(0)
 
     # get the last events row and account for a small timestamp rounding error
     last_event_row = events_df.iloc[-1]
@@ -123,7 +127,8 @@ def _process_sma_crossovers(time_current, horizon, prices_df, **kwargs):
     # for each event in last row of all recents events
     for event_name, event_value in last_event_row.iteritems():
         if event_value:    # if one of SMA events is TRUE, save and emit
-            trend = _col2trend[event_name]
+
+            # save all elem events
             try:
                 sma_event = EventsElementary.objects.create(
                     **kwargs,
@@ -131,19 +136,25 @@ def _process_sma_crossovers(time_current, horizon, prices_df, **kwargs):
                     event_value=int(1),
                 )
                 sma_event.save()
-
-                signal_sma_cross = Signal(
-                    **kwargs,
-                    signal='SMA',
-                    trend=np.sign(trend),  # -1 / 1
-                    horizon=horizon,
-                    strength_value=np.abs(trend),  # 1,2,3
-                    strength_max=int(3)
-                )
-                signal_sma_cross.save()
-                logger.debug("   >>> FIRED - Event " + event_name)
             except Exception as e:
-                logger.error(" Error saving/firing SMA signal ")
+                logger.error(" #Error saving SMA signal ")
+
+            # Fire all sinals, except two which we dont need
+            if event_name not in ['sma50_above_sma200', 'sma50_below_sma200']:
+                 try:
+                    trend = _col2trend[event_name]
+                    signal_sma_cross = Signal(
+                        **kwargs,
+                        signal='SMA',
+                        trend=np.sign(trend),  # -1 / 1
+                        horizon=horizon,
+                        strength_value=np.abs(trend),  # 1,2,3
+                        strength_max=int(3)
+                    )
+                    signal_sma_cross.save()
+                    logger.debug("   >>> FIRED - Event " + event_name)
+                 except Exception as e:
+                    logger.error(" #Error firing SMA signal ")
 
 
 
