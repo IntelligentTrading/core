@@ -113,6 +113,8 @@ def _process_sma_crossovers(time_current, horizon, prices_df, **kwargs):
     events_df['sma200_cross_price_up'] = np.sign(prices_df.high_sma - prices_df.close_price).diff().gt(0)  # 2
     events_df['sma50_cross_sma200_up'] = np.sign(prices_df.low_sma - prices_df.high_sma).diff().gt(0)  # 3
 
+    #events_df['sma50_above_sma200'] = np.sign(prices_df.low_sma - prices_df.high_sma).gt(0)
+
     # get the last events row and account for a small timestamp rounding error
     last_event_row = events_df.iloc[-1]
     time_of_last_row = events_df.index[-1]

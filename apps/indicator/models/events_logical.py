@@ -112,12 +112,11 @@ class EventsLogical(AbstractIndicator):
 
             # add a long period signal to the current signals
             if not long_period_events_df.empty:
-                long_period_events_df = long_period_events_df.iloc[-1]  # get the last record
-                long_period_events_df['long_sma50_cross_sma200_up'] = long_period_events_df['sma50_cross_sma200_up']
+                long_period_events_df['long_sma50_above_sma200'] = long_period_events_df['sma50_above_sma200']
 
                 long_period_events_df['RSI_Cumulative'] = np.where(
                 (
-                    long_period_events_df['long_sma50_cross_sma200_up'] &
+                    long_period_events_df['long_sma50_above_sma200'] &
                     np.abs(long_period_events_df['rsi_bracket']) == 3
                  ) == True,
                 1, 0)
