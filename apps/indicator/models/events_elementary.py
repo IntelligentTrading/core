@@ -6,7 +6,7 @@ from apps.indicator.models.sma import get_n_last_sma_df
 from apps.indicator.models.price_resampl import get_n_last_resampl_df
 from apps.user.models.user import get_horizon_value_from_string
 from settings import HORIZONS_TIME2NAMES
-from datetime import timedelta, datetime
+import time
 
 import pandas as pd
 import numpy as np
@@ -102,10 +102,11 @@ def _process_rsi(horizon, **kwargs):
                 logger.error(" Error saving/emitting RSI Event ")
 
 
-def _process_sma_crossovers(time_current, horizon, prices_df, **kwargs):
+def _process_sma_crossovers(horizon, prices_df, **kwargs):
 
     # NOTE - correct df names if change sma_low!
-    # sma50_cross_price_down
+    time_current = pd.to_datetime(time.time(), unit='s')
+
 
     # calculate all events and place them to one DF
     events_df = pd.DataFrame()
@@ -165,22 +166,15 @@ class EventsElementary(AbstractIndicator):
 
     @staticmethod
     def check_events(cls, **kwargs):
-        timestamp = kwargs['timestamp']
-        source = kwargs['source']
-        transaction_currency = kwargs['transaction_currency']
-        counter_currency = kwargs['counter_currency']
-        resample_period = kwargs['resample_period']
+        horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[kwargs['resample_period']])
 
+        # create a param dict to pass inside get_n_last_resampl_df
         no_time_params = {
-            'source' : source,
-            'transaction_currency' : transaction_currency,
-            'counter_currency' : counter_currency,
-            'resample_period' : resample_period
+            'source' : kwargs['source'],
+            'transaction_currency' : kwargs['transaction_currency'],
+            'counter_currency' : kwargs['counter_currency'],
+            'resample_period' : kwargs['resample_period']
         }
-
-        horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[resample_period])
-        time_current = pd.to_datetime(timestamp, unit='s')
-
 
         # load nessesary resampled prices from price resampled
         # we only need last_records back in time
@@ -193,12 +187,11 @@ class EventsElementary(AbstractIndicator):
 
 
         ############## check SMA cross over events
-        SMA_LOW = 50
-        SMA_HIGH = 200
+        SMA_LOW, SMA_HIGH = [50,200]
         sma_low_df = get_n_last_sma_df(last_records, SMA_LOW, **no_time_params)
         sma_high_df = get_n_last_sma_df(last_records, SMA_HIGH, **no_time_params)
 
-        # add SMA to price column to dataframe
+        # add SMA to price dataframe
         prices_df['low_sma'] = sma_low_df.sma_close_price
         prices_df['high_sma'] = sma_high_df.sma_close_price
         # todo: that is not right fron statistical view point!!! remove later when anough values
@@ -206,7 +199,7 @@ class EventsElementary(AbstractIndicator):
 
         logger.debug("   ... Check SMA Events: ")
         # todo - add return value, and say if any crossovers have happend
-        _process_sma_crossovers(time_current, horizon, prices_df, **kwargs)
+        _process_sma_crossovers(horizon, prices_df, **kwargs)
 
 
         ############## calculate and save ICHIMOKU elementary events
@@ -269,10 +262,6 @@ class EventsElementary(AbstractIndicator):
         df['close_cloud_breakout_down_ext'] = df['close_cloud_breakout_down'] |\
                                                      df['close_cloud_breakout_down'].shift(1)
 
-        #logger.debug('======= df elementary events =======')
-        #logger.debug(df.tail(7))
-        #logger.debug('====================================')
-
 
         # check it ichi_param_4_26 hours ago
         df['lagging_above_cloud'] = np.where(
@@ -303,6 +292,7 @@ class EventsElementary(AbstractIndicator):
         #get the last event line in DF
         last_events = df.iloc[-1]
         time_of_last_row = df.index[-1]
+        time_current = pd.to_datetime(kwargs['timestamp'], unit='s')
         assert (abs(time_current - time_of_last_row).value < 1800000)  # check if difference with now now > 30min
         last_events = last_events.fillna(False)
 
