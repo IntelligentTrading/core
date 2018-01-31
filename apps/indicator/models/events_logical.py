@@ -99,7 +99,8 @@ class EventsLogical(AbstractIndicator):
 
             # DEBUG: print all events if any
             for name, values in last_events_df.iteritems():
-                logger.debug('    ... event: ' + name + ' = ' + str(values[0]) )
+                if values[0]:
+                    logger.debug('    ... event: ' + name + ' = ' + str(values[0]) )
 
 
             ########## check for ITT Cummulative RSI Signal
