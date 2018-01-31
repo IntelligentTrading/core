@@ -3,7 +3,7 @@ from settings import HORIZONS_TIME2NAMES, LONG
 
 from apps.indicator.models.abstract_indicator import AbstractIndicator
 from apps.signal.models.signal import Signal
-from apps.indicator.models.events_elementary import get_last_elementory_events_df
+from apps.indicator.models.events_elementary import get_current_elementory_events_df, get_last_ever_entered_elementory_events_df
 from apps.indicator.models.rsi import get_last_rs_object
 from apps.user.models.user import get_horizon_value_from_string
 
@@ -23,10 +23,10 @@ class EventsLogical(AbstractIndicator):
         resample_period = kwargs['resample_period']
         horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[resample_period])
 
-        logger.info('   ...... Start analysing LOGICAL events ')
+        logger.info('   ::::  Start analysing LOGICAL events ::::')
         # get all elementory events
         # always one line!
-        last_events_df = get_last_elementory_events_df(**kwargs)
+        last_events_df = get_current_elementory_events_df(**kwargs)
 
         if not last_events_df.empty:
             ###################### Ichi kumo breakout UP
@@ -99,7 +99,7 @@ class EventsLogical(AbstractIndicator):
 
             # DEBUG: print all events if any
             for name, values in last_events_df.iteritems():
-                logger.debug('    ... event: ' + name + ' = ' + str(values[1]) )
+                logger.debug('    ... event: ' + name + ' = ' + str(values[0]) )
 
 
             ########## check for ITT Cummulative RSI Signal
@@ -108,7 +108,7 @@ class EventsLogical(AbstractIndicator):
             # get events for long time period (not for current)
             long_param_dict = kwargs
             long_param_dict['resample_period'] = LONG
-            long_period_events_df = get_last_elementory_events_df(**long_param_dict)
+            long_period_events_df = get_last_ever_entered_elementory_events_df(**long_param_dict)
 
             # add a long period signal to the current signals
             if not long_period_events_df.empty:
@@ -117,7 +117,7 @@ class EventsLogical(AbstractIndicator):
                 long_period_events_df['RSI_Cumulative'] = np.where(
                 (
                     long_period_events_df['long_sma50_above_sma200'] &
-                    np.abs(long_period_events_df['rsi_bracket']) == 3
+                    np.abs(last_events_df['rsi_bracket']) == 3
                  ) == True,
                 1, 0)
 

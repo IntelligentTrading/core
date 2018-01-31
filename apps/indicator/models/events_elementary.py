@@ -175,6 +175,8 @@ class EventsElementary(AbstractIndicator):
         last_records = ichi_param_4_26 * ichi_param_4_26 + 10
         prices_df = get_n_last_resampl_df(last_records, **no_time_params)
 
+        logger.info('   ::::  Start analysing ELEMENTARY events ::::')
+
         ###### check for rsi events, save and emit signal
         logger.debug("   ... Check RSI Events: ")
         _process_rsi(horizon, **kwargs)
@@ -301,7 +303,7 @@ class EventsElementary(AbstractIndicator):
 
 
 ###################
-def get_last_elementory_events_df(timestamp, source, transaction_currency, counter_currency, resample_period):
+def get_current_elementory_events_df(timestamp, source, transaction_currency, counter_currency, resample_period):
     '''
     get all elementary events happened in the one timestamp
     NOTE - DB request returns several records for one timestamp!
@@ -314,6 +316,30 @@ def get_last_elementory_events_df(timestamp, source, transaction_currency, count
         counter_currency=counter_currency,
         resample_period=resample_period,
     ).order_by('-timestamp').values('timestamp','event_name','event_value'))
+
+    # convert several records into one line of dataFrame
+    df = pd.DataFrame()
+    if last_events:
+        # assert all timestamps are the same
+        ts = [rec['timestamp'] for rec in last_events]
+        event_names = [rec['event_name'] for rec in last_events]
+        event_values = [rec['event_value'] for rec in last_events]
+
+        df = pd.DataFrame(columns = ALL_POSSIBLE_ELEMENTARY_EVENTS, index=pd.Series(ts[0])) # DF has only one line
+        df[event_names] = event_values
+        df = df.fillna(value=0)
+
+    return df
+
+# the different with the previous one is that it returns the last row in a pile even if it was entered a month ago
+def get_last_ever_entered_elementory_events_df(timestamp, source, transaction_currency, counter_currency, resample_period):
+
+    last_events = list(EventsElementary.objects.filter(
+        source=source,
+        transaction_currency=transaction_currency,
+        counter_currency=counter_currency,
+        resample_period=resample_period,
+    ).order_by('-timestamp').values('timestamp','event_name','event_value').first())
 
     # convert several records into one line of dataFrame
     df = pd.DataFrame()
