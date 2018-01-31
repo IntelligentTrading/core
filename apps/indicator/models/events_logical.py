@@ -23,7 +23,7 @@ class EventsLogical(AbstractIndicator):
         resample_period = kwargs['resample_period']
         horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[resample_period])
 
-        logger.info('---- Start analysing LOGICAL events ----------')
+        logger.info('   ...... Start analysing LOGICAL events ')
         # get all elementory events
         # always one line!
         last_events_df = get_last_elementory_events_df(**kwargs)
@@ -99,7 +99,7 @@ class EventsLogical(AbstractIndicator):
 
             # DEBUG: print all events if any
             for name, values in last_events_df.iteritems():
-                logger.debug('    ... event: ' + name + ' = ' + str(values) )
+                logger.debug('    ... event: ' + name + ' = ' + str(values[1]) )
 
 
             ########## check for ITT Cummulative RSI Signal

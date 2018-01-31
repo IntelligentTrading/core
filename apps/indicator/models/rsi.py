@@ -19,6 +19,9 @@ class Rsi(AbstractIndicator):
 
     def get_rsi_bracket_value(self):
         rsi = self.rsi
+        if rsi is None:
+            return 0
+
         assert (rsi>=0.0) & (rsi<=100.0)
 
         rsi_strength = 0

@@ -7,6 +7,7 @@ from apps.indicator.models.price_resampl import get_n_last_resampl_df
 from apps.user.models.user import get_horizon_value_from_string
 from settings import HORIZONS_TIME2NAMES
 import time
+from datetime import timedelta, datetime
 
 import pandas as pd
 import numpy as np
@@ -14,8 +15,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# list of all events to return by get_last_elementory_events_df
-ALL_POSSIBLE_ELEMENTARY_EVENTS = [
+SMA_ELEMENTARY_EVENTS =  [
     'sma50_cross_price_down',
     'sma200_cross_price_down',
     'sma50_cross_sma200_down',
@@ -24,9 +24,10 @@ ALL_POSSIBLE_ELEMENTARY_EVENTS = [
     'sma50_cross_sma200_up',
     'sma50_above_sma200',
     'sma50_below_sma200',
-    'rsi_bracket',
-    'close_above_cloud',
-    'close_below_cloud',
+    'rsi_bracket'
+]
+
+ICHI_ELEMENTARY_EVENTS = [
     'close_cloud_breakout_up',
     'close_cloud_breakout_down',
     'close_cloud_breakout_up_ext',
@@ -36,8 +37,13 @@ ALL_POSSIBLE_ELEMENTARY_EVENTS = [
     'lagging_above_highest',
     'lagging_below_lowest',
     'conversion_above_base',
-    'conversion_below_base'
+    'conversion_below_base',
+    'close_above_cloud',
+    'close_below_cloud',
 ]
+
+# list of all events to return by get_last_elementory_events_df
+ALL_POSSIBLE_ELEMENTARY_EVENTS = SMA_ELEMENTARY_EVENTS + ICHI_ELEMENTARY_EVENTS
 
 # dictionary to convert name of sma event to one-number trend
 _col2trend = {
@@ -56,26 +62,11 @@ ichi_param_3_52 = 120
 ichi_param_4_26 = 30
 
 
-events2save = [
-    'close_cloud_breakout_up',
-    'close_cloud_breakout_down',
-    'close_cloud_breakout_up_ext',
-    'close_cloud_breakout_down_ext',
-    'lagging_above_cloud',
-    'lagging_below_cloud',
-    'lagging_above_highest',
-    'lagging_below_lowest',
-    'conversion_above_base',
-    'conversion_below_base',
-    'close_above_cloud',
-    'close_below_cloud',
-]
-
 
 def _process_rsi(horizon, **kwargs):
     rs_obj = get_last_rs_object(**kwargs)
 
-    if (rs_obj is not None) & (rs_obj.rsi is not None):
+    if (rs_obj is not None):
         rsi_bracket = rs_obj.get_rsi_bracket_value()
         if rsi_bracket != 0:
             # save the event
@@ -100,6 +91,9 @@ def _process_rsi(horizon, **kwargs):
                 logger.debug("   >>> RSI bracket event FIRED!")
             except Exception as e:
                 logger.error(" Error saving/emitting RSI Event ")
+            return rsi_bracket
+    else:
+        return False
 
 
 def _process_sma_crossovers(horizon, prices_df, **kwargs):
@@ -107,13 +101,12 @@ def _process_sma_crossovers(horizon, prices_df, **kwargs):
     # NOTE - correct df names if change sma_low!
     time_current = pd.to_datetime(time.time(), unit='s')
 
-
     # calculate all events and place them to one DF
     events_df = pd.DataFrame()
-    events_df['sma50_cross_price_down'] = np.sign(prices_df.low_sma - prices_df.close_price).diff().lt(0)  # -1
+    events_df['sma50_cross_price_down']  = np.sign(prices_df.low_sma - prices_df.close_price).diff().lt(0)  # -1
     events_df['sma200_cross_price_down'] = np.sign(prices_df.high_sma - prices_df.close_price).diff().lt(0)  # -2
     events_df['sma50_cross_sma200_down'] = np.sign(prices_df.low_sma - prices_df.high_sma).diff().lt(0)  # -3
-    events_df['sma50_cross_price_up'] = np.sign(prices_df.low_sma - prices_df.close_price).diff().gt(0)  # 1
+    events_df['sma50_cross_price_up']  = np.sign(prices_df.low_sma - prices_df.close_price).diff().gt(0)  # 1
     events_df['sma200_cross_price_up'] = np.sign(prices_df.high_sma - prices_df.close_price).diff().gt(0)  # 2
     events_df['sma50_cross_sma200_up'] = np.sign(prices_df.low_sma - prices_df.high_sma).diff().gt(0)  # 3
 
@@ -123,7 +116,7 @@ def _process_sma_crossovers(horizon, prices_df, **kwargs):
     # get the last events row and account for a small timestamp rounding error
     last_event_row = events_df.iloc[-1]
     time_of_last_row = events_df.index[-1]
-    assert(abs(time_current-time_of_last_row).value < 1800000)  # check if difference with now now > 30min
+    assert(abs( (time_current-time_of_last_row).seconds)  < 3000),'current time too far away'  # check if difference with now now > 30min
 
     # for each event in last row of all recents events
     for event_name, event_value in last_event_row.iteritems():
@@ -156,6 +149,7 @@ def _process_sma_crossovers(horizon, prices_df, **kwargs):
                     logger.debug("   >>> FIRED - Event " + event_name)
                  except Exception as e:
                     logger.error(" #Error firing SMA signal ")
+
 
 
 
@@ -203,7 +197,6 @@ class EventsElementary(AbstractIndicator):
 
 
         ############## calculate and save ICHIMOKU elementary events
-        # no signal emitting
 
         logger.debug("   ... Check Ichimoku Elementary Events: ")
         price_low_ts = prices_df['low_price']
@@ -211,7 +204,7 @@ class EventsElementary(AbstractIndicator):
         closing_price_ts = prices_df['close_price']
         midpoint_price_ts = prices_df['midpoint_price']
 
-        # calculate new line indicators as time series
+        # calculate five Ichi lines
         tenkan_sen_conversion = midpoint_price_ts.rolling(window=ichi_param_1_9, center=False, min_periods=4).mean()
         kijun_sen_base = midpoint_price_ts.rolling(window=ichi_param_2_26, center=False, min_periods=12).mean()
 
@@ -222,7 +215,7 @@ class EventsElementary(AbstractIndicator):
 
         hikou_span_lagging = closing_price_ts.shift(-ichi_param_2_26)
 
-        # combine everythin into one dataFrame
+        # combine everything into one dataFrame for convinience
         df = pd.DataFrame({
             'idx_col': closing_price_ts.index,
             'low': price_low_ts,
@@ -241,8 +234,7 @@ class EventsElementary(AbstractIndicator):
         if any(df.isnull()):
             logger.warning("  Ichi: some of the elem_events are NaN, result might be INCORRECT! ")
 
-
-
+        # calculate intercections and more complex events
         df['close_above_cloud'] = np.where(((df.closing > df.leading_a) & (df.closing > df.leading_b)), 1, 0)
         df['close_below_cloud'] = np.where(((df.closing < df.leading_a) & (df.closing < df.leading_b)), 1, 0)
 
@@ -254,14 +246,9 @@ class EventsElementary(AbstractIndicator):
             df.closing - pd.concat([df.leading_a, df.leading_b], axis=1).min(axis=1)
         ).diff().fillna(0).lt(0)
 
-
-        # to avoid up and down noise
-        df['close_cloud_breakout_up_ext'] = df['close_cloud_breakout_up'] | \
-                                                   df['close_cloud_breakout_up'].shift(1)
-
-        df['close_cloud_breakout_down_ext'] = df['close_cloud_breakout_down'] |\
-                                                     df['close_cloud_breakout_down'].shift(1)
-
+        # to avoid up and down noise, make signal active for one more time point
+        df['close_cloud_breakout_up_ext'] = df['close_cloud_breakout_up'] | df['close_cloud_breakout_up'].shift(1)
+        df['close_cloud_breakout_down_ext'] = df['close_cloud_breakout_down'] | df['close_cloud_breakout_down'].shift(1)
 
         # check it ichi_param_4_26 hours ago
         df['lagging_above_cloud'] = np.where(
@@ -289,15 +276,15 @@ class EventsElementary(AbstractIndicator):
 
 
 
-        #get the last event line in DF
+        # get the last event line in DF, these are all events together
         last_events = df.iloc[-1]
         time_of_last_row = df.index[-1]
         time_current = pd.to_datetime(kwargs['timestamp'], unit='s')
         assert (abs(time_current - time_of_last_row).value < 1800000)  # check if difference with now now > 30min
         last_events = last_events.fillna(False)
 
-        # save event in DB
-        for event_name in events2save:
+        # save event in DB and no signal emitting
+        for event_name in ICHI_ELEMENTARY_EVENTS:
             event_value = last_events[event_name]
             if event_value:
                 logger.debug('   >>> Ichimoku elementary event has been FIRED : ' + str(event_name))
@@ -310,8 +297,6 @@ class EventsElementary(AbstractIndicator):
                     ichi_event.save()
                 except Exception as e:
                     logger.error(" Error saving  " + event_name + " elementary event ")
-
-            #logger.debug('   ... NO Ichi event: ' + event_name )
 
 
 
@@ -338,7 +323,7 @@ def get_last_elementory_events_df(timestamp, source, transaction_currency, count
         event_names = [rec['event_name'] for rec in last_events]
         event_values = [rec['event_value'] for rec in last_events]
 
-        df = pd.DataFrame(columns = ALL_POSSIBLE_ELEMENTARY_EVENTS, index=pd.Series(ts[0]))
+        df = pd.DataFrame(columns = ALL_POSSIBLE_ELEMENTARY_EVENTS, index=pd.Series(ts[0])) # DF has only one line
         df[event_names] = event_values
         df = df.fillna(value=0)
 
