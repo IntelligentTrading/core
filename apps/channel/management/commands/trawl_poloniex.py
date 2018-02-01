@@ -125,7 +125,7 @@ def _compute_and_save_indicators(resample_period_par):
             'resample_period' : resample_period
         }
         ################# BACK CALCULATION (need only once when run first time)
-        BACK_REC = 55   # how many records to calculate back in time
+        BACK_REC = 100   # how many records to calculate back in time
         BACK_TIME = timestamp - BACK_REC * resample_period * 60  # same in sec
 
         last_time_computed = get_first_resampled_time(POLONIEX, transaction_currency, counter_currency, resample_period)
