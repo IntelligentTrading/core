@@ -207,20 +207,20 @@ class EventsElementary(AbstractIndicator):
         midpoint_price_ts = prices_df['midpoint_price']
 
         # calculate five Ichi lines
-        period_9_high = price_high_ts.rolling(window=ichi_param_1_9, center=False, min_periods=4).max() #highest high
-        period_9_low = price_low_ts.rolling(window=ichi_param_1_9, center=False, min_periods=4).min() # lowest low
+        period_9_high = price_high_ts.rolling(window=ichi_param_1_9, center=False, min_periods=6).max() #highest high
+        period_9_low = price_low_ts.rolling(window=ichi_param_1_9, center=False, min_periods=6).min() # lowest low
         tenkan_sen_conversion = (period_9_high + period_9_low) / 2
         #tenkan_sen_conversion = midpoint_price_ts.rolling(window=ichi_param_1_9, center=False, min_periods=4).mean()
 
-        period_26_high = price_high_ts.rolling(window=ichi_param_2_26, center=False, min_periods=4).max()
-        period_26_low = price_low_ts.rolling(window=ichi_param_2_26, center=False, min_periods=4).min()
+        period_26_high = price_high_ts.rolling(window=ichi_param_2_26, center=False, min_periods=15).max()
+        period_26_low = price_low_ts.rolling(window=ichi_param_2_26, center=False, min_periods=15).min()
         kijun_sen_base = (period_26_high + period_26_low) / 2
         #kijun_sen_base = midpoint_price_ts.rolling(window=ichi_param_2_26, center=False, min_periods=12).mean()
 
         senkou_span_a_leading = ((tenkan_sen_conversion + kijun_sen_base) / 2).shift(ichi_param_2_26)
 
-        period_52_high = price_high_ts.rolling(window=ichi_param_3_52, center=False, min_periods=4).max()
-        period_52_low = price_low_ts.rolling(window=ichi_param_3_52, center=False, min_periods=4).min()
+        period_52_high = price_high_ts.rolling(window=ichi_param_3_52, center=False, min_periods=25).max()
+        period_52_low = price_low_ts.rolling(window=ichi_param_3_52, center=False, min_periods=25).min()
         period52 = (period_52_high + period_52_low) / 2
         #period52 = midpoint_price_ts.rolling(window=ichi_param_3_52, center=False, min_periods=25).mean()
 
