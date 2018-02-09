@@ -334,12 +334,22 @@ def get_current_elementory_events_df(timestamp, source, transaction_currency, co
 # the different with the previous one is that it returns the last row in a pile even if it was entered a month ago
 def get_last_ever_entered_elementory_events_df(timestamp, source, transaction_currency, counter_currency, resample_period):
 
-    last_events = list(EventsElementary.objects.filter(
+    # get the most recent time
+    last_time = EventsElementary.objects.filter(
         source=source,
         transaction_currency=transaction_currency,
         counter_currency=counter_currency,
         resample_period=resample_period,
-    ).order_by('-timestamp').values('timestamp','event_name','event_value').first())
+    ).order_by('-timestamp').values('timestamp').first()
+
+    #get all records for this time
+    last_events = list(EventsElementary.objects.filter(
+        timestamp = last_time['timestamp'],
+        source=source,
+        transaction_currency=transaction_currency,
+        counter_currency=counter_currency,
+        resample_period=resample_period,
+    ).order_by('-timestamp').values('timestamp','event_name','event_value'))
 
     # convert several records into one line of dataFrame
     df = pd.DataFrame()
