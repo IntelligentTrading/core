@@ -123,7 +123,7 @@ class EventsLogical(AbstractIndicator):
                 1, 0)
 
 
-                if last_events_df['RSI_Cumulative']:
+                if all(last_events_df['RSI_Cumulative']):
 
                     try:
                         rsi_cum = cls.objects.create(
