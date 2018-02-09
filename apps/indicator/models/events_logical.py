@@ -113,7 +113,7 @@ class EventsLogical(AbstractIndicator):
 
             # add a long period signal to the current signals
             if not long_period_events_df.empty:
-                last_events_df['long_sma50_above_sma200'] = long_period_events_df['sma50_above_sma200']
+                last_events_df['long_sma50_above_sma200'] = int(long_period_events_df['sma50_above_sma200'])
 
                 last_events_df['RSI_Cumulative'] = np.where(
                 (
@@ -143,9 +143,10 @@ class EventsLogical(AbstractIndicator):
                         logger.info('    YOH! RSI_Cummulative has been FIRED!')
                     except Exception as e:
                         logger.error(" Error saving RSI Cumulative signal ")
+                logger.debug("    ... No RSI cumulative events")
 
             else:
-                logger.debug("   .. No RSI Cumulative events.")
+                logger.debug("   .. no long term data yet ... so, no RSI Cumulative.")
 
         else:
             logger.debug("   ... No elementary events found at all, skip processing !")
