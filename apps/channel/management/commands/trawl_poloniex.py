@@ -114,7 +114,7 @@ def _compute_and_save_indicators(resample_period_par):
     pairs_to_iterate = [(itm,Price.USDT) for itm in USDT_COINS] + [(itm,Price.BTC) for itm in BTC_COINS]
     for transaction_currency, counter_currency in pairs_to_iterate:
 
-        logger.info('   ======== checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
+        logger.info('   ======== '+str(resample_period)+ ': checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
 
         # create a dictionary of parameters to improve readability
         indicator_params_dict = {
@@ -125,7 +125,7 @@ def _compute_and_save_indicators(resample_period_par):
             'resample_period' : resample_period
         }
         ################# BACK CALCULATION (need only once when run first time)
-        BACK_REC = 320   # how many records to calculate back in time
+        BACK_REC = 210   # how many records to calculate back in time
         BACK_TIME = timestamp - BACK_REC * resample_period * 60  # same in sec
 
         last_time_computed = get_first_resampled_time(POLONIEX, transaction_currency, counter_currency, resample_period)

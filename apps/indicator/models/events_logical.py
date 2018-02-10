@@ -118,7 +118,7 @@ class EventsLogical(AbstractIndicator):
                 last_events_df['RSI_Cumulative'] = np.where(
                 (
                     last_events_df['long_sma50_above_sma200'] &
-                    np.abs(last_events_df['rsi_bracket']) == 3
+                    (np.abs(last_events_df['rsi_bracket']) == 3)
                  ) == True,
                 1, 0)
 
