@@ -1,15 +1,11 @@
-from rest_framework.generics import (
-    ListAPIView,
-    RetrieveAPIView
-)
+from rest_framework.generics import ListAPIView
 
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from .serializers import SignalSerializer
+from .permissions import RestAPIPermission
 
 from ..models import Signal
 
-from .serializers import SignalSerializer
-
 class SignalListAPIView(ListAPIView):
     queryset = Signal.objects.order_by('-id') # last signal will be on top/first
-    permission_classes = (IsAuthenticatedOrReadOnly, )
+    permission_classes = (RestAPIPermission, )
     serializer_class = SignalSerializer
