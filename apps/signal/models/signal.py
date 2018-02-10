@@ -59,7 +59,8 @@ class Signal(Timestampable, models.Model):
     sent_at = UnixTimeStampField(use_numeric=True)
 
     # MODEL PROPERTIES
-
+    class Meta:
+        ordering = ['-id'] # Default order: last id first/top. We need this for REST pagination
 
     # MODEL FUNCTIONS
 

@@ -101,6 +101,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
 
     # PLUGINS
+    'rest_framework',
 
 ]
 
@@ -228,6 +229,16 @@ A_PRIME_NUMBER = int(os.environ.get('A_PRIME_NUMBER', 12345))
 TEAM_EMOJIS = os.environ.get('TEAM_EMOJIS', "🤖,").split(",")
 ITT_API_KEY = os.environ.get('ITT_API_KEY', "123ABC")
 
+
+# @Alex2 REST Framework settings
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAdminUser', # Very secure by default:  only admin can access, overwrite on per-view basis
+    ),
+
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 100
+}
 
 if LOCAL:
     logger.info("LOCAL environment detected. Importing local_settings.py")
