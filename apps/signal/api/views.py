@@ -10,6 +10,6 @@ from ..models import Signal
 from .serializers import SignalSerializer
 
 class SignalListAPIView(ListAPIView):
-    queryset = Signal.objects.all()
+    queryset = Signal.objects.order_by('-id') # last signal will be on top/first
     permission_classes = (IsAuthenticatedOrReadOnly, )
     serializer_class = SignalSerializer
