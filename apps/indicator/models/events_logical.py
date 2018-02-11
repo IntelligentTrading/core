@@ -4,7 +4,7 @@ from settings import HORIZONS_TIME2NAMES, LONG
 from apps.indicator.models.abstract_indicator import AbstractIndicator
 from apps.signal.models.signal import Signal
 from apps.indicator.models.events_elementary import get_current_elementory_events_df, get_last_ever_entered_elementory_events_df
-from apps.indicator.models.rsi import get_last_rs_object
+from apps.indicator.models.rsi import Rsi
 from apps.user.models.user import get_horizon_value_from_string
 
 import pandas as pd
@@ -124,14 +124,14 @@ class EventsLogical(AbstractIndicator):
 
 
                 if all(last_events_df['RSI_Cumulative']):
-
+                    logger.info('    YOH! RSI_Cumulative has been DETECTED!')
                     try:
                         rsi_cum = cls.objects.create(
                             **kwargs,
                             event_name='RSI_Cumulative',
                             event_value=np.sign(last_events_df['rsi_bracket']),
                         )
-                        rs_obj = get_last_rs_object(**kwargs)
+                        rs_obj = Rsi.objects.filter(**kwargs).last() # get current rsi object
                         signal_rsi_cum = Signal(
                             **kwargs,
                             signal='RSI_Cumulative',
@@ -140,7 +140,7 @@ class EventsLogical(AbstractIndicator):
                             horizon=horizon,
                         )
                         signal_rsi_cum.save()
-                        logger.info('    YOH! RSI_Cummulative has been FIRED!')
+                        logger.info('    RSI_Cumulative has been Saved!')
                     except Exception as e:
                         logger.error(" Error saving RSI Cumulative signal ")
                 logger.debug("    ... No RSI cumulative events")

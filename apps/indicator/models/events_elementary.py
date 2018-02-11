@@ -1,13 +1,12 @@
 from django.db import models
 from apps.indicator.models.abstract_indicator import AbstractIndicator
 from apps.signal.models.signal import Signal
-from apps.indicator.models.rsi import get_last_rs_object
+from apps.indicator.models.rsi import Rsi
 from apps.indicator.models.sma import get_n_last_sma_df
 from apps.indicator.models.price_resampl import get_n_last_resampl_df
 from apps.user.models.user import get_horizon_value_from_string
 from settings import HORIZONS_TIME2NAMES
 import time
-from datetime import timedelta, datetime
 
 import pandas as pd
 import numpy as np
@@ -64,10 +63,10 @@ ichi_param_4_26 = 30
 
 
 def _process_rsi(horizon, **kwargs):
-    rs_obj = get_last_rs_object(**kwargs)
+    rs_obj = Rsi.objects.filter(**kwargs).last()
 
     if (rs_obj is not None):
-        rsi_bracket = rs_obj.get_rsi_bracket_value()
+        rsi_bracket = rs_obj.get_rsi_bracket_value() # get current rsi object
         if rsi_bracket != 0:
             # save the event
             try:
@@ -93,6 +92,7 @@ def _process_rsi(horizon, **kwargs):
                 logger.error(" Error saving/emitting RSI Event ")
             return rsi_bracket
     else:
+        logger.debug(" ... No RSI Event found ")
         return False
 
 

@@ -91,6 +91,8 @@ class Rsi(AbstractIndicator):
 
 #################
 # get last RS value object
+'''
 def get_last_rs_object(**kwargs):
     rs = Rsi.objects.filter(**kwargs).order_by('-timestamp').last()
     return rs
+'''
