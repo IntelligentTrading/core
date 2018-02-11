@@ -107,7 +107,7 @@ class EventsLogical(AbstractIndicator):
             logger.debug("   ... Check RSI Cumulative Event ")
 
             # get events for long time period (not for current)
-            long_param_dict = kwargs
+            long_param_dict = kwargs.copy()
             long_param_dict['resample_period'] = LONG
             long_period_events_df = get_last_ever_entered_elementory_events_df(**long_param_dict)
 
