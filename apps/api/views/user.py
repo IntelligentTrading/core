@@ -62,7 +62,8 @@ class User(View):
             return HttpResponse(400)  # request error
 
         user, u_created = UserModel.objects.get_or_create(telegram_chat_id=chat_id)
-        return HttpResponse(json.dumps(user.get_telegram_settings()))  # ok
+        # return HttpResponse(json.dumps(user.get_telegram_settings()))  # ok
+        return HttpResponse(json.dumps({}))  # ok
 
 
 class Users(View):
@@ -100,4 +101,5 @@ class Users(View):
         # Filters done, compile chat ids #
 
         chat_id_list = list(users.values_list('telegram_chat_id', flat=True))
-        return HttpResponse(json.dumps({'chat_ids': chat_id_list}))  # ok
+        # return HttpResponse(json.dumps({'chat_ids': chat_id_list}))  # ok
+        return HttpResponse(json.dumps({}))  # ok
