@@ -1,9 +1,9 @@
 from rest_framework.generics import ListAPIView
 
-from .serializers import SignalSerializer
-from .permissions import RestAPIPermission
+from apps.api.serializers.signal import SignalSerializer
+from apps.api.permissions import RestAPIPermission
 
-from ..models import Signal
+from apps.signal.models import Signal
 
 class SignalListAPIView(ListAPIView):
     queryset = Signal.objects.order_by('-id') # last signal will be on top/first

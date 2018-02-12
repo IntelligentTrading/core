@@ -10,5 +10,5 @@ urlpatterns = [
 
     url(r'^admin/', admin.site.urls),
 
-    url(r'^signal/', include('apps.signal.urls', namespace='signal')) # REST API for signal
+    #url(r'^signal/', include('apps.signal.urls', namespace='signal')) # REST API for signal
 ]

@@ -102,6 +102,7 @@ INSTALLED_APPS = [
 
     # PLUGINS
     'rest_framework',
+    'rest_framework_swagger',
 
 ]
 
