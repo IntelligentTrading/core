@@ -60,7 +60,7 @@ class Signal(Timestampable, models.Model):
 
     # MODEL PROPERTIES
 
-    
+
     # MODEL FUNCTIONS
 
     def get_price(self):
