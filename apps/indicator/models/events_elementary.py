@@ -178,7 +178,7 @@ class EventsElementary(AbstractIndicator):
         logger.info('   ::::  Start analysing ELEMENTARY events ::::')
 
         ###### check for rsi events, save and emit signal
-        logger.debug("   ... Check RSI Events: ")
+        logger.info("   ... Check RSI Events: ")
         _process_rsi(horizon, **kwargs)
 
 
@@ -193,14 +193,14 @@ class EventsElementary(AbstractIndicator):
         # todo: that is not right fron statistical view point!!! remove later when anough values
         prices_df = prices_df.fillna(value=0)
 
-        logger.debug("   ... Check SMA Events: ")
+        logger.info("   ... Check SMA Events: ")
         # todo - add return value, and say if any crossovers have happend
         _process_sma_crossovers(horizon, prices_df, **kwargs)
 
 
         ############## calculate and save ICHIMOKU elementary events
 
-        logger.debug("   ... Check Ichimoku Elementary Events: ")
+        logger.info("   ... Check Ichimoku Elementary Events: ")
         price_low_ts = prices_df['low_price']
         price_high_ts = prices_df['high_price']
         closing_price_ts = prices_df['close_price']
@@ -245,7 +245,7 @@ class EventsElementary(AbstractIndicator):
 
         # emit warning if any NAN is present
         if any(df.isnull()):
-            logger.warning("  Ichi: some of the elem_events are NaN, result might be INCORRECT! ")
+            logger.debug("  Ichi: some of the elem_events are NaN, result might be INCORRECT! ")
 
         # calculate intercections and more complex events
         df['close_above_cloud'] = np.where(((df.closing > df.leading_a) & (df.closing > df.leading_b)), 1, 0)
@@ -300,7 +300,7 @@ class EventsElementary(AbstractIndicator):
         for event_name in ICHI_ELEMENTARY_EVENTS:
             event_value = last_events[event_name]
             if event_value:
-                logger.debug('   >>> Ichimoku elementary event has been FIRED : ' + str(event_name))
+                logger.debug('   >>> Ichi elem event was FIRED : ' + str(event_name))
                 try:
                     ichi_event = cls.objects.create(
                         **kwargs,

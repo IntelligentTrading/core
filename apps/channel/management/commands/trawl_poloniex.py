@@ -25,17 +25,25 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         logger.info("Getting ready to trawl Poloniex...")
 
-        schedule.every(1/time_speed).minutes.do(_pull_poloniex_data)
+        schedule.every().minute.do(_pull_poloniex_data)
 
         # @Alex
         # run resampling for all periods and calculate indicator values
         # TODO synchronize the start with beginning of hours / days / etc
         for hor_period in PERIODS_LIST:
-            schedule.every(hor_period / time_speed).minutes.do(
+            hours = (hor_period / 60) / time_speed
+            schedule.every(hours).hours.at("00:00").do(
                 _compute_and_save_indicators,
                 {'period': hor_period}
             )
 
+
+            '''
+            schedule.every(hor_period / time_speed).minutes.do(
+                _compute_and_save_indicators,
+                {'period': hor_period}            
+            )
+            '''
 
         keep_going = True
         while keep_going:
