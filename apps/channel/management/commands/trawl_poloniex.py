@@ -114,7 +114,7 @@ def _compute_and_save_indicators(resample_period_par):
     from apps.indicator.models.events_elementary import EventsElementary
     from apps.indicator.models.events_logical import EventsLogical
 
-    timestamp = time.time()
+    timestamp = time.time() // (1 * 60) * (1 * 60)   # rounded to a minute
     resample_period = resample_period_par['period']
 
     logger.info(" ################# Resampling with Period: " + str(resample_period) + " #######################")
@@ -143,7 +143,8 @@ def _compute_and_save_indicators(resample_period_par):
             logger.info("  ... calculate resampl back in time, needed records: " + str(records_to_compute))
             for idx in range(1, records_to_compute):
                 time_point_back = last_time_computed - idx * (resample_period * 60)
-                indicator_params_dict['timestamp'] = time_point_back
+                # round down to the closest hour
+                indicator_params_dict['timestamp'] = time_point_back // (60 * 60) * (60 * 60)
 
                 try:
                     resample_object = PriceResampl.objects.create(**indicator_params_dict)

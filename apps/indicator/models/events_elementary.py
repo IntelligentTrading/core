@@ -58,7 +58,7 @@ _col2trend = {
 ichi_param_1_9 = 20
 ichi_param_2_26 = 60
 ichi_param_3_52 = 120
-ichi_param_4_26 = 30
+ichi_displacement = 30
 
 
 
@@ -172,7 +172,7 @@ class EventsElementary(AbstractIndicator):
 
         # load nessesary resampled prices from price resampled
         # we only need last_records back in time
-        last_records = ichi_param_4_26 * ichi_param_4_26 + 10
+        last_records = ichi_displacement * ichi_displacement + 10
         prices_df = get_n_last_resampl_df(last_records, **no_time_params)
 
         logger.info('   ::::  Start analysing ELEMENTARY events ::::')
@@ -201,32 +201,36 @@ class EventsElementary(AbstractIndicator):
         ############## calculate and save ICHIMOKU elementary events
 
         logger.info("   ... Check Ichimoku Elementary Events: ")
-        price_low_ts = prices_df['low_price']
-        price_high_ts = prices_df['high_price']
-        closing_price_ts = prices_df['close_price']
-        midpoint_price_ts = prices_df['midpoint_price']
+
+        # correct shift in 10 min , so resumple again
+        # shall be removed as soon as we have time by exact hours
+        # res_df = res_df[['high_price','low_price','open_price','close_price']].resample(rule='1H').mean().bfill()
+        rule = str(int(kwargs['resample_period'] / 60)) + 'H'
+
+        # todo - remove resampling when enough data is gathered (several weeks from now)
+        price_low_ts = prices_df['low_price'].resample(rule=rule).mean().bfill()
+        price_high_ts = prices_df['high_price'].resample(rule=rule).mean().bfill()
+        closing_price_ts = prices_df['close_price'].resample(rule=rule).mean().bfill()
+
 
         # calculate five Ichi lines
         period_9_high = price_high_ts.rolling(window=ichi_param_1_9, center=False, min_periods=6).max() #highest high
         period_9_low = price_low_ts.rolling(window=ichi_param_1_9, center=False, min_periods=6).min() # lowest low
         tenkan_sen_conversion = (period_9_high + period_9_low) / 2
-        #tenkan_sen_conversion = midpoint_price_ts.rolling(window=ichi_param_1_9, center=False, min_periods=4).mean()
 
         period_26_high = price_high_ts.rolling(window=ichi_param_2_26, center=False, min_periods=15).max()
         period_26_low = price_low_ts.rolling(window=ichi_param_2_26, center=False, min_periods=15).min()
         kijun_sen_base = (period_26_high + period_26_low) / 2
-        #kijun_sen_base = midpoint_price_ts.rolling(window=ichi_param_2_26, center=False, min_periods=12).mean()
 
-        senkou_span_a_leading = ((tenkan_sen_conversion + kijun_sen_base) / 2).shift(ichi_param_2_26)
+        senkou_span_a_leading = ((tenkan_sen_conversion + kijun_sen_base) / 2).shift(ichi_displacement)
 
         period_52_high = price_high_ts.rolling(window=ichi_param_3_52, center=False, min_periods=25).max()
         period_52_low = price_low_ts.rolling(window=ichi_param_3_52, center=False, min_periods=25).min()
         period52 = (period_52_high + period_52_low) / 2
-        #period52 = midpoint_price_ts.rolling(window=ichi_param_3_52, center=False, min_periods=25).mean()
 
-        senkou_span_b_leading = period52.shift(ichi_param_2_26)
+        senkou_span_b_leading = period52.shift(ichi_displacement)
 
-        hikou_span_lagging = closing_price_ts.shift(-ichi_param_2_26)
+        hikou_span_lagging = closing_price_ts.shift(-ichi_displacement)
 
         # combine everything into one dataFrame for convinience
         df = pd.DataFrame({
@@ -265,24 +269,24 @@ class EventsElementary(AbstractIndicator):
 
         # check it ichi_param_4_26 hours ago
         df['lagging_above_cloud'] = np.where(
-            ((df.lagging.shift(ichi_param_4_26) > df.leading_a.shift(ichi_param_4_26)) &
-             (df.lagging.shift(ichi_param_4_26) > df.leading_b.shift(ichi_param_4_26))),
+            ((df.lagging.shift(ichi_displacement) > df.leading_a.shift(ichi_displacement)) &
+             (df.lagging.shift(ichi_displacement) > df.leading_b.shift(ichi_displacement))),
             1, 0)
         # shift back to current day
-        df['lagging_above_cloud'] = df['lagging_above_cloud'].shift(ichi_param_4_26)
+        df['lagging_above_cloud'] = df['lagging_above_cloud'].shift(ichi_displacement)
 
         df['lagging_below_cloud'] = np.where(
-            ((df.lagging.shift(ichi_param_4_26) < df.leading_a.shift(ichi_param_4_26)) &
-             (df.lagging.shift(ichi_param_4_26) < df.leading_b.shift(ichi_param_4_26))),
+            ((df.lagging.shift(ichi_displacement) < df.leading_a.shift(ichi_displacement)) &
+             (df.lagging.shift(ichi_displacement) < df.leading_b.shift(ichi_displacement))),
             1, 0)
-        df['lagging_below_cloud'] = df['lagging_below_cloud'].shift(ichi_param_4_26)
+        df['lagging_below_cloud'] = df['lagging_below_cloud'].shift(ichi_displacement)
 
 
-        df['lagging_above_highest'] = np.where(df.lagging.shift(ichi_param_4_26) > df.high.shift(ichi_param_4_26), 1, 0)
-        df['lagging_above_highest'] = df['lagging_above_highest'].shift(ichi_param_4_26)
+        df['lagging_above_highest'] = np.where(df.lagging.shift(ichi_displacement) > df.high.shift(ichi_displacement), 1, 0)
+        df['lagging_above_highest'] = df['lagging_above_highest'].shift(ichi_displacement)
 
-        df['lagging_below_lowest'] = np.where(df.lagging.shift(ichi_param_4_26) < df.low.shift(ichi_param_4_26), 1, 0)
-        df['lagging_below_lowest'] = df['lagging_below_lowest'].shift(ichi_param_4_26)
+        df['lagging_below_lowest'] = np.where(df.lagging.shift(ichi_displacement) < df.low.shift(ichi_displacement), 1, 0)
+        df['lagging_below_lowest'] = df['lagging_below_lowest'].shift(ichi_displacement)
 
         df['conversion_above_base'] = np.where(df.conversion > df.base, 1, 0)
         df['conversion_below_base'] = np.where(df.conversion < df.base, 1, 0)
