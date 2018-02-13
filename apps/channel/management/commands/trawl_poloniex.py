@@ -31,19 +31,12 @@ class Command(BaseCommand):
         # run resampling for all periods and calculate indicator values
         # TODO synchronize the start with beginning of hours / days / etc
         for hor_period in PERIODS_LIST:
-            hours = (hor_period / 60) / time_speed
+            hours = (hor_period / 60) / time_speed  # convert to hours
             schedule.every(hours).hours.at("00:00").do(
                 _compute_and_save_indicators,
                 {'period': hor_period}
             )
 
-
-            '''
-            schedule.every(hor_period / time_speed).minutes.do(
-                _compute_and_save_indicators,
-                {'period': hor_period}            
-            )
-            '''
 
         keep_going = True
         while keep_going:
@@ -133,7 +126,7 @@ def _compute_and_save_indicators(resample_period_par):
             'resample_period' : resample_period
         }
         ################# BACK CALCULATION (need only once when run first time)
-        BACK_REC = 210   # how many records to calculate back in time
+        BACK_REC = 140   # how many records to calculate back in time
         BACK_TIME = timestamp - BACK_REC * resample_period * 60  # same in sec
 
         last_time_computed = get_first_resampled_time(POLONIEX, transaction_currency, counter_currency, resample_period)
