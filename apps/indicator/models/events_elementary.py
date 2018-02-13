@@ -1,13 +1,12 @@
 from django.db import models
 from apps.indicator.models.abstract_indicator import AbstractIndicator
 from apps.signal.models.signal import Signal
-from apps.indicator.models.rsi import get_last_rs_object
+from apps.indicator.models.rsi import Rsi
 from apps.indicator.models.sma import get_n_last_sma_df
 from apps.indicator.models.price_resampl import get_n_last_resampl_df
 from apps.user.models.user import get_horizon_value_from_string
 from settings import HORIZONS_TIME2NAMES
 import time
-from datetime import timedelta, datetime
 
 import pandas as pd
 import numpy as np
@@ -59,15 +58,15 @@ _col2trend = {
 ichi_param_1_9 = 20
 ichi_param_2_26 = 60
 ichi_param_3_52 = 120
-ichi_param_4_26 = 30
+ichi_displacement = 30
 
 
 
 def _process_rsi(horizon, **kwargs):
-    rs_obj = get_last_rs_object(**kwargs)
+    rs_obj = Rsi.objects.filter(**kwargs).last()
 
     if (rs_obj is not None):
-        rsi_bracket = rs_obj.get_rsi_bracket_value()
+        rsi_bracket = rs_obj.get_rsi_bracket_value() # get current rsi object
         if rsi_bracket != 0:
             # save the event
             try:
@@ -93,6 +92,7 @@ def _process_rsi(horizon, **kwargs):
                 logger.error(" Error saving/emitting RSI Event ")
             return rsi_bracket
     else:
+        logger.debug(" ... No RSI Event found ")
         return False
 
 
@@ -172,13 +172,13 @@ class EventsElementary(AbstractIndicator):
 
         # load nessesary resampled prices from price resampled
         # we only need last_records back in time
-        last_records = ichi_param_4_26 * ichi_param_4_26 + 10
+        last_records = ichi_displacement * ichi_displacement + 10
         prices_df = get_n_last_resampl_df(last_records, **no_time_params)
 
         logger.info('   ::::  Start analysing ELEMENTARY events ::::')
 
         ###### check for rsi events, save and emit signal
-        logger.debug("   ... Check RSI Events: ")
+        logger.info("   ... Check RSI Events: ")
         _process_rsi(horizon, **kwargs)
 
 
@@ -193,29 +193,44 @@ class EventsElementary(AbstractIndicator):
         # todo: that is not right fron statistical view point!!! remove later when anough values
         prices_df = prices_df.fillna(value=0)
 
-        logger.debug("   ... Check SMA Events: ")
+        logger.info("   ... Check SMA Events: ")
         # todo - add return value, and say if any crossovers have happend
         _process_sma_crossovers(horizon, prices_df, **kwargs)
 
 
         ############## calculate and save ICHIMOKU elementary events
 
-        logger.debug("   ... Check Ichimoku Elementary Events: ")
-        price_low_ts = prices_df['low_price']
-        price_high_ts = prices_df['high_price']
-        closing_price_ts = prices_df['close_price']
-        midpoint_price_ts = prices_df['midpoint_price']
+        logger.info("   ... Check Ichimoku Elementary Events: ")
+
+        # correct shift in 10 min , so resumple again
+        # shall be removed as soon as we have time by exact hours
+        # res_df = res_df[['high_price','low_price','open_price','close_price']].resample(rule='1H').mean().bfill()
+        rule = str(int(kwargs['resample_period'] / 60)) + 'H'
+
+        # todo - remove resampling when enough data is gathered (several weeks from now)
+        price_low_ts = prices_df['low_price'].resample(rule=rule).mean().bfill()
+        price_high_ts = prices_df['high_price'].resample(rule=rule).mean().bfill()
+        closing_price_ts = prices_df['close_price'].resample(rule=rule).mean().bfill()
+
 
         # calculate five Ichi lines
-        tenkan_sen_conversion = midpoint_price_ts.rolling(window=ichi_param_1_9, center=False, min_periods=4).mean()
-        kijun_sen_base = midpoint_price_ts.rolling(window=ichi_param_2_26, center=False, min_periods=12).mean()
+        period_9_high = price_high_ts.rolling(window=ichi_param_1_9, center=False, min_periods=6).max() #highest high
+        period_9_low = price_low_ts.rolling(window=ichi_param_1_9, center=False, min_periods=6).min() # lowest low
+        tenkan_sen_conversion = (period_9_high + period_9_low) / 2
 
-        senkou_span_a_leading = ((tenkan_sen_conversion + kijun_sen_base) / 2).shift(ichi_param_2_26)
+        period_26_high = price_high_ts.rolling(window=ichi_param_2_26, center=False, min_periods=15).max()
+        period_26_low = price_low_ts.rolling(window=ichi_param_2_26, center=False, min_periods=15).min()
+        kijun_sen_base = (period_26_high + period_26_low) / 2
 
-        period52 = midpoint_price_ts.rolling(window=ichi_param_3_52, center=False, min_periods=25).mean()
-        senkou_span_b_leading = period52.shift(ichi_param_2_26)
+        senkou_span_a_leading = ((tenkan_sen_conversion + kijun_sen_base) / 2).shift(ichi_displacement)
 
-        hikou_span_lagging = closing_price_ts.shift(-ichi_param_2_26)
+        period_52_high = price_high_ts.rolling(window=ichi_param_3_52, center=False, min_periods=25).max()
+        period_52_low = price_low_ts.rolling(window=ichi_param_3_52, center=False, min_periods=25).min()
+        period52 = (period_52_high + period_52_low) / 2
+
+        senkou_span_b_leading = period52.shift(ichi_displacement)
+
+        hikou_span_lagging = closing_price_ts.shift(-ichi_displacement)
 
         # combine everything into one dataFrame for convinience
         df = pd.DataFrame({
@@ -234,7 +249,7 @@ class EventsElementary(AbstractIndicator):
 
         # emit warning if any NAN is present
         if any(df.isnull()):
-            logger.warning("  Ichi: some of the elem_events are NaN, result might be INCORRECT! ")
+            logger.debug("  Ichi: some of the elem_events are NaN, result might be INCORRECT! ")
 
         # calculate intercections and more complex events
         df['close_above_cloud'] = np.where(((df.closing > df.leading_a) & (df.closing > df.leading_b)), 1, 0)
@@ -254,24 +269,24 @@ class EventsElementary(AbstractIndicator):
 
         # check it ichi_param_4_26 hours ago
         df['lagging_above_cloud'] = np.where(
-            ((df.lagging.shift(ichi_param_4_26) > df.leading_a.shift(ichi_param_4_26)) &
-             (df.lagging.shift(ichi_param_4_26) > df.leading_b.shift(ichi_param_4_26))),
+            ((df.lagging.shift(ichi_displacement) > df.leading_a.shift(ichi_displacement)) &
+             (df.lagging.shift(ichi_displacement) > df.leading_b.shift(ichi_displacement))),
             1, 0)
         # shift back to current day
-        df['lagging_above_cloud'] = df['lagging_above_cloud'].shift(ichi_param_4_26)
+        df['lagging_above_cloud'] = df['lagging_above_cloud'].shift(ichi_displacement)
 
         df['lagging_below_cloud'] = np.where(
-            ((df.lagging.shift(ichi_param_4_26) < df.leading_a.shift(ichi_param_4_26)) &
-             (df.lagging.shift(ichi_param_4_26) < df.leading_b.shift(ichi_param_4_26))),
+            ((df.lagging.shift(ichi_displacement) < df.leading_a.shift(ichi_displacement)) &
+             (df.lagging.shift(ichi_displacement) < df.leading_b.shift(ichi_displacement))),
             1, 0)
-        df['lagging_below_cloud'] = df['lagging_below_cloud'].shift(ichi_param_4_26)
+        df['lagging_below_cloud'] = df['lagging_below_cloud'].shift(ichi_displacement)
 
 
-        df['lagging_above_highest'] = np.where(df.lagging.shift(ichi_param_4_26) > df.high.shift(ichi_param_4_26), 1, 0)
-        df['lagging_above_highest'] = df['lagging_above_highest'].shift(ichi_param_4_26)
+        df['lagging_above_highest'] = np.where(df.lagging.shift(ichi_displacement) > df.high.shift(ichi_displacement), 1, 0)
+        df['lagging_above_highest'] = df['lagging_above_highest'].shift(ichi_displacement)
 
-        df['lagging_below_lowest'] = np.where(df.lagging.shift(ichi_param_4_26) < df.low.shift(ichi_param_4_26), 1, 0)
-        df['lagging_below_lowest'] = df['lagging_below_lowest'].shift(ichi_param_4_26)
+        df['lagging_below_lowest'] = np.where(df.lagging.shift(ichi_displacement) < df.low.shift(ichi_displacement), 1, 0)
+        df['lagging_below_lowest'] = df['lagging_below_lowest'].shift(ichi_displacement)
 
         df['conversion_above_base'] = np.where(df.conversion > df.base, 1, 0)
         df['conversion_below_base'] = np.where(df.conversion < df.base, 1, 0)
@@ -289,7 +304,7 @@ class EventsElementary(AbstractIndicator):
         for event_name in ICHI_ELEMENTARY_EVENTS:
             event_value = last_events[event_name]
             if event_value:
-                logger.debug('   >>> Ichimoku elementary event has been FIRED : ' + str(event_name))
+                logger.debug('   >>> Ichi elem event was FIRED : ' + str(event_name))
                 try:
                     ichi_event = cls.objects.create(
                         **kwargs,
@@ -334,16 +349,26 @@ def get_current_elementory_events_df(timestamp, source, transaction_currency, co
 # the different with the previous one is that it returns the last row in a pile even if it was entered a month ago
 def get_last_ever_entered_elementory_events_df(timestamp, source, transaction_currency, counter_currency, resample_period):
 
-    last_events = list(EventsElementary.objects.filter(
+    # get the most recent time
+    last_time = EventsElementary.objects.filter(
         source=source,
         transaction_currency=transaction_currency,
         counter_currency=counter_currency,
         resample_period=resample_period,
-    ).order_by('-timestamp').values('timestamp','event_name','event_value').first())
+    ).order_by('-timestamp').values('timestamp').first()
 
     # convert several records into one line of dataFrame
     df = pd.DataFrame()
-    if last_events:
+    if last_time:
+        # get all records for this time
+        last_events = list(EventsElementary.objects.filter(
+            timestamp=last_time['timestamp'],
+            source=source,
+            transaction_currency=transaction_currency,
+            counter_currency=counter_currency,
+            resample_period=resample_period,
+        ).order_by('-timestamp').values('timestamp', 'event_name', 'event_value'))
+
         # assert all timestamps are the same
         ts = [rec['timestamp'] for rec in last_events]
         event_names = [rec['event_name'] for rec in last_events]

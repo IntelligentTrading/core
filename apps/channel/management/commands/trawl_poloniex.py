@@ -25,17 +25,25 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         logger.info("Getting ready to trawl Poloniex...")
 
-        schedule.every(1/time_speed).minutes.do(_pull_poloniex_data)
+        schedule.every().minute.do(_pull_poloniex_data)
 
         # @Alex
         # run resampling for all periods and calculate indicator values
         # TODO synchronize the start with beginning of hours / days / etc
         for hor_period in PERIODS_LIST:
-            schedule.every(hor_period / time_speed).minutes.do(
+            hours = (hor_period / 60) / time_speed
+            schedule.every(hours).hours.at("00:00").do(
                 _compute_and_save_indicators,
                 {'period': hor_period}
             )
 
+
+            '''
+            schedule.every(hor_period / time_speed).minutes.do(
+                _compute_and_save_indicators,
+                {'period': hor_period}            
+            )
+            '''
 
         keep_going = True
         while keep_going:
@@ -106,7 +114,7 @@ def _compute_and_save_indicators(resample_period_par):
     from apps.indicator.models.events_elementary import EventsElementary
     from apps.indicator.models.events_logical import EventsLogical
 
-    timestamp = time.time()
+    timestamp = time.time() // (1 * 60) * (1 * 60)   # rounded to a minute
     resample_period = resample_period_par['period']
 
     logger.info(" ################# Resampling with Period: " + str(resample_period) + " #######################")
@@ -114,7 +122,7 @@ def _compute_and_save_indicators(resample_period_par):
     pairs_to_iterate = [(itm,Price.USDT) for itm in USDT_COINS] + [(itm,Price.BTC) for itm in BTC_COINS]
     for transaction_currency, counter_currency in pairs_to_iterate:
 
-        logger.info('   ======== checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
+        logger.info('   ======== '+str(resample_period)+ ': checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
 
         # create a dictionary of parameters to improve readability
         indicator_params_dict = {
@@ -125,7 +133,7 @@ def _compute_and_save_indicators(resample_period_par):
             'resample_period' : resample_period
         }
         ################# BACK CALCULATION (need only once when run first time)
-        BACK_REC = 100   # how many records to calculate back in time
+        BACK_REC = 210   # how many records to calculate back in time
         BACK_TIME = timestamp - BACK_REC * resample_period * 60  # same in sec
 
         last_time_computed = get_first_resampled_time(POLONIEX, transaction_currency, counter_currency, resample_period)
@@ -135,7 +143,8 @@ def _compute_and_save_indicators(resample_period_par):
             logger.info("  ... calculate resampl back in time, needed records: " + str(records_to_compute))
             for idx in range(1, records_to_compute):
                 time_point_back = last_time_computed - idx * (resample_period * 60)
-                indicator_params_dict['timestamp'] = time_point_back
+                # round down to the closest hour
+                indicator_params_dict['timestamp'] = time_point_back // (60 * 60) * (60 * 60)
 
                 try:
                     resample_object = PriceResampl.objects.create(**indicator_params_dict)

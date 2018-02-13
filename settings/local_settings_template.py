@@ -1,5 +1,7 @@
 SECRET_KEY = ''
 
+REST_API_SECRET_KEY = 'secret' # Key for accessing REST API
+
 # https://docs.djangoproject.com/en/1.7/ref/settings/#databases
 DATABASES = {
     'default': {
