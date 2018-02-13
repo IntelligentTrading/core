@@ -129,14 +129,14 @@ class EventsLogical(AbstractIndicator):
                         rsi_cum = cls.objects.create(
                             **kwargs,
                             event_name='RSI_Cumulative',
-                            event_value=np.sign(last_events_df['rsi_bracket']),
+                            event_value=np.sign(last_events_df['rsi_bracket'].tail(1).values[0]),
                         )
                         rs_obj = Rsi.objects.filter(**kwargs).last() # get current rsi object
                         signal_rsi_cum = Signal(
                             **kwargs,
                             signal='RSI_Cumulative',
                             rsi_value=rs_obj.rsi,
-                            trend=np.sign(last_events_df['rsi_bracket']),
+                            trend=np.sign(last_events_df['rsi_bracket'].tail(1).values[0]),
                             horizon=horizon,
                         )
                         signal_rsi_cum.save()
