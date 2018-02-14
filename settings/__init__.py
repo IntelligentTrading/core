@@ -224,8 +224,6 @@ HORIZONS_TIME2NAMES = {
 }
 
 
-time_speed = 1  # set to 1 for production, 10 for fast debugging
-
 A_PRIME_NUMBER = int(os.environ.get('A_PRIME_NUMBER', 12345))
 TEAM_EMOJIS = os.environ.get('TEAM_EMOJIS', "🤖,").split(",")
 ITT_API_KEY = os.environ.get('ITT_API_KEY', "123ABC")
@@ -249,3 +247,8 @@ if LOCAL:
     except:
         logger.error("Could not successfully import local_settings.py. This is necessary if you are running locally. This file should be in version control.")
         raise
+
+
+time_speed = 1  # set to 1 for production, 10 for fast debugging
+EMIT_SMA = False
+EMIT_RSI = False

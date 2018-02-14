@@ -5,7 +5,7 @@ from apps.indicator.models.rsi import Rsi
 from apps.indicator.models.sma import get_n_last_sma_df
 from apps.indicator.models.price_resampl import get_n_last_resampl_df
 from apps.user.models.user import get_horizon_value_from_string
-from settings import HORIZONS_TIME2NAMES
+from settings import HORIZONS_TIME2NAMES, EMIT_RSI, EMIT_SMA
 import time
 
 import pandas as pd
@@ -76,18 +76,21 @@ def _process_rsi(horizon, **kwargs):
                     event_value = rsi_bracket,
                     event_second_value = rs_obj.rsi,
                 )
-                # emit signal
-                signal_rsi = Signal(
-                    **kwargs,
-                    signal='RSI',
-                    rsi_value=rs_obj.rsi,
-                    trend=np.sign(rsi_bracket),
-                    horizon=horizon,
-                    strength_value=np.abs(rsi_bracket),
-                    strength_max=int(3),
-                )
-                signal_rsi.save()
-                logger.debug("   >>> RSI bracket event FIRED!")
+                logger.debug("   >>> RSI bracket event detected and saved")
+                if EMIT_RSI:
+                    signal_rsi = Signal(
+                        **kwargs,
+                        signal='RSI',
+                        rsi_value=rs_obj.rsi,
+                        trend=np.sign(rsi_bracket),
+                        horizon=horizon,
+                        strength_value=np.abs(rsi_bracket),
+                        strength_max=int(3),
+                    )
+                    signal_rsi.save()
+                    logger.debug("   >>> RSI bracket event FIRED!")
+                else:
+                    logger.debug("   .. RSI emitting disabled by settings")
             except Exception as e:
                 logger.error(" Error saving/emitting RSI Event ")
             return rsi_bracket
@@ -133,8 +136,8 @@ def _process_sma_crossovers(horizon, prices_df, **kwargs):
             except Exception as e:
                 logger.error(" #Error saving SMA signal ")
 
-            # Fire all sinals, except two which we dont need
-            if event_name not in ['sma50_above_sma200', 'sma50_below_sma200']:
+            # Fire all sinals, except two which we dont need and imitting is allowed
+            if EMIT_SMA & (event_name not in ['sma50_above_sma200', 'sma50_below_sma200']):
                  try:
                     trend = _col2trend[event_name]
                     signal_sma_cross = Signal(
