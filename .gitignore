@@ -77,6 +77,7 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+*.ipynb
 
 # pyenv
 .python-version
@@ -106,4 +107,7 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# generated staticfiles
+staticfiles/
 
