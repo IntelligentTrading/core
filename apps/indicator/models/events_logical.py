@@ -123,14 +123,14 @@ class EventsLogical(AbstractIndicator):
                 last_events_df['RSI_Cumulative_bullish'] = np.where(
                 (
                     last_events_df['long_sma50_above_sma200'] &
-                    ( np.abs(last_events_df['rsi_bracket']) in [2,3] )
+                    ( np.abs(last_events_df['rsi_bracket']).isin([2,3]) )
                  ) == True,
                 1, 0)
 
                 last_events_df['RSI_Cumulative_bearish'] = np.where(
                 (
                     last_events_df['long_sma50_below_sma200'] &
-                    (last_events_df['rsi_bracket'] in [-2,-3])
+                    (last_events_df['rsi_bracket'].isin([-2,-3]) )
                  ) == True,
                 1, 0)
 

@@ -29,7 +29,6 @@ class Command(BaseCommand):
 
         # @Alex
         # run resampling for all periods and calculate indicator values
-        # TODO synchronize the start with beginning of hours / days / etc
         for hor_period in PERIODS_LIST:
             hours = (hor_period / 60) / time_speed  # convert to hours
             schedule.every(hours).hours.at("00:00").do(

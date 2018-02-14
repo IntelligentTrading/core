@@ -229,6 +229,10 @@ TEAM_EMOJIS = os.environ.get('TEAM_EMOJIS', "🤖,").split(",")
 ITT_API_KEY = os.environ.get('ITT_API_KEY', "123ABC")
 REST_API_SECRET_KEY = os.environ.get('REST_API_SECRET_KEY', "123ABC")
 
+time_speed = 1  # set to 1 for production, 10 for fast debugging
+EMIT_SMA = False
+EMIT_RSI = False
+
 
 # @Alex2 REST Framework settings
 REST_FRAMEWORK = {
@@ -240,6 +244,8 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 100
 }
 
+
+
 if LOCAL:
     logger.info("LOCAL environment detected. Importing local_settings.py")
     try:
@@ -249,6 +255,3 @@ if LOCAL:
         raise
 
 
-time_speed = 1  # set to 1 for production, 10 for fast debugging
-EMIT_SMA = False
-EMIT_RSI = False
