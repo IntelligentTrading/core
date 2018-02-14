@@ -20,17 +20,14 @@ urlpatterns = [
     url(r'^signals/$', signal.SignalsListAPIView.as_view(), name='signals'), 
     url(r'^signals/(?P<signal>.+)$',  signal.SignalListAPIView.as_view(), name='signal'),
 
- 
     url(r'^prices/$',  price.PricesListAPIView.as_view(), name='prices'),
     url(r'^prices/(?P<transaction_currency>.+)$',  price.PriceListAPIView.as_view(), name='price'),
 
     url(r'^volumes/$',  volume.VolumesListAPIView.as_view(), name='volumes'),
-    url(r'^volume/(?P<transaction_currency>.+)$',  volume.VolumeListAPIView.as_view(), name='volume'),
+    url(r'^volumes/(?P<transaction_currency>.+)$',  volume.VolumeListAPIView.as_view(), name='volume'),
 
     url(r'^rsi/$',  rsi.RsisListAPIView.as_view(), name='rsis'),
     url(r'^rsi/(?P<transaction_currency>.+)$',  rsi.RsiListAPIView.as_view(), name='rsi'),
-    
-#    url(r'^rsi/(?P<transaction_currency>.+)$',  volume.VolumeListAPIView.as_view(), name='volume'),
     
     url(r'^$', schema_view), # swagger
 
