@@ -233,8 +233,8 @@ ITT_API_KEY = os.environ.get('ITT_API_KEY', "123ABC")
 REST_API_SECRET_KEY = os.environ.get('REST_API_SECRET_KEY', "123ABC")
 
 time_speed = 1  # set to 1 for production, 10 for fast debugging
-EMIT_SMA = False
-EMIT_RSI = False
+EMIT_SMA = True
+EMIT_RSI = True
 
 
 # @Alex2 REST Framework settings
