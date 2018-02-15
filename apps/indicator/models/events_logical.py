@@ -111,27 +111,40 @@ class EventsLogical(AbstractIndicator):
             long_param_dict['resample_period'] = LONG
             long_period_events_df = get_last_ever_entered_elementory_events_df(**long_param_dict)
 
+            # get current rsi object
+            rs_obj = Rsi.objects.filter(**kwargs).last()
+
             # add a long period signal to the current signals
             if not long_period_events_df.empty:
                 last_events_df['long_sma50_above_sma200'] = int(long_period_events_df['sma50_above_sma200'])
+                last_events_df['long_sma50_below_sma200'] = int(long_period_events_df['sma50_below_sma200'])
 
-                last_events_df['RSI_Cumulative'] = np.where(
+                # detect
+                last_events_df['RSI_Cumulative_bullish'] = np.where(
                 (
                     last_events_df['long_sma50_above_sma200'] &
-                    (np.abs(last_events_df['rsi_bracket']) == 3)
+                    ( np.abs(last_events_df['rsi_bracket']).isin([2,3]) )
                  ) == True,
                 1, 0)
 
+                last_events_df['RSI_Cumulative_bearish'] = np.where(
+                (
+                    last_events_df['long_sma50_below_sma200'] &
+                    (last_events_df['rsi_bracket'].isin([-2,-3]) )
+                 ) == True,
+                1, 0)
 
-                if all(last_events_df['RSI_Cumulative']):
-                    logger.info('    YOH! RSI_Cumulative has been DETECTED!')
+                # save and emit signals if neccesary
+                if all(last_events_df['RSI_Cumulative_bullish']):
+                    logger.info('    YOH! RSI_Cumulative_bullish has been DETECTED!')
                     try:
                         rsi_cum = cls.objects.create(
                             **kwargs,
-                            event_name='RSI_Cumulative',
-                            event_value=np.sign(last_events_df['rsi_bracket'].tail(1).values[0]),
+                            event_name='RSI_Cumulative_bullish',
+                            event_value= rs_obj.rsi
+                            #np.sign(last_events_df['rsi_bracket'].tail(1).values[0]),
                         )
-                        rs_obj = Rsi.objects.filter(**kwargs).last() # get current rsi object
+
                         signal_rsi_cum = Signal(
                             **kwargs,
                             signal='RSI_Cumulative',
@@ -140,10 +153,34 @@ class EventsLogical(AbstractIndicator):
                             horizon=horizon,
                         )
                         signal_rsi_cum.save()
-                        logger.info('    RSI_Cumulative has been Saved!')
+                        logger.info('    RSI_Cumulative_bullish has been Saved!')
                     except Exception as e:
-                        logger.error(" Error saving RSI Cumulative signal ")
-                logger.debug("    ... No RSI cumulative events")
+                        logger.error(" Error saving RSI_Cumulative_bullish signal ")
+                logger.debug("    ... No RSI_Cumulative_bullish event")
+
+
+                if all(last_events_df['RSI_Cumulative_bearish']):
+                    logger.info('    YOH! RSI_Cumulative_bearish has been DETECTED!')
+                    try:
+                        rsi_cum = cls.objects.create(
+                            **kwargs,
+                            event_name='RSI_Cumulative_bearish',
+                            event_value= rs_obj.rsi
+                            #np.sign(last_events_df['rsi_bracket'].tail(1).values[0]),
+                        )
+
+                        signal_rsi_cum = Signal(
+                            **kwargs,
+                            signal='RSI_Cumulative',
+                            rsi_value=rs_obj.rsi,
+                            trend=np.sign(last_events_df['rsi_bracket'].tail(1).values[0]),
+                            horizon=horizon,
+                        )
+                        signal_rsi_cum.save()
+                        logger.info('    RSI_Cumulative_bearish has been Saved!')
+                    except Exception as e:
+                        logger.error(" Error saving RSI_Cumulative_bearish signal ")
+                logger.debug("    ... No RSI_Cumulative_bearish event")
 
             else:
                 logger.debug("   .. no long term data yet ... so, no RSI Cumulative.")

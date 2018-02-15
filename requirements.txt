@@ -28,3 +28,4 @@ simplejson==3.11.1
 six==1.11.0
 toolz==0.8.2
 waitress==1.0.1
+whitenoise==3.3.1

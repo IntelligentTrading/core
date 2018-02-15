@@ -108,6 +108,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', # for static files
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -165,13 +166,15 @@ USE_TZ = False
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
-STATIC_ROOT = STATIC_URL = '/static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(SITE_ROOT, 'staticfiles')
 
 # Additional locations of static files
 STATICFILES_DIRS = (
     os.path.join(SITE_ROOT, 'static'),
-    ('user', os.path.join(SITE_ROOT, 'apps/user/static')),
 )
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 ### START DJANGO ALLAUTH SETTINGS ###
 SITE_ID = 1
@@ -224,12 +227,14 @@ HORIZONS_TIME2NAMES = {
 }
 
 
-time_speed = 1  # set to 1 for production, 10 for fast debugging
-
 A_PRIME_NUMBER = int(os.environ.get('A_PRIME_NUMBER', 12345))
 TEAM_EMOJIS = os.environ.get('TEAM_EMOJIS', "🤖,").split(",")
 ITT_API_KEY = os.environ.get('ITT_API_KEY', "123ABC")
 REST_API_SECRET_KEY = os.environ.get('REST_API_SECRET_KEY', "123ABC")
+
+time_speed = 1  # set to 1 for production, 10 for fast debugging
+EMIT_SMA = True
+EMIT_RSI = True
 
 
 # @Alex2 REST Framework settings
@@ -242,6 +247,8 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 100
 }
 
+
+
 if LOCAL:
     logger.info("LOCAL environment detected. Importing local_settings.py")
     try:
@@ -249,3 +256,5 @@ if LOCAL:
     except:
         logger.error("Could not successfully import local_settings.py. This is necessary if you are running locally. This file should be in version control.")
         raise
+
+
