@@ -19,7 +19,6 @@ class Sma(AbstractIndicator):
 
     def _compute_sma(self):
         # get neccesary records from price_resample
-        #logger.debug(" compute SMA starts")
         resampl_prices_df = price_resampl.get_n_last_resampl_df(
             self.resample_period * self.sma_period + 5,
             self.source,
@@ -32,10 +31,11 @@ class Sma(AbstractIndicator):
         resampl_midpoint_price_ts = resampl_prices_df.midpoint_price
         time_max = np.max(resampl_prices_df.index)
 
-        # reduce smawindow if we are in test mode
+        # reduce sma window if we are in test mode
         sma_window = int(self.sma_period/time_speed)
-        #calculte sma if half of the nessesary time points are present
-        min_per = int(sma_window/2) if sma_window > 10 else None
+
+        #calculte sma if one third of the nessesary time points are present
+        min_per = int(sma_window/3) if sma_window > 10 else None
 
         if not resampl_close_price_ts.empty:
             sma_close_ts = resampl_close_price_ts.rolling(window=sma_window, center=False, min_periods=min_per).mean()

@@ -362,7 +362,9 @@ def get_last_ever_entered_elementory_events_df(timestamp, source, transaction_cu
 
     # convert several records into one line of dataFrame
     df = pd.DataFrame()
-    if last_time:
+
+    # if there is at least one record and this record is not too far away (not later then 50 hours ago)
+    if bool(last_time) & (abs(timestamp - last_time['timestamp'].timestamp()) < (3600000 * 50)):
         # get all records for this time
         last_events = list(EventsElementary.objects.filter(
             timestamp=last_time['timestamp'],
