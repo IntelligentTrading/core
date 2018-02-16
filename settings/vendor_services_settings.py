@@ -34,9 +34,9 @@ if not LOCAL:
     HOST_URL = 'http://' + BUCKET_NAME + '.s3.amazonaws.com'
     MEDIA_URL = 'http://' + BUCKET_NAME + '.s3.amazonaws.com/'
     AWS_STATIC_URL = 'http://' + BUCKET_NAME + '.s3.amazonaws.com/'
-    STATIC_ROOT = STATIC_URL = AWS_STATIC_URL
+    #STATIC_ROOT = STATIC_URL = AWS_STATIC_URL
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
-    STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+    #STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 
     DATABASES = {
         'default': {

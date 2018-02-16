@@ -10,7 +10,7 @@ from apps.channel.models import ExchangeData
 from apps.channel.models.exchange_data import POLONIEX
 from apps.indicator.models import Price, Volume
 from apps.indicator.models.price import get_currency_value_from_string
-from apps.indicator.models.price_resampl import get_n_last_resampl_df, get_first_resampled_time
+from apps.indicator.models.price_resampl import get_first_resampled_time
 
 from settings import time_speed  # 1 / 10
 from settings import USDT_COINS, BTC_COINS
@@ -29,21 +29,30 @@ class Command(BaseCommand):
 
         # @Alex
         # run resampling for all periods and calculate indicator values
-        # TODO synchronize the start with beginning of hours / days / etc
-        for hor_period in PERIODS_LIST:
-            hours = (hor_period / 60) / time_speed
+        '''
+        for horizont_period in PERIODS_LIST:
+            hours = (horizont_period / 60) / time_speed  # convert to hours
             schedule.every(hours).hours.at("00:00").do(
                 _compute_and_save_indicators,
-                {'period': hor_period}
+                {'period': horizont_period}
             )
+        '''
 
+        for horizont_period in PERIODS_LIST:
+            hours = (horizont_period / 60) / time_speed  # convert to hours
 
-            '''
-            schedule.every(hor_period / time_speed).minutes.do(
-                _compute_and_save_indicators,
-                {'period': hor_period}            
-            )
-            '''
+            if horizont_period in [SHORT, MEDIUM]:
+                schedule.every(hours).hours.at("00:00").do(
+                    _compute_and_save_indicators,
+                    {'period': horizont_period}
+                )
+
+            # if long period start exacly at the beginning of a day
+            if horizont_period == LONG:
+                schedule.every().day.at("00:00").do(
+                    _compute_and_save_indicators,
+                    {'period': horizont_period}
+                )
 
         keep_going = True
         while keep_going:
@@ -133,7 +142,7 @@ def _compute_and_save_indicators(resample_period_par):
             'resample_period' : resample_period
         }
         ################# BACK CALCULATION (need only once when run first time)
-        BACK_REC = 210   # how many records to calculate back in time
+        BACK_REC = 190   # how many records to calculate back in time
         BACK_TIME = timestamp - BACK_REC * resample_period * 60  # same in sec
 
         last_time_computed = get_first_resampled_time(POLONIEX, transaction_currency, counter_currency, resample_period)
@@ -164,6 +173,7 @@ def _compute_and_save_indicators(resample_period_par):
         indicator_params_dict['timestamp'] = timestamp
         ################# Can be commented after first time run
 
+
         # calculate and save resampling price
         # todo - prevent adding an empty record if no value was computed (static method below)
         try:
@@ -182,9 +192,6 @@ def _compute_and_save_indicators(resample_period_par):
                 logger.error(str(ind) + " Indicator Exception: " + str(e))
 
         # check for events and save if any
-        # todo: make sure EventsElementary runs first
-
-
         events_list = [EventsElementary, EventsLogical]
         for event in events_list:
             try:
