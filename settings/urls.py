@@ -8,7 +8,9 @@ urlpatterns = [
 
     url(r'^api/', include('apps.api.urls', namespace='api')),
 
-    #url(r'^admin/', admin.site.urls),
+    url(r'^admin/', admin.site.urls),
 
-    #url(r'^signal/', include('apps.signal.urls', namespace='signal')) # REST API for signal
+    #url(r'^accounts/login$', 'django.contrib.auth.views.login'),
+
+    #url(r'^signal/', include('apps.signal.urls', namespace='signal'))
 ]

@@ -23,7 +23,7 @@ class PriceSerializer(serializers.ModelSerializer):
 class VolumeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Volume
-        fields = ['source', 'transaction_currency', 'counter_currency', 'volume', 'timestamp']
+        fields = ['timestamp', 'source', 'transaction_currency', 'counter_currency', 'volume']
 
 # Rsi
 class RsiSerializer(serializers.ModelSerializer):
