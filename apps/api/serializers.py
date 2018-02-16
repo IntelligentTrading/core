@@ -26,7 +26,19 @@ class VolumeSerializer(serializers.ModelSerializer):
         fields = ['timestamp', 'source', 'transaction_currency', 'counter_currency', 'volume']
 
 # Rsi
+import json
 class RsiSerializer(serializers.ModelSerializer):
+
+    relative_strength_fixed = serializers.SerializerMethodField('get_relative_strength')
+
+    def get_relative_strength(self, object):
+        rs = object.relative_strength
+        try:
+            json.dumps(rs, allow_nan=False)
+        except Exception:
+            rs = str(rs) # represent Nan, Infinity and etc as string
+        return rs
+
     class Meta:
         model = Rsi
-        fields = ['timestamp', 'source', 'counter_currency', 'transaction_currency', 'resample_period', 'relative_strength']
+        fields = ['timestamp', 'source', 'counter_currency', 'transaction_currency', 'resample_period', 'relative_strength_fixed']

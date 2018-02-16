@@ -2,7 +2,7 @@ from rest_framework.generics import ListAPIView
 
 from apps.api.serializers import SignalSerializer
 from apps.api.permissions import RestAPIPermission
-from apps.api.paginations import StandardResultsSetPagination
+from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
 
 from apps.signal.models import Signal
 
@@ -15,7 +15,7 @@ class SignalsListAPIView(ListAPIView):
 class SignalListAPIView(ListAPIView):
     permission_classes = (RestAPIPermission, )
     serializer_class = SignalSerializer
-    pagination_class = StandardResultsSetPagination
+    pagination_class = OneRecordPagination
 
     model = serializer_class.Meta.model
     def get_queryset(self):

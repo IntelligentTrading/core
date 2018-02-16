@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 
 from apps.api.serializers import PriceSerializer
 from apps.api.permissions import RestAPIPermission
-from apps.api.paginations import StandardResultsSetPagination
+from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
 
 from apps.indicator.models import PriceResampl
 from settings import PERIODS_LIST
@@ -20,11 +20,12 @@ class PricesListAPIView(ListAPIView):
 class PriceListAPIView(ListAPIView):
     permission_classes = (RestAPIPermission, )
     serializer_class = PriceSerializer
-    pagination_class = StandardResultsSetPagination
+    pagination_class = OneRecordPagination
 
     model = serializer_class.Meta.model
     def get_queryset(self):
         short_period = PERIODS_LIST[0]
         transaction_currency = self.kwargs['transaction_currency']
-        queryset = self.model.objects.filter(transaction_currency=transaction_currency, resample_period=short_period)
+        # midpoint_price must not be empty, short resample perion 1min
+        queryset = self.model.objects.exclude(midpoint_price__isnull=True).filter(transaction_currency=transaction_currency, resample_period=short_period)
         return queryset.order_by('-timestamp')
