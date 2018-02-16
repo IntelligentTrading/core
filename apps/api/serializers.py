@@ -30,5 +30,3 @@ class RsiSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rsi
         fields = ['timestamp', 'source', 'counter_currency', 'transaction_currency', 'resample_period', 'relative_strength']
-
-# PriceResampled
