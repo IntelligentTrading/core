@@ -1,42 +1,30 @@
-import json
+from rest_framework.generics import ListAPIView
 
-from django.http import HttpResponse
-from django.views.generic import View
+from rest_framework.views import APIView
 
-from apps.indicator.models import Price as PriceModel
+from apps.api.serializers import PriceSerializer
+from apps.api.permissions import RestAPIPermission
+from apps.api.paginations import StandardResultsSetPagination
+
+from apps.indicator.models import PriceResampl
+from settings import PERIODS_LIST
 
 
-class Price(View):
-    def dispatch(self, request, *args, **kwargs):
-        return super(Price, self).dispatch(request, *args, **kwargs)
+class PricesListAPIView(ListAPIView):
+    short_period = PERIODS_LIST[0] # 1min in secs
+    queryset = PriceResampl.objects.filter(resample_period=short_period).order_by('-timestamp')
+    permission_classes = (RestAPIPermission, )
+    pagination_class = StandardResultsSetPagination
+    serializer_class = PriceSerializer
 
+class PriceListAPIView(ListAPIView):
+    permission_classes = (RestAPIPermission, )
+    serializer_class = PriceSerializer
+    pagination_class = StandardResultsSetPagination
 
-    def get(self, request, *args, **kwargs):
-
-        transaction_currency = request.GET.get('transaction_currency', 'NA').upper()
-        counter_currency = PriceModel.BTC  # it is default one, get in from GET in futore
-
-        if transaction_currency == 'NA':
-            return HttpResponse(json.dumps({'error': 'transaction_currency parameter is required'}),
-                                content_type="application/json")
-
-        assert len(transaction_currency) > 1
-        assert len(transaction_currency) < 8
-
-        price_object = PriceModel.objects.filter(transaction_currency=transaction_currency, counter_currency=counter_currency
-                                                 ).order_by('-timestamp').first()
-        if price_object:
-            response = {
-                'source': price_object.get_source_display(),
-                'transaction_currency': price_object.transaction_currency,
-                'counter_currency': price_object.counter_currency,
-                'price': price_object.price,
-                'price_change': price_object.price_change,
-                'timestamp': str(price_object.timestamp),
-            }
-        else:
-            response = {
-                'error': "Coin not found"
-            }
-
-        return HttpResponse(json.dumps(response), content_type="application/json")
+    model = serializer_class.Meta.model
+    def get_queryset(self):
+        short_period = PERIODS_LIST[0]
+        transaction_currency = self.kwargs['transaction_currency']
+        queryset = self.model.objects.filter(transaction_currency=transaction_currency, resample_period=short_period)
+        return queryset.order_by('-timestamp')

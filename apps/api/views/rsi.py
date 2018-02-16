@@ -2,22 +2,22 @@ from rest_framework.generics import ListAPIView
 
 from rest_framework.views import APIView
 
-from apps.api.serializers import VolumeSerializer
+from apps.api.serializers import RsiSerializer
 from apps.api.permissions import RestAPIPermission
 from apps.api.paginations import StandardResultsSetPagination
 
-from apps.indicator.models import Volume
+from apps.indicator.models import Rsi
 
 
-class VolumesListAPIView(ListAPIView):
-    queryset = Volume.objects.order_by('-timestamp')
+class RsiListAPIView(ListAPIView):
+    queryset = Rsi.objects.order_by('-timestamp')
     permission_classes = (RestAPIPermission, )
     pagination_class = StandardResultsSetPagination
-    serializer_class = VolumeSerializer
+    serializer_class = RsiSerializer
 
-class VolumeListAPIView(ListAPIView):
+class RsisListAPIView(ListAPIView):
     permission_classes = (RestAPIPermission, )
-    serializer_class = VolumeSerializer
+    serializer_class = RsiSerializer
     pagination_class = StandardResultsSetPagination
 
     model = serializer_class.Meta.model
