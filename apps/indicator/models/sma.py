@@ -63,17 +63,15 @@ class Sma(AbstractIndicator):
 
     @staticmethod
     def compute_all(cls,**kwargs):
-
         # todo - avoid creation empty record if no sma was computed..it also mith be fine
         for sma_period in SMA_LIST:
             try:
                 sma_instance = cls.objects.create(**kwargs, sma_period = sma_period)
                 sma_instance._compute_sma()
                 sma_instance.save()
-                #logger.debug("   ...SMA_" + str(sma_period) +" calculation done and saved.")
             except Exception as e:
                 logger.error(" SMA " + str(sma_period) + " Compute Exception: " + str(e))
-        logger.debug("   ...All SMA calculations have been done and saved.")
+        logger.info("   ...All SMA calculations have been done and saved.")
 
 
 
