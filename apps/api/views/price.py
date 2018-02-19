@@ -27,9 +27,9 @@ class PriceListAPIView(ListAPIView):
 
     model = serializer_class.Meta.model
     def get_queryset(self):
-        short_period = PERIODS_LIST[0]
+        short_period = PERIODS_LIST[0] # PERIODS_LIST = [60, 240, 1440] in minutes
         transaction_currency = self.kwargs['transaction_currency']
-        # midpoint_price must not be empty, short resample perion 1min
+        # midpoint_price must not be empty, short resample period - 60min
         queryset = self.model.objects.exclude(midpoint_price__isnull=True
         ).filter(transaction_currency=transaction_currency, resample_period=short_period)
 

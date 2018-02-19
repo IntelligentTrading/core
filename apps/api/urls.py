@@ -28,7 +28,7 @@ urlpatterns = [
 #   url(r'^sma$', views.sma.SMA.as_view(), name='sma'),
 
     url(r'^v2/signals/$', signal.SignalsListAPIView.as_view(), name='signals'), 
-    url(r'^v2/signals/(?P<signal>.+)$',  signal.SignalListAPIView.as_view(), name='signal'),
+    url(r'^v2/signals/(?P<transaction_currency>.+)$',  signal.SignalListAPIView.as_view(), name='signal'),
 
     url(r'^v2/prices/$', price.PricesListAPIView.as_view(), name='prices'),
     url(r'^v2/prices/(?P<transaction_currency>.+)$',  price.PriceListAPIView.as_view(), name='price'),
@@ -40,7 +40,7 @@ urlpatterns = [
     url(r'^v2/rsi/(?P<transaction_currency>.+)$',  rsi.RsiListAPIView.as_view(), name='rsi'),
 
     url(r'^v2/events-elementary/$', events_elementary.EventsElementaryListAPIView.as_view(), name='events-elementary'),
-    url(r'^v2/events-elementary/(?P<event_name>.+)$',  events_elementary.EventElementaryListAPIView.as_view(), name='event-elementary'),
+    url(r'^v2/events-elementary/(?P<transaction_currency>.+)$',  events_elementary.EventElementaryListAPIView.as_view(), name='event-elementary'),
 
 
     url(r'^$', schema_view), # swagger

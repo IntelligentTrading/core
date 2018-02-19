@@ -18,10 +18,10 @@ class EventsElementaryListAPIView(ListAPIView):
 class EventElementaryListAPIView(ListAPIView):
     permission_classes = (RestAPIPermission, )
     serializer_class = EventsElementarySerializer
-    pagination_class = OneRecordPagination
+    pagination_class = StandardResultsSetPagination
 
     model = serializer_class.Meta.model
     def get_queryset(self):
-        event_name = self.kwargs['event_name']
-        queryset = self.model.objects.filter(event_name=event_name)
+        transaction_currency = self.kwargs['transaction_currency']
+        queryset = self.model.objects.filter(transaction_currency=transaction_currency)
         return queryset.order_by('-timestamp')

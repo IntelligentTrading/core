@@ -18,7 +18,7 @@ class RsisListAPIView(ListAPIView):
 class RsiListAPIView(ListAPIView):
     permission_classes = (RestAPIPermission, )
     serializer_class = RsiSerializer
-    pagination_class = OneRecordPagination
+    pagination_class = StandardResultsSetPagination
 
     model = serializer_class.Meta.model
     def get_queryset(self):

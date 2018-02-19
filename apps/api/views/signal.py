@@ -15,10 +15,10 @@ class SignalsListAPIView(ListAPIView):
 class SignalListAPIView(ListAPIView):
     permission_classes = (RestAPIPermission, )
     serializer_class = SignalSerializer
-    pagination_class = OneRecordPagination
+    pagination_class = StandardResultsSetPagination
 
     model = serializer_class.Meta.model
     def get_queryset(self):
-        signal = self.kwargs['signal']
-        queryset = self.model.objects.filter(signal=signal)
+        transaction_currency = self.kwargs['transaction_currency']
+        queryset = self.model.objects.filter(transaction_currency=transaction_currency)
         return queryset.order_by('-timestamp')
