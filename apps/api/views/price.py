@@ -28,7 +28,8 @@ class PricesListAPIView(ListAPIView):
 class PriceListAPIView(ListAPIView):
     """
     Show last price from PriceResampl model for short resampl period - 60min.
-    Default counter_currency is BTC. For BTC itself counter_currency is USDT.
+    
+    Default counter_currency is BTC. For BTC itself, counter_currency is USDT.
     """
     
     permission_classes = (RestAPIPermission, )
