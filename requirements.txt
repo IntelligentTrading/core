@@ -5,6 +5,7 @@ dj-static==0.0.6
 Django==1.11
 django-debug-toolbar==1.6
 django-extensions==1.7.5
+django-filter==1.1.0
 django-rest-swagger==2.1.2
 django-storages==1.5.1
 django-toolbelt==0.0.1
