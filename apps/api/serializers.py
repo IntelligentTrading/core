@@ -1,7 +1,10 @@
+import json
+
 from rest_framework import serializers
 
 from apps.signal.models import Signal
-from apps.indicator.models import PriceResampl, Volume, Rsi
+from apps.indicator.models import PriceResampl, Volume, Rsi, EventsElementary
+
 
 # Signal
 class SignalSerializer(serializers.ModelSerializer):
@@ -26,7 +29,6 @@ class VolumeSerializer(serializers.ModelSerializer):
         fields = ['timestamp', 'source', 'transaction_currency', 'counter_currency', 'volume']
 
 # Rsi
-import json
 class RsiSerializer(serializers.ModelSerializer):
 
     relative_strength_fixed = serializers.SerializerMethodField('get_relative_strength')
@@ -41,4 +43,14 @@ class RsiSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Rsi
-        fields = ['timestamp', 'source', 'counter_currency', 'transaction_currency', 'resample_period', 'relative_strength_fixed']
+        fields = ['timestamp', 'source', 'counter_currency', 'transaction_currency', \
+                    'resample_period', 'relative_strength_fixed']
+
+# EventsElementary
+class EventsElementarySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = EventsElementary
+        fields = ['timestamp', 'source', 'counter_currency', 'transaction_currency', \
+                    'resample_period', 'event_name', 'event_value', 'event_second_value']
+
