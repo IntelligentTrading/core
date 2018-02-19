@@ -24,7 +24,6 @@ class PriceSerializer(serializers.ModelSerializer):
         cc_text = next(currency for code, currency in Price.COUNTER_CURRENCY_CHOICES if code == cc_code)
         return cc_text
 
-
     class Meta:
         model = PriceResampl
         fields = [
