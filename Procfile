@@ -1,4 +1,4 @@
 release: python manage.py migrate
-web: waitress-serve settings.wsgi:application
+web: gunicorn settings.wsgi
 worker: python manage.py trawl_poloniex
 
