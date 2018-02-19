@@ -2,7 +2,7 @@ from rest_framework.generics import ListAPIView
 
 from apps.api.serializers import SignalSerializer
 from apps.api.permissions import RestAPIPermission
-from apps.api.paginations import StandardResultsSetPagination
+from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
 
 from apps.signal.models import Signal
 
@@ -19,6 +19,6 @@ class SignalListAPIView(ListAPIView):
 
     model = serializer_class.Meta.model
     def get_queryset(self):
-        signal = self.kwargs['signal']
-        queryset = self.model.objects.filter(signal=signal)
+        transaction_currency = self.kwargs['transaction_currency']
+        queryset = self.model.objects.filter(transaction_currency=transaction_currency)
         return queryset.order_by('-timestamp')

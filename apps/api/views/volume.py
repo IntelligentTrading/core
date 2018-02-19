@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 
 from apps.api.serializers import VolumeSerializer
 from apps.api.permissions import RestAPIPermission
-from apps.api.paginations import StandardResultsSetPagination
+from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
 
 from apps.indicator.models import Volume
 
@@ -18,7 +18,7 @@ class VolumesListAPIView(ListAPIView):
 class VolumeListAPIView(ListAPIView):
     permission_classes = (RestAPIPermission, )
     serializer_class = VolumeSerializer
-    pagination_class = StandardResultsSetPagination
+    pagination_class = OneRecordPagination
 
     model = serializer_class.Meta.model
     def get_queryset(self):

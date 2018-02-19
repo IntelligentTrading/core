@@ -2,7 +2,7 @@ from django.conf.urls import url, include
 from rest_framework_swagger.views import get_swagger_view
 
 from apps.api.views import v1_price, v1_volume, v1_user, v1_csv
-from apps.api.views import price, volume, signal, rsi
+from apps.api.views import price, volume, signal, rsi, events_elementary
 
 
 schema_view = get_swagger_view(title='ITT Core API')
@@ -28,16 +28,20 @@ urlpatterns = [
 #   url(r'^sma$', views.sma.SMA.as_view(), name='sma'),
 
     url(r'^v2/signals/$', signal.SignalsListAPIView.as_view(), name='signals'), 
-    url(r'^v2/signals/(?P<signal>.+)$',  signal.SignalListAPIView.as_view(), name='signal'),
+    url(r'^v2/signals/(?P<transaction_currency>.+)$',  signal.SignalListAPIView.as_view(), name='signal'),
 
-    url(r'^v2/prices/$',  price.PricesListAPIView.as_view(), name='prices'),
+    url(r'^v2/prices/$', price.PricesListAPIView.as_view(), name='prices'),
     url(r'^v2/prices/(?P<transaction_currency>.+)$',  price.PriceListAPIView.as_view(), name='price'),
 
-    url(r'^v2/volumes/$',  volume.VolumesListAPIView.as_view(), name='volumes'),
+    url(r'^v2/volumes/$', volume.VolumesListAPIView.as_view(), name='volumes'),
     url(r'^v2/volumes/(?P<transaction_currency>.+)$',  volume.VolumeListAPIView.as_view(), name='volume'),
 
-    url(r'^v2/rsi/$',  rsi.RsisListAPIView.as_view(), name='rsis'),
+    url(r'^v2/rsi/$', rsi.RsisListAPIView.as_view(), name='rsis'),
     url(r'^v2/rsi/(?P<transaction_currency>.+)$',  rsi.RsiListAPIView.as_view(), name='rsi'),
-    
+
+    url(r'^v2/events-elementary/$', events_elementary.EventsElementaryListAPIView.as_view(), name='events-elementary'),
+    url(r'^v2/events-elementary/(?P<transaction_currency>.+)$',  events_elementary.EventElementaryListAPIView.as_view(), name='event-elementary'),
+
+
     url(r'^$', schema_view), # swagger
  ]

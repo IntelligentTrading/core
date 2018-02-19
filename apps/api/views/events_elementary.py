@@ -2,22 +2,22 @@ from rest_framework.generics import ListAPIView
 
 from rest_framework.views import APIView
 
-from apps.api.serializers import RsiSerializer
+from apps.api.serializers import EventsElementarySerializer
 from apps.api.permissions import RestAPIPermission
 from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
 
-from apps.indicator.models import Rsi
+from apps.indicator.models import EventsElementary
 
 
-class RsisListAPIView(ListAPIView):
-    queryset = Rsi.objects.order_by('-timestamp')
+class EventsElementaryListAPIView(ListAPIView):
+    queryset = EventsElementary.objects.order_by('-timestamp')
     permission_classes = (RestAPIPermission, )
     pagination_class = StandardResultsSetPagination
-    serializer_class = RsiSerializer
+    serializer_class = EventsElementarySerializer
 
-class RsiListAPIView(ListAPIView):
+class EventElementaryListAPIView(ListAPIView):
     permission_classes = (RestAPIPermission, )
-    serializer_class = RsiSerializer
+    serializer_class = EventsElementarySerializer
     pagination_class = StandardResultsSetPagination
 
     model = serializer_class.Meta.model
