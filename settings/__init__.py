@@ -99,6 +99,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'django.contrib.sites',
+    'django_filters',
 
     # PLUGINS
     'rest_framework',
@@ -237,14 +238,16 @@ EMIT_SMA = True
 EMIT_RSI = True
 
 
-# @Alex2 REST Framework settings
+# @Alexander REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAdminUser', # Very secure by default:  only admin can access, overwrite on per-view basis
     ),
 
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 100
+    'PAGE_SIZE': 100,
+
+     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
 }
 
 
