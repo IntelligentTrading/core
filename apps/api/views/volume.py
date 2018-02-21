@@ -20,10 +20,10 @@ class ListVolumes(ListAPIView):
 
     for filtering:
 
-        transaction_currency: -- string: 'BTC', 'ETH' etc
-        counter_currency -- number: 0=BTC, 1=ETH, 2=USDT, 3=XMR
-        source -- number: 0=poloniex, 1=bittrex
-        startdate -- from this date (inclusive). Example: 2018-02-12T09:09:15
+        transaction_currency: -- string 'BTC', 'ETH' etc
+        counter_currency -- number 0=BTC, 1=ETH, 2=USDT, 3=XMR
+        source -- number 0=poloniex, 1=bittrex
+        startdate -- from this date (inclusive). Example 2018-02-12T09:09:15
         enddate -- to this date (inclusive)
 
     for pagination:
@@ -68,14 +68,14 @@ class ListVolume(ListAPIView):
 
     for filtering:
 
-        counter_currency -- number: 0=BTC, 1=ETH, 2=USDT, 3=XMR (Default: 0, for BTC - 2)
+        counter_currency -- number: 0=BTC, 1=ETH, 2=USDT, 3=XMR (Default 0, for BTC - 2)
         source -- number: 0=poloniex, 1=bittrex
         startdate -- show inclusive from this date formatted %Y-%m-%dT%H:%M:%S'. For example 2018-02-12T09:09:15
         enddate -- until this date inclusive in same format
 
     for pagination:
 
-        page_size -- number of results to return per page (Default: 1)
+        page_size -- number of results to return per page (Default 1)
         page -- page number within the paginated result set
 
     Examples:
