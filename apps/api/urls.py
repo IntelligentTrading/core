@@ -33,8 +33,8 @@ urlpatterns = [
     url(r'^v2/prices/$', price.PricesListAPIView.as_view(), name='prices'),
     url(r'^v2/prices/(?P<transaction_currency>.+)$',  price.PriceListAPIView.as_view(), name='price'),
 
-    url(r'^v2/volumes/$', volume.VolumesListAPIView.as_view(), name='volumes'),
-    url(r'^v2/volumes/(?P<transaction_currency>.+)$',  volume.VolumeListAPIView.as_view(), name='volume'),
+    url(r'^v2/volumes/$', volume.ListVolumes.as_view(), name='volumes'),
+    url(r'^v2/volumes/(?P<transaction_currency>.+)$',  volume.ListVolume.as_view(), name='volume'),
 
     url(r'^v2/rsi/$', rsi.RsisListAPIView.as_view(), name='rsis'),
     url(r'^v2/rsi/(?P<transaction_currency>.+)$',  rsi.RsiListAPIView.as_view(), name='rsi'),
