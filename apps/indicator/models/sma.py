@@ -35,7 +35,7 @@ class Sma(AbstractIndicator):
         sma_window = int(self.sma_period/time_speed)
 
         #calculte sma if one third of the nessesary time points are present
-        min_per = int(sma_window/3) if sma_window > 10 else None
+        min_per = int(sma_window/4) if sma_window > 10 else None
 
         if not resampl_close_price_ts.empty:
             sma_close_ts = resampl_close_price_ts.rolling(window=sma_window, center=False, min_periods=min_per).mean()
