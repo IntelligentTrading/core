@@ -6,9 +6,7 @@ from apps.api.paginations import StandardResultsSetPagination, OneRecordPaginati
 
 from settings import PERIODS_LIST
 
-from apps.indicator.models import PriceResampl, Price
-
-#from django_filters.rest_framework import DjangoFilterBackend
+from apps.indicator.models import PriceResampl
 
 SHORT_PERIOD = PERIODS_LIST[0] # PERIODS_LIST = [60, 240, 1440] in minutes
 
@@ -24,6 +22,7 @@ class PricesListAPIView(ListAPIView):
     serializer_class = PriceSerializer
 
     filter_fields = ('source', 'transaction_currency', 'counter_currency')
+
 
 class PriceListAPIView(ListAPIView):
     """

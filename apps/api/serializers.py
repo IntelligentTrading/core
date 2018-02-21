@@ -15,21 +15,12 @@ class SignalSerializer(serializers.ModelSerializer):
 
 # Price (model: PriceResampl)
 class PriceSerializer(serializers.ModelSerializer):
- 
-    counter_currency_text = serializers.SerializerMethodField('get_counter_currency_txt')
-    
-    def get_counter_currency_txt(self, object):
-        cc_code = object.counter_currency
-        # Price.COUNTER_CURRENCY_CHOICES = ((0, 'BTC'), (1, 'ETH'), (2, 'USDT'), (3, 'XMR'))
-        cc_text = next(currency for code, currency in Price.COUNTER_CURRENCY_CHOICES if code == cc_code)
-        return cc_text
-
     class Meta:
         model = PriceResampl
         fields = [
             'timestamp', 'source', 'counter_currency', 'transaction_currency', 'resample_period',\
             'open_price', 'close_price','low_price', 'high_price', 'midpoint_price', 'mean_price',\
-            'price_variance', 'counter_currency_text',
+            'price_variance',
         ]
 
 # Volume
