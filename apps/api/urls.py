@@ -27,11 +27,11 @@ urlpatterns = [
 
 #   url(r'^sma$', views.sma.SMA.as_view(), name='sma'),
 
-    url(r'^v2/signals/$', signal.SignalsListAPIView.as_view(), name='signals'), 
-    url(r'^v2/signals/(?P<transaction_currency>.+)$',  signal.SignalListAPIView.as_view(), name='signal'),
+    url(r'^v2/signals/$', signal.ListSignals.as_view(), name='signals'), 
+    url(r'^v2/signals/(?P<transaction_currency>.+)$',  signal.ListSignal.as_view(), name='signal'),
 
-    url(r'^v2/prices/$', price.PricesListAPIView.as_view(), name='prices'),
-    url(r'^v2/prices/(?P<transaction_currency>.+)$',  price.PriceListAPIView.as_view(), name='price'),
+    url(r'^v2/prices/$', price.ListPrices.as_view(), name='prices'),
+    url(r'^v2/prices/(?P<transaction_currency>.+)$',  price.ListPrice.as_view(), name='price'),
 
     url(r'^v2/volumes/$', volume.ListVolumes.as_view(), name='volumes'),
     url(r'^v2/volumes/(?P<transaction_currency>.+)$',  volume.ListVolume.as_view(), name='volume'),
