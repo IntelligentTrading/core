@@ -11,6 +11,7 @@ from settings import PERIODS_LIST
 from apps.indicator.models import PriceResampl
 
 
+
 SHORT_PERIOD = PERIODS_LIST[0] # PERIODS_LIST = [60, 240, 1440] in minutes
 
 class ListPrices(ListAPIView):

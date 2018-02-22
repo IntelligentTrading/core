@@ -36,11 +36,11 @@ urlpatterns = [
     url(r'^v2/volumes/$', volume.ListVolumes.as_view(), name='volumes'),
     url(r'^v2/volumes/(?P<transaction_currency>.+)$',  volume.ListVolume.as_view(), name='volume'),
 
-    url(r'^v2/rsi/$', rsi.RsisListAPIView.as_view(), name='rsis'),
-    url(r'^v2/rsi/(?P<transaction_currency>.+)$',  rsi.RsiListAPIView.as_view(), name='rsi'),
+    url(r'^v2/rsi/$', rsi.ListRsis.as_view(), name='rsis'),
+    url(r'^v2/rsi/(?P<transaction_currency>.+)$',  rsi.ListRsi.as_view(), name='rsi'),
 
-    url(r'^v2/events-elementary/$', events_elementary.EventsElementaryListAPIView.as_view(), name='events-elementary'),
-    url(r'^v2/events-elementary/(?P<transaction_currency>.+)$',  events_elementary.EventElementaryListAPIView.as_view(), name='event-elementary'),
+    url(r'^v2/events-elementary/$', events_elementary.ListEventsElementary.as_view(), name='events-elementary'),
+    url(r'^v2/events-elementary/(?P<transaction_currency>.+)$',  events_elementary.ListEventElementary.as_view(), name='event-elementary'),
 
 
     url(r'^$', schema_view), # swagger

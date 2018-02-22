@@ -9,6 +9,7 @@ from apps.api.helpers import default_counter_currency, filter_queryset_by_timest
 from apps.indicator.models import Volume
 
 
+
 class ListVolumes(ListAPIView):
     """Return a list of all the existing price volumes.
 
@@ -58,8 +59,8 @@ class ListVolume(ListAPIView):
 
     For filtering:
 
-        counter_currency -- number: 0=BTC, 1=ETH, 2=USDT, 3=XMR (Default 0, for BTC - 2)
-        source -- number: 0=poloniex, 1=bittrex
+        counter_currency -- number 0=BTC, 1=ETH, 2=USDT, 3=XMR (Default 0, for BTC - 2)
+        source -- number 0=poloniex, 1=bittrex
         startdate -- show inclusive from this date. For example 2018-02-12T09:09:15
         enddate -- until this date inclusive in same format
 
