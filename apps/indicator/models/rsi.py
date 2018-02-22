@@ -85,7 +85,7 @@ class Rsi(AbstractIndicator):
         new_instance = cls.objects.create(**kwargs)
         new_instance.compute_rs()
         new_instance.save()
-        logger.debug("   ...RS calculations done and saved.")
+        logger.info("   ...RS calculations done and saved.")
 
 
 

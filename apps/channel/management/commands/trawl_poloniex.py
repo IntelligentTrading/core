@@ -14,7 +14,7 @@ from apps.indicator.models.price_resampl import get_first_resampled_time
 
 from settings import time_speed  # 1 / 10
 from settings import USDT_COINS, BTC_COINS
-from settings import PERIODS_LIST
+from settings import PERIODS_LIST, SHORT, MEDIUM, LONG
 
 logger = logging.getLogger(__name__)
 
@@ -29,13 +29,30 @@ class Command(BaseCommand):
 
         # @Alex
         # run resampling for all periods and calculate indicator values
-        for hor_period in PERIODS_LIST:
-            hours = (hor_period / 60) / time_speed  # convert to hours
+        '''
+        for horizont_period in PERIODS_LIST:
+            hours = (horizont_period / 60) / time_speed  # convert to hours
             schedule.every(hours).hours.at("00:00").do(
                 _compute_and_save_indicators,
-                {'period': hor_period}
+                {'period': horizont_period}
             )
+        '''
 
+        for horizont_period in PERIODS_LIST:
+            hours = (horizont_period / 60) / time_speed  # convert to hours
+
+            if horizont_period in [SHORT, MEDIUM]:
+                schedule.every(hours).hours.at("00:00").do(
+                    _compute_and_save_indicators,
+                    {'period': horizont_period}
+                )
+
+            # if long period start exacly at the beginning of a day
+            if horizont_period == LONG:
+                schedule.every().day.at("00:00").do(
+                    _compute_and_save_indicators,
+                    {'period': horizont_period}
+                )
 
         keep_going = True
         while keep_going:
@@ -125,7 +142,7 @@ def _compute_and_save_indicators(resample_period_par):
             'resample_period' : resample_period
         }
         ################# BACK CALCULATION (need only once when run first time)
-        BACK_REC = 170   # how many records to calculate back in time
+        BACK_REC = 210   # how many records to calculate back in time
         BACK_TIME = timestamp - BACK_REC * resample_period * 60  # same in sec
 
         last_time_computed = get_first_resampled_time(POLONIEX, transaction_currency, counter_currency, resample_period)

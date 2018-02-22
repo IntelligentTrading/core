@@ -1,20 +1,23 @@
 from rest_framework.generics import ListAPIView
 
-from apps.api.serializers import SignalSerializer
+from rest_framework.views import APIView
+
+from apps.api.serializers import EventsElementarySerializer
 from apps.api.permissions import RestAPIPermission
 from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
 
-from apps.signal.models import Signal
+from apps.indicator.models import EventsElementary
 
-class SignalsListAPIView(ListAPIView):
-    queryset = Signal.objects.order_by('-timestamp') # last signal will be on top/first
+
+class EventsElementaryListAPIView(ListAPIView):
+    queryset = EventsElementary.objects.order_by('-timestamp')
     permission_classes = (RestAPIPermission, )
     pagination_class = StandardResultsSetPagination
-    serializer_class = SignalSerializer
+    serializer_class = EventsElementarySerializer
 
-class SignalListAPIView(ListAPIView):
+class EventElementaryListAPIView(ListAPIView):
     permission_classes = (RestAPIPermission, )
-    serializer_class = SignalSerializer
+    serializer_class = EventsElementarySerializer
     pagination_class = StandardResultsSetPagination
 
     model = serializer_class.Meta.model

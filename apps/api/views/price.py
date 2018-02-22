@@ -1,42 +1,50 @@
-import json
+from rest_framework.generics import ListAPIView
 
-from django.http import HttpResponse
-from django.views.generic import View
+from apps.api.serializers import PriceSerializer
+from apps.api.permissions import RestAPIPermission
+from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
 
-from apps.indicator.models import Price as PriceModel
+from apps.api.helpers import default_counter_currency
+
+from settings import PERIODS_LIST
+
+from apps.indicator.models import PriceResampl
+
+SHORT_PERIOD = PERIODS_LIST[0] # PERIODS_LIST = [60, 240, 1440] in minutes
+
+class PricesListAPIView(ListAPIView):
+    """
+    Show List of Prices from PriceResampl model for short resampl period - 60min.
+    """ 
+    queryset = PriceResampl.objects.exclude(midpoint_price__isnull=True # filter empty records
+    ).filter(resample_period=SHORT_PERIOD).order_by('-timestamp')
+    
+    permission_classes = (RestAPIPermission, )
+    pagination_class = StandardResultsSetPagination
+    serializer_class = PriceSerializer
+
+    filter_fields = ('source', 'transaction_currency', 'counter_currency')
 
 
-class Price(View):
-    def dispatch(self, request, *args, **kwargs):
-        return super(Price, self).dispatch(request, *args, **kwargs)
+class PriceListAPIView(ListAPIView):
+    """
+    Show last price from PriceResampl model for short resampl period - 60min.
+    
+    Default counter_currency is BTC. For BTC itself, counter_currency is USDT.
+    """
+    
+    permission_classes = (RestAPIPermission, )
+    serializer_class = PriceSerializer
+    pagination_class = OneRecordPagination
 
+    model = serializer_class.Meta.model
 
-    def get(self, request, *args, **kwargs):
+    def get_queryset(self):
+        transaction_currency = self.kwargs['transaction_currency']
+        counter_currency = default_counter_currency(transaction_currency)
+        # midpoint_price must not be empty
+        queryset = self.model.objects.exclude(midpoint_price__isnull=True
+        ).filter(transaction_currency=transaction_currency, counter_currency=counter_currency, \
+                    resample_period=SHORT_PERIOD)
 
-        transaction_currency = request.GET.get('transaction_currency', 'NA').upper()
-        counter_currency = PriceModel.BTC  # it is default one, get in from GET in futore
-
-        if transaction_currency == 'NA':
-            return HttpResponse(json.dumps({'error': 'transaction_currency parameter is required'}),
-                                content_type="application/json")
-
-        assert len(transaction_currency) > 1
-        assert len(transaction_currency) < 8
-
-        price_object = PriceModel.objects.filter(transaction_currency=transaction_currency, counter_currency=counter_currency
-                                                 ).order_by('-timestamp').first()
-        if price_object:
-            response = {
-                'source': price_object.get_source_display(),
-                'transaction_currency': price_object.transaction_currency,
-                'counter_currency': price_object.counter_currency,
-                'price': price_object.price,
-                'price_change': price_object.price_change,
-                'timestamp': str(price_object.timestamp),
-            }
-        else:
-            response = {
-                'error': "Coin not found"
-            }
-
-        return HttpResponse(json.dumps(response), content_type="application/json")
+        return queryset.order_by('-timestamp')

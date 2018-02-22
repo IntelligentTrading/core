@@ -35,7 +35,7 @@ class Sma(AbstractIndicator):
         sma_window = int(self.sma_period/time_speed)
 
         #calculte sma if one third of the nessesary time points are present
-        min_per = int(sma_window/3) if sma_window > 10 else None
+        min_per = int(sma_window/4) if sma_window > 10 else None
 
         if not resampl_close_price_ts.empty:
             sma_close_ts = resampl_close_price_ts.rolling(window=sma_window, center=False, min_periods=min_per).mean()
@@ -63,17 +63,15 @@ class Sma(AbstractIndicator):
 
     @staticmethod
     def compute_all(cls,**kwargs):
-
         # todo - avoid creation empty record if no sma was computed..it also mith be fine
         for sma_period in SMA_LIST:
             try:
                 sma_instance = cls.objects.create(**kwargs, sma_period = sma_period)
                 sma_instance._compute_sma()
                 sma_instance.save()
-                #logger.debug("   ...SMA_" + str(sma_period) +" calculation done and saved.")
             except Exception as e:
                 logger.error(" SMA " + str(sma_period) + " Compute Exception: " + str(e))
-        logger.debug("   ...All SMA calculations have been done and saved.")
+        logger.info("   ...All SMA calculations have been done and saved.")
 
 
 
