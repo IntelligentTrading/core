@@ -54,9 +54,9 @@ class ListEventElementary(ListAPIView):
 
     /api/v2/events-elementary/{transaction_currency}
 
-    URL query parameters:
+    URL query parameters
 
-    For filtering:
+    For filtering
 
         event_name -- string sma200_cross_price_up, lagging_above_highest
         counter_currency -- number 0=BTC, 1=ETH, 2=USDT, 3=XMR
@@ -64,12 +64,12 @@ class ListEventElementary(ListAPIView):
         startdate -- show inclusive from this date. For example 2018-02-12T09:09:15
         enddate -- until this date inclusive in same format
 
-    For pagination:
+    For pagination
 
         page_size -- number of results to return per page (Default 1)
         page -- page number within the paginated result set
 
-    Examples:
+    Examples
         /api/v2/events-elementary/BTC
         /api/v2/events-elementary/BTC?event_name=conversion_below_base
     """

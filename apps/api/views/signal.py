@@ -15,9 +15,9 @@ class ListSignals(ListAPIView):
 
     /api/v2/signals/
 
-    URL query parameters:
+    URL query parameters
 
-    For filtering:
+    For filtering
 
         transaction_currency -- string BTC, ETH etc
         signal -- string SMA, RSI
@@ -26,12 +26,12 @@ class ListSignals(ListAPIView):
         startdate -- from this date (inclusive). Example 2018-02-12T09:09:15
         enddate -- to this date (inclusive)
 
-    For pagination:
+    For pagination
 
         page_size -- number of results to return per page (Default 100)
         page -- page number within the paginated result set
 
-    Examples:
+    Examples
         /api/v2/signals/?transaction_currency=ETH&signal=RSI
         /api/v2/signals/?startdate=2018-02-10T22:14:37&enddate=2018-02-10T22:27:58
     """
@@ -54,9 +54,9 @@ class ListSignal(ListAPIView):
     
     /api/v2/signals/{transaction_currency}
 
-    URL query parameters:
+    URL query parameters
 
-    For filtering:
+    For filtering
 
         signal -- string SMA, RSI
         counter_currency -- number 0=BTC, 1=ETH, 2=USDT, 3=XMR
@@ -64,12 +64,12 @@ class ListSignal(ListAPIView):
         startdate -- show inclusive from this date. For example 2018-02-12T09:09:15
         enddate -- until this date inclusive in same format
 
-    For pagination:
+    For pagination
 
         page_size -- number of results to return per page (Default 1)
         page -- page number within the paginated result set
 
-    Examples:
+    Examples
         /api/v2/signals/ETH
         /api/v2/signals/ETH?signal=RSI
     """
