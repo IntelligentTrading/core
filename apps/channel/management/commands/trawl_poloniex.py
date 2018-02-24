@@ -49,7 +49,7 @@ class Command(BaseCommand):
 
             # if long period start exacly at the beginning of a day
             if horizont_period == LONG:
-                schedule.every().day.at("00:00").do(
+                schedule.every().day.at("00:00:00").do(
                     _compute_and_save_indicators,
                     {'period': horizont_period}
                 )
