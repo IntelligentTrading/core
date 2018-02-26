@@ -3,7 +3,7 @@ import logging
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import schedule
 import time
-from commands.command_index import unknown_command
+from apps.bot.telegram.bot_commands_index import unknown_command
 
 from django.core.management.base import BaseCommand
 
