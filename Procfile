@@ -1,3 +1,4 @@
 release: python manage.py migrate
-web: gunicorn settings.wsgi
+web: waitress-serve --port=$PORT settings.wsgi:application
 worker: python manage.py trawl_poloniex
+

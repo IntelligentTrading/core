@@ -19,6 +19,9 @@ class Rsi(AbstractIndicator):
 
     def get_rsi_bracket_value(self):
         rsi = self.rsi
+        if rsi is None:
+            return 0
+
         assert (rsi>=0.0) & (rsi<=100.0)
 
         rsi_strength = 0
@@ -82,12 +85,14 @@ class Rsi(AbstractIndicator):
         new_instance = cls.objects.create(**kwargs)
         new_instance.compute_rs()
         new_instance.save()
-        logger.debug("   ...RS calculations done and saved.")
+        logger.info("   ...RS calculations done and saved.")
 
 
 
 #################
 # get last RS value object
+'''
 def get_last_rs_object(**kwargs):
     rs = Rsi.objects.filter(**kwargs).order_by('-timestamp').last()
     return rs
+'''

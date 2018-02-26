@@ -8,5 +8,6 @@ urlpatterns = [
 
     url(r'^api/', include('apps.api.urls', namespace='api')),
 
-    url(r'^admin/', admin.site.urls),
+    # url(r'^admin/', admin.site.urls),
+
 ]

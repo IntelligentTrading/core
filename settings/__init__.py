@@ -99,13 +99,20 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'django.contrib.sites',
+    'django_filters',
 
     # PLUGINS
+    'rest_framework',
+    'rest_framework_swagger',
 
 ]
 
 MIDDLEWARE = [
+    'django.middleware.cache.UpdateCacheMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.cache.FetchFromCacheMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', # for static files
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -163,13 +170,15 @@ USE_TZ = False
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
-STATIC_ROOT = STATIC_URL = '/static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(SITE_ROOT, 'staticfiles')
 
 # Additional locations of static files
 STATICFILES_DIRS = (
     os.path.join(SITE_ROOT, 'static'),
-    ('user', os.path.join(SITE_ROOT, 'apps/user/static')),
 )
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 ### START DJANGO ALLAUTH SETTINGS ###
 SITE_ID = 1
@@ -211,7 +220,9 @@ BTC_COINS = [
 
 
 # mapping from bin size to a name short/medium
-PERIODS_LIST = list([60,240,1440]) #list([15, 60, 360])  #
+# CHANGES TO THESE VALUES REQUIRE MAKING AND RUNNING DB MIGRATIONS
+PERIODS_LIST = list([60,240,1440])
+# CHANGES TO THESE VALUES REQUIRE MAKING AND RUNNING DB MIGRATIONS
 (SHORT, MEDIUM, LONG) = PERIODS_LIST
 HORIZONS_TIME2NAMES = {
     SHORT:'short',
@@ -220,12 +231,31 @@ HORIZONS_TIME2NAMES = {
 }
 
 
-time_speed = 1  # set to 1 for production, 10 for fast debugging
-
 A_PRIME_NUMBER = int(os.environ.get('A_PRIME_NUMBER', 12345))
 TEAM_EMOJIS = os.environ.get('TEAM_EMOJIS', "🤖,").split(",")
 ITT_API_KEY = os.environ.get('ITT_API_KEY', "123ABC")
+REST_API_SECRET_KEY = os.environ.get('REST_API_SECRET_KEY', "123ABC")
 
+time_speed = 1  # set to 1 for production, 10 for fast debugging
+EMIT_SMA = True
+EMIT_RSI = True
+
+
+# @Alexander REST Framework settings
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAdminUser', # Very secure by default:  only admin can access, overwrite on per-view basis
+    ),
+
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 100,
+
+    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
+}
+
+CACHE_MIDDLEWARE_SECONDS = SHORT * 60 # cache pages for 60 min same as SHORT period in price model
+CACHE_MIDDLEWARE_ALIAS = 'default'
+CACHE_MIDDLEWARE_KEY_PREFIX = ''
 
 if LOCAL:
     logger.info("LOCAL environment detected. Importing local_settings.py")
@@ -234,3 +264,5 @@ if LOCAL:
     except:
         logger.error("Could not successfully import local_settings.py. This is necessary if you are running locally. This file should be in version control.")
         raise
+
+
