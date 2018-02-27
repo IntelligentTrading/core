@@ -1,4 +1,4 @@
-from apps.bot.telegram.utilities import telegram_command, ChatBotException
+from apps.bot.telegram.utilities import telegram_command, TelegramBotException
 
 
 @telegram_command("ema", pass_args=True)
@@ -16,7 +16,7 @@ def ema(args):
         # symbol = get_symbol(args[0])
         pass
 
-    except ChatBotException as e:
+    except TelegramBotException as e:
         # logger.debug(e.developer_message)
         return e.user_message
 

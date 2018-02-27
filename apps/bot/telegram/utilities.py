@@ -36,7 +36,7 @@ def telegram_command(execution_handle, pass_args=False):
 #     def __call__(self, *args, **kwargs):
 #
 #         if self.requires_args and len(args) == 0:
-#             raise ChatBotException(
+#             raise TelegramBotException(
 #                 user_message="",
 #                 developer_message=""
 #             )
@@ -48,7 +48,7 @@ def telegram_command(execution_handle, pass_args=False):
 #         pass
 
 
-class ChatBotException(Exception):
+class TelegramBotException(Exception):
     def __init__(self, user_message="", developer_message=""):
         self.user_message = user_message
         self.developer_message = developer_message
