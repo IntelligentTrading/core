@@ -28,7 +28,7 @@ class ListSignals(ListAPIView):
 
     For pagination
 
-        page_size -- number of results to return per page (Default 100)
+        page_size -- number of results to return per page (Default 50)
         page -- page number within the paginated result set
 
     Examples
