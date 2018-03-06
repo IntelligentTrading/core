@@ -20,7 +20,7 @@ numpy==1.13.3
 pandas==0.20.3
 python-binary-memcached==0.26.1
 python-dateutil==2.6.0
-python-telegram-bot==7.0.1
+python-telegram-bot==9.0.0
 psycopg2==2.7.3
 pytz==2016.10
 PyYAML==3.12

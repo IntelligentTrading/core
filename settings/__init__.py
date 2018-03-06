@@ -89,6 +89,7 @@ INSTALLED_APPS = [
     'apps.indicator',
     'apps.signal',
     'apps.api',
+    'apps.bot',
 
     # DJANGO APPS
     'django.contrib.admin',
@@ -235,6 +236,8 @@ A_PRIME_NUMBER = int(os.environ.get('A_PRIME_NUMBER', 12345))
 TEAM_EMOJIS = os.environ.get('TEAM_EMOJIS', "🤖,").split(",")
 ITT_API_KEY = os.environ.get('ITT_API_KEY', "123ABC")
 REST_API_SECRET_KEY = os.environ.get('REST_API_SECRET_KEY', "123ABC")
+TELEGRAM_BOT_API_TOKEN = os.environ.get('TELEGRAM_BOT_API_TOKEN', "123ABC")
+CRYPTOPANIC_API_TOKEN = os.environ.get('CRYPTOPANIC_API_TOKEN', "123ABC")
 
 time_speed = 1  # set to 1 for production, 10 for fast debugging
 EMIT_SMA = True
