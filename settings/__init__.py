@@ -260,6 +260,8 @@ CACHE_MIDDLEWARE_SECONDS = SHORT * 60 # cache pages for 60 min same as SHORT per
 CACHE_MIDDLEWARE_ALIAS = 'default'
 CACHE_MIDDLEWARE_KEY_PREFIX = ''
 
+CACHE_TELEGRAM_BOT_SECONDS = 3 * 60 * 60 # cache telegram bot reply for 3 hour
+
 if LOCAL:
     logger.info("LOCAL environment detected. Importing local_settings.py")
     try:

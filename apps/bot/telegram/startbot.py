@@ -38,7 +38,7 @@ def startbot():
 
     # inline mode
     dp.add_handler(InlineQueryHandler(inline.inlinequery))
-    
+
     # log all errors
     dp.add_error_handler(special_commands.error)
 
@@ -47,5 +47,3 @@ def startbot():
 
     updater.start_polling()
     updater.idle()
-
-    #time.sleep(10); updater.stop() # for debug

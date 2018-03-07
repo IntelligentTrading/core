@@ -6,17 +6,17 @@ import requests
 from textwrap import dedent
 from datetime import datetime, timedelta
 
-
+from cache_memoize import cache_memoize
 from telegram import ParseMode
 
 from django.core.cache import cache
 
-from settings import CRYPTOPANIC_API_TOKEN 
-from settings import USDT_COINS, BTC_COINS, CACHE_MIDDLEWARE_SECONDS
+from settings import CRYPTOPANIC_API_TOKEN
+from settings import USDT_COINS, BTC_COINS, CACHE_TELEGRAM_BOT_SECONDS
 
 from apps.indicator.models import Price, Volume, Sma, Rsi
 
-ALL_COINS = USDT_COINS + list(set(BTC_COINS)-set(USDT_COINS)) # remove dublicates and combine, USDT_COINS first
+ALL_COINS = USDT_COINS + list(set(BTC_COINS)-set(USDT_COINS)) # combine and remove dublicates, USDT_COINS first
 #ALL_COINS = set(USDT_COINS + BTC_COINS) # it will sort coins alphabetically
 
 
@@ -54,76 +54,81 @@ def sentiment_from_cryptopanic(currency):
     return (title, link)
 
 
+# Attach decorator to cacheable function with a timeout of 3 hour in seconds.
+@cache_memoize(CACHE_TELEGRAM_BOT_SECONDS)
 def currency_info(currency):
-    cache_key = "itt_bot_ci_" + currency
-    reply_text = cache.get(cache_key)
-    if not reply_text: # no cache for reply_text
-        if currency in USDT_COINS:
-            counter_currency = Price.USDT
-            counter_currency_txt = 'USDT'
-        else:
-            counter_currency = Price.BTC
-            counter_currency_txt = 'BTC'
+    if currency in USDT_COINS:
+        counter_currency = Price.USDT
+        counter_currency_txt = 'USDT'
+    else:
+        counter_currency = Price.BTC
+        counter_currency_txt = 'BTC'
 
-        # Price
-        price_new_object = Price.objects.filter(
+    # Price
+    price_new_object = Price.objects.filter(
+        transaction_currency=currency, counter_currency=counter_currency
+        ).order_by('-timestamp').first()
+
+    price_24h_old_object = Price.objects.filter(
+        transaction_currency=currency, counter_currency=counter_currency,
+        timestamp__lte=price_new_object.timestamp - timedelta(minutes=1440)
+        ).order_by('-timestamp').first()
+
+    percents_price_diff_24h = percents(price_new_object.price, price_24h_old_object.price)
+
+    currency_format = "{:.8f}" if fiat_from_satoshi(price_new_object.price) < 1 else "{:.2f}"
+
+    price_block_text = "*{}*/{} *${} {}*\n24h change {}".format(
+        currency, counter_currency_txt, currency_format.format(fiat_from_satoshi(price_new_object.price)), \
+        diff_symbol(percents_price_diff_24h), '{:+.2f}%'.format(percents_price_diff_24h))
+
+    # Volume
+    volume_object = Volume.objects.filter(
+        transaction_currency=currency, counter_currency=counter_currency,
+        ).order_by('-timestamp').first()
+    volume_block_text = "\nvolume ${:.2f}".format(volume_object.volume)
+
+    # Signals
+    try:
+        latest_sma_200_object = Sma.objects.filter(
+            transaction_currency=currency, counter_currency=counter_currency,
+            sma_period=200
+            ).order_by('-timestamp').first()
+        sma_text = "\n{}: Sma200".format(format_timestamp(latest_sma_200_object.timestamp))
+    except:
+        sma_text = ''
+
+    itt_dashboard_url = 'http://intelligenttrading.org/'
+    more_info_at_itt = "\n[Get more signals on ITT Dashboard]({})".format(itt_dashboard_url)
+
+    try:
+        latest_rsi_object = Rsi.objects.filter(
             transaction_currency=currency, counter_currency=counter_currency
-            ).order_by('-timestamp').first()
+            ).exclude(relative_strength='Nan').order_by('-timestamp').first()
+        rsi_text = "\n{}: RSI {:.2f}".format(format_timestamp(latest_rsi_object.timestamp), latest_rsi_object.relative_strength)
+    except:
+        rsi_text = ''
 
-        price_24h_old_object = Price.objects.filter(
-            transaction_currency=currency, counter_currency=counter_currency,
-            timestamp__lte=price_new_object.timestamp - timedelta(minutes=1440)
-            ).order_by('-timestamp').first()
-        
-        percents_price_diff_24h = percents(price_new_object.price, price_24h_old_object.price)
+    if '' not in (sma_text, rsi_text):
+        signals_block_text = '\n\nLatest signals:' + sma_text + rsi_text
+    else:
+        signals_block_text = ''
 
-        currency_format = "{:.8f}" if fiat_from_satoshi(price_new_object.price) < 1 else "{:.2f}"
+    # Sentiments from cryptopanic
+    (title, url) = sentiment_from_cryptopanic(currency)
+    if '' not in (title, url):
+        cryptopanic_sentiment_block_text = "\n\n\"{}\"\n[Read on CryptoPanic]({})".format(title, url)
+    else:
+        cryptopanic_sentiment_block_text = ""
 
-        price_block_text = "*{}*/{} *${} {}*\n24h change {}".format(
-            currency, counter_currency_txt, currency_format.format(fiat_from_satoshi(price_new_object.price)), \
-            diff_symbol(percents_price_diff_24h), '{:+.2f}%'.format(percents_price_diff_24h))
-
-        # Volume
-        volume_object = Volume.objects.filter(
-            transaction_currency=currency, counter_currency=counter_currency,
-            ).order_by('-timestamp').first()
-        volume_block_text = "\nvolume ${:.2f}".format(volume_object.volume)
-
-        # Signals
-        try:
-            latest_sma_200_object = Sma.objects.filter(
-                transaction_currency=currency, counter_currency=counter_currency,
-                sma_period=200
-                ).order_by('-timestamp').first()
-            sma_text = "\n{}: Sma200".format(format_timestamp(latest_sma_200_object.timestamp))
-        except:
-            sma_text = ''
-
-        try:
-            latest_rsi_object = Rsi.objects.filter(
-                transaction_currency=currency, counter_currency=counter_currency
-                ).exclude(relative_strength='Nan').order_by('-timestamp').first()
-            rsi_text = "\n{}: RSI {:.2f}".format(format_timestamp(latest_rsi_object.timestamp), latest_rsi_object.relative_strength)
-        except:
-            rsi_text = ''
-        
-        if '' not in (sma_text, rsi_text):
-            signals_block_text = '\n\nLatest signals:' + sma_text + rsi_text
-        else:
-            signals_block_text = ''
-
-        # Sentiments from cryptopanic
-        (title, url) = sentiment_from_cryptopanic(currency)
-        if '' not in (title, url):
-            cryptopanic_sentiment_block_text = "\n\n\"{}\"\n[Read on CryptoPanic]({})".format(title, url)
-        else:
-            cryptopanic_sentiment_block_text = ""
-
-        reply_text = price_block_text + volume_block_text + signals_block_text + cryptopanic_sentiment_block_text # + "\nSource: Poloniex"
-
-        cache.set(cache_key, reply_text, timeout=CACHE_MIDDLEWARE_SECONDS)  # cache for 60 min
-
+    reply_text = price_block_text + volume_block_text + signals_block_text + more_info_at_itt + \
+                cryptopanic_sentiment_block_text # + "\nSource: Poloniex"
     return reply_text
+
+def precache_currency_info():
+    for currency in ('BTC', 'DASH', 'ETH', 'LTC', 'XMR', 'XRP', 'ZEC'):
+        currency_info(currency, _refresh=True) # "heat the cache up" right after we've cleared it
+
 
 ## user commands
 def itt(bot, update, args):
@@ -139,3 +144,5 @@ def itt(bot, update, args):
         reply_text = "Sorry, I know nothing about this currency `{}`.\nPlease use one of this:\n\n{}.".format(args[0].upper(), ", ".join(ALL_COINS))
 
     update.message.reply_text(reply_text, ParseMode.MARKDOWN, disable_web_page_preview=True)
+
+

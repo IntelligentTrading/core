@@ -48,13 +48,12 @@ def start(bot, update):
 
 def help(bot, update):
     update.message.reply_text(dedent("""
-        Here's a list of all commands currently available:
+        *Available commands:*
 
-        /help - Get a list of all commands
-        /itt - Short info about currency. For example: `/itt BTC`
+        *•* /help - Get a list of all commands
+        *•* /itt <cryptocurrency> - Short info about currency. For example: `/itt BTC`
     """), ParseMode.MARKDOWN)
 
 def error(bot, update, error):
     """Log Errors caused by Updates."""
     logger.warning('Update "%s" caused error "%s"', update, error)
-    
