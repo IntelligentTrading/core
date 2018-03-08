@@ -6,15 +6,12 @@ from apps.api.paginations import StandardResultsSetPagination, OneRecordPaginati
 
 from apps.api.helpers import default_counter_currency, filter_queryset_by_timestamp
 
-from settings import SHORT
-
-from apps.indicator.models import PriceResampl
+from apps.indicator.models import Price
 
 
 
 class ListPrices(ListAPIView):
-    """Return a list of all the prices from PriceResampl model for short resampl period - 60min.
-    Exclude prices with empty midpoint_price
+    """Return list of prices from Price model. Thise are raw, non resampled prices from exchange.
 
     /api/v2/prices/
 
@@ -48,15 +45,13 @@ class ListPrices(ListAPIView):
     model = serializer_class.Meta.model
     
     def get_queryset(self):
-        queryset = self.model.objects.exclude(midpoint_price__isnull=True \
-        ).filter(resample_period=SHORT).order_by('-timestamp')
+        queryset = self.model.objects.order_by('-timestamp')
         queryset = filter_queryset_by_timestamp(self, queryset)
         return queryset
 
 
 class ListPrice(ListAPIView):
-    """Return a list of prices from PriceResampl model for {transaction_currency} with default counter_currency. 
-    Short resample period 60 min, non empty midpoint_price. 
+    """Return list of prices from Price model for {transaction_currency} with default counter_currency. 
     Default counter_currency is BTC. For BTC itself, counter_currency is USDT.
     
     /api/v2/prices/{transaction_currency}
@@ -65,8 +60,8 @@ class ListPrice(ListAPIView):
 
     For filtering
 
-        counter_currency -- number: 0=BTC, 1=ETH, 2=USDT, 3=XMR (Default 0, for BTC - 2)
-        source -- number: 0=poloniex, 1=bittrex
+        counter_currency -- number 0=BTC, 1=ETH, 2=USDT, 3=XMR (Default 0, for BTC - 2)
+        source -- number 0=poloniex, 1=bittrex
         startdate -- show inclusive from date. For example 2018-02-12T09:09:15
         enddate -- until this date inclusive in same format
 
@@ -91,9 +86,7 @@ class ListPrice(ListAPIView):
     def get_queryset(self):
         transaction_currency = self.kwargs['transaction_currency']
         counter_currency = default_counter_currency(transaction_currency)
-        # midpoint_price must not be empty
-        queryset = self.model.objects.exclude(midpoint_price__isnull=True
-        ).filter(transaction_currency=transaction_currency, counter_currency=counter_currency, \
-                    resample_period=SHORT).order_by('-timestamp')
+        queryset = self.model.objects.filter(transaction_currency=transaction_currency, \
+                    counter_currency=counter_currency).order_by('-timestamp')
         queryset = filter_queryset_by_timestamp(self, queryset)
         return queryset

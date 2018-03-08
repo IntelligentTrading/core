@@ -2,7 +2,7 @@ from django.conf.urls import url, include
 from rest_framework_swagger.views import get_swagger_view
 
 from apps.api.views import v1_price, v1_volume, v1_user, v1_csv
-from apps.api.views import price, volume, signal, rsi, events_elementary
+from apps.api.views import price, resampled_price, volume, signal, rsi, events_elementary
 
 
 schema_view = get_swagger_view(title='ITT Core API')
@@ -28,16 +28,19 @@ urlpatterns = [
 #   url(r'^sma$', views.sma.SMA.as_view(), name='sma'),
 
     url(r'^v2/signals/$', signal.ListSignals.as_view(), name='signals'), 
-    url(r'^v2/signals/(?P<transaction_currency>.+)$',  signal.ListSignal.as_view(), name='signal'),
+    url(r'^v2/signals/(?P<transaction_currency>.+)$', signal.ListSignal.as_view(), name='signal'),
+
+    url(r'^v2/resampled-prices/$', resampled_price.ListPrices.as_view(), name='resampled-prices'),
+    url(r'^v2/resampled-prices/(?P<transaction_currency>.+)$', resampled_price.ListPrice.as_view(), name='resampled-price'),
 
     url(r'^v2/prices/$', price.ListPrices.as_view(), name='prices'),
-    url(r'^v2/prices/(?P<transaction_currency>.+)$',  price.ListPrice.as_view(), name='price'),
+    url(r'^v2/prices/(?P<transaction_currency>.+)$', price.ListPrice.as_view(), name='price'),
 
     url(r'^v2/volumes/$', volume.ListVolumes.as_view(), name='volumes'),
-    url(r'^v2/volumes/(?P<transaction_currency>.+)$',  volume.ListVolume.as_view(), name='volume'),
+    url(r'^v2/volumes/(?P<transaction_currency>.+)$', volume.ListVolume.as_view(), name='volume'),
 
     url(r'^v2/rsi/$', rsi.ListRsis.as_view(), name='rsis'),
-    url(r'^v2/rsi/(?P<transaction_currency>.+)$',  rsi.ListRsi.as_view(), name='rsi'),
+    url(r'^v2/rsi/(?P<transaction_currency>.+)$', rsi.ListRsi.as_view(), name='rsi'),
 
     url(r'^v2/events-elementary/$', events_elementary.ListEventsElementary.as_view(), name='events-elementary'),
     url(r'^v2/events-elementary/(?P<transaction_currency>.+)$',  events_elementary.ListEventElementary.as_view(), name='event-elementary'),

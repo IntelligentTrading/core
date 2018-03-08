@@ -1,5 +1,5 @@
 """
-Helpers and common methods for our REST API
+Helpers and common methods for RESTful API
 """
 
 from dateutil.parser import parse
