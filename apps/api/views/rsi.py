@@ -13,7 +13,7 @@ from apps.indicator.models import Rsi
 
 
 class ListRsis(ListAPIView):
-    """Return a list of RSI.
+    """Return list of RSI.
 
     /api/v2/rsi/
 
@@ -52,7 +52,7 @@ class ListRsis(ListAPIView):
 
 
 class ListRsi(ListAPIView):
-    """Return a list of RSI for {transaction_currency}.
+    """Return list of RSI for {transaction_currency}.
     
     /api/v2/rsi/{transaction_currency}
 
