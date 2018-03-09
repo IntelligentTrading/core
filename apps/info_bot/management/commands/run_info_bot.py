@@ -7,10 +7,10 @@ import threading
 
 from django.core.management.base import BaseCommand
 
-from apps.bot.telegram.startbot import startbot
-from apps.bot.telegram.bot_commands.itt import precache_currency_info
+from apps.info_bot.telegram.start_info_bot import start_info_bot
+from apps.info_bot.telegram.bot_commands.itt import precache_currency_info
 
-from settings import CACHE_TELEGRAM_BOT_SECONDS
+from settings import INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,8 @@ def run_threaded(job_func):
 
 class ScheduleThread(threading.Thread):
     def __init__(self, *pargs, **kwargs):
-        super().__init__(*pargs, daemon=True, name="scheduler", **kwargs) # daemon=true so when your program quits, any daemon threads are killed automatically
+        # daemon=true so when your program quits, any daemon threads are killed automatically
+        super().__init__(*pargs, daemon=True, name="scheduler", **kwargs)
 
     def run(self):
         while True:
@@ -36,12 +37,12 @@ class Command(BaseCommand):
     help = 'Run basic telegram info bot'
 
     def handle(self, *args, **options):
-        logger.info('Precaching info for telegram bot')
+        logger.info('Precaching info for telegram info_bot')
         run_threaded(precache_currency_info)
-        schedule.every(CACHE_TELEGRAM_BOT_SECONDS).seconds.do(
+        schedule.every(INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS).seconds.do(
             run_threaded, precache_currency_info
         )
         ScheduleThread().start()
 
-        logger.info("Starting telegram info bot.")
-        startbot()
+        logger.info("Starting telegram info_bot.")
+        start_info_bot()

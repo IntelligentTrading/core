@@ -15,7 +15,7 @@ from textwrap import dedent
 from telegram import ParseMode
 from telegram.ext import Updater
 
-from settings import TELEGRAM_BOT_API_TOKEN
+from settings import INFO_BOT_TELEGRAM_BOT_API_TOKEN, LOCAL
 
 
 
@@ -23,16 +23,17 @@ logger = logging.getLogger(__name__)
 
 ## bot admin commands
 
-updater = Updater(token=TELEGRAM_BOT_API_TOKEN)
+if LOCAL:
+    updater = Updater(token=INFO_BOT_TELEGRAM_BOT_API_TOKEN)
 
-def stop_and_restart():
-        """Gracefully stop the Updater and replace the current process with a new one"""
-        updater.stop()
-        os.execl(sys.executable, sys.executable, *sys.argv)
+    def stop_and_restart():
+            """Gracefully stop the Updater and replace the current process with a new one"""
+            updater.stop()
+            os.execl(sys.executable, sys.executable, *sys.argv)
 
-def restart(bot, update):
-    update.message.reply_text('itt bot is restarting...')
-    Thread(target=stop_and_restart).start()
+    def restart(bot, update):
+        update.message.reply_text('itt bot is restarting...')
+        Thread(target=stop_and_restart).start()
 
 
 ## special commands

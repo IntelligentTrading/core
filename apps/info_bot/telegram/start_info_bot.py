@@ -4,26 +4,21 @@ https://github.com/python-telegram-bot/python-telegram-bot
 
 Telegram API:
 https://core.telegram.org/bots/api
-
-Bot url:
-telegram.me/AlienTestBot
-
 """
 
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram.ext import InlineQueryHandler
 
-from settings import TELEGRAM_BOT_API_TOKEN, LOCAL
+from apps.info_bot.telegram.bot_commands import itt
+from apps.info_bot.telegram.bot_commands import inline
+from apps.info_bot.telegram.bot_commands import special_commands
 
-from apps.bot.telegram.bot_commands import itt
-from apps.bot.telegram.bot_commands import inline
-
-from apps.bot.telegram.bot_commands import special_commands
-
+from settings import LOCAL, INFO_BOT_TELEGRAM_BOT_API_TOKEN, INFO_BOT_ADMIN_USERNAME
 
 
-def startbot():
-    updater = Updater(token=TELEGRAM_BOT_API_TOKEN)
+
+def start_info_bot():
+    updater = Updater(token=INFO_BOT_TELEGRAM_BOT_API_TOKEN)
 
     # Dispatcher to register handlers
     dp = updater.dispatcher
@@ -34,7 +29,8 @@ def startbot():
     dp.add_handler(CommandHandler('itt', itt.itt, pass_args=True))
 
     if LOCAL:
-        dp.add_handler(CommandHandler('r', special_commands.restart, filters=Filters.user(username='@lexusnexus')))
+        dp.add_handler(CommandHandler('r', special_commands.restart, \
+            filters=Filters.user(username=INFO_BOT_ADMIN_USERNAME)))
 
     # inline mode
     dp.add_handler(InlineQueryHandler(inline.inlinequery))
@@ -42,8 +38,9 @@ def startbot():
     # log all errors
     dp.add_error_handler(special_commands.error)
 
+    # handle unkomwn commands
     # this handler must be added last.
-    dp.add_handler(MessageHandler(Filters.command, special_commands.unknown)) # handler for unkomwn commands
+    dp.add_handler(MessageHandler(Filters.command, special_commands.unknown))
 
     updater.start_polling()
     updater.idle()

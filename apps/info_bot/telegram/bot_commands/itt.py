@@ -2,6 +2,7 @@
 
 itt - Short info about currency. For example: /itt BTC
 """
+
 import requests
 from textwrap import dedent
 from datetime import datetime, timedelta
@@ -11,14 +12,15 @@ from telegram import ParseMode
 
 from django.core.cache import cache
 
-from settings import CRYPTOPANIC_API_TOKEN
-from settings import USDT_COINS, BTC_COINS, CACHE_TELEGRAM_BOT_SECONDS
+from settings import INFO_BOT_CRYPTOPANIC_API_TOKEN, INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS
+from settings import USDT_COINS, BTC_COINS
 
 from apps.indicator.models import Price, Volume, Sma, Rsi
 
-ALL_COINS = USDT_COINS + list(set(BTC_COINS)-set(USDT_COINS)) # combine and remove dublicates, USDT_COINS first
-#ALL_COINS = set(USDT_COINS + BTC_COINS) # it will sort coins alphabetically
 
+
+# combine and remove dublicates, USDT_COINS first in list
+ALL_COINS = USDT_COINS + list(set(BTC_COINS)-set(USDT_COINS))
 
 ## helpers
 
@@ -41,11 +43,10 @@ def format_timestamp(timestamp):
     return timestamp.strftime('%Y-%m-%d %H:%M:%S')
 
 def sentiment_from_cryptopanic(currency):
-    # to speedup this plz warmup cache for all currencies or most popular ones
-    CRYPTOPANIC_API_URL = "https://cryptopanic.com/api/posts/?auth_token={}&filter=trending&currencies={}".format(
-        CRYPTOPANIC_API_TOKEN, currency)
+    INFO_BOT_CRYPTOPANIC_API_URL = "https://cryptopanic.com/api/posts/?auth_token={}&filter=trending&currencies={}".format(
+        INFO_BOT_CRYPTOPANIC_API_TOKEN, currency)
     try:
-        data = requests.get(CRYPTOPANIC_API_URL).json()
+        data = requests.get(INFO_BOT_CRYPTOPANIC_API_URL).json()
         last_result = data['results'][0]
         title = last_result['title']
         link = last_result['url']
@@ -54,8 +55,8 @@ def sentiment_from_cryptopanic(currency):
     return (title, link)
 
 
-# Attach decorator to cacheable function with a timeout of 3 hour in seconds.
-@cache_memoize(CACHE_TELEGRAM_BOT_SECONDS)
+# Attach decorator to cacheable function. Currently 3 hours.
+@cache_memoize(INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS)
 def currency_info(currency):
     if currency in USDT_COINS:
         counter_currency = Price.USDT
@@ -75,10 +76,9 @@ def currency_info(currency):
         ).order_by('-timestamp').first()
 
     percents_price_diff_24h = percents(price_new_object.price, price_24h_old_object.price)
-
     currency_format = "{:.8f}" if fiat_from_satoshi(price_new_object.price) < 1 else "{:.2f}"
 
-    price_block_text = "*{}*/{} *${} {}*\n24h change {}".format(
+    price_section = "*{}*/{} *${} {}*\n24h change {}".format(
         currency, counter_currency_txt, currency_format.format(fiat_from_satoshi(price_new_object.price)), \
         diff_symbol(percents_price_diff_24h), '{:+.2f}%'.format(percents_price_diff_24h))
 
@@ -86,7 +86,7 @@ def currency_info(currency):
     volume_object = Volume.objects.filter(
         transaction_currency=currency, counter_currency=counter_currency,
         ).order_by('-timestamp').first()
-    volume_block_text = "\nvolume ${:.2f}".format(volume_object.volume)
+    volume_section = "\nvolume ${:.2f}".format(volume_object.volume)
 
     # Signals
     try:
@@ -99,7 +99,7 @@ def currency_info(currency):
         sma_text = ''
 
     itt_dashboard_url = 'http://intelligenttrading.org/'
-    more_info_at_itt = "\n[Get more signals on ITT Dashboard]({})".format(itt_dashboard_url)
+    more_info_section = "\n[Get more signals on ITT Dashboard]({})".format(itt_dashboard_url)
 
     try:
         latest_rsi_object = Rsi.objects.filter(
@@ -110,20 +110,24 @@ def currency_info(currency):
         rsi_text = ''
 
     if '' not in (sma_text, rsi_text):
-        signals_block_text = '\n\nLatest signals:' + sma_text + rsi_text
+        signals_section = '\n\nLatest signals:' + sma_text + rsi_text
     else:
-        signals_block_text = ''
+        signals_section = ''
 
     # Sentiments from cryptopanic
     (title, url) = sentiment_from_cryptopanic(currency)
     if '' not in (title, url):
-        cryptopanic_sentiment_block_text = "\n\n\"{}\"\n[Read on CryptoPanic]({})".format(title, url)
+        cryptopanic_sentiment_section = "\n\n\"{}\"\n[Read on CryptoPanic]({})".format(title, url)
     else:
-        cryptopanic_sentiment_block_text = ""
+        cryptopanic_sentiment_section = ""
 
-    reply_text = price_block_text + volume_block_text + signals_block_text + more_info_at_itt + \
-                cryptopanic_sentiment_block_text # + "\nSource: Poloniex"
+    reply_text = price_section + volume_section + signals_section + \
+                    more_info_section + cryptopanic_sentiment_section
+
     return reply_text
+
+
+## utility functions
 
 def precache_currency_info():
     for currency in ('BTC', 'DASH', 'ETH', 'LTC', 'XMR', 'XRP', 'ZEC'):
@@ -131,6 +135,7 @@ def precache_currency_info():
 
 
 ## user commands
+
 def itt(bot, update, args):
     try:
         currency = args[0].upper()
