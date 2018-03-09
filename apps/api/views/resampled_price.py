@@ -1,25 +1,28 @@
 from rest_framework.generics import ListAPIView
 
-from apps.api.serializers import VolumeSerializer
+from apps.api.serializers import ResampledPriceSerializer
 from apps.api.permissions import RestAPIPermission
 from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
 
 from apps.api.helpers import default_counter_currency, filter_queryset_by_timestamp
 
-from apps.indicator.models import Volume
+from settings import SHORT
+
+from apps.indicator.models import PriceResampl
 
 
 
-class ListVolumes(ListAPIView):
-    """Return list of price volumes.
+class ListPrices(ListAPIView):
+    """Return list of resampled prices from PriceResampl model for short resampl period - 60min.
+    Exclude prices with empty midpoint_price
 
-    /api/v2/volumes/
+    /api/v2/prices/
 
     URL query parameters
 
     For filtering
 
-        transaction_currency -- string 'BTC', 'ETH' etc
+        transaction_currency: -- string 'BTC', 'ETH' etc
         counter_currency -- number 0=BTC, 1=ETH, 2=USDT, 3=XMR
         source -- number 0=poloniex, 1=bittrex
         startdate -- from this date (inclusive). Example 2018-02-12T09:09:15
@@ -31,29 +34,32 @@ class ListVolumes(ListAPIView):
         page -- page number within the paginated result set
 
     Examples
-        /api/v2/volumes/?startdate=2018-02-10T22:14:37&enddate=2018-02-10T22:27:58
-        /api/v2/volumes/?transaction_currency=ETH&counter_currency=0
-        /api/v2/volumes/?page_size=1&page=3
+        /api/v2/resampled-prices/?startdate=2018-01-26T10:24:37&enddate=2018-01-26T10:59:02
+        /api/v2/resampled-prices/?transaction_currency=ETH&counter_currency=0
+        /api/v2/resampled-prices/?page_size=1&page=3
     """
-
+     
     permission_classes = (RestAPIPermission, )
-    serializer_class = VolumeSerializer
     pagination_class = StandardResultsSetPagination
+    serializer_class = ResampledPriceSerializer
 
-    filter_fields = ('transaction_currency', 'counter_currency', 'source')
+    filter_fields = ('source', 'transaction_currency', 'counter_currency')
 
     model = serializer_class.Meta.model
     
     def get_queryset(self):
-        queryset = self.model.objects.order_by('-timestamp')
+        queryset = self.model.objects.exclude(midpoint_price__isnull=True \
+        ).filter(resample_period=SHORT).order_by('-timestamp')
         queryset = filter_queryset_by_timestamp(self, queryset)
         return queryset
 
 
-class ListVolume(ListAPIView):
-    """Return list of price volumes for {transaction_currency} with default counter_currency.
+class ListPrice(ListAPIView):
+    """Return list of resampled prices from PriceResampl model for {transaction_currency} with default counter_currency. 
+    Short resample period 60 min, non empty midpoint_price. 
+    Default counter_currency is BTC. For BTC itself, counter_currency is USDT.
     
-    /api/v2/volumes/{transaction_currency}
+    /api/v2/resampled-prices/{transaction_currency}
 
     URL query parameters
 
@@ -61,7 +67,7 @@ class ListVolume(ListAPIView):
 
         counter_currency -- number 0=BTC, 1=ETH, 2=USDT, 3=XMR (Default 0, for BTC - 2)
         source -- number 0=poloniex, 1=bittrex
-        startdate -- show inclusive from this date. For example 2018-02-12T09:09:15
+        startdate -- show inclusive from date. For example 2018-02-12T09:09:15
         enddate -- until this date inclusive in same format
 
     For pagination
@@ -70,11 +76,12 @@ class ListVolume(ListAPIView):
         page -- page number within the paginated result set
 
     Examples
-        /api/v2/volumes/ETH # ETH in BTC
-        /api/v2/volumes/ETH?counter_currency=2 # ETH in USDT
+        /api/v2/resampled-prices/ETH # ETH in BTC
+        /api/v2/resampled-prices/ETH?counter_currency=2 # ETH in USDT
     """
+
     permission_classes = (RestAPIPermission, )
-    serializer_class = VolumeSerializer
+    serializer_class = ResampledPriceSerializer
     pagination_class = OneRecordPagination
 
     filter_fields = ('counter_currency', 'source')
@@ -84,6 +91,9 @@ class ListVolume(ListAPIView):
     def get_queryset(self):
         transaction_currency = self.kwargs['transaction_currency']
         counter_currency = default_counter_currency(transaction_currency)
-        queryset = self.model.objects.filter(transaction_currency=transaction_currency, counter_currency=counter_currency)
+        # midpoint_price must not be empty
+        queryset = self.model.objects.exclude(midpoint_price__isnull=True
+        ).filter(transaction_currency=transaction_currency, counter_currency=counter_currency, \
+                    resample_period=SHORT).order_by('-timestamp')
         queryset = filter_queryset_by_timestamp(self, queryset)
-        return queryset.order_by('-timestamp')
+        return queryset
