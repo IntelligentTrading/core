@@ -89,6 +89,7 @@ INSTALLED_APPS = [
     'apps.indicator',
     'apps.signal',
     'apps.api',
+    'apps.info_bot',
 
     # DJANGO APPS
     'django.contrib.admin',
@@ -236,6 +237,7 @@ TEAM_EMOJIS = os.environ.get('TEAM_EMOJIS', "🤖,").split(",")
 ITT_API_KEY = os.environ.get('ITT_API_KEY', "123ABC")
 REST_API_SECRET_KEY = os.environ.get('REST_API_SECRET_KEY', "123ABC")
 
+
 time_speed = 1  # set to 1 for production, 10 for fast debugging
 EMIT_SMA = True
 EMIT_RSI = True
@@ -256,6 +258,11 @@ REST_FRAMEWORK = {
 CACHE_MIDDLEWARE_SECONDS = SHORT * 60 # cache pages for 60 min same as SHORT period in price model
 CACHE_MIDDLEWARE_ALIAS = 'default'
 CACHE_MIDDLEWARE_KEY_PREFIX = ''
+
+INFO_BOT_TELEGRAM_BOT_API_TOKEN = os.environ.get('INFO_BOT_TELEGRAM_BOT_API_TOKEN', '123ABC')
+INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS = 3 * 60 * 60 # cache telegram bot reply for 3 hour
+INFO_BOT_CRYPTOPANIC_API_TOKEN = os.environ.get('INFO_BOT_CRYPTOPANIC_API_TOKEN', '123ABC')
+INFO_BOT_ADMIN_USERNAME = ''
 
 if LOCAL:
     logger.info("LOCAL environment detected. Importing local_settings.py")
