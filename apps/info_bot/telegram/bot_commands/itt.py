@@ -3,6 +3,7 @@
 itt - Short info about currency. For example: /itt BTC
 """
 
+import math
 import requests
 from textwrap import dedent
 from datetime import datetime, timedelta
@@ -15,12 +16,13 @@ from django.core.cache import cache
 from settings import INFO_BOT_CRYPTOPANIC_API_TOKEN, INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS
 from settings import USDT_COINS, BTC_COINS
 
-from apps.indicator.models import Price, Volume, Sma, Rsi
-
+from apps.indicator.models import Price, Volume
+from apps.signal.models import Signal
 
 
 # combine and remove dublicates, USDT_COINS first in list
 ALL_COINS = USDT_COINS + list(set(BTC_COINS)-set(USDT_COINS))
+POPULAR_COINS = ('BTC', 'DASH', 'ETH', 'LTC', 'XMR', 'XRP', 'ZEC')
 
 ## helpers
 
@@ -36,11 +38,25 @@ def diff_symbol(diff): # ↑ increase, ↓ decrease
         d_sym = ""
     return d_sym
 
-def fiat_from_satoshi(satoshis):
-    return float(satoshis * float(10**-8))
-
 def format_timestamp(timestamp):
-    return timestamp.strftime('%Y-%m-%d %H:%M:%S')
+    return timestamp.strftime('%b %d, %H:%M')
+
+def format_currency(amount, currency_symbol='', in_satoshi=True):
+    if amount == 0:
+        return currency_symbol + '0.00'
+
+    if in_satoshi: # convert from satoshis
+        amount = float(amount * float(10**-8))
+
+    common_logarithm = int(math.log10(abs(amount)))
+    if common_logarithm > 3: # 12345.2212 -> 12345
+        currency_norm = "{:.0f}".format(amount)
+    elif common_logarithm > 0: # 123.2212 -> 123.22
+        currency_norm = "{:.2f}".format(amount)
+    else: # 0.123400000 -> 0.1234
+        currency_norm = "{:.6f}".format(amount).rstrip('0').rstrip('.')
+
+    return currency_symbol + currency_norm
 
 def sentiment_from_cryptopanic(currency):
     INFO_BOT_CRYPTOPANIC_API_URL = "https://cryptopanic.com/api/posts/?auth_token={}&filter=trending&currencies={}".format(
@@ -55,15 +71,17 @@ def sentiment_from_cryptopanic(currency):
     return (title, link)
 
 
-# Attach decorator to cacheable function. Currently 3 hours.
+# Attach decorator to cacheable function. Now: 3 hours.
 @cache_memoize(INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS)
 def currency_info(currency):
     if currency in USDT_COINS:
         counter_currency = Price.USDT
         counter_currency_txt = 'USDT'
+        currency_symbol = '$'
     else:
         counter_currency = Price.BTC
         counter_currency_txt = 'BTC'
+        currency_symbol = ''
 
     # Price
     price_new_object = Price.objects.filter(
@@ -76,43 +94,35 @@ def currency_info(currency):
         ).order_by('-timestamp').first()
 
     percents_price_diff_24h = percents(price_new_object.price, price_24h_old_object.price)
-    currency_format = "{:.8f}" if fiat_from_satoshi(price_new_object.price) < 1 else "{:.2f}"
 
-    price_section = "*{}*/{} *${} {}*\n24h change {}".format(
-        currency, counter_currency_txt, currency_format.format(fiat_from_satoshi(price_new_object.price)), \
-        diff_symbol(percents_price_diff_24h), '{:+.2f}%'.format(percents_price_diff_24h))
+    price_section = "*{}*/{} *{} {}*\n24hr Change: {}".format(
+        currency, counter_currency_txt, format_currency(price_new_object.price, currency_symbol),
+        diff_symbol(percents_price_diff_24h), '{:+.2f}%'.format(percents_price_diff_24h)
+    )
 
     # Volume
     volume_object = Volume.objects.filter(
         transaction_currency=currency, counter_currency=counter_currency,
         ).order_by('-timestamp').first()
-    volume_section = "\nvolume ${:.2f}".format(volume_object.volume)
+    volume_section = "\n24hr Volume: {} {}".format(format_currency(volume_object.volume, in_satoshi=False), counter_currency_txt)
 
     # Signals
-    try:
-        latest_sma_200_object = Sma.objects.filter(
+    last_signals = []
+
+    for signal in ['SMA', 'RSI']:
+        signal_object = Signal.objects.filter(
             transaction_currency=currency, counter_currency=counter_currency,
-            sma_period=200
+            signal=signal
             ).order_by('-timestamp').first()
-        sma_text = "\n{}: Sma200".format(format_timestamp(latest_sma_200_object.timestamp))
-    except:
-        sma_text = ''
+        last_signals.append(signal_object)
+
+    signals_section = '\n\n*Latest signals:*'
+    for signal in sorted(last_signals, key=lambda s: s.timestamp, reverse=True):
+        signals_section+= "\n{} {} {}".format(format_timestamp(signal.timestamp), \
+                            signal.signal, format_currency(signal.price))
 
     itt_dashboard_url = 'http://intelligenttrading.org/'
     more_info_section = "\n[Get more signals on ITT Dashboard]({})".format(itt_dashboard_url)
-
-    try:
-        latest_rsi_object = Rsi.objects.filter(
-            transaction_currency=currency, counter_currency=counter_currency
-            ).exclude(relative_strength='Nan').order_by('-timestamp').first()
-        rsi_text = "\n{}: RSI {:.2f}".format(format_timestamp(latest_rsi_object.timestamp), latest_rsi_object.relative_strength)
-    except:
-        rsi_text = ''
-
-    if '' not in (sma_text, rsi_text):
-        signals_section = '\n\nLatest signals:' + sma_text + rsi_text
-    else:
-        signals_section = ''
 
     # Sentiments from cryptopanic
     (title, url) = sentiment_from_cryptopanic(currency)
@@ -130,7 +140,7 @@ def currency_info(currency):
 ## utility functions
 
 def precache_currency_info():
-    for currency in ('BTC', 'DASH', 'ETH', 'LTC', 'XMR', 'XRP', 'ZEC'):
+    for currency in POPULAR_COINS:
         currency_info(currency, _refresh=True) # "heat the cache up" right after we've cleared it
 
 
@@ -149,5 +159,3 @@ def itt(bot, update, args):
         reply_text = "Sorry, I know nothing about this currency `{}`.\nPlease use one of this:\n\n{}.".format(args[0].upper(), ", ".join(ALL_COINS))
 
     update.message.reply_text(reply_text, ParseMode.MARKDOWN, disable_web_page_preview=True)
-
-
