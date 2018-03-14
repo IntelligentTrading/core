@@ -79,9 +79,6 @@ def _compute_and_save_indicators(resample_period_par):
         _calculate_one_par(timestamp, resample_period, transaction_currency, counter_currency)
 
 
-
-
-
 # move a calculation of one coin pair to a separate routine for future parallel execution (requested by @Alexander)
 def _calculate_one_par(timestamp, resample_period, transaction_currency, counter_currency ):
     from apps.indicator.models.price_resampl import PriceResampl
