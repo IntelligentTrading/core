@@ -3,12 +3,12 @@ import schedule
 import time
 import threading
 
-
-
 from django.core.management.base import BaseCommand
 
 from apps.info_bot.telegram.start_info_bot import start_info_bot
 from apps.info_bot.telegram.bot_commands.itt import precache_currency_info
+
+from apps.info_bot import tasks
 
 from settings import INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS
 
@@ -37,10 +37,13 @@ class Command(BaseCommand):
     help = 'Run basic telegram info bot'
 
     def handle(self, *args, **options):
+    
         logger.info('Precaching info for telegram info_bot')
-        run_threaded(precache_currency_info)
+        #run_threaded(precache_currency_info)
+        tasks.precache_currency_info_for_info_bot.delay()
         schedule.every(INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS).seconds.do(
-            run_threaded, precache_currency_info
+        #    run_threaded, precache_currency_info
+            tasks.precache_currency_info_for_info_bot.delay
         )
         ScheduleThread().start()
 
