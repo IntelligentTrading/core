@@ -11,7 +11,7 @@ from apps.signal.models import Signal
 
 
 class ListSignals(ListAPIView):
-    """Return a list of all signals.
+    """Return list of signals.
 
     /api/v2/signals/
 
@@ -28,7 +28,7 @@ class ListSignals(ListAPIView):
 
     For pagination
 
-        page_size -- number of results to return per page (Default 100)
+        page_size -- number of results to return per page (Default 50)
         page -- page number within the paginated result set
 
     Examples
@@ -50,7 +50,7 @@ class ListSignals(ListAPIView):
 
 
 class ListSignal(ListAPIView):
-    """Return a list of signals for {transaction_currency}.
+    """Return list of signals for {transaction_currency}.
     
     /api/v2/signals/{transaction_currency}
 

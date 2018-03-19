@@ -13,7 +13,7 @@ from apps.indicator.models import EventsElementary
 
 
 class ListEventsElementary(ListAPIView):
-    """Return a list of elementary events.
+    """Return list of elementary events.
 
     /api/v2/events-elementary/
 
@@ -30,7 +30,7 @@ class ListEventsElementary(ListAPIView):
 
     For pagination:
 
-        page_size -- number of results to return per page (Default 100)
+        page_size -- number of results to return per page (Default 50)
         page -- page number within the paginated result set
 
     Examples:
@@ -50,7 +50,7 @@ class ListEventsElementary(ListAPIView):
         return queryset
 
 class ListEventElementary(ListAPIView):
-    """Return a list of elementary events for {transaction_currency}.
+    """Return list of elementary events for {transaction_currency}.
 
     /api/v2/events-elementary/{transaction_currency}
 

@@ -13,7 +13,7 @@ from apps.indicator.models import Rsi
 
 
 class ListRsis(ListAPIView):
-    """Return a list of RSI.
+    """Return list of RSI.
 
     /api/v2/rsi/
 
@@ -29,7 +29,7 @@ class ListRsis(ListAPIView):
 
     For pagination
 
-        page_size -- number of results to return per page (Default 100)
+        page_size -- number of results to return per page (Default 50)
         page -- page number within the paginated result set
 
     Examples
@@ -52,7 +52,7 @@ class ListRsis(ListAPIView):
 
 
 class ListRsi(ListAPIView):
-    """Return a list of RSI for {transaction_currency}.
+    """Return list of RSI for {transaction_currency}.
     
     /api/v2/rsi/{transaction_currency}
 
