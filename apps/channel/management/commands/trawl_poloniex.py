@@ -200,6 +200,7 @@ def _calculate_one_par(timestamp, resample_period, transaction_currency, counter
         except Exception as e:
             logger.error(str(ind) + " Indicator Exception: " + str(e))
 
+
     # check for events and save if any
     events_list = [EventsElementary, EventsLogical]
     for event in events_list:

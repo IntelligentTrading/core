@@ -192,11 +192,11 @@ class EventsElementary(AbstractIndicator):
 
         sma_low_df = get_n_last_sma_df(last_records, SMA_LOW, **no_time_params).tail(10)
         sma_high_df = get_n_last_sma_df(last_records, SMA_HIGH, **no_time_params).tail(10)
-        small_prices_df = prices_df.tail(10)
+        small_prices_df = prices_df.tail(10).copy()
 
         # form a small price dataframe and add SMA to price dataframe
-        small_prices_df['low_sma'] = sma_low_df.sma_close_price
-        small_prices_df['high_sma'] = sma_high_df.sma_close_price
+        small_prices_df.loc[:,'low_sma'] = sma_low_df['sma_close_price']
+        small_prices_df.loc[:,'high_sma'] = sma_high_df['sma_close_price']
 
         # todo: that is not right fron statistical view point!!! remove later when anough values
         small_prices_df = small_prices_df.fillna(value=0)
