@@ -190,8 +190,8 @@ class EventsElementary(AbstractIndicator):
         logger.info("   ... Check SMA Events: ")
         SMA_LOW, SMA_HIGH = [50,200]
 
-        sma_low_df = get_n_last_sma_df(10, SMA_LOW, **no_time_params)
-        sma_high_df = get_n_last_sma_df(10, SMA_HIGH, **no_time_params)
+        sma_low_df = get_n_last_sma_df(last_records, SMA_LOW, **no_time_params).tail(10)
+        sma_high_df = get_n_last_sma_df(last_records, SMA_HIGH, **no_time_params).tail(10)
         small_prices_df = prices_df.tail(10)
 
         # form a small price dataframe and add SMA to price dataframe
