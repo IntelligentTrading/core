@@ -1,11 +1,9 @@
 from __future__ import absolute_import, unicode_literals
 import os
-#import time
 import logging
 
 from celery import Celery, signals
 from celery.schedules import crontab
-#from celery.exceptions import SoftTimeLimitExceeded
 from celery.signals import worker_ready
 
 from settings import INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS, SHORT, MEDIUM, LONG
@@ -72,9 +70,14 @@ def at_start(sender, **kwarg):
     with sender.app.connection() as conn:
         sender.app.send_task('taskapp.tasks.precache_info_bot', args=None, connection=conn)
 
+## Debug, demo tasks
 @app.task(bind=True)
 def debug_task(self):
     print('Request: {0!r}'.format(self.request))
+
+@app.task
+def demo(x):
+    print("Hi, "+x)
 
 # Periodic Tasks
 # @app.task
