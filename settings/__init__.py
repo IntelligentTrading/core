@@ -62,7 +62,7 @@ logger.info("Deployment environment detected: {}".format(dt_key))
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = LOCAL or STAGE
+DEBUG = LOCAL # or STAGE # Using settings.DEBUG leads to a memory leak in Celery
 
 AUTH_USER_MODEL = 'user.User'
 
