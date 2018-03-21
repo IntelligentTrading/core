@@ -90,6 +90,7 @@ INSTALLED_APPS = [
     'apps.signal',
     'apps.api',
     'apps.info_bot',
+    'taskapp',
 
     # DJANGO APPS
     'django.contrib.admin',
@@ -260,9 +261,14 @@ CACHE_MIDDLEWARE_ALIAS = 'default'
 CACHE_MIDDLEWARE_KEY_PREFIX = ''
 
 INFO_BOT_TELEGRAM_BOT_API_TOKEN = os.environ.get('INFO_BOT_TELEGRAM_BOT_API_TOKEN', '123ABC')
-INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS = 3 * 60 * 60 # cache telegram bot reply for 3 hour
+INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS = 4 * 60 * 60 # cache telegram bot reply for 4 hour
 INFO_BOT_CRYPTOPANIC_API_TOKEN = os.environ.get('INFO_BOT_CRYPTOPANIC_API_TOKEN', '123ABC')
 INFO_BOT_ADMIN_USERNAME = ''
+
+CELERY_BROKER_URL =  os.environ.get('CLOUDAMQP_URL', 'amqp://guest:guest@localhost//')
+CELERY_BROKER_POOL_LIMIT = 1 # for free tier of the ampq https://devcenter.heroku.com/articles/cloudamqp#celery
+
+
 
 if LOCAL:
     logger.info("LOCAL environment detected. Importing local_settings.py")
@@ -271,5 +277,3 @@ if LOCAL:
     except:
         logger.error("Could not successfully import local_settings.py. This is necessary if you are running locally. This file should be in version control.")
         raise
-
-
