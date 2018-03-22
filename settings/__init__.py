@@ -62,7 +62,7 @@ logger.info("Deployment environment detected: {}".format(dt_key))
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = LOCAL or STAGE
+DEBUG = LOCAL # or STAGE # Using settings.DEBUG leads to a memory leak in Celery
 
 AUTH_USER_MODEL = 'user.User'
 
@@ -90,6 +90,7 @@ INSTALLED_APPS = [
     'apps.signal',
     'apps.api',
     'apps.info_bot',
+    'taskapp',
 
     # DJANGO APPS
     'django.contrib.admin',
@@ -242,7 +243,6 @@ time_speed = 1  # set to 1 for production, 10 for fast debugging
 EMIT_SMA = True
 EMIT_RSI = True
 
-
 # @Alexander REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
@@ -255,14 +255,8 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
 }
 
-CACHE_MIDDLEWARE_SECONDS = SHORT * 60 # cache pages for 60 min same as SHORT period in price model
-CACHE_MIDDLEWARE_ALIAS = 'default'
-CACHE_MIDDLEWARE_KEY_PREFIX = ''
+INFO_BOT_ADMIN_USERNAME = '' # Telegram info-bot admin disabled
 
-INFO_BOT_TELEGRAM_BOT_API_TOKEN = os.environ.get('INFO_BOT_TELEGRAM_BOT_API_TOKEN', '123ABC')
-INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS = 3 * 60 * 60 # cache telegram bot reply for 3 hour
-INFO_BOT_CRYPTOPANIC_API_TOKEN = os.environ.get('INFO_BOT_CRYPTOPANIC_API_TOKEN', '123ABC')
-INFO_BOT_ADMIN_USERNAME = ''
 
 if LOCAL:
     logger.info("LOCAL environment detected. Importing local_settings.py")
@@ -271,5 +265,3 @@ if LOCAL:
     except:
         logger.error("Could not successfully import local_settings.py. This is necessary if you are running locally. This file should be in version control.")
         raise
-
-
