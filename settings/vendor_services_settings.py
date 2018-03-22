@@ -49,57 +49,8 @@ if not LOCAL:
         }
     }
 
-# Heroku Memcachier settings
-# Add MemCachier addon to heroku
-# def get_cache():
-#   import os
-#   try:
-#     servers = os.environ['MEMCACHIER_SERVERS']
-#     username = os.environ['MEMCACHIER_USERNAME']
-#     password = os.environ['MEMCACHIER_PASSWORD']
-#     return {
-#       'default': {
-#         'BACKEND': 'django.core.cache.backends.memcached.PyLibMCCache',
-#         # TIMEOUT is not the connection timeout! It's the default expiration
-#         # timeout that should be applied to keys! Setting it to `None`
-#         # disables expiration.
-#         'TIMEOUT': None,
-#         'LOCATION': servers,
-#         'OPTIONS': {
-#           'binary': True,
-#           'username': username,
-#           'password': password,
-#           'behaviors': {
-#             # Enable faster IO
-#             'no_block': True,
-#             'tcp_nodelay': True,
-#             # Keep connection alive
-#             'tcp_keepalive': True,
-#             # Timeout settings
-#             'connect_timeout': 2000, # ms
-#             'send_timeout': 750 * 1000, # us
-#             'receive_timeout': 750 * 1000, # us
-#             '_poll_timeout': 2000, # ms
-#             # Better failover
-#             'ketama': True,
-#             'remove_failed': 1,
-#             'retry_timeout': 2,
-#             'dead_timeout': 30,
-#           }
-#         }
-#       }
-#     }
-#   except:
-#     return {
-#       'default': {
-#         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'
-#       }
-#     }
-
-
 # Memcached Cloud settings
 # https://devcenter.heroku.com/articles/memcachedcloud
-
 def get_cache():
   import os
   try:
@@ -124,4 +75,21 @@ def get_cache():
     }
 
 CACHES = get_cache()
+
+# UpdateCacheMiddleware settings. For auto caching RESTful API.
+CACHE_MIDDLEWARE_SECONDS = 60 * 60 # cache pages for 60 min same as SHORT period in price model
+CACHE_MIDDLEWARE_ALIAS = 'default'
+CACHE_MIDDLEWARE_KEY_PREFIX = ''
+
+# Celery settings (optimized for CloudAMQP)
+CELERY_BROKER_URL =  os.environ.get('CLOUDAMQP_URL', 'amqp://guest:guest@localhost//')
+CELERY_BROKER_POOL_LIMIT = 1 # for free tier of the ampq https://devcenter.heroku.com/articles/cloudamqp#celery
+CELERYD_TASK_TIME_LIMIT = 1*60*60 # 1 hour, in seconds
+CELERY_BROKER_HEARTBEAT = None # CloudAMQP using TCP keep-alive instead
+CELERY_BROKER_CONNECTION_TIMEOUT = 30 # default 4 is not enough for CloudAMQP
+
+# Telegram settings for itt-info-bot
+INFO_BOT_TELEGRAM_BOT_API_TOKEN = os.environ.get('INFO_BOT_TELEGRAM_BOT_API_TOKEN', '123ABC')
+INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS = 4 * 60 * 60 # cache telegram bot reply for 4 hour
+INFO_BOT_CRYPTOPANIC_API_TOKEN = os.environ.get('INFO_BOT_CRYPTOPANIC_API_TOKEN', '123ABC')
 

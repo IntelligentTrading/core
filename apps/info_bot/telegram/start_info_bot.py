@@ -5,6 +5,7 @@ https://github.com/python-telegram-bot/python-telegram-bot
 Telegram API:
 https://core.telegram.org/bots/api
 """
+import logging
 
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram.ext import InlineQueryHandler
@@ -15,7 +16,13 @@ from apps.info_bot.telegram.bot_commands import special_commands
 
 from settings import LOCAL, INFO_BOT_TELEGRAM_BOT_API_TOKEN, INFO_BOT_ADMIN_USERNAME
 
+logger = logging.getLogger(__name__)
 
+
+
+# too much DEBUG messages from telegram
+logging.getLogger("telegram.bot").setLevel(logging.INFO)
+logging.getLogger("telegram.vendor").setLevel(logging.INFO)
 
 def start_info_bot():
     updater = Updater(token=INFO_BOT_TELEGRAM_BOT_API_TOKEN)
@@ -41,6 +48,8 @@ def start_info_bot():
     # handle unkomwn commands
     # this handler must be added last.
     dp.add_handler(MessageHandler(Filters.command, special_commands.unknown))
+
+    logger.info("All handlers added to the telegram info_bot.")
 
     updater.start_polling()
     updater.idle()

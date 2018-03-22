@@ -243,7 +243,6 @@ time_speed = 1  # set to 1 for production, 10 for fast debugging
 EMIT_SMA = True
 EMIT_RSI = True
 
-
 # @Alexander REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
@@ -256,18 +255,7 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
 }
 
-CACHE_MIDDLEWARE_SECONDS = SHORT * 60 # cache pages for 60 min same as SHORT period in price model
-CACHE_MIDDLEWARE_ALIAS = 'default'
-CACHE_MIDDLEWARE_KEY_PREFIX = ''
-
-INFO_BOT_TELEGRAM_BOT_API_TOKEN = os.environ.get('INFO_BOT_TELEGRAM_BOT_API_TOKEN', '123ABC')
-INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS = 4 * 60 * 60 # cache telegram bot reply for 4 hour
-INFO_BOT_CRYPTOPANIC_API_TOKEN = os.environ.get('INFO_BOT_CRYPTOPANIC_API_TOKEN', '123ABC')
-INFO_BOT_ADMIN_USERNAME = ''
-
-CELERY_BROKER_URL =  os.environ.get('CLOUDAMQP_URL', 'amqp://guest:guest@localhost//')
-CELERY_BROKER_POOL_LIMIT = 1 # for free tier of the ampq https://devcenter.heroku.com/articles/cloudamqp#celery
-
+INFO_BOT_ADMIN_USERNAME = '' # Telegram info-bot admin disabled
 
 
 if LOCAL:
