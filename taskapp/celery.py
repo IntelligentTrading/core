@@ -21,6 +21,10 @@ app = Celery('core')
 #   should have a `CELERY_` prefix.
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
+# app.conf.update(
+#     CELERY_BROKER_POOL_LIMIT=1,
+# )
+
 # Load task modules from all registered Django app configs.
 # Celery auto-discover modules in tasks.py files
 app.autodiscover_tasks()
