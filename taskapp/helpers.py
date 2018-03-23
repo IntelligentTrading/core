@@ -79,9 +79,11 @@ def _save_prices_and_volumes(data, timestamp):
 
 def _compute_and_save_indicators(resample_period_par):
 
+    model = None
     try:
         model_path = sys.path[0] + '/apps/indicator/models/lstm_model.h5'
         model = load_model(model_path)
+        logger.debug(" >> KERAS model loaded sucessfully!")
     except Exception as e:
         logger.error(" >>> Canot load KERAS model " + str(e))
 
@@ -106,7 +108,7 @@ def _compute_and_save_indicators(resample_period_par):
         }
 
         ################# BACK CALCULATION (need only once when run first time)
-        BACK_REC = 310   # how many records to calculate back in time
+        BACK_REC = 350   # how many records to calculate back in time
         BACK_TIME = timestamp - BACK_REC * resample_period * 60  # same in sec
 
         last_time_computed = get_first_resampled_time(POLONIEX, transaction_currency, counter_currency, resample_period)
@@ -196,11 +198,14 @@ def _compute_and_save_indicators(resample_period_par):
 
 
             # data (124451, 196, 4) : 4 = price/volume/price_var/volume_var
-            trend_predicted = model.predict(X_test)
+            if model :
+                trend_predicted = model.predict(X_test)
+            else:
+                logger.debug(">> Model does not exists! ")
 
             logger.debug('>>> AI EMITS <<< Predicted next trend probabilities (same/up/down): ' + str(trend_predicted))
         except Exception as e:
-            logger.error(">> AI chek up error: probably keras or tensorflow do not work :(  |  " + str(e))
+            logger.error(">> AI check up error: probably keras or tensorflow do not work :(  |  " + str(e))
 
         ##############################
         # check for events and save if any
