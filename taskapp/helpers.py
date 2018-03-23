@@ -1,6 +1,7 @@
 import json
 import logging
 import time
+import sys
 
 from django.core.management.base import BaseCommand
 from requests import get, RequestException
@@ -8,12 +9,16 @@ from requests import get, RequestException
 from apps.channel.models import ExchangeData
 from apps.channel.models.exchange_data import POLONIEX
 from apps.indicator.models import Price, Volume
-from apps.indicator.models.price import get_currency_value_from_string
+from apps.indicator.models.price import get_currency_value_from_string, get_n_last_prices_ts
 from apps.indicator.models.price_resampl import get_first_resampled_time
+from apps.indicator.models.volume import get_n_last_volumes_ts
 
 from settings import time_speed  # 1 / 10
 from settings import USDT_COINS, BTC_COINS
 from settings import PERIODS_LIST, SHORT, MEDIUM, LONG
+
+import pandas as pd
+import numpy as np
 
 
 
@@ -146,6 +151,57 @@ def _calculate_one_par(timestamp, resample_period, transaction_currency, counter
         except Exception as e:
             logger.error(str(ind) + " Indicator Exception: " + str(e))
 
+
+    ############################ check feasibility of keras and tensor flow on Heroku
+    try:
+        res_period = '10min'
+        win_size = 200
+        needed_records = win_size * 11
+
+        raw_price_ts = get_n_last_prices_ts(needed_records, indicator_params_dict['source'], transaction_currency, counter_currency)
+        raw_volume_ts = get_n_last_volumes_ts(needed_records, indicator_params_dict['source'], transaction_currency, counter_currency)
+
+        raw_data_frame = pd.merge(raw_price_ts.to_frame(name='price'), raw_volume_ts.to_frame(name='volume'), how='left', left_index=True, right_index=True)
+        raw_data_frame[pd.isnull(raw_data_frame)] = None
+
+        data_ts = raw_data_frame.resample(rule=res_period).mean()
+        data_ts['price_var'] = raw_data_frame['price'].resample(rule=res_period).var()
+        data_ts['volume_var'] = raw_data_frame['volume'].resample(rule=res_period).var()
+        data_ts = data_ts.interpolate()
+        data_ts = data_ts.tail(win_size)
+        assert len(data_ts) == win_size, ' :: Wrong training example lenght!'
+
+        # data (124451, 196, 4) : 4 = price/volume/price_var/volume_var
+        X_test = np.zeros([1,win_size,4])
+        X_test[0, :, 0] = data_ts['price']
+        X_test[0, :, 1] = data_ts['volume']
+        X_test[0, :, 2] = data_ts['price_var']
+        X_test[0, :, 3] = data_ts['volume_var']
+
+        for example in range(X_test.shape[0]):
+            X_test[example, :, 0] = (X_test[example, :, 0] - X_test[example, -1, 0]) / (np.max(X_test[example, :, 0]) - np.min(X_test[example, :, 0]))
+            X_test[example, :, 1] = (X_test[example, :, 1] - X_test[example, -1, 1]) / (np.max(X_test[example, :, 1]) - np.min(X_test[example, :, 1]))
+            X_test[example, :, 2] = (X_test[example, :, 2] - X_test[example, -1, 2]) / (np.max(X_test[example, :, 2]) - np.min(X_test[example, :, 2]))
+            X_test[example, :, 3] = (X_test[example, :, 3] - X_test[example, -1, 3]) / (np.max(X_test[example, :, 3]) - np.min(X_test[example, :, 3]))
+
+        # check for NaN
+
+
+        # check if keras and tensor flow are workging from Heroku
+        logger.debug('@@@@@@    Prepare to run Keras     @@@@@@@@@')
+        from keras.models import load_model
+
+        model_path = sys.path[0] + '/apps/indicator/models/lstm_model.h5'
+        model = load_model(model_path)
+
+        # data (124451, 196, 4) : 4 = price/volume/price_var/volume_var
+        trend_predicted = model.predict(X_test)
+
+        logger.debug('>>> AI EMITS <<< Predicted next trend probabilities (same/up/down): ' + str(trend_predicted))
+    except Exception as e:
+        logger.error(">> AI chek up error: probably keras or tensorflow do not work :(  |  " + str(e))
+
+    ##############################
     # check for events and save if any
     events_list = [EventsElementary, EventsLogical]
     for event in events_list:

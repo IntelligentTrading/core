@@ -1,5 +1,7 @@
 from django.db import models
 from unixtimestampfield.fields import UnixTimeStampField
+from datetime import timedelta, datetime
+import pandas as pd
 
 from apps.channel.models.exchange_data import SOURCE_CHOICES
 from apps.indicator.models.price import Price
@@ -17,3 +19,17 @@ class Volume(models.Model):
     # MODEL PROPERTIES
 
     # MODEL FUNCTIONS
+
+def get_n_last_volumes_ts(n, source, transaction_currency, counter_currency):
+    back_in_time_records = list(Volume.objects.filter(
+        source=source,
+        transaction_currency=transaction_currency,
+        counter_currency=counter_currency,
+        timestamp__gte=datetime.now() - timedelta(minutes=n)
+    ).values('timestamp', 'volume').order_by('timestamp'))
+
+    if back_in_time_records:
+        return pd.Series(
+            data = [rec['volume'] for rec in back_in_time_records],
+            index=[rec['timestamp'] for rec in back_in_time_records]
+        )
