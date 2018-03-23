@@ -200,10 +200,11 @@ def _compute_and_save_indicators(resample_period_par):
             # data (124451, 196, 4) : 4 = price/volume/price_var/volume_var
             if model :
                 trend_predicted = model.predict(X_test)
+                logger.debug('>>> AI EMITS <<< Predicted next trend probabilities (same/up/down): ' + str(trend_predicted))
             else:
                 logger.debug(">> Model does not exists! ")
 
-            logger.debug('>>> AI EMITS <<< Predicted next trend probabilities (same/up/down): ' + str(trend_predicted))
+
         except Exception as e:
             logger.error(">> AI check up error: probably keras or tensorflow do not work :(  |  " + str(e))
 
