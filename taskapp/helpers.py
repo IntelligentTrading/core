@@ -192,10 +192,10 @@ def _calculate_one_par(timestamp, resample_period, transaction_currency, counter
         from keras.models import load_model
 
         model_path = sys.path[0] + '/apps/indicator/models/lstm_model.h5'
-        model = load_model(model_path)
+        #model = load_model(model_path)
 
         # data (124451, 196, 4) : 4 = price/volume/price_var/volume_var
-        trend_predicted = model.predict(X_test)
+        #trend_predicted = model.predict(X_test)
 
         logger.debug('>>> AI EMITS <<< Predicted next trend probabilities (same/up/down): ' + str(trend_predicted))
     except Exception as e:
