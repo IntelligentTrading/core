@@ -81,7 +81,8 @@ def _compute_and_save_indicators(resample_period_par):
 
     model = None
     try:
-        model_path = sys.path[0] + '/apps/indicator/models/lstm_model.h5'
+        syspath = sys.path[0]
+        model_path = '/apps/indicator/models/lstm_model.h5'
         model = load_model(model_path)
         logger.debug(" >> KERAS model loaded sucessfully!")
     except Exception as e:
