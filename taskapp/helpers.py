@@ -79,6 +79,7 @@ def _save_prices_and_volumes(data, timestamp):
 
 def _compute_and_save_indicators(resample_period_par):
 
+    '''
     model = None
     try:
         syspath = sys.path[0]
@@ -87,7 +88,7 @@ def _compute_and_save_indicators(resample_period_par):
         logger.debug(" >> KERAS model loaded sucessfully!")
     except Exception as e:
         logger.error(" >>> Canot load KERAS model " + str(e))
-
+    '''
 
     timestamp = time.time() // (1 * 60) * (1 * 60)   # rounded to a minute
     resample_period = resample_period_par['period']
@@ -109,7 +110,7 @@ def _compute_and_save_indicators(resample_period_par):
         }
 
         ################# BACK CALCULATION (need only once when run first time)
-        BACK_REC = 350   # how many records to calculate back in time
+        BACK_REC = 410   # how many records to calculate back in time
         BACK_TIME = timestamp - BACK_REC * resample_period * 60  # same in sec
 
         last_time_computed = get_first_resampled_time(POLONIEX, transaction_currency, counter_currency, resample_period)
@@ -160,6 +161,7 @@ def _compute_and_save_indicators(resample_period_par):
 
 
         ############################ check feasibility of keras and tensor flow on Heroku
+        '''
         try:
             res_period = '10min'
             win_size = 200
@@ -208,6 +210,7 @@ def _compute_and_save_indicators(resample_period_par):
 
         except Exception as e:
             logger.error(">> AI check up error: probably keras or tensorflow do not work :(  |  " + str(e))
+        '''
 
         ##############################
         # check for events and save if any
