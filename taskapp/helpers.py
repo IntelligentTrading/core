@@ -2,6 +2,7 @@ import json
 import logging
 import time
 import sys
+import boto
 
 from django.core.management.base import BaseCommand
 from requests import get, RequestException
@@ -18,11 +19,11 @@ from apps.indicator.models.sma import Sma
 from apps.indicator.models.rsi import Rsi
 from apps.indicator.models.events_elementary import EventsElementary
 from apps.indicator.models.events_logical import EventsLogical
-from keras.models import load_model
 
 from settings import time_speed  # 1 / 10
 from settings import USDT_COINS, BTC_COINS
 from settings import PERIODS_LIST, SHORT, MEDIUM, LONG
+from settings import QUEUE_NAME, AWS_OPTIONS, DEFAULT_FILE_STORAGE
 
 import pandas as pd
 import numpy as np
@@ -80,6 +81,7 @@ def _save_prices_and_volumes(data, timestamp):
 def _compute_and_save_indicators(resample_period_par):
 
     '''
+    # read the pre-trained model
     model = None
     try:
         syspath = sys.path[0]
@@ -89,6 +91,21 @@ def _compute_and_save_indicators(resample_period_par):
     except Exception as e:
         logger.error(" >>> Canot load KERAS model " + str(e))
     '''
+
+    ######### import the pre-trained AI model
+    from keras.models import load_model
+    from boto.s3.key import Key
+
+    conn = boto.s3.connect_to_region("us-east-1",
+                            aws_access_key_id=AWS_OPTIONS['AWS_ACCESS_KEY_ID'],
+                            aws_secret_access_key=AWS_OPTIONS['AWS_SECRET_ACCESS_KEY'])
+    bucket = conn.get_bucket(AWS_OPTIONS['AWS_STORAGE_BUCKET_NAME'])
+    key_obj = Key(bucket)
+    key_obj.key = 'lstm_model.h5'
+    contents = key_obj.get_contents_to_filename('lstm_model.h5')
+    model = load_model('lstm_model.h5')
+
+
 
     timestamp = time.time() // (1 * 60) * (1 * 60)   # rounded to a minute
     resample_period = resample_period_par['period']
@@ -108,6 +125,7 @@ def _compute_and_save_indicators(resample_period_par):
             'counter_currency': counter_currency,
             'resample_period': resample_period
         }
+
 
         ################# BACK CALCULATION (need only once when run first time)
         BACK_REC = 410   # how many records to calculate back in time
@@ -161,11 +179,14 @@ def _compute_and_save_indicators(resample_period_par):
 
 
         ############################ check feasibility of keras and tensor flow on Heroku
-        '''
+
         try:
+            start = time.time()
             res_period = '10min'
+
+            # TODO get win_size etc from keras model file itself
             win_size = 200
-            needed_records = win_size * 11
+            needed_records = win_size * 11  # because of 10min
 
             raw_price_ts = get_n_last_prices_ts(needed_records, indicator_params_dict['source'], transaction_currency, counter_currency)
             raw_volume_ts = get_n_last_volumes_ts(needed_records, indicator_params_dict['source'], transaction_currency, counter_currency)
@@ -207,10 +228,13 @@ def _compute_and_save_indicators(resample_period_par):
             else:
                 logger.debug(">> Model does not exists! ")
 
+            end = time.time()
+            logger.debug(" ELAPSED Time for prediction: " + str(end - start))
+
 
         except Exception as e:
             logger.error(">> AI check up error: probably keras or tensorflow do not work :(  |  " + str(e))
-        '''
+
 
         ##############################
         # check for events and save if any
