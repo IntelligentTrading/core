@@ -79,8 +79,7 @@ def _save_prices_and_volumes(data, timestamp):
 
 
 def _compute_and_save_indicators(resample_period_par):
-
-
+    '''
     ######### import the pre-trained AI model
     # TODO try-catch
     # TODO model management
@@ -96,7 +95,7 @@ def _compute_and_save_indicators(resample_period_par):
     contents = key_obj.get_contents_to_filename('lstm_model.h5')
     model = load_model('lstm_model.h5')
     logger.debug(" >> KERAS model loaded sucessfully!")
-
+    '''
 
 
     timestamp = time.time() // (1 * 60) * (1 * 60)   # rounded to a minute
@@ -171,7 +170,7 @@ def _compute_and_save_indicators(resample_period_par):
 
 
         ############################ check feasibility of keras and tensor flow on Heroku
-
+        '''
         try:
             # check if keras and tensor flow are workging from Heroku
             logger.debug('@@@@@@    Prepare to run AI prediction    @@@@@@@@@')
@@ -226,7 +225,7 @@ def _compute_and_save_indicators(resample_period_par):
             logger.error(">> AI prediction error  |  " + str(e))
 
         logger.debug('@@@@@@   End of running AI  @@@@@@@')
-
+        '''
         ##############################
         # check for events and save if any
         events_list = [EventsElementary, EventsLogical]
