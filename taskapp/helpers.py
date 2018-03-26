@@ -80,19 +80,10 @@ def _save_prices_and_volumes(data, timestamp):
 
 def _compute_and_save_indicators(resample_period_par):
 
-    '''
-    # read the pre-trained model
-    model = None
-    try:
-        syspath = sys.path[0]
-        model_path = '/apps/indicator/models/lstm_model.h5'
-        model = load_model(model_path)
-        logger.debug(" >> KERAS model loaded sucessfully!")
-    except Exception as e:
-        logger.error(" >>> Canot load KERAS model " + str(e))
-    '''
 
     ######### import the pre-trained AI model
+    # TODO try-catch
+    # TODO model management
     from keras.models import load_model
     from boto.s3.key import Key
 
@@ -104,6 +95,7 @@ def _compute_and_save_indicators(resample_period_par):
     key_obj.key = 'lstm_model.h5'
     contents = key_obj.get_contents_to_filename('lstm_model.h5')
     model = load_model('lstm_model.h5')
+    logger.debug(" >> KERAS model loaded sucessfully!")
 
 
 
@@ -181,6 +173,9 @@ def _compute_and_save_indicators(resample_period_par):
         ############################ check feasibility of keras and tensor flow on Heroku
 
         try:
+            # check if keras and tensor flow are workging from Heroku
+            logger.debug('@@@@@@    Prepare to run AI prediction    @@@@@@@@@')
+
             start = time.time()
             res_period = '10min'
 
@@ -199,6 +194,7 @@ def _compute_and_save_indicators(resample_period_par):
             data_ts['volume_var'] = raw_data_frame['volume'].resample(rule=res_period).var()
             data_ts = data_ts.interpolate()
             data_ts = data_ts.tail(win_size)
+            logger.debug('lenght of one training example is ' + str(len(data_ts)) )
             assert len(data_ts) == win_size, ' :: Wrong training example lenght!'
 
             # data (124451, 196, 4) : 4 = price/volume/price_var/volume_var
@@ -214,27 +210,22 @@ def _compute_and_save_indicators(resample_period_par):
                 X_test[example, :, 2] = (X_test[example, :, 2] - X_test[example, -1, 2]) / (np.max(X_test[example, :, 2]) - np.min(X_test[example, :, 2]))
                 X_test[example, :, 3] = (X_test[example, :, 3] - X_test[example, -1, 3]) / (np.max(X_test[example, :, 3]) - np.min(X_test[example, :, 3]))
 
-            # check for NaN
-
-
-            # check if keras and tensor flow are workging from Heroku
-            logger.debug('@@@@@@    Prepare to run Keras     @@@@@@@@@')
-
 
             # data (124451, 196, 4) : 4 = price/volume/price_var/volume_var
             if model :
                 trend_predicted = model.predict(X_test)
-                logger.debug('>>> AI EMITS <<< Predicted next trend probabilities (same/up/down): ' + str(trend_predicted))
+                logger.debug('>>> AI EMITS <<< Predicted probabilities for price for next 15 hours, (same/up/down): ' + str(trend_predicted))
             else:
                 logger.debug(">> Model does not exists! ")
 
             end = time.time()
-            logger.debug(" ELAPSED Time for prediction: " + str(end - start))
+            logger.debug(" ELAPSED Time of AI prediction: " + str(end - start))
 
 
         except Exception as e:
-            logger.error(">> AI check up error: probably keras or tensorflow do not work :(  |  " + str(e))
+            logger.error(">> AI prediction error  |  " + str(e))
 
+        logger.debug('@@@@@@   End of running AI  @@@@@@@')
 
         ##############################
         # check for events and save if any
