@@ -48,7 +48,7 @@ def setup_periodic_tasks(sender, **kwargs):
         )
 
     sender.add_periodic_task(
-        ccrontab(minute=0),
+        crontab(minute=0),
         tasks.compute_and_save_indicators.s({'period': MEDIUM}),
         name='at the beginning of every 4 hours',
         )
