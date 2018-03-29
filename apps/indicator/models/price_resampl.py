@@ -82,7 +82,6 @@ def get_n_last_resampl_df(n, source, transaction_currency, counter_currency, res
         df['close_price'] = close_prices
         df['midpoint_price'] = midpoint_prices
         # we need df in a right order (from past to future) to make sma rolling work righ
-        # TODO: hey, boy, you just need to remove minus from order_by('-timestamp')
         df = df.iloc[::-1] # df.sort_index(inplace=True)  might works too
 
     return df

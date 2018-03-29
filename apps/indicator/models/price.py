@@ -46,13 +46,10 @@ def get_n_last_prices_ts(n, source, transaction_currency, counter_currency ):
         transaction_currency=transaction_currency,
         counter_currency=counter_currency,
         timestamp__gte=datetime.now() - timedelta(minutes=n)
-    ).values('timestamp', 'price').order_by('timestamp'))
+    ).values('timestamp', 'price').order_by('-timestamp'))
 
     if back_in_time_records:
-        return pd.Series(
-            data= [rec['price'] for rec in back_in_time_records],
-            index = [rec['timestamp'] for rec in back_in_time_records]
-        )
+        return pd.Series([rec['price'] for rec in back_in_time_records])
 
 
 def get_currency_value_from_string(currency_string):
