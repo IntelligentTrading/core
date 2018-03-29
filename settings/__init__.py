@@ -87,6 +87,7 @@ INSTALLED_APPS = [
     'apps.user',
     'apps.channel',
     'apps.indicator',
+    'apps.ai',
     'apps.signal',
     'apps.api',
     'apps.info_bot',

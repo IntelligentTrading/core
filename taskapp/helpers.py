@@ -17,16 +17,19 @@ from apps.indicator.models.volume import get_n_last_volumes_ts
 from apps.indicator.models.price_resampl import PriceResampl
 from apps.indicator.models.sma import Sma
 from apps.indicator.models.rsi import Rsi
+from apps.indicator.models.nn_price_class_predictor import AnnPriceClassification
 from apps.indicator.models.events_elementary import EventsElementary
 from apps.indicator.models.events_logical import EventsLogical
+
+from apps.ai.models.nn_model import get_ann_model
 
 from settings import time_speed  # 1 / 10
 from settings import USDT_COINS, BTC_COINS
 from settings import PERIODS_LIST, SHORT, MEDIUM, LONG
 from settings import QUEUE_NAME, AWS_OPTIONS, DEFAULT_FILE_STORAGE
 
-import pandas as pd
-import numpy as np
+
+
 
 
 
@@ -79,24 +82,12 @@ def _save_prices_and_volumes(data, timestamp):
 
 
 def _compute_and_save_indicators(resample_period_par):
-    '''
+
     ######### import the pre-trained AI model
     # TODO try-catch
-    # TODO model management
-    from keras.models import load_model
-    from boto.s3.key import Key
 
-    conn = boto.s3.connect_to_region("us-east-1",
-                            aws_access_key_id=AWS_OPTIONS['AWS_ACCESS_KEY_ID'],
-                            aws_secret_access_key=AWS_OPTIONS['AWS_SECRET_ACCESS_KEY'])
-    bucket = conn.get_bucket(AWS_OPTIONS['AWS_STORAGE_BUCKET_NAME'])
-    key_obj = Key(bucket)
-    key_obj.key = 'lstm_model.h5'
-    contents = key_obj.get_contents_to_filename('lstm_model.h5')
-    model = load_model('lstm_model.h5')
-    logger.debug(" >> KERAS model loaded sucessfully!")
-    '''
-
+    # choose the nn model from DB
+    ann_model = get_ann_model('lstm_model.h5')
 
     timestamp = time.time() // (1 * 60) * (1 * 60)   # rounded to a minute
     resample_period = resample_period_par['period']
@@ -119,7 +110,7 @@ def _compute_and_save_indicators(resample_period_par):
 
 
         ################# BACK CALCULATION (need only once when run first time)
-        BACK_REC = 410   # how many records to calculate back in time
+        BACK_REC = 10   # how many records to calculate back in time
         BACK_TIME = timestamp - BACK_REC * resample_period * 60  # same in sec
 
         last_time_computed = get_first_resampled_time(POLONIEX, transaction_currency, counter_currency, resample_period)
@@ -168,64 +159,14 @@ def _compute_and_save_indicators(resample_period_par):
             except Exception as e:
                 logger.error(str(ind) + " Indicator Exception: " + str(e))
 
-
-        ############################ check feasibility of keras and tensor flow on Heroku
-        '''
+        # calculate ANN indicator(s)
         try:
-            # check if keras and tensor flow are workging from Heroku
-            logger.debug('@@@@@@    Prepare to run AI prediction    @@@@@@@@@')
-
-            start = time.time()
-            res_period = '10min'
-
-            # TODO get win_size etc from keras model file itself
-            win_size = 200
-            needed_records = win_size * 11  # because of 10min
-
-            raw_price_ts = get_n_last_prices_ts(needed_records, indicator_params_dict['source'], transaction_currency, counter_currency)
-            raw_volume_ts = get_n_last_volumes_ts(needed_records, indicator_params_dict['source'], transaction_currency, counter_currency)
-
-            raw_data_frame = pd.merge(raw_price_ts.to_frame(name='price'), raw_volume_ts.to_frame(name='volume'), how='left', left_index=True, right_index=True)
-            raw_data_frame[pd.isnull(raw_data_frame)] = None
-
-            data_ts = raw_data_frame.resample(rule=res_period).mean()
-            data_ts['price_var'] = raw_data_frame['price'].resample(rule=res_period).var()
-            data_ts['volume_var'] = raw_data_frame['volume'].resample(rule=res_period).var()
-            data_ts = data_ts.interpolate()
-            data_ts = data_ts.tail(win_size)
-            logger.debug('lenght of one training example is ' + str(len(data_ts)) )
-            assert len(data_ts) == win_size, ' :: Wrong training example lenght!'
-
-            # data (124451, 196, 4) : 4 = price/volume/price_var/volume_var
-            X_test = np.zeros([1,win_size,4])
-            X_test[0, :, 0] = data_ts['price']
-            X_test[0, :, 1] = data_ts['volume']
-            X_test[0, :, 2] = data_ts['price_var']
-            X_test[0, :, 3] = data_ts['volume_var']
-
-            for example in range(X_test.shape[0]):
-                X_test[example, :, 0] = (X_test[example, :, 0] - X_test[example, -1, 0]) / (np.max(X_test[example, :, 0]) - np.min(X_test[example, :, 0]))
-                X_test[example, :, 1] = (X_test[example, :, 1] - X_test[example, -1, 1]) / (np.max(X_test[example, :, 1]) - np.min(X_test[example, :, 1]))
-                X_test[example, :, 2] = (X_test[example, :, 2] - X_test[example, -1, 2]) / (np.max(X_test[example, :, 2]) - np.min(X_test[example, :, 2]))
-                X_test[example, :, 3] = (X_test[example, :, 3] - X_test[example, -1, 3]) / (np.max(X_test[example, :, 3]) - np.min(X_test[example, :, 3]))
-
-
-            # data (124451, 196, 4) : 4 = price/volume/price_var/volume_var
-            if model :
-                trend_predicted = model.predict(X_test)
-                logger.debug('>>> AI EMITS <<< Predicted probabilities for price for next 15 hours, (same/up/down): ' + str(trend_predicted))
-            else:
-                logger.debug(">> Model does not exists! ")
-
-            end = time.time()
-            logger.debug(" ELAPSED Time of AI prediction: " + str(end - start))
-
-
+            AnnPriceClassification.compute_all(AnnPriceClassification, ann_model, **indicator_params_dict)
         except Exception as e:
-            logger.error(">> AI prediction error  |  " + str(e))
+            logger.error("ANN Indicator Exception: " + str(e))
 
-        logger.debug('@@@@@@   End of running AI  @@@@@@@')
-        '''
+
+
         ##############################
         # check for events and save if any
         events_list = [EventsElementary, EventsLogical]
