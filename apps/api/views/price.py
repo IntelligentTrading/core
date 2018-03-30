@@ -45,7 +45,8 @@ class ListPrices(ListAPIView):
     model = serializer_class.Meta.model
     
     def get_queryset(self):
-        queryset = self.model.objects.order_by('-timestamp')
+        #queryset = self.model.objects.order_by('-timestamp')
+        queryset = self.model.objects.order_by('-id')
         queryset = filter_queryset_by_timestamp(self, queryset)
         return queryset
 
