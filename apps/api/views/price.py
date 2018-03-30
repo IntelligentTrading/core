@@ -88,6 +88,7 @@ class ListPrice(ListAPIView):
         transaction_currency = self.kwargs['transaction_currency']
         counter_currency = default_counter_currency(transaction_currency)
         queryset = self.model.objects.filter(transaction_currency=transaction_currency, \
-                    counter_currency=counter_currency).order_by('-timestamp')
+#                    counter_currency=counter_currency).order_by('-timestamp')
+                    counter_currency=counter_currency).order_by('-id')
         queryset = filter_queryset_by_timestamp(self, queryset)
         return queryset
