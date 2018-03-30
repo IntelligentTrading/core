@@ -1,7 +1,8 @@
 import boto
 import typing
 from settings import AWS_OPTIONS, DEFAULT_FILE_STORAGE
-
+import logging
+logger = logging.getLogger(__name__)
 
 def get_readable_stream(s3_key):
     s3_key.open_read()
@@ -28,7 +29,7 @@ def download_file_from_s3(s3filename):
                                      aws_secret_access_key=AWS_OPTIONS['AWS_SECRET_ACCESS_KEY'])
 
     bucket = conn.get_bucket(AWS_OPTIONS['AWS_STORAGE_BUCKET_NAME'])
-    key_obj = boto.s3.Key(bucket)
+    key_obj = boto.s3.key.Key(bucket)
     key_obj.key = s3filename
 
-    contents = key_obj.get_contents_to_filename('lstm_model.h5')
+    contents = key_obj.get_contents_to_filename(s3filename)

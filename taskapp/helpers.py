@@ -17,11 +17,11 @@ from apps.indicator.models.volume import get_n_last_volumes_ts
 from apps.indicator.models.price_resampl import PriceResampl
 from apps.indicator.models.sma import Sma
 from apps.indicator.models.rsi import Rsi
-from apps.indicator.models.nn_price_class_predictor import AnnPriceClassification
+from apps.indicator.models.ann_future_price_classification import AnnPriceClassification
 from apps.indicator.models.events_elementary import EventsElementary
 from apps.indicator.models.events_logical import EventsLogical
 
-from apps.ai.models.nn_model import get_ann_model
+from apps.ai.models.nn_model import get_ann_model_object
 
 from settings import time_speed  # 1 / 10
 from settings import USDT_COINS, BTC_COINS
@@ -83,16 +83,19 @@ def _save_prices_and_volumes(data, timestamp):
 
 def _compute_and_save_indicators(resample_period_par):
 
-    ######### import the pre-trained AI model
-    # TODO try-catch
-
-    # choose the nn model from DB
-    ann_model = get_ann_model('lstm_model.h5')
-
     timestamp = time.time() // (1 * 60) * (1 * 60)   # rounded to a minute
     resample_period = resample_period_par['period']
 
     logger.info(" ################# Resampling with Period: " + str(resample_period) + " #######################")
+
+    # choose the pre-trained ANN model depending on period
+    period2model = {
+        SHORT : 'lstm_model_2_2.h5',
+        MEDIUM: '',
+        LONG  : ''
+    }
+    # load model from S3 and database
+    ann_model_object = get_ann_model_object(period2model[resample_period])
 
     pairs_to_iterate = [(itm,Price.USDT) for itm in USDT_COINS] + [(itm,Price.BTC) for itm in BTC_COINS]
 
@@ -148,20 +151,28 @@ def _compute_and_save_indicators(resample_period_par):
             resample_object = PriceResampl.objects.create(**indicator_params_dict)
             resample_object.compute()
             resample_object.save()
+            logger.debug("  ... Resampled completed,  ELAPSED Time: " + str(time.time() - timestamp))
         except Exception as e:
             logger.error(" -> RESAMPLE EXCEPTION: " + str(e))
+
 
         # calculate and save simple indicators
         indicators_list = [Sma, Rsi]
         for ind in indicators_list:
             try:
                 ind.compute_all(ind, **indicator_params_dict)
+                logger.debug("  ... Regular indicators completed,  ELAPSED Time: " + str(time.time() - timestamp))
             except Exception as e:
                 logger.error(str(ind) + " Indicator Exception: " + str(e))
 
         # calculate ANN indicator(s)
+        # TODO: just form X_predicted here and then run prediction outside the loop !
         try:
-            AnnPriceClassification.compute_all(AnnPriceClassification, ann_model, **indicator_params_dict)
+            if ann_model_object:
+                AnnPriceClassification.compute_all(AnnPriceClassification, ann_model_object, **indicator_params_dict)
+                logger.debug("  ... ANN indicators completed,  ELAPSED Time: " + str(time.time() - timestamp))
+            else:
+                logger.info(" No ANN model, calculation does not make sence")
         except Exception as e:
             logger.error("ANN Indicator Exception: " + str(e))
 
@@ -173,5 +184,11 @@ def _compute_and_save_indicators(resample_period_par):
         for event in events_list:
             try:
                 event.check_events(event, **indicator_params_dict)
+                logger.debug("  ... Events completed,  ELAPSED Time: " + str(time.time() - timestamp))
             except Exception as e:
                 logger.error("Event Exception: " + str(e))
+
+
+
+    # TODO check if I can do a batch Keras prediction for all currencies at once
+    # NOTE: you can form an X vector inside this cycle and then run prediction!!!
