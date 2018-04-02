@@ -62,7 +62,7 @@ logger.info("Deployment environment detected: {}".format(dt_key))
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = LOCAL # or STAGE # Using settings.DEBUG leads to a memory leak in Celery
+DEBUG = LOCAL or STAGE # Using settings.DEBUG leads to a memory leak in Celery
 
 AUTH_USER_MODEL = 'user.User'
 
@@ -110,9 +110,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    # 'django.middleware.cache.UpdateCacheMiddleware',
-    # 'django.middleware.common.CommonMiddleware',
-    # 'django.middleware.cache.FetchFromCacheMiddleware',
+        # 'django.middleware.cache.UpdateCacheMiddleware',
+        # 'django.middleware.common.CommonMiddleware',
+        # 'django.middleware.cache.FetchFromCacheMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware', # for static files
     'django.contrib.sessions.middleware.SessionMiddleware',
