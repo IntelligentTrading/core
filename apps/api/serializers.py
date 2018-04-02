@@ -19,7 +19,7 @@ class ResampledPriceSerializer(serializers.ModelSerializer):
         fields = [
             'timestamp', 'source', 'counter_currency', 'transaction_currency', 'resample_period',\
             'open_price', 'close_price','low_price', 'high_price', 'midpoint_price', 'mean_price',\
-            'price_variance',
+            'price_variance', 'price_change_24h',
         ]
 
 # Price (model: Price)
