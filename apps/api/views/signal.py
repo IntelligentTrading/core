@@ -21,6 +21,7 @@ class ListSignals(ListAPIView):
 
         transaction_currency -- string BTC, ETH etc
         signal -- string SMA, RSI
+        trend -- 1, -1
         counter_currency -- number 0=BTC, 1=ETH, 2=USDT, 3=XMR
         source -- number 0=poloniex, 1=bittrex
         startdate -- from this date (inclusive). Example 2018-02-12T09:09:15
@@ -39,7 +40,7 @@ class ListSignals(ListAPIView):
     serializer_class = SignalSerializer
     pagination_class = StandardResultsSetPagination
 
-    filter_fields = ('signal', 'transaction_currency', 'counter_currency', 'source')
+    filter_fields = ('signal', 'transaction_currency', 'counter_currency', 'source', 'trend')
 
     model = serializer_class.Meta.model
 
@@ -59,6 +60,7 @@ class ListSignal(ListAPIView):
     For filtering
 
         signal -- string SMA, RSI
+        trend -- 1, -1
         counter_currency -- number 0=BTC, 1=ETH, 2=USDT, 3=XMR
         source -- number 0=poloniex, 1=bittrex
         startdate -- show inclusive from this date. For example 2018-02-12T09:09:15
@@ -77,7 +79,7 @@ class ListSignal(ListAPIView):
     serializer_class = SignalSerializer
     pagination_class = OneRecordPagination
 
-    filter_fields = ('signal', 'counter_currency', 'source')
+    filter_fields = ('signal', 'counter_currency', 'source', 'trend')
 
     model = serializer_class.Meta.model
 
