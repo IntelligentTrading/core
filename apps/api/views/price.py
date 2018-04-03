@@ -4,14 +4,14 @@ from apps.api.serializers import PriceSerializer
 from apps.api.permissions import RestAPIPermission
 from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
 
-from apps.api.helpers import default_counter_currency, filter_queryset_by_timestamp
+from apps.api.helpers import filter_queryset_by_timestamp, queryset_for_list_without_resample_period
 
 from apps.indicator.models import Price
 
 
 
 class ListPrices(ListAPIView):
-    """Return list of prices from Price model. Thise are raw, non resampled prices from exchange.
+    """Return list of prices from Price model. Thise are raw, non resampled prices from exchange tickers.
 
     /api/v2/prices/
 
@@ -28,9 +28,6 @@ class ListPrices(ListAPIView):
     For pagination
         cursor - indicator that the client may use to page through the result set
 
-    Results
-        price_change_24h - calculated (current close_price - 24h old close_price)/current close_price
-
     Examples
         /api/v2/prices/?startdate=2018-01-26T10:24:37&enddate=2018-01-26T10:59:02
         /api/v2/prices/?transaction_currency=ETH&counter_currency=0
@@ -45,8 +42,7 @@ class ListPrices(ListAPIView):
     model = serializer_class.Meta.model
     
     def get_queryset(self):
-        queryset = self.model.objects.order_by('-timestamp')
-        queryset = filter_queryset_by_timestamp(self, queryset)
+        queryset = filter_queryset_by_timestamp(self, self.model.objects)
         return queryset
 
 
@@ -77,14 +73,10 @@ class ListPrice(ListAPIView):
     serializer_class = PriceSerializer
     pagination_class = OneRecordPagination
 
-    filter_fields = ('counter_currency', 'source')
+    filter_fields = ('source', 'counter_currency')
 
     model = serializer_class.Meta.model
 
     def get_queryset(self):
-        transaction_currency = self.kwargs['transaction_currency']
-        counter_currency = default_counter_currency(transaction_currency)
-        queryset = self.model.objects.filter(transaction_currency=transaction_currency, \
-                    counter_currency=counter_currency).order_by('-timestamp')
-        queryset = filter_queryset_by_timestamp(self, queryset)
+        queryset = queryset_for_list_without_resample_period(self)
         return queryset

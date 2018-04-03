@@ -4,7 +4,7 @@ from apps.api.serializers import VolumeSerializer
 from apps.api.permissions import RestAPIPermission
 from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
 
-from apps.api.helpers import default_counter_currency, filter_queryset_by_timestamp
+from apps.api.helpers import filter_queryset_by_timestamp, queryset_for_list_without_resample_period
 
 from apps.indicator.models import Volume
 
@@ -43,8 +43,7 @@ class ListVolumes(ListAPIView):
     model = serializer_class.Meta.model
     
     def get_queryset(self):
-        queryset = self.model.objects.order_by('-timestamp')
-        queryset = filter_queryset_by_timestamp(self, queryset)
+        queryset = filter_queryset_by_timestamp(self)
         return queryset
 
 
@@ -78,8 +77,5 @@ class ListVolume(ListAPIView):
     model = serializer_class.Meta.model
 
     def get_queryset(self):
-        transaction_currency = self.kwargs['transaction_currency']
-        counter_currency = default_counter_currency(transaction_currency)
-        queryset = self.model.objects.filter(transaction_currency=transaction_currency, counter_currency=counter_currency)
-        queryset = filter_queryset_by_timestamp(self, queryset)
-        return queryset.order_by('-timestamp')
+        queryset = queryset_for_list_without_resample_period(self)
+        return queryset

@@ -8,6 +8,8 @@ from apps.api.paginations import StandardResultsSetPagination, OneRecordPaginati
 
 from apps.api.helpers import filter_queryset_by_timestamp
 
+from apps.api.helpers import filter_queryset_by_timestamp, queryset_for_list_with_resample_period
+
 from apps.indicator.models import Rsi
 
 
@@ -24,11 +26,12 @@ class ListRsis(ListAPIView):
         transaction_currency -- string BTC, ETH etc
         counter_currency -- number 0=BTC, 1=ETH, 2=USDT, 3=XMR
         source -- number 0=poloniex, 1=bittrex
+        resample_period -- in minutes, SHORT = 60
         startdate -- from this date (inclusive). Example 2018-02-12T09:09:15
         enddate -- to this date (inclusive)
 
     For pagination
-        cursor - indicator that the client may use to page through the result set
+        cursor - the pagination cursor value
 
     Examples
         /api/v2/rsi/?transaction_currency=BTC
@@ -39,13 +42,12 @@ class ListRsis(ListAPIView):
     pagination_class = StandardResultsSetPagination
     serializer_class = RsiSerializer
 
-    filter_fields = ('transaction_currency', 'counter_currency', 'source')
+    filter_fields = ('source', 'resample_period', 'transaction_currency', 'counter_currency')
 
     model = serializer_class.Meta.model
 
     def get_queryset(self):
-        queryset = self.model.objects.order_by('-timestamp')
-        queryset = filter_queryset_by_timestamp(self, queryset)
+        queryset = filter_queryset_by_timestamp(self)
         return queryset
 
 
@@ -60,11 +62,12 @@ class ListRsi(ListAPIView):
 
         counter_currency -- number: 0=BTC, 1=ETH, 2=USDT, 3=XMR
         source -- number 0=poloniex, 1=bittrex
+        resample_period -- in minutes, SHORT = 60
         startdate -- show inclusive from this date. For example 2018-02-12T09:09:15
         enddate -- until this date inclusive in same format
 
     For pagination
-        cursor - indicator that the client may use to page through the result set
+        cursor - the pagination cursor value
 
     Examples
         /api/v2/rsi/BTC
@@ -75,12 +78,10 @@ class ListRsi(ListAPIView):
     serializer_class = RsiSerializer
     pagination_class = OneRecordPagination
 
-    filter_fields = ('counter_currency', 'source')
+    filter_fields = ('source', 'counter_currency')
 
     model = serializer_class.Meta.model
 
     def get_queryset(self):
-        transaction_currency = self.kwargs['transaction_currency']
-        queryset = self.model.objects.filter(transaction_currency=transaction_currency)
-        queryset = filter_queryset_by_timestamp(self, queryset)
-        return queryset.order_by('-timestamp')
+        queryset = queryset_for_list_with_resample_period(self)
+        return queryset

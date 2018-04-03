@@ -4,7 +4,7 @@ from apps.api.serializers import SignalSerializer
 from apps.api.permissions import RestAPIPermission
 from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
 
-from apps.api.helpers import filter_queryset_by_timestamp
+from apps.api.helpers import filter_queryset_by_timestamp, queryset_for_list_with_resample_period
 
 from apps.signal.models import Signal
 
@@ -24,6 +24,7 @@ class ListSignals(ListAPIView):
         trend -- 1, -1
         counter_currency -- number 0=BTC, 1=ETH, 2=USDT, 3=XMR
         source -- number 0=poloniex, 1=bittrex
+        resample_period -- in minutes, SHORT = 60
         startdate -- from this date (inclusive). Example 2018-02-12T09:09:15
         enddate -- to this date (inclusive)
 
@@ -38,13 +39,12 @@ class ListSignals(ListAPIView):
     serializer_class = SignalSerializer
     pagination_class = StandardResultsSetPagination
 
-    filter_fields = ('signal', 'transaction_currency', 'counter_currency', 'source', 'trend')
+    filter_fields = ('source', 'resample_period', 'transaction_currency', 'counter_currency', 'signal', 'trend')
 
     model = serializer_class.Meta.model
 
     def get_queryset(self):
-        queryset = self.model.objects.order_by('-timestamp')
-        queryset = filter_queryset_by_timestamp(self, queryset)
+        queryset = filter_queryset_by_timestamp(self)
         return queryset
 
 
@@ -61,6 +61,7 @@ class ListSignal(ListAPIView):
         trend -- 1, -1
         counter_currency -- number 0=BTC, 1=ETH, 2=USDT, 3=XMR
         source -- number 0=poloniex, 1=bittrex
+        resample_period -- in minutes, SHORT = 60
         startdate -- show inclusive from this date. For example 2018-02-12T09:09:15
         enddate -- until this date inclusive in same format
 
@@ -75,12 +76,10 @@ class ListSignal(ListAPIView):
     serializer_class = SignalSerializer
     pagination_class = OneRecordPagination
 
-    filter_fields = ('signal', 'counter_currency', 'source', 'trend')
+    filter_fields = ('source', 'counter_currency', 'signal', 'trend')
 
     model = serializer_class.Meta.model
 
     def get_queryset(self):
-        transaction_currency = self.kwargs['transaction_currency']
-        queryset = self.model.objects.filter(transaction_currency=transaction_currency)
-        queryset = filter_queryset_by_timestamp(self, queryset)
-        return queryset.order_by('-timestamp')
+        queryset = queryset_for_list_with_resample_period(self)
+        return queryset
