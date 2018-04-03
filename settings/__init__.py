@@ -110,9 +110,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-        # 'django.middleware.cache.UpdateCacheMiddleware',
-        # 'django.middleware.common.CommonMiddleware',
-        # 'django.middleware.cache.FetchFromCacheMiddleware',
+    'django.middleware.cache.UpdateCacheMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.cache.FetchFromCacheMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware', # for static files
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -248,10 +248,6 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAdminUser', # Very secure by default:  only admin can access, overwrite on per-view basis
     ),
-
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 100,
-
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
 }
 
