@@ -23,13 +23,14 @@ class PriceResampl(AbstractIndicator):
     price_variance = models.FloatField(null=True)  # for future signal smoothing
 
 
-     # MODEL PROPERTIES
+    # MODEL PROPERTIES
     @property
     def price_change_24h(self):
         current_price_r = self.close_price
         if current_price_r:
             price_r_24h_older = PriceResampl.objects.filter(
                 source=self.source,
+                resample_period=self.resample_period,
                 transaction_currency=self.transaction_currency,
                 counter_currency=self.counter_currency,
                 timestamp__lte=self.timestamp - timedelta(minutes=1440) # 1440m = 24h
@@ -68,7 +69,6 @@ class PriceResampl(AbstractIndicator):
         else:
             #logger.debug(' ======= skipping, no price information')
             return False
-
 
 
 ############## get n last records from resampled table as a DataFrame

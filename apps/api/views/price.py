@@ -73,9 +73,6 @@ class ListPrice(ListAPIView):
         page_size -- number of results to return per page (Default 1)
         page -- page number within the paginated result set
 
-    Results
-        price_change_24h - calculated (current close_price - 24h old close_price)/current close_price
-
     Examples
         /api/v2/prices/ETH # ETH in BTC
         /api/v2/prices/ETH?counter_currency=2 # ETH in USDT

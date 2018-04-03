@@ -33,6 +33,9 @@ class ListPrices(ListAPIView):
         page_size -- number of results to return per page (Default 50)
         page -- page number within the paginated result set
 
+    Results
+        price_change_24h - calculated (current close_price - 24h old close_price)/current close_price
+
     Examples
         /api/v2/resampled-prices/?startdate=2018-01-26T10:24:37&enddate=2018-01-26T10:59:02
         /api/v2/resampled-prices/?transaction_currency=ETH&counter_currency=0
@@ -74,6 +77,9 @@ class ListPrice(ListAPIView):
 
         page_size -- number of results to return per page (Default 1)
         page -- page number within the paginated result set
+
+    Results
+        price_change_24h - calculated (current close_price - 24h old close_price)/current close_price
 
     Examples
         /api/v2/resampled-prices/ETH # ETH in BTC
