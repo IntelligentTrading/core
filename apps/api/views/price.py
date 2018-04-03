@@ -26,9 +26,7 @@ class ListPrices(ListAPIView):
         enddate -- to this date (inclusive)
 
     For pagination
-
-        page_size -- number of results to return per page (Default 50)
-        page -- page number within the paginated result set
+        cursor - indicator that the client may use to page through the result set
 
     Results
         price_change_24h - calculated (current close_price - 24h old close_price)/current close_price
@@ -36,7 +34,6 @@ class ListPrices(ListAPIView):
     Examples
         /api/v2/prices/?startdate=2018-01-26T10:24:37&enddate=2018-01-26T10:59:02
         /api/v2/prices/?transaction_currency=ETH&counter_currency=0
-        /api/v2/prices/?page_size=1&page=3
     """
      
     permission_classes = (RestAPIPermission, )
@@ -69,9 +66,7 @@ class ListPrice(ListAPIView):
         enddate -- until this date inclusive in same format
 
     For pagination
-
-        page_size -- number of results to return per page (Default 1)
-        page -- page number within the paginated result set
+        cursor - indicator that the client may use to page through the result set
 
     Examples
         /api/v2/prices/ETH # ETH in BTC

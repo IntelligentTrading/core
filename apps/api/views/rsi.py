@@ -28,9 +28,7 @@ class ListRsis(ListAPIView):
         enddate -- to this date (inclusive)
 
     For pagination
-
-        page_size -- number of results to return per page (Default 50)
-        page -- page number within the paginated result set
+        cursor - indicator that the client may use to page through the result set
 
     Examples
         /api/v2/rsi/?transaction_currency=BTC
@@ -66,9 +64,7 @@ class ListRsi(ListAPIView):
         enddate -- until this date inclusive in same format
 
     For pagination
-
-        page_size -- number of results to return per page (Default 1)
-        page -- page number within the paginated result set
+        cursor - indicator that the client may use to page through the result set
 
     Examples
         /api/v2/rsi/BTC

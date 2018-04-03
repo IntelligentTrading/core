@@ -29,9 +29,7 @@ class ListEventsElementary(ListAPIView):
         enddate -- to this date (inclusive)
 
     For pagination:
-
-        page_size -- number of results to return per page (Default 50)
-        page -- page number within the paginated result set
+        cursor - indicator that the client may use to page through the result set
 
     Examples:
         /api/v2/events-elementary/?transaction_currency=ETH&event_name=sma200_cross_price_down
@@ -65,9 +63,7 @@ class ListEventElementary(ListAPIView):
         enddate -- until this date inclusive in same format
 
     For pagination
-
-        page_size -- number of results to return per page (Default 1)
-        page -- page number within the paginated result set
+        cursor - indicator that the client may use to page through the result set
 
     Examples
         /api/v2/events-elementary/BTC
