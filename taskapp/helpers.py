@@ -165,6 +165,7 @@ def _compute_and_save_indicators(resample_period_par):
             except Exception as e:
                 logger.error(str(ind) + " Indicator Exception: " + str(e))
 
+
         # calculate ANN indicator(s)
         # TODO: just form X_predicted here and then run prediction outside the loop !
         try:

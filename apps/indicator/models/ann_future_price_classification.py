@@ -6,6 +6,7 @@ NOTE: before using AI prediction a AI model must be manually added as follows
 
 '''
 import time
+from datetime import timedelta, datetime
 import pandas as pd
 import numpy as np
 
@@ -30,6 +31,16 @@ class AnnPriceClassification(AbstractIndicator):
     probability_same = models.FloatField(null=True)  # probability of price will stay the same
     probability_up = models.FloatField(null=True)
     probability_down = models.FloatField(null=True)
+
+    @property
+    def get_max_prob_same_up_down(self):
+        return np.argmax([self.probability_same, self.probability_up, self.probability_down])
+
+    @property
+    def get_max_prob_up_down(self):
+        # add one to shift the number, up must be 1, not zero
+        return np.argmax([self.probability_up, self.probability_down]) + 1
+
 
     @staticmethod
     def compute_all(cls, ann_model, **kwargs):
@@ -128,6 +139,30 @@ def _compute_lstm_classification(ann_model, **kwargs):
 
 
 
+def get_n_last_ann_classif_df(n, **kwargs):
 
+    last_records = list(AnnPriceClassification.objects.filter(
+        source=kwargs['source'],
+        resample_period=kwargs['resample_period'],
+        transaction_currency=kwargs['transaction_currency'],
+        counter_currency=kwargs['counter_currency'],
+        timestamp__gte = datetime.now() - timedelta(minutes=kwargs['resample_period'] * n)
+    ).values('timestamp', 'probability_same', 'probability_up', 'probability_down').order_by('timestamp'))
+
+    df = pd.DataFrame()
+    if last_records:
+        # todo - reverse order or make sure I get values in the same order!
+        ts = [rec['timestamp'] for rec in last_records]
+        probability_same = pd.Series(data=[rec['probability_same'] for rec in last_records], index=ts)
+        probability_up = pd.Series(data=[rec['probability_up'] for rec in last_records], index=ts)
+        probability_down = pd.Series(data=[rec['probability_down'] for rec in last_records], index=ts)
+
+        df['probability_same'] = probability_same
+        df['probability_up'] = probability_up
+        df['probability_down'] = probability_down
+
+        # TODO: make sure the last data is at the bottom pf the dataset!
+
+    return df
 
 
