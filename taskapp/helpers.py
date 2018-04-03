@@ -88,11 +88,11 @@ def _compute_and_save_indicators(resample_period_par):
 
     logger.info(" ################# Resampling with Period: " + str(resample_period) + " #######################")
 
-    # choose the pre-trained ANN model depending on period
+    # choose the pre-trained ANN model depending on period, here are the same
     period2model = {
         SHORT : 'lstm_model_2_2.h5',
-        MEDIUM: '',
-        LONG  : ''
+        MEDIUM: 'lstm_model_2_2.h5',
+        LONG  : 'lstm_model_2_2.h5'
     }
     # load model from S3 and database
     ann_model_object = get_ann_model_object(period2model[resample_period])
@@ -174,7 +174,7 @@ def _compute_and_save_indicators(resample_period_par):
             else:
                 logger.info(" No ANN model, calculation does not make sence")
         except Exception as e:
-            logger.error("ANN Indicator Exception: " + str(e))
+            logger.error("ANN Indicator Exception (ANN has not been calculated): " + str(e))
 
 
 

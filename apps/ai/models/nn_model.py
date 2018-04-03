@@ -1,4 +1,5 @@
 import logging
+import time
 from django.db import models
 from apps.channel.models.exchange_data import SOURCE_CHOICES
 from unixtimestampfield.fields import UnixTimeStampField
@@ -54,10 +55,12 @@ class AnnModel(models.Model):
 
 # download model file from s3 to local then import it into keras model, then return this keras model
 def get_ann_model_object(s3_model_file):
-    ann_model = AnnModel.objects.get(s3_model_file=s3_model_file)
+    start = time.time()
+    ann_model = AnnModel.objects.get(s3_model_file=s3_model_file) ## get ann model metainfo from DB
 
     try:
-        ann_model.initialize()
+        ann_model.initialize()   # download model from S3, save it onlocal disk, then upload to class
+        logger.info(">> ANN model loaded, ELapsed time: " + str(time.time() - start))
         return ann_model
     except Exception as e:
         logger.error(" Cannot load ANN model: either no Model in DB or S3 file does not exist")

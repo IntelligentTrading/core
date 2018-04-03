@@ -1,3 +1,10 @@
+'''
+@AlexY :
+NOTE: before using AI prediction a AI model must be manually added as follows
+ - upload a model to S3
+ - run a django command      python manage.py add_nn_model
+
+'''
 import time
 import pandas as pd
 import numpy as np
@@ -13,10 +20,14 @@ logger = logging.getLogger(__name__)
 
 
 class AnnPriceClassification(AbstractIndicator):
-    ann_model = models.ForeignKey(AnnModel, on_delete=models.CASCADE)
+    '''
+    Every period this class gives a prediction for the future whether the price will go up or down
+    In essence it is one more indicator same as RSI, SMA, which givev a continuous prediction for every coin
+    '''
+    ann_model = models.ForeignKey(AnnModel, on_delete=models.CASCADE)  # a version of model which made the prediction
 
-    predicted_ahead_for = models.SmallIntegerField(null=True) # in mins
-    probability_same = models.FloatField(null=True)
+    predicted_ahead_for = models.SmallIntegerField(null=True) # in mins, price predicted for this time frame
+    probability_same = models.FloatField(null=True)  # probability of price will stay the same
     probability_up = models.FloatField(null=True)
     probability_down = models.FloatField(null=True)
 
@@ -28,8 +39,8 @@ class AnnPriceClassification(AbstractIndicator):
 
         trend_predicted = _compute_lstm_classification(ann_model, **kwargs)
 
-        # create a record is we have predicted values
-        if trend_predicted:
+        # create a record if we have predicted values
+        if trend_predicted is not None:
             new_instance = cls.objects.create(
                 **kwargs,
                 ann_model=ann_model,
@@ -69,7 +80,7 @@ def _compute_lstm_classification(ann_model, **kwargs):
     data_ts = data_ts.interpolate()
     # get only reacent time points according to trained model
     data_ts = data_ts.tail(ann_model.slide_win_size)
-    logger.debug('lenght of one training example is ' + str(len(data_ts)) )
+    logger.debug('lenght of one feature vector to predict on is ' + str(len(data_ts)) )
     assert len(data_ts) == ann_model.slide_win_size, ' @@@@@ :: Wrong training example lenght!'
 
     # combine the data into X matrix like that
@@ -80,6 +91,16 @@ def _compute_lstm_classification(ann_model, **kwargs):
     X_test[0, :, 2] = data_ts['price_var']
     X_test[0, :, 3] = data_ts['volume_var']
 
+    # check if we have Nans
+    # TODO: interpolate or cancel calculation if yes (CLEANING input data)
+    # TODO: download price and VOLUME tables too!
+    logger.debug("Do we have NaNs in X?: " + str(np.isnan(X_test[0, :, :]).any()))
+
+    if sum(sum(np.isnan(X_test[0, :, :]))) > 20:
+        logger.info(" >> Cancel AI prediction, because too many NaNs, prediction is not reliable!")
+        return None
+
+
     # Normalize data so that it ends in curent price value and btw -1 / 1
     for example in range(X_test.shape[0]):
         X_test[example, :, 0] = (X_test[example, :, 0] - X_test[example, -1, 0]) / (np.max(X_test[example, :, 0]) - np.min(X_test[example, :, 0]))
@@ -87,12 +108,15 @@ def _compute_lstm_classification(ann_model, **kwargs):
         X_test[example, :, 2] = (X_test[example, :, 2] - X_test[example, -1, 2]) / (np.max(X_test[example, :, 2]) - np.min(X_test[example, :, 2]))
         X_test[example, :, 3] = (X_test[example, :, 3] - X_test[example, -1, 3]) / (np.max(X_test[example, :, 3]) - np.min(X_test[example, :, 3]))
 
-    # TODO: it looks liek we cannot store Keras model as an object in class
+    # TODO: it looks like we cannot store Keras model as an object in class
     # check if I can load the model here or do a batch predictionat the end for all currencies
 
+    from keras.models import Sequential
     # run prediction
     if ann_model.keras_model :
-        trend_predicted = ann_model.keras_model.predict(X_test)
+        loaded_model = ann_model.keras_model
+        logger.info(loaded_model.summary())
+        trend_predicted = loaded_model.predict(X_test)
         logger.debug('>>> AI <<< Predicted probabilities for price for next period, (same/up/down): ' + str(trend_predicted))
     else:
         logger.debug(">> Model does not exists! ")
@@ -100,7 +124,7 @@ def _compute_lstm_classification(ann_model, **kwargs):
     if np.isnan(trend_predicted).all():
         return None
     else:
-        return trend_predicted
+        return trend_predicted[0]  # it is array of arrays because usually the prediction is dome for many rows
 
 
 
