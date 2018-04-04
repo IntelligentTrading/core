@@ -2,7 +2,6 @@ import json
 import logging
 import time
 import sys
-import boto
 
 from django.core.management.base import BaseCommand
 from requests import get, RequestException
