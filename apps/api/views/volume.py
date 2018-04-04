@@ -4,7 +4,7 @@ from apps.api.serializers import VolumeSerializer
 from apps.api.permissions import RestAPIPermission
 from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
 
-from apps.api.helpers import default_counter_currency, filter_queryset_by_timestamp
+from apps.api.helpers import filter_queryset_by_timestamp, queryset_for_list_without_resample_period
 
 from apps.indicator.models import Volume
 
@@ -26,9 +26,7 @@ class ListVolumes(ListAPIView):
         enddate -- to this date (inclusive)
 
     For pagination
-
-        page_size -- number of results to return per page (Default 50)
-        page -- page number within the paginated result set
+        cursor - indicator that the client may use to page through the result set
 
     Examples
         /api/v2/volumes/?startdate=2018-02-10T22:14:37&enddate=2018-02-10T22:27:58
@@ -45,8 +43,7 @@ class ListVolumes(ListAPIView):
     model = serializer_class.Meta.model
     
     def get_queryset(self):
-        queryset = self.model.objects.order_by('-timestamp')
-        queryset = filter_queryset_by_timestamp(self, queryset)
+        queryset = filter_queryset_by_timestamp(self)
         return queryset
 
 
@@ -65,9 +62,7 @@ class ListVolume(ListAPIView):
         enddate -- until this date inclusive in same format
 
     For pagination
-
-        page_size -- number of results to return per page (Default 1)
-        page -- page number within the paginated result set
+        cursor - indicator that the client may use to page through the result set
 
     Examples
         /api/v2/volumes/ETH # ETH in BTC
@@ -82,8 +77,5 @@ class ListVolume(ListAPIView):
     model = serializer_class.Meta.model
 
     def get_queryset(self):
-        transaction_currency = self.kwargs['transaction_currency']
-        counter_currency = default_counter_currency(transaction_currency)
-        queryset = self.model.objects.filter(transaction_currency=transaction_currency, counter_currency=counter_currency)
-        queryset = filter_queryset_by_timestamp(self, queryset)
-        return queryset.order_by('-timestamp')
+        queryset = queryset_for_list_without_resample_period(self)
+        return queryset

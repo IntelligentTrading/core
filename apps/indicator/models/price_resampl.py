@@ -23,6 +23,22 @@ class PriceResampl(AbstractIndicator):
     price_variance = models.FloatField(null=True)  # for future signal smoothing
 
 
+    # MODEL PROPERTIES
+    @property
+    def price_change_24h(self):
+        current_price_r = self.close_price
+        if current_price_r:
+            price_r_24h_older = PriceResampl.objects.filter(
+                source=self.source,
+                resample_period=self.resample_period,
+                transaction_currency=self.transaction_currency,
+                counter_currency=self.counter_currency,
+                timestamp__lte=self.timestamp - timedelta(minutes=1440) # 1440m = 24h
+            ).order_by('-timestamp').first()
+        if current_price_r and price_r_24h_older:
+            return float(current_price_r - price_r_24h_older.close_price)  / price_r_24h_older.close_price
+
+
     # compute resampled prices
     def compute(self):
         # set the current time, it might differ from real current time if we calculate prices for old time point
@@ -55,7 +71,6 @@ class PriceResampl(AbstractIndicator):
             return False
 
 
-
 ############## get n last records from resampled table as a DataFrame
 # NOTE: no kwargs because we dont have timestamp here
 def get_n_last_resampl_df(n, source, transaction_currency, counter_currency, resample_period):
@@ -82,7 +97,6 @@ def get_n_last_resampl_df(n, source, transaction_currency, counter_currency, res
         df['close_price'] = close_prices
         df['midpoint_price'] = midpoint_prices
         # we need df in a right order (from past to future) to make sma rolling work righ
-        # TODO: hey, boy, you just need to remove minus from order_by('-timestamp')
         df = df.iloc[::-1] # df.sort_index(inplace=True)  might works too
 
     return df

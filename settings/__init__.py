@@ -62,7 +62,7 @@ logger.info("Deployment environment detected: {}".format(dt_key))
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = LOCAL # or STAGE # Using settings.DEBUG leads to a memory leak in Celery
+DEBUG = LOCAL #or STAGE # Using settings.DEBUG leads to a memory leak in Celery
 
 AUTH_USER_MODEL = 'user.User'
 
@@ -249,10 +249,6 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAdminUser', # Very secure by default:  only admin can access, overwrite on per-view basis
     ),
-
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 100,
-
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
 }
 
