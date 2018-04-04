@@ -96,17 +96,18 @@ def _process_ai_simple(horizon, **kwargs):
             )
             logger.debug("   >>> ANN event detected and saved")
 
-            signal_rsi = Signal(
+            signal_ai = Signal(
                 **kwargs,
                 signal='ANN_Simple',
                 trend=ann_classif_df.iloc[-1]['class_change'],
                 horizon=horizon,
             )
-            signal_rsi.save()
+            signal_ai.save()
             logger.debug("   >>> ANN event FIRED!")
-
         except Exception as e:
-            logger.error(" Error saving/emitting ANN Event ")
+            logger.error(" Error saving/emitting ANN Event " + e)
+        else:
+            logger.debug("   ... no AI event generated (predicts no changes in price")
 
 
 

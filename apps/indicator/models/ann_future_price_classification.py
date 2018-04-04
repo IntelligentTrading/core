@@ -126,7 +126,7 @@ def _compute_lstm_classification(ann_model, **kwargs):
     # run prediction
     if ann_model.keras_model :
         loaded_model = ann_model.keras_model
-        logger.info(loaded_model.summary())
+        #logger.info(loaded_model.summary())
         trend_predicted = loaded_model.predict(X_test)
         logger.debug('>>> AI <<< Predicted probabilities for price for next period, (same/up/down): ' + str(trend_predicted))
     else:
