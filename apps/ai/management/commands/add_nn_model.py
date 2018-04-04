@@ -19,7 +19,7 @@ class Command(BaseCommand):
         # check if it exists
         # TODO: add automatic import from S3 + command line questionaaire about text fields + may be link to Notebook
 
-        if not AnnModel.objects.filter(s3_file = 'lstm_model_2_2.h5').exists():
+        if not AnnModel.objects.filter(s3_model_file = 'lstm_model_2_2.h5').exists():
             AnnModel.objects.create(
                 timestamp=time.time(),
                 source = POLONIEX,
