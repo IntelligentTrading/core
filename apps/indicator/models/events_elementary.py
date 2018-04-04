@@ -106,8 +106,8 @@ def _process_ai_simple(horizon, **kwargs):
             logger.debug("   >>> ANN event FIRED!")
         except Exception as e:
             logger.error(" Error saving/emitting ANN Event " + e)
-        else:
-            logger.debug("   ... no AI event generated (predicts no changes in price")
+    else:
+        logger.debug("   ... no AI event generated (predicts no changes in price")
 
 
 

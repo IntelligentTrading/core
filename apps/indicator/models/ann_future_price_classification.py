@@ -44,7 +44,7 @@ class AnnPriceClassification(AbstractIndicator):
 
     @staticmethod
     def compute_all(cls, ann_model, **kwargs):
-        logger.debug('@@@@@@    Run AI prediction    @@@@@@@@@')
+        logger.debug('   @@@@@@    Run AI prediction    @@@@@@@@@')
 
         start = time.time()
 
@@ -66,7 +66,7 @@ class AnnPriceClassification(AbstractIndicator):
             logger.info(" ... No predicted probabilities have been returned")
 
         end = time.time()
-        logger.debug(" @@@@@@   End of running AI.  ELAPSED Time: " + str(end - start))
+        logger.debug("   @@@@@@   End of running AI.  ELAPSED Time: " + str(end - start))
 
 
 
@@ -91,7 +91,7 @@ def _compute_lstm_classification(ann_model, **kwargs):
     data_ts = data_ts.interpolate()
     # get only reacent time points according to trained model
     data_ts = data_ts.tail(ann_model.slide_win_size)
-    logger.debug('lenght of one feature vector to predict on is ' + str(len(data_ts)) )
+    logger.debug('   ... length of one feature vector to predict on is ' + str(len(data_ts)) )
     assert len(data_ts) == ann_model.slide_win_size, ' @@@@@ :: Wrong training example lenght!'
 
     # combine the data into X matrix like that
@@ -105,7 +105,7 @@ def _compute_lstm_classification(ann_model, **kwargs):
     # check if we have Nans
     # TODO: interpolate or cancel calculation if yes (CLEANING input data)
     # TODO: download price and VOLUME tables too!
-    logger.debug("Do we have NaNs in X?: " + str(np.isnan(X_test[0, :, :]).any()))
+    logger.debug("    ... Do we have NaNs in X?: " + str(np.isnan(X_test[0, :, :]).any()))
 
     if sum(sum(np.isnan(X_test[0, :, :]))) > 20:
         logger.info(" >> Cancel AI prediction, because too many NaNs, prediction is not reliable!")
