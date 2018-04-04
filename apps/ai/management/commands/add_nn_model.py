@@ -25,9 +25,10 @@ class Command(BaseCommand):
                 source = POLONIEX,
                 model_name = 'LSTM',
                 s3_file = 'lstm_model_2_2.h5',
+                s3_notebook_file = '04_ML_Keras_LSTM_Three_Class_ALLCOINS_2.ipynb',
                 period = 10,  # 10min
 
-                slide_win_size = 200, # so timewisw it is 200 x 10min = 33,3 hours
+                slide_win_size = 200, # so timewise it is 200 x 10min = 33,3 hours
                 predicted_win_size = 90, # 90 x 10min = 15 hours
                 delta_tolerance = 0.02, # +/- 2%
 
