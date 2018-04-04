@@ -29,7 +29,7 @@ from settings import QUEUE_NAME, AWS_OPTIONS, DEFAULT_FILE_STORAGE
 
 
 
-
+# python manage.py add_nn_model
 
 
 logger = logging.getLogger(__name__)

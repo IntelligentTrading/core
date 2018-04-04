@@ -1,46 +1,68 @@
 import logging
 import time
-from django.core.management.base import BaseCommand
-from apps.ai.models.nn_model import AnnModel
-from apps.channel.models.exchange_data import POLONIEX
+from django.db import models
+from apps.channel.models.exchange_data import SOURCE_CHOICES
+from unixtimestampfield.fields import UnixTimeStampField
+from apps.common.utilities.s3 import download_file_from_s3
+
+from keras.models import load_model
 
 logger = logging.getLogger(__name__)
 
-class Command(BaseCommand):
+# redo it as here
+# https://www.b-list.org/weblog/2006/aug/18/django-tips-using-properties-models-and-managers/
+
+
+class AnnModel(models.Model):
     '''
-    Run this command if you need to add a new NN model
-    Keras or TF model must be already uploaded to S3
+    Keep all NN models in a database table, so we can keep track of which indicator value
+    was calculated with which NN model and be able to reproduce it
     '''
-    help = 'Add a new NN model to a database '
 
-    def handle(self, *args, **options):
-        logger.info("Adding a new Neural Network model to a database")
+    timestamp = UnixTimeStampField(null=False)
+    source = models.SmallIntegerField(choices=SOURCE_CHOICES, null=False)
+    model_name = models.CharField(max_length=32, null=False, blank=False)
+    s3_model_file = models.TextField(null=False, blank=False)
+    s3_notebook_file = models.TextField(null=True)
 
-        # check if it exists
-        # TODO: add automatic import from S3 + command line questionaaire about text fields + may be link to Notebook
+    period = models.PositiveSmallIntegerField(null=False, blank=False) # 10min, we use full price table, not resampled
+    slide_win_size = models.SmallIntegerField(null=False, blank=False)
+    predicted_win_size = models.SmallIntegerField(null=False, blank=False)
+    delta_tolerance = models.FloatField(null=False)
 
-        if not AnnModel.objects.filter(s3_file = 'lstm_model_2_2.h5').exists():
-            AnnModel.objects.create(
-                timestamp=time.time(),
-                source = POLONIEX,
-                model_name = 'LSTM',
-                s3_file = 'lstm_model_2_2.h5',
-                s3_notebook_file = '04_ML_Keras_LSTM_Three_Class_ALLCOINS_2.ipynb',
-                period = 10,  # 10min
+    train_accuracy = models.FloatField(null=True)
+    train_f1_score = models.FloatField(null=True)
+    validation_accuracy = models.FloatField(null=True)
+    validation_f1_score = models.FloatField(null=True)
 
-                slide_win_size = 200, # so timewise it is 200 x 10min = 33,3 hours
-                predicted_win_size = 90, # 90 x 10min = 15 hours
-                delta_tolerance = 0.02, # +/- 2%
+    train_data_description = models.TextField(null=True, blank=True)
+    features_description = models.TextField(null=True, blank=True)
 
-                train_accuracy = 0.4284,
-                #train_f1_score = models.FloatField(null=True)
-                validation_accuracy = 0.4606,
-                #validation_f1_score = models.FloatField(null=True)
+    keras_model = None
 
-                train_data_description = "ETH ETH ETC OMG XRP XMR LTC XEM DASH",
-                features_description = '4 : price, volume, price variance, volume variance'
-                )
-            logger.info("Done.")
+    # download keras model from s3 into keras model
+    def initialize(self):
+        logger.debug(" >> Start Loading Keras Model...")
+        if self.keras_model:
+            logger.debug(" >> KERAS model exists and returned !")
+            return self.keras_model
         else:
-            logger.info(" NN model already exists")
+            download_file_from_s3(self.s3_model_file)
+            self.keras_model = load_model(self.s3_model_file) # 'lstm_model.h5'
+            logger.debug(" >> KERAS model loaded and returned!")
+            return self.keras_model
 
+
+# download model file from s3 to local then import it into keras model, then return this keras model
+def get_ann_model_object(s3_model_file):
+    start = time.time()
+    ann_model = AnnModel.objects.get(s3_model_file=s3_model_file) ## get ann model metainfo from DB
+
+    try:
+        ann_model.initialize()   # download model from S3, save it onlocal disk, then upload to class
+        logger.info(">> ANN model loaded, ELapsed time: " + str(time.time() - start))
+        return ann_model
+    except Exception as e:
+        logger.error(" Cannot load ANN model: either no Model in DB or S3 file does not exist")
+
+    return None
