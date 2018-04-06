@@ -55,7 +55,7 @@ class AnnPriceClassification(AbstractIndicator):
             new_instance = cls.objects.create(
                 **kwargs,
                 ann_model=ann_model,
-                predicted_ahead_for = ann_model.predicted_win_size,  # in mins, can remove we also have it in ann model
+                predicted_ahead_for = ann_model.predicted_win_size * ann_model.period,  # in mins, can remove we also have it in ann model
                 probability_same = trend_predicted[0],
                 probability_up = trend_predicted[1],
                 probability_down = trend_predicted[2]
@@ -147,7 +147,7 @@ def get_n_last_ann_classif_df(n, **kwargs):
         transaction_currency=kwargs['transaction_currency'],
         counter_currency=kwargs['counter_currency'],
         timestamp__gte = datetime.now() - timedelta(minutes=kwargs['resample_period'] * n)
-    ).values('timestamp', 'probability_same', 'probability_up', 'probability_down').order_by('timestamp'))
+    ).values('timestamp', 'probability_same', 'probability_up', 'probability_down','predicted_ahead_for').order_by('timestamp'))
 
     df = pd.DataFrame()
     if last_records:
@@ -156,10 +156,12 @@ def get_n_last_ann_classif_df(n, **kwargs):
         probability_same = pd.Series(data=[rec['probability_same'] for rec in last_records], index=ts)
         probability_up = pd.Series(data=[rec['probability_up'] for rec in last_records], index=ts)
         probability_down = pd.Series(data=[rec['probability_down'] for rec in last_records], index=ts)
+        predicted_ahead_for = pd.Series(data=[rec['predicted_ahead_for'] for rec in last_records], index=ts)
 
         df['probability_same'] = probability_same
         df['probability_up'] = probability_up
         df['probability_down'] = probability_down
+        df['predicted_ahead_for'] = predicted_ahead_for
 
         # TODO: make sure the last data is at the bottom pf the dataset!
 
