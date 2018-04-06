@@ -5,14 +5,15 @@ import numpy as np
 
 from django.db import models
 from apps.indicator.models.abstract_indicator import AbstractIndicator
-from apps.indicator.models.rsi import Rsi
-from apps.indicator.models.sma import get_n_last_sma_df
-from apps.indicator.models.ann_future_price_classification import get_n_last_ann_classif_df
-from apps.signal.models.signal import Signal
 from apps.indicator.models.price_resampl import get_n_last_resampl_df
+from apps.indicator.models.sma import get_n_last_sma_df
+from apps.indicator.models.rsi import Rsi
+from apps.signal.models.signal import Signal
+from apps.indicator.models.ann_future_price_classification import AnnPriceClassification, get_n_last_ann_classif_df
 
 from apps.user.models.user import get_horizon_value_from_string
 from settings import HORIZONS_TIME2NAMES, EMIT_RSI, EMIT_SMA
+
 
 logger = logging.getLogger(__name__)
 
@@ -65,39 +66,40 @@ ichi_displacement = 30
 def _process_ai_simple(horizon, **kwargs):
     '''
     very simple strategy: emit signal anytime it changes state from up to down
-    :param horizon:
-    :param kwargs:
-    :return:
     '''
     # get two reacent objects as a dataframe
-    ann_classif_df = get_n_last_ann_classif_df(5, **kwargs)
+
+    # NOTE: here I hardcoded two class classification ignoring SAME - should be don ona  model level!!
+
+    ann_classif_df = get_n_last_ann_classif_df(4, **kwargs)
     # choose only two class classification (ignore SAME), then add a new column with the best class
-    ann_classif_df = ann_classif_df[['probability_up','probability_down']]
-    ann_classif_df['class'] = ann_classif_df.idxmax(axis=1)
+    df = ann_classif_df[['probability_up','probability_down']]
+    df['class'] = df.idxmax(axis=1)
 
-    #  dfn.loc[ dfn['Sex']=='male', 'Survived'] = 0
-    ann_classif_df.loc[ann_classif_df['class'] == 'probability_up', 'class_num'] = int(0)
-    ann_classif_df.loc[ann_classif_df['class'] == 'probability_down', 'class_num'] = int(1)
+    df.loc[df['class'] == 'probability_up', 'class_num'] = int(0)
+    df.loc[df['class'] == 'probability_down', 'class_num'] = int(1)
+    df['class_change'] = df['class_num'].diff()   # detect change of state
 
-    ann_classif_df['class_change'] = ann_classif_df['class_num'].diff()   # detect changes
-
-    if ann_classif_df.iloc[-1]['class_change'] != 0:
+    if df.iloc[-1]['class_change'] != 0:
         # emit signal
         try:
-            # TODO: change to emitting two signals UP and DOWN accordint to how others events are generated (for ML)
+            # TODO: change to emitting two signals UP and DOWN according to how others events are generated (for ML)
             new_instance = EventsElementary.objects.create(
                 **kwargs,
                 event_name="ann_price_2class_simple",
-                event_value=ann_classif_df.iloc[-1]['class_change'],
-                #event_second_value=rs_obj.rsi,
+                event_value=df.iloc[-1]['class_change'],
             )
             logger.debug("   >>> ANN event detected and saved")
 
             signal_ai = Signal(
                 **kwargs,
                 signal='ANN_Simple',
-                trend=ann_classif_df.iloc[-1]['class_change'],
+                trend=df.iloc[-1]['class_change'],
                 horizon=horizon,
+                predicted_ahead_for= ann_classif_df.tail(1)['predicted_ahead_for'][0] * 10,
+                probability_same = ann_classif_df.tail(1)['probability_same'][0],
+                probability_up = df.tail(1)['probability_up'][0],
+                probability_down = df.tail(1)['probability_down'][0]
             )
             signal_ai.save()
             logger.debug("   >>> ANN event FIRED!")
@@ -209,9 +211,8 @@ class EventsElementary(AbstractIndicator):
 
     @staticmethod
     def check_events(cls, **kwargs):
-        logger.info("   ::: Start analysing ELEMENTARY events  ::: ")
-
         horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[kwargs['resample_period']])
+
         # create a param dict to pass inside get_n_last_resampl_df
         no_time_params = {
             'source' : kwargs['source'],
@@ -220,21 +221,21 @@ class EventsElementary(AbstractIndicator):
             'resample_period' : kwargs['resample_period']
         }
 
-
         # load nessesary resampled prices from price resampled
         # we only need last_records back in time
-        logger.debug("------ STEP 1: get price_df ... ")
         last_records = ichi_displacement * ichi_displacement + 10
         prices_df = get_n_last_resampl_df(last_records, **no_time_params)
         prices_df = prices_df.fillna(value=0)
 
+        logger.info('   ::::  Start analysing ELEMENTARY events ::::')
+
         ###### check for rsi events, save and emit signal
-        logger.info("   ... Check RSI elementary Events: ")
+        logger.info("   ... Check RSI Events: ")
         _process_rsi(horizon, **kwargs)
 
 
         ############## check SMA cross over events
-        logger.info("   ... Check SMA elementary Events: ")
+        logger.info("   ... Check SMA Events: ")
         SMA_LOW, SMA_HIGH = [50,200]
 
         sma_low_df = get_n_last_sma_df(last_records, SMA_LOW, **no_time_params).tail(10)
@@ -372,7 +373,7 @@ class EventsElementary(AbstractIndicator):
 
 
         ############## calculate and save ANN Events   #################
-        logger.info("   ... Check AI elementary Events: ")
+        logger.info("   ... Check AI Elementary Events: ")
         _process_ai_simple(horizon, **kwargs)
 
 
