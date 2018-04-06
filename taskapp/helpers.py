@@ -188,6 +188,10 @@ def _compute_and_save_indicators(resample_period_par):
             except Exception as e:
                 logger.error("Event Exception: " + str(e))
 
+    # clean session to prevent memory leak
+    logger.debug("   ... Cleaning Keras session...")
+    from keras import backend as K
+    K.clear_session()
 
 
     # TODO check if I can do a batch Keras prediction for all currencies at once

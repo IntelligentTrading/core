@@ -56,6 +56,11 @@ class Signal(Timestampable, models.Model):
     volume_usdt = models.FloatField(null=True)  # USD value
     volume_usdt_change = models.FloatField(null=True)
 
+    predicted_ahead_for = models.SmallIntegerField(null=True) # in mins, price predicted for this time frame
+    probability_same = models.FloatField(null=True)  # probability of price will stay the same
+    probability_up = models.FloatField(null=True)
+    probability_down = models.FloatField(null=True)
+
     sent_at = UnixTimeStampField(use_numeric=True)
 
     # MODEL PROPERTIES

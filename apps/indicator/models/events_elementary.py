@@ -4,15 +4,12 @@ import pandas as pd
 import numpy as np
 
 from django.db import models
-
 from apps.indicator.models.abstract_indicator import AbstractIndicator
-from apps.indicator.models.rsi import Rsi
-from apps.indicator.models.ann_future_price_classification import AnnPriceClassification
 from apps.indicator.models.sma import get_n_last_sma_df
-from apps.indicator.models.price_resampl import get_n_last_resampl_df
-from apps.indicator.models.ann_future_price_classification import get_n_last_ann_classif_df
-
+from apps.indicator.models.rsi import Rsi
 from apps.signal.models.signal import Signal
+from apps.indicator.models.ann_future_price_classification import AnnPriceClassification, get_n_last_ann_classif_df
+
 from apps.user.models.user import get_horizon_value_from_string
 from settings import HORIZONS_TIME2NAMES, EMIT_RSI, EMIT_SMA
 
@@ -68,39 +65,40 @@ ichi_displacement = 30
 def _process_ai_simple(horizon, **kwargs):
     '''
     very simple strategy: emit signal anytime it changes state from up to down
-    :param horizon:
-    :param kwargs:
-    :return:
     '''
     # get two reacent objects as a dataframe
-    ann_classif_df = get_n_last_ann_classif_df(5, **kwargs)
+
+    # NOTE: here I hardcoded two class classification ignoring SAME - should be don ona  model level!!
+
+    ann_classif_df = get_n_last_ann_classif_df(4, **kwargs)
     # choose only two class classification (ignore SAME), then add a new column with the best class
-    ann_classif_df = ann_classif_df[['probability_up','probability_down']]
-    ann_classif_df['class'] = ann_classif_df.idxmax(axis=1)
+    df = ann_classif_df[['probability_up','probability_down']]
+    df['class'] = df.idxmax(axis=1)
 
-    #  dfn.loc[ dfn['Sex']=='male', 'Survived'] = 0
-    ann_classif_df.loc[ann_classif_df['class'] == 'probability_up', 'class_num'] = int(0)
-    ann_classif_df.loc[ann_classif_df['class'] == 'probability_down', 'class_num'] = int(1)
+    df.loc[df['class'] == 'probability_up', 'class_num'] = int(0)
+    df.loc[df['class'] == 'probability_down', 'class_num'] = int(1)
+    df['class_change'] = df['class_num'].diff()   # detect change of state
 
-    ann_classif_df['class_change'] = ann_classif_df['class_num'].diff()   # detect changes
-
-    if ann_classif_df.iloc[-1]['class_change'] != 0:
+    if df.iloc[-1]['class_change'] != 0:
         # emit signal
         try:
-            # TODO: change to emitting two signals UP and DOWN accordint to how others events are generated (for ML)
+            # TODO: change to emitting two signals UP and DOWN according to how others events are generated (for ML)
             new_instance = EventsElementary.objects.create(
                 **kwargs,
                 event_name="ann_price_2class_simple",
-                event_value=ann_classif_df.iloc[-1]['class_change'],
-                #event_second_value=rs_obj.rsi,
+                event_value=df.iloc[-1]['class_change'],
             )
             logger.debug("   >>> ANN event detected and saved")
 
             signal_ai = Signal(
                 **kwargs,
                 signal='ANN_Simple',
-                trend=ann_classif_df.iloc[-1]['class_change'],
+                trend=df.iloc[-1]['class_change'],
                 horizon=horizon,
+                predicted_ahead_for= ann_classif_df.tail(1)['predicted_ahead_for'][0] * 10,
+                probability_same = ann_classif_df.tail(1)['probability_same'][0],
+                probability_up = df.tail(1)['probability_up'][0],
+                probability_down = df.tail(1)['probability_down'][0]
             )
             signal_ai.save()
             logger.debug("   >>> ANN event FIRED!")
