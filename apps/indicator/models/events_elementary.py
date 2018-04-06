@@ -4,18 +4,15 @@ import pandas as pd
 import numpy as np
 
 from django.db import models
-
 from apps.indicator.models.abstract_indicator import AbstractIndicator
-from apps.indicator.models.rsi import Rsi
-from apps.indicator.models.ann_future_price_classification import AnnPriceClassification
-from apps.indicator.models.sma import get_n_last_sma_df
 from apps.indicator.models.price_resampl import get_n_last_resampl_df
+from apps.indicator.models.rsi import Rsi
+from apps.indicator.models.sma import get_n_last_sma_df
 from apps.indicator.models.ann_future_price_classification import get_n_last_ann_classif_df
-
 from apps.signal.models.signal import Signal
+
 from apps.user.models.user import get_horizon_value_from_string
 from settings import HORIZONS_TIME2NAMES, EMIT_RSI, EMIT_SMA
-
 
 logger = logging.getLogger(__name__)
 
@@ -222,6 +219,7 @@ class EventsElementary(AbstractIndicator):
             'resample_period' : kwargs['resample_period']
         }
 
+        logger.info(" ::: Start analysing ELEMENTARY events  ::: ")
         # load nessesary resampled prices from price resampled
         # we only need last_records back in time
         last_records = ichi_displacement * ichi_displacement + 10

@@ -9,9 +9,8 @@ from requests import get, RequestException
 from apps.channel.models import ExchangeData
 from apps.channel.models.exchange_data import POLONIEX
 from apps.indicator.models import Price, Volume
-from apps.indicator.models.price import get_currency_value_from_string, get_n_last_prices_ts
+from apps.indicator.models.price import get_currency_value_from_string
 from apps.indicator.models.price_resampl import get_first_resampled_time
-from apps.indicator.models.volume import get_n_last_volumes_ts
 
 from apps.indicator.models.price_resampl import PriceResampl
 from apps.indicator.models.sma import Sma
@@ -22,10 +21,9 @@ from apps.indicator.models.events_logical import EventsLogical
 
 from apps.ai.models.nn_model import get_ann_model_object
 
-from settings import time_speed  # 1 / 10
 from settings import USDT_COINS, BTC_COINS
 from settings import PERIODS_LIST, SHORT, MEDIUM, LONG
-from settings import QUEUE_NAME, AWS_OPTIONS, DEFAULT_FILE_STORAGE
+
 
 
 
