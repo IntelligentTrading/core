@@ -168,9 +168,9 @@ def _compute_and_save_indicators(resample_period_par):
         try:
             if ann_model_object:
                 AnnPriceClassification.compute_all(AnnPriceClassification, ann_model_object, **indicator_params_dict)
-                logger.debug("  ... ANN indicators completed,  ELAPSED Time: " + str(time.time() - timestamp))
+                logger.info("  ... ANN indicators completed,  ELAPSED Time: " + str(time.time() - timestamp))
             else:
-                logger.info(" No ANN model, calculation does not make sence")
+                logger.error(" No ANN model, calculation does not make sence")
         except Exception as e:
             logger.error("ANN Indicator Exception (ANN has not been calculated): " + str(e))
 
@@ -184,7 +184,7 @@ def _compute_and_save_indicators(resample_period_par):
                 event.check_events(event, **indicator_params_dict)
                 logger.debug("  ... Events completed,  ELAPSED Time: " + str(time.time() - timestamp))
             except Exception as e:
-                logger.error("Event Exception: " + str(e))
+                logger.error(" Event Exception: " + str(e))
 
     # clean session to prevent memory leak
     logger.debug("   ... Cleaning Keras session...")

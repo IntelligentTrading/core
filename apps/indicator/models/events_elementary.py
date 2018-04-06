@@ -5,11 +5,11 @@ import numpy as np
 
 from django.db import models
 from apps.indicator.models.abstract_indicator import AbstractIndicator
-from apps.indicator.models.price_resampl import get_n_last_resampl_df
 from apps.indicator.models.rsi import Rsi
 from apps.indicator.models.sma import get_n_last_sma_df
 from apps.indicator.models.ann_future_price_classification import get_n_last_ann_classif_df
 from apps.signal.models.signal import Signal
+from apps.indicator.models.price_resampl import get_n_last_resampl_df
 
 from apps.user.models.user import get_horizon_value_from_string
 from settings import HORIZONS_TIME2NAMES, EMIT_RSI, EMIT_SMA
@@ -209,8 +209,9 @@ class EventsElementary(AbstractIndicator):
 
     @staticmethod
     def check_events(cls, **kwargs):
-        horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[kwargs['resample_period']])
+        logger.info("   ::: Start analysing ELEMENTARY events  ::: ")
 
+        horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[kwargs['resample_period']])
         # create a param dict to pass inside get_n_last_resampl_df
         no_time_params = {
             'source' : kwargs['source'],
@@ -219,22 +220,21 @@ class EventsElementary(AbstractIndicator):
             'resample_period' : kwargs['resample_period']
         }
 
-        logger.info(" ::: Start analysing ELEMENTARY events  ::: ")
+
         # load nessesary resampled prices from price resampled
         # we only need last_records back in time
+        logger.debug("------ STEP 1: get price_df ... ")
         last_records = ichi_displacement * ichi_displacement + 10
         prices_df = get_n_last_resampl_df(last_records, **no_time_params)
         prices_df = prices_df.fillna(value=0)
 
-        logger.info('   ::::  Start analysing ELEMENTARY events ::::')
-
         ###### check for rsi events, save and emit signal
-        logger.info("   ... Check RSI Events: ")
+        logger.info("   ... Check RSI elementary Events: ")
         _process_rsi(horizon, **kwargs)
 
 
         ############## check SMA cross over events
-        logger.info("   ... Check SMA Events: ")
+        logger.info("   ... Check SMA elementary Events: ")
         SMA_LOW, SMA_HIGH = [50,200]
 
         sma_low_df = get_n_last_sma_df(last_records, SMA_LOW, **no_time_params).tail(10)
@@ -372,7 +372,7 @@ class EventsElementary(AbstractIndicator):
 
 
         ############## calculate and save ANN Events   #################
-        logger.info("   ... Check AI Elementary Events: ")
+        logger.info("   ... Check AI elementary Events: ")
         _process_ai_simple(horizon, **kwargs)
 
 
