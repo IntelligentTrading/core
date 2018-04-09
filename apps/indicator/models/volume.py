@@ -4,6 +4,9 @@ from unixtimestampfield.fields import UnixTimeStampField
 from apps.channel.models.exchange_data import SOURCE_CHOICES
 from apps.indicator.models.price import Price
 
+from datetime import timedelta, datetime
+import pandas as pd
+
 class Volume(models.Model):
     source = models.SmallIntegerField(choices=SOURCE_CHOICES, null=False)
     transaction_currency = models.CharField(max_length=6, null=False, blank=False)
@@ -17,3 +20,17 @@ class Volume(models.Model):
     # MODEL PROPERTIES
 
     # MODEL FUNCTIONS
+
+def get_n_last_volumes_ts(n, source, transaction_currency, counter_currency):
+    back_in_time_records = list(Volume.objects.filter(
+        source=source,
+        transaction_currency=transaction_currency,
+        counter_currency=counter_currency,
+        timestamp__gte=datetime.now() - timedelta(minutes=n)
+    ).values('timestamp', 'volume').order_by('timestamp'))
+
+    if back_in_time_records:
+        return pd.Series(
+            data = [rec['volume'] for rec in back_in_time_records],
+            index=[rec['timestamp'] for rec in back_in_time_records]
+        )

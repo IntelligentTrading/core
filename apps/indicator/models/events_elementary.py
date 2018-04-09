@@ -1,16 +1,19 @@
-from django.db import models
-from apps.indicator.models.abstract_indicator import AbstractIndicator
-from apps.signal.models.signal import Signal
-from apps.indicator.models.rsi import Rsi
-from apps.indicator.models.sma import get_n_last_sma_df
-from apps.indicator.models.price_resampl import get_n_last_resampl_df
-from apps.user.models.user import get_horizon_value_from_string
-from settings import HORIZONS_TIME2NAMES, EMIT_RSI, EMIT_SMA
 import time
-
+import logging
 import pandas as pd
 import numpy as np
-import logging
+
+from django.db import models
+from apps.indicator.models.abstract_indicator import AbstractIndicator
+from apps.indicator.models.price_resampl import get_n_last_resampl_df
+from apps.indicator.models.sma import get_n_last_sma_df
+from apps.indicator.models.rsi import Rsi
+from apps.signal.models.signal import Signal
+from apps.indicator.models.ann_future_price_classification import AnnPriceClassification, get_n_last_ann_classif_df
+
+from apps.user.models.user import get_horizon_value_from_string
+from settings import HORIZONS_TIME2NAMES, EMIT_RSI, EMIT_SMA
+
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +62,51 @@ ichi_param_1_9 = 20
 ichi_param_2_26 = 60
 ichi_param_3_52 = 120
 ichi_displacement = 30
+
+def _process_ai_simple(horizon, **kwargs):
+    '''
+    very simple strategy: emit signal anytime it changes state from up to down
+    '''
+    # get two reacent objects as a dataframe
+
+    # NOTE: here I hardcoded two class classification ignoring SAME - should be don ona  model level!!
+
+    ann_classif_df = get_n_last_ann_classif_df(4, **kwargs)
+    # choose only two class classification (ignore SAME), then add a new column with the best class
+    df = ann_classif_df[['probability_up','probability_down']]
+    df['class'] = df.idxmax(axis=1)
+
+    df.loc[df['class'] == 'probability_up', 'class_num'] = int(0)
+    df.loc[df['class'] == 'probability_down', 'class_num'] = int(1)
+    df['class_change'] = df['class_num'].diff()   # detect change of state
+
+    if df.iloc[-1]['class_change'] != 0:
+        # emit signal
+        try:
+            # TODO: change to emitting two signals UP and DOWN according to how others events are generated (for ML)
+            new_instance = EventsElementary.objects.create(
+                **kwargs,
+                event_name="ann_price_2class_simple",
+                event_value=df.iloc[-1]['class_change'],
+            )
+            logger.debug("   >>> ANN event detected and saved")
+
+            signal_ai = Signal(
+                **kwargs,
+                signal='ANN_Simple',
+                trend=df.iloc[-1]['class_change'],
+                horizon=horizon,
+                predicted_ahead_for= ann_classif_df.tail(1)['predicted_ahead_for'][0],
+                probability_same = ann_classif_df.tail(1)['probability_same'][0],
+                probability_up = df.tail(1)['probability_up'][0],
+                probability_down = df.tail(1)['probability_down'][0]
+            )
+            signal_ai.save()
+            logger.debug("   >>> ANN event FIRED!")
+        except Exception as e:
+            logger.error(" Error saving/emitting ANN Event " + e)
+    else:
+        logger.debug("   ... no AI event generated (predicts no changes in price")
 
 
 
@@ -304,7 +352,7 @@ class EventsElementary(AbstractIndicator):
         last_events = df.iloc[-1]
         time_of_last_row = df.index[-1]
         time_current = pd.to_datetime(kwargs['timestamp'], unit='s')
-        assert (abs(time_current - time_of_last_row).value < 1800000)  # check if difference with now now > 30min
+        #assert (abs(time_current - time_of_last_row).value < 1800000)  # check if difference with now now > 30min
         last_events = last_events.fillna(False)
 
         # save event in DB and no signal emitting
@@ -321,6 +369,14 @@ class EventsElementary(AbstractIndicator):
                     ichi_event.save()
                 except Exception as e:
                     logger.error(" Error saving  " + event_name + " elementary event ")
+
+
+
+        ############## calculate and save ANN Events   #################
+        logger.info("   ... Check AI Elementary Events: ")
+        _process_ai_simple(horizon, **kwargs)
+
+
 
 
 
@@ -352,6 +408,7 @@ def get_current_elementory_events_df(timestamp, source, transaction_currency, co
         df = df.fillna(value=0)
 
     return df
+
 
 # the different with the previous one is that it returns the last row in a pile even if it was entered a month ago
 def get_last_ever_entered_elementory_events_df(timestamp, source, transaction_currency, counter_currency, resample_period):
