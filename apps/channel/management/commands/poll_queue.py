@@ -9,6 +9,8 @@ from apps.indicator.models import Price, Volume
 
 from apps.channel.incoming_queue import SqsListener
 
+from settings import INCOMING_SQS_QUEUE
+
 
 
 logger = logging.getLogger(__name__)
@@ -20,7 +22,7 @@ class Command(BaseCommand):
         logger.info("Getting ready to poll prices from the queue")
 
         # FIXME get sqs queue name from settings
-        listener = SqsListener('itf-sqs-core-incoming-data-test', wait_time=5)
+        listener = SqsListener(INCOMING_SQS_QUEUE, wait_time=5)
         listener.handler = process_message_from_queue
         listener.listen()
 
