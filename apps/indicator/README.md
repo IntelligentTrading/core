@@ -1,6 +1,6 @@
 # Indicator folder
 
-Indicator name came from TA (technical Analysis) terminology and means any new time series derived from row data (which is raw price table in our case)
+Indicator name came from TA (Technical Analysis) terminology and means any new time series derived from raw data (which is raw price table in our case)
 
 So, indicator folders keep all TA indicators which can be calculated for every time point. Currently they are:
 
@@ -31,7 +31,7 @@ At each time point the simple indicators and price time series are checked for c
 - if conversion line is above the base line (see Ichimoku)
 etc
 
-#### EventLogical
+#### EventLogical: complex events carrying its own name (Kumo etc)
 This is a next step after simple events checking in EventElementary.
 
 At each time point we check for more complicated event to happen. Usually these events are carrying its widely known name like _kumo breakout up_ event
