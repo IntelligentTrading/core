@@ -43,7 +43,7 @@ def process_message_from_queue(message_body):
 
     # FIXME we need to add some filtering
     for item in exchange:
-        logger.debug("Process: {category} for: {symbol} from: {source}".format(**item))
+        logger.debug("Save {category} for {symbol} from {source}".format(**item))
     
         source_code = next((code for code, source_text in SOURCE_CHOICES if source_text==item['source']), None)
 
@@ -63,8 +63,8 @@ def process_message_from_queue(message_body):
                     price=price,
                     timestamp=item['timestamp']
                 )
-                logger.debug(">>> Price saved: source={}, transaction_currency={}, counter_currency={}, price={}, timestamp={}".format(
-                            source_code, transaction_currency, counter_currency_code, price, item['timestamp']))
+                #logger.debug(">>> Price saved: source={}, transaction_currency={}, counter_currency={}, price={}, timestamp={}".format(
+                #            source_code, transaction_currency, counter_currency_code, price, item['timestamp']))
             except Exception as e:
                 logger.debug(">>>> Error saving Price for {}: {}".format(item['symbol'], e))
 
@@ -79,8 +79,8 @@ def process_message_from_queue(message_body):
                     volume=volume,
                     timestamp=item['timestamp']
                 )
-                logger.debug(">>> Volume saved: source={}, transaction_currency={}, counter_currency={}, volume={}, timestamp={}".format(
-                            source_code, transaction_currency, counter_currency_code, volume, item['timestamp']))
+                #logger.debug(">>> Volume saved: source={}, transaction_currency={}, counter_currency={}, volume={}, timestamp={}".format(
+                #            source_code, transaction_currency, counter_currency_code, volume, item['timestamp']))
             except Exception as e:
                 logger.debug(">>>> Error saving Volume for {}: {}".format(item['symbol'], e))
     logger.debug("Message processed and saved")

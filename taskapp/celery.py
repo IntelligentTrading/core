@@ -38,8 +38,8 @@ def setup_periodic_tasks(sender, **kwargs):
     from taskapp import tasks
 
     # Pull poloniex data every minute
-    EVERY_MINUTE = 60
-    sender.add_periodic_task(EVERY_MINUTE, tasks.pull_poloniex_data.s(), name='every %is' % EVERY_MINUTE)
+    #EVERY_MINUTE = 60
+    #sender.add_periodic_task(EVERY_MINUTE, tasks.pull_poloniex_data.s(), name='every %is' % EVERY_MINUTE)
 
     # Process data and send signals
     # calculate SHORT period at the start of the hour
