@@ -1,13 +1,11 @@
 import json
 import logging
 import time
-import sys
 
-from django.core.management.base import BaseCommand
 from requests import get, RequestException
 
 from apps.channel.models import ExchangeData
-from apps.channel.models.exchange_data import POLONIEX
+#from apps.channel.models.exchange_data import POLONIEX
 from apps.indicator.models import Price, Volume
 from apps.indicator.models.price import get_currency_value_from_string
 from apps.indicator.models.price_resampl import get_first_resampled_time
@@ -22,19 +20,15 @@ from apps.indicator.models.events_logical import EventsLogical
 from apps.ai.models.nn_model import get_ann_model_object
 
 from settings import USDT_COINS, BTC_COINS
-from settings import PERIODS_LIST, SHORT, MEDIUM, LONG
-
-
-
-
-# python manage.py add_nn_model
-
+from settings import SHORT, MEDIUM, LONG
 
 logger = logging.getLogger(__name__)
+
 
 def _get_pairs_to_iterate():
     pass
 
+'''
 def _pull_poloniex_data():
     logger.info("pulling Poloniex data...")
     req = get('https://poloniex.com/public?command=returnTicker')
@@ -49,7 +43,6 @@ def _pull_poloniex_data():
     )
     logger.info("Saving Poloniex price, volume data...")
     _save_prices_and_volumes(data, timestamp)
-
 
 def _save_prices_and_volumes(data, timestamp):
     for currency_pair in data:
@@ -79,7 +72,7 @@ def _save_prices_and_volumes(data, timestamp):
             logger.debug(str(e))
 
     logger.debug("Saved Poloniex price and volume data")
-
+'''
 
 def _compute_and_save_indicators(resample_period_par):
 
@@ -98,6 +91,7 @@ def _compute_and_save_indicators(resample_period_par):
     # load model from S3 and database
     ann_model_object = get_ann_model_object(period2model[resample_period])
 
+    #TODO: get pairs from def(SOURCE)
     pairs_to_iterate = [(itm,Price.USDT) for itm in USDT_COINS] + [(itm,Price.BTC) for itm in BTC_COINS]
 
     for transaction_currency, counter_currency in pairs_to_iterate:
@@ -106,7 +100,7 @@ def _compute_and_save_indicators(resample_period_par):
         # create a dictionary of parameters to improve readability
         indicator_params_dict = {
             'timestamp': timestamp,
-            'source': POLONIEX,
+            'source': SOURCE,
             'transaction_currency': transaction_currency,
             'counter_currency': counter_currency,
             'resample_period': resample_period
@@ -117,7 +111,7 @@ def _compute_and_save_indicators(resample_period_par):
         BACK_REC = 10   # how many records to calculate back in time
         BACK_TIME = timestamp - BACK_REC * resample_period * 60  # same in sec
 
-        last_time_computed = get_first_resampled_time(POLONIEX, transaction_currency, counter_currency, resample_period)
+        last_time_computed = get_first_resampled_time(SOURCE, transaction_currency, counter_currency, resample_period)
         records_to_compute = int((last_time_computed-BACK_TIME)/(resample_period * 60))
 
         if records_to_compute >= 0:
