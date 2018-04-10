@@ -22,7 +22,7 @@ class Command(BaseCommand):
         logger.info("Getting ready to poll prices from the queue")
 
         # FIXME get sqs queue name from settings
-        listener = SqsListener(INCOMING_SQS_QUEUE, wait_time=5)
+        listener = SqsListener(INCOMING_SQS_QUEUE, wait_time=10)
         listener.handler = process_message_from_queue
         listener.listen()
 

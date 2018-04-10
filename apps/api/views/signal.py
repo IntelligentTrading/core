@@ -27,9 +27,10 @@ class ListSignals(ListAPIView):
         resample_period -- in minutes, SHORT = 60
         startdate -- from this date (inclusive). Example 2018-02-12T09:09:15
         enddate -- to this date (inclusive)
+        horizon --
 
     For pagination
-        cursor - indicator that the client may use to page through the result set
+        cursor -- indicator that the client may use to page through the result set
 
     Examples
         /api/v2/signals/?transaction_currency=ETH&signal=RSI
@@ -39,7 +40,7 @@ class ListSignals(ListAPIView):
     serializer_class = SignalSerializer
     pagination_class = StandardResultsSetPagination
 
-    filter_fields = ('source', 'resample_period', 'transaction_currency', 'counter_currency', 'signal', 'trend')
+    filter_fields = ('source', 'resample_period', 'transaction_currency', 'counter_currency', 'signal', 'trend', 'horizon')
 
     model = serializer_class.Meta.model
 
@@ -64,6 +65,7 @@ class ListSignal(ListAPIView):
         resample_period -- in minutes, SHORT = 60
         startdate -- show inclusive from this date. For example 2018-02-12T09:09:15
         enddate -- until this date inclusive in same format
+        horizon --
 
     For pagination
         cursor - indicator that the client may use to page through the result set
