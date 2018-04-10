@@ -32,6 +32,9 @@ from settings import PERIODS_LIST, SHORT, MEDIUM, LONG
 
 logger = logging.getLogger(__name__)
 
+def _get_pairs_to_iterate():
+    pass
+
 def _pull_poloniex_data():
     logger.info("pulling Poloniex data...")
     req = get('https://poloniex.com/public?command=returnTicker')
@@ -82,6 +85,7 @@ def _compute_and_save_indicators(resample_period_par):
 
     timestamp = time.time() // (1 * 60) * (1 * 60)   # rounded to a minute
     resample_period = resample_period_par['period']
+    SOURCE = resample_period_par['source']
 
     logger.info(" ################# Resampling with Period: " + str(resample_period) + " #######################")
 
