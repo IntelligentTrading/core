@@ -25,8 +25,6 @@ from settings import SHORT, MEDIUM, LONG
 logger = logging.getLogger(__name__)
 
 
-def _get_pairs_to_iterate():
-    pass
 
 '''
 def _pull_poloniex_data():
@@ -73,14 +71,28 @@ def _save_prices_and_volumes(data, timestamp):
 
     logger.debug("Saved Poloniex price and volume data")
 '''
+# def get_exchanges():
+#     """
+#     Return list of exchange codes for signal calculations
+#     """
+#     return [code for code, name in SOURCE_CHOICES if name in EXCHANGE_MARKETS]
 
-def _compute_and_save_indicators(resample_period_par):
+
+def get_currency_pairs(source, period_in_seconds):
+    """
+    Return: [('BTC', 0), ('PINK', 0), ('ETH', 0),....]
+    """
+    get_from_time = time.time() - period_in_seconds
+    price_objects = Price.objects.values('transaction_currency', 'counter_currency').filter(source=source).filter(timestamp__gte=get_from_time).distinct()
+    return [(item['transaction_currency'], item['counter_currency']) for item in price_objects]
+
+
+
+def _compute_and_save_indicators(source, resample_period):
 
     timestamp = time.time() // (1 * 60) * (1 * 60)   # rounded to a minute
-    resample_period = resample_period_par['period']
-    SOURCE = resample_period_par['source']
 
-    logger.info(" ################# Resampling with Period: " + str(resample_period) + " #######################")
+    logger.info("################# Resampling with Period: " + str(resample_period) + ", Source:" + str(source) + " #######################")
 
     # choose the pre-trained ANN model depending on period, here are the same
     period2model = {
@@ -92,7 +104,9 @@ def _compute_and_save_indicators(resample_period_par):
     ann_model_object = get_ann_model_object(period2model[resample_period])
 
     #TODO: get pairs from def(SOURCE)
-    pairs_to_iterate = [(itm,Price.USDT) for itm in USDT_COINS] + [(itm,Price.BTC) for itm in BTC_COINS]
+    #pairs_to_iterate = [(itm,Price.USDT) for itm in USDT_COINS] + [(itm,Price.BTC) for itm in BTC_COINS]
+    pairs_to_iterate = get_currency_pairs(source=source, period_in_seconds=resample_period*60*2)
+    logger.debug("## Pairs to iterate: " + str(pairs_to_iterate))
 
     for transaction_currency, counter_currency in pairs_to_iterate:
         logger.info('   ======== ' + str(resample_period)+ ': checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
@@ -100,7 +114,7 @@ def _compute_and_save_indicators(resample_period_par):
         # create a dictionary of parameters to improve readability
         indicator_params_dict = {
             'timestamp': timestamp,
-            'source': SOURCE,
+            'source': source,
             'transaction_currency': transaction_currency,
             'counter_currency': counter_currency,
             'resample_period': resample_period

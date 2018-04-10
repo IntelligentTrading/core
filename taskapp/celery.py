@@ -6,7 +6,10 @@ from celery import Celery, signals
 from celery.schedules import crontab
 from celery.signals import worker_ready
 
+from apps.channel.models.exchange_data import SOURCE_CHOICES
+
 from settings import INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS, SHORT, MEDIUM, LONG
+from settings import EXCHANGE_MARKETS, DEBUG
 
 
 
@@ -29,6 +32,11 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 # Celery auto-discover modules in tasks.py files
 app.autodiscover_tasks()
 
+def get_exchanges():
+    """
+    Return list of exchange codes for signal calculations
+    """
+    return [code for code, name in SOURCE_CHOICES if name in EXCHANGE_MARKETS]
 
 ## CELERY Periodic Tasks/Scheduler
 ##   http://docs.celeryproject.org/en/v4.1.0/userguide/periodic-tasks.html
@@ -41,27 +49,41 @@ def setup_periodic_tasks(sender, **kwargs):
     #EVERY_MINUTE = 60
     #sender.add_periodic_task(EVERY_MINUTE, tasks.pull_poloniex_data.s(), name='every %is' % EVERY_MINUTE)
 
+    # [0, 1] for ('poloniex', 'bittrex')
+    exchanges = get_exchanges() #[code for code, name in SOURCE_CHOICES if name in EXCHANGE_MARKETS]
+
+    if DEBUG:
+        for exchange in exchanges:
+            sender.add_periodic_task(
+                10*60, # every 10 minutes
+                tasks.compute_and_save_indicators.s(source=exchange, resample_period=SHORT),
+                name='run SHOT period every 10 minutes',
+                )
+
     # Process data and send signals
     # calculate SHORT period at the start of the hour
-    sender.add_periodic_task(
-        crontab(minute=0),
-        tasks.compute_and_save_indicators.s({'period': SHORT}),
-        name='at the beginning of every hour',
-        )
+    for exchange in exchanges:
+        sender.add_periodic_task(
+            crontab(minute=0),
+            tasks.compute_and_save_indicators.s(source=exchange, resample_period=SHORT),
+            name='at the beginning of every hour',
+            )
 
     # calculate MEDIUM period at the start of every 4 hours
-    sender.add_periodic_task(
-        crontab(minute=0, hour='*/4'),
-        tasks.compute_and_save_indicators.s({'period': MEDIUM}),
-        name='at the beginning of every 4 hours',
-        )
+    for exchange in exchanges:
+        sender.add_periodic_task(
+            crontab(minute=0, hour='*/4'),
+            tasks.compute_and_save_indicators.s(source=exchange, resample_period=MEDIUM),
+            name='at the beginning of every 4 hours',
+            )
 
     # calculate LONG period daily at midnight.
-    sender.add_periodic_task(
-        crontab(minute=0, hour=0),
-        tasks.compute_and_save_indicators.s({'period': LONG}),
-        name='daily at midnight',
-        )
+    for exchange in exchanges:
+        sender.add_periodic_task(
+            crontab(minute=0, hour=0),
+            tasks.compute_and_save_indicators.s(source=exchange, resample_period=LONG),
+            name='daily at midnight',
+            )
 
     # Precache info_bot every 4 hours
     sender.add_periodic_task(INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS, tasks.precache_info_bot.s(), name='every %is' % INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS)

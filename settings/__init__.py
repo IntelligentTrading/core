@@ -221,6 +221,9 @@ BTC_COINS = [
     "NXC", "BELA", "XPM", "XVC", "XBC", "RADS", "SBD", "PINK", "NMC", "HUC", "BTM"
 ]
 
+# list of the exchanges on which we generate signals. Make it in sync with same list in Data app settings
+#EXCHANGE_MARKETS = ('poloniex', 'binance', 'bittrex', 'bitfinex', 'kucoin')
+EXCHANGE_MARKETS = ('poloniex', 'bittrex')
 
 # mapping from bin size to a name short/medium
 # CHANGES TO THESE VALUES REQUIRE MAKING AND RUNNING DB MIGRATIONS
