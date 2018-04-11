@@ -13,9 +13,9 @@ def pull_poloniex_data():
     _pull_poloniex_data()
 
 @shared_task
-def compute_and_save_indicators(resample_period_par):
+def compute_and_save_indicators(source, resample_period):
     from taskapp.helpers import _compute_and_save_indicators
-    _compute_and_save_indicators(resample_period_par)
+    _compute_and_save_indicators(source=source, resample_period=resample_period)
 
 @shared_task
 def precache_info_bot():
