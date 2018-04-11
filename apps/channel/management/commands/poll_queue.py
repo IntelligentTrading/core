@@ -21,7 +21,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         logger.info("Getting ready to poll prices from the queue")
 
-        # FIXME get sqs queue name from settings
         listener = SqsListener(INCOMING_SQS_QUEUE, wait_time=10)
         listener.handler = process_message_from_queue
         listener.listen()
@@ -40,10 +39,11 @@ class Command(BaseCommand):
 def process_message_from_queue(message_body):
     body_dict = json.loads(message_body)
     exchange = json.loads(body_dict['Message'])
-
+    
+    logger.info("Message with: {} coins received and will be processed".format(len(exchange)/2)
     # FIXME we need to add some filtering
     for item in exchange:
-        logger.debug("Save {category} for {symbol} from {source}".format(**item))
+        #logger.debug("Save {category} for {symbol} from {source}".format(**item))
     
         source_code = next((code for code, source_text in SOURCE_CHOICES if source_text==item['source']), None)
 
