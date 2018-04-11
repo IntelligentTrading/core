@@ -40,7 +40,7 @@ def process_message_from_queue(message_body):
     body_dict = json.loads(message_body)
     exchange = json.loads(body_dict['Message'])
     
-    logger.info("Message with: {} coins received and will be processed".format(len(exchange)/2)
+    #logger.info("Message with: {} coins received and will be processed".format(len(exchange)/2)
     # FIXME we need to add some filtering
     for item in exchange:
         #logger.debug("Save {category} for {symbol} from {source}".format(**item))
