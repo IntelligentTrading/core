@@ -225,6 +225,14 @@ BTC_COINS = [
 #EXCHANGE_MARKETS = ('poloniex', 'binance', 'bittrex', 'bitfinex', 'kucoin')
 EXCHANGE_MARKETS = ('poloniex', 'bittrex')
 
+# Please only add new exchanges to this settings, never remove or modify
+(POLONIEX, BITTREX) = list(range(2))
+SOURCE_CHOICES = (
+    (POLONIEX, 'poloniex'),
+    (BITTREX, 'bittrex'),
+)
+
+
 # mapping from bin size to a name short/medium
 # CHANGES TO THESE VALUES REQUIRE MAKING AND RUNNING DB MIGRATIONS
 PERIODS_LIST = list([60,240,1440])

@@ -125,7 +125,7 @@ def _compute_and_save_indicators(source, resample_period):
         BACK_REC = 10   # how many records to calculate back in time
         BACK_TIME = timestamp - BACK_REC * resample_period * 60  # same in sec
 
-        last_time_computed = get_first_resampled_time(SOURCE, transaction_currency, counter_currency, resample_period)
+        last_time_computed = get_first_resampled_time(source, transaction_currency, counter_currency, resample_period)
         records_to_compute = int((last_time_computed-BACK_TIME)/(resample_period * 60))
 
         if records_to_compute >= 0:
