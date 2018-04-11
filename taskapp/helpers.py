@@ -26,8 +26,16 @@ logger = logging.getLogger(__name__)
 
 
 
-'''
-def _pull_poloniex_data():
+def get_currency_pairs(source, period_in_seconds):
+    """
+    Return: [('BTC', 0), ('PINK', 0), ('ETH', 0),....]
+    """
+    get_from_time = time.time() - period_in_seconds
+    price_objects = Price.objects.values('transaction_currency', 'counter_currency').filter(source=source).filter(timestamp__gte=get_from_time).distinct()
+    return [(item['transaction_currency'], item['counter_currency']) for item in price_objects]
+
+
+def _pull_poloniex_data(source):
     logger.info("pulling Poloniex data...")
     req = get('https://poloniex.com/public?command=returnTicker')
 
@@ -35,14 +43,14 @@ def _pull_poloniex_data():
     timestamp = time.time()
 
     poloniex_data_point = ExchangeData.objects.create(
-        source=POLONIEX,
+        source=source,
         data=json.dumps(data),
         timestamp=timestamp
     )
     logger.info("Saving Poloniex price, volume data...")
-    _save_prices_and_volumes(data, timestamp)
+    _save_prices_and_volumes(data, timestamp, source)
 
-def _save_prices_and_volumes(data, timestamp):
+def _save_prices_and_volumes(data, timestamp, source):
     for currency_pair in data:
         try:
             counter_currency_string = currency_pair.split('_')[0]
@@ -52,7 +60,7 @@ def _save_prices_and_volumes(data, timestamp):
             assert len(transaction_currency_string) > 1 and len(transaction_currency_string) <= 6
 
             Price.objects.create(
-                source=POLONIEX,
+                source=source,
                 transaction_currency=transaction_currency_string,
                 counter_currency=counter_currency,
                 price=int(float(data[currency_pair]['last']) * 10 ** 8),
@@ -60,7 +68,7 @@ def _save_prices_and_volumes(data, timestamp):
             )
 
             Volume.objects.create(
-                source=POLONIEX,
+                source=source,
                 transaction_currency=transaction_currency_string,
                 counter_currency=counter_currency,
                 volume=float(data[currency_pair]['baseVolume']),
@@ -70,7 +78,7 @@ def _save_prices_and_volumes(data, timestamp):
             logger.debug(str(e))
 
     logger.debug("Saved Poloniex price and volume data")
-'''
+
 # def get_exchanges():
 #     """
 #     Return list of exchange codes for signal calculations
@@ -78,13 +86,6 @@ def _save_prices_and_volumes(data, timestamp):
 #     return [code for code, name in SOURCE_CHOICES if name in EXCHANGE_MARKETS]
 
 
-def get_currency_pairs(source, period_in_seconds):
-    """
-    Return: [('BTC', 0), ('PINK', 0), ('ETH', 0),....]
-    """
-    get_from_time = time.time() - period_in_seconds
-    price_objects = Price.objects.values('transaction_currency', 'counter_currency').filter(source=source).filter(timestamp__gte=get_from_time).distinct()
-    return [(item['transaction_currency'], item['counter_currency']) for item in price_objects]
 
 
 

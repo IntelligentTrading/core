@@ -29,7 +29,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         logger.info("Getting ready to trawl Poloniex...")
 
-        schedule.every().minute.do(_pull_poloniex_data)
+        schedule.every().minute.do(_pull_poloniex_data, {'source': 0})
 
         # @Alex
         # run resampling for all periods and calculate indicator values
