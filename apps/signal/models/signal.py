@@ -145,7 +145,7 @@ class Signal(Timestampable, models.Model):
 
         logger.info("EMITTED SIGNAL: " + str(self.as_dict()))
 
-        publish_message_to_sns(message=message, topic_arn=SNS_SIGNALS_TOPIC_ARN)
+        publish_message_to_sns(message=json.dumps(self.as_dict()), topic_arn=SNS_SIGNALS_TOPIC_ARN)
 
         self.sent_at = datetime.now()  # to prevent emitting the same signal twice
 
