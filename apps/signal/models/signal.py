@@ -11,6 +11,7 @@ from django.db.models.signals import post_save, pre_save
 from apps.common.behaviors import Timestampable
 from apps.indicator.models import Price
 from settings import QUEUE_NAME, AWS_OPTIONS, BETA_QUEUE_NAME, TEST_QUEUE_NAME, PERIODS_LIST
+from settings import SNS_SIGNALS_TOPIC_ARN
 from django.db import models
 from unixtimestampfield.fields import UnixTimeStampField
 from apps.channel.models.exchange_data import SOURCE_CHOICES, POLONIEX
@@ -141,7 +142,12 @@ class Signal(Timestampable, models.Model):
             test_queue.write(message)
 
         logger.info("EMITTED SIGNAL: " + str(self.as_dict()))
+
+        publish_message_to_sns(message=message, topic_arn=SNS_SIGNALS_TOPIC_ARN)
+
         self.sent_at = datetime.now()  # to prevent emitting the same signal twice
+
+
         return
 
     def print(self):
@@ -150,6 +156,18 @@ class Signal(Timestampable, models.Model):
     def _same_as_previous(self):
         # todo: get one day back in time and check if all fileds are the same - no reason to send it twice
         return False
+
+def publish_message_to_sns(message, topic_arn=None):
+    if topic_arn is not None:
+        sns_connection = boto.sns.connect_to_region(
+            region_name="us-east-1",
+            aws_access_key_id=AWS_OPTIONS['AWS_ACCESS_KEY_ID'],
+            aws_secret_access_key=AWS_OPTIONS['AWS_SECRET_ACCESS_KEY'],
+        )
+        sns_connection.publish(topic=SNS_SIGNALS_TOPIC_ARN, message=message)
+        logger.debug("Message published to SNS topic")
+    else:
+        logger.debug("No SNS topic. Skipping sending message to SNS")
 
 
 from django.db.models.signals import post_save
