@@ -3,6 +3,7 @@ import json
 import logging
 
 import boto
+import boto.sns
 from boto.sqs.message import Message
 from datetime import datetime
 
@@ -12,6 +13,7 @@ from apps.common.behaviors import Timestampable
 from apps.indicator.models import Price
 from settings import QUEUE_NAME, AWS_OPTIONS, BETA_QUEUE_NAME, TEST_QUEUE_NAME, PERIODS_LIST
 from settings import SNS_SIGNALS_TOPIC_ARN
+
 from django.db import models
 from unixtimestampfield.fields import UnixTimeStampField
 from apps.channel.models.exchange_data import SOURCE_CHOICES, POLONIEX
