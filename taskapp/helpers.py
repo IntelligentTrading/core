@@ -90,7 +90,9 @@ def _save_prices_and_volumes(data, timestamp, source):
 
 
 
-def _compute_and_save_indicators(source, resample_period):
+def _compute_and_save_indicators(params):
+    source = params['source']
+    resample_period = params['period']
 
     timestamp = time.time() // (1 * 60) * (1 * 60)   # rounded to a minute
 
@@ -107,7 +109,7 @@ def _compute_and_save_indicators(source, resample_period):
 
     #TODO: get pairs from def(SOURCE)
     #pairs_to_iterate = [(itm,Price.USDT) for itm in USDT_COINS] + [(itm,Price.BTC) for itm in BTC_COINS]
-    pairs_to_iterate = get_currency_pairs(source=source, period_in_seconds=resample_period*60*2)
+    pairs_to_iterate = get_currency_pairs(source=source, period_in_seconds=resample_period*60*4)
     logger.debug("## Pairs to iterate: " + str(pairs_to_iterate))
 
     for transaction_currency, counter_currency in pairs_to_iterate:
@@ -207,9 +209,10 @@ def _compute_and_save_indicators(source, resample_period):
         for strategy in strategies_list:
             try:
                 strategy.is_signal_now(timestamp)
-                logger.debug("   ... Check for any strategy signals.")
+                # TODO: emit a signal without saving it in the table!
+                logger.debug("   ... Checking for strategy signals completed.")
             except Exception as e:
-                logger.error(" Error Strategy checking")
+                logger.error(" Error Strategy checking:" + str(e))
 
     # clean session to prevent memory leak
     logger.debug("   ... Cleaning Keras session...")

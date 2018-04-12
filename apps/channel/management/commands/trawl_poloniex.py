@@ -29,7 +29,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         logger.info("Getting ready to trawl Poloniex...")
 
-        schedule.every().minute.do(_pull_poloniex_data, {'source': 0})
+        schedule.every().minute.do(_pull_poloniex_data, 0 )
 
         # @Alex
         # run resampling for all periods and calculate indicator values
@@ -48,14 +48,16 @@ class Command(BaseCommand):
             if horizont_period in [SHORT, MEDIUM]:
                 schedule.every(hours).hours.at("00:00").do(
                     _compute_and_save_indicators,
-                    {'period': horizont_period}
+                    { 'source': 0,
+                      'period': horizont_period }
                 )
 
             # if long period start exacly at the beginning of a day
             if horizont_period == LONG:
                 schedule.every().day.at("00:00").do(
                     _compute_and_save_indicators,
-                    {'period': horizont_period}
+                    {'source': 0,
+                     'period': horizont_period}
                 )
 
         keep_going = True

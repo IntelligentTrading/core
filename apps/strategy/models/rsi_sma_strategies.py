@@ -6,22 +6,25 @@ class RsiSimpleStrategy(AbstractStrategy):
     that subset shall represent a given strategy, for example for RsiSimple  as follows:
     - RSI simple strategy is buy when RSI < 25 and sell when RSI > 85
     '''
-
-    def is_signal_now(self,timestamp):
+    @staticmethod
+    def is_signal_now(timestamp):
         # check if now there are any on RSI<25 and RSI>85
         # return a signal_id (?) if any
         pass
 
-    def get_all_signals_in_time_period(self, start_timestamp, end_timestamp):
+    @staticmethod
+    def get_all_signals_in_time_period(start_timestamp, end_timestamp):
         pass
 
 
 
 class SmaCrossOverStrategy(AbstractStrategy):
-    def is_signal_now(self, timestamp):
+    @staticmethod
+    def is_signal_now( timestamp):
         pass
 
-    def get_all_signals_in_time_period(self, start_timestamp, end_timestamp):
+    @staticmethod
+    def get_all_signals_in_time_period(start_timestamp, end_timestamp):
         pass
 
 
