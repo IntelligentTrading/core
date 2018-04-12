@@ -96,11 +96,11 @@ def _compute_and_save_indicators(source, resample_period):
     logger.info("################# Resampling with Period: " + str(resample_period) + ", Source:" + str(source) + " #######################")
 
     # choose the pre-trained ANN model depending on period, here are the same
-    period2model = {
-        SHORT : 'lstm_model_2_2.h5',
-        MEDIUM: 'lstm_model_2_2.h5',
-        LONG  : 'lstm_model_2_2.h5'
-    }
+    # period2model = {
+    #     SHORT : 'lstm_model_2_2.h5',
+    #     MEDIUM: 'lstm_model_2_2.h5',
+    #     LONG  : 'lstm_model_2_2.h5'
+    # }
 
     if RUN_ANN:
         # load model from S3 and database
