@@ -16,15 +16,21 @@ class BackTest(models.Model):
     strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE)  # id of a strategy Strategy Table
     strategy_name = models.CharField(max_length=32, null=False, blank=False)
 
+
     backtested_performance = models.FloatField(null=True)
 
-    def __init__(self, strategy):
+    def __init__(self, strategy, start_timeframe, end_timeframe):
         self.strategy = strategy
 
 
     def run_backtest_one_curency_pair(self, counter_currency, transaction_currency):
+        # TODO:
+        # - make strategy to return ids of all signals for that strategy
+        # - having a list of signals do a backtesting
+
         gain_to_counter_currency = None
         gain_to_random_strategy = None
+
 
         return gain_to_counter_currency, gain_to_random_strategy
 
