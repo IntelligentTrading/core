@@ -20,7 +20,7 @@ from apps.indicator.models.events_logical import EventsLogical
 from apps.ai.models.nn_model import get_ann_model_object
 
 from settings import USDT_COINS, BTC_COINS
-from settings import SHORT, MEDIUM, LONG
+from settings import SHORT, MEDIUM, LONG, RUN_ANN
 
 logger = logging.getLogger(__name__)
 
@@ -101,8 +101,10 @@ def _compute_and_save_indicators(source, resample_period):
         MEDIUM: 'lstm_model_2_2.h5',
         LONG  : 'lstm_model_2_2.h5'
     }
-    # load model from S3 and database
-    ann_model_object = get_ann_model_object(period2model[resample_period])
+
+    if RUN_ANN:
+        # load model from S3 and database
+        ann_model_object = get_ann_model_object(period2model[resample_period])
 
     #TODO: get pairs from def(SOURCE)
     #pairs_to_iterate = [(itm,Price.USDT) for itm in USDT_COINS] + [(itm,Price.BTC) for itm in BTC_COINS]
@@ -177,15 +179,16 @@ def _compute_and_save_indicators(source, resample_period):
 
 
         # calculate ANN indicator(s)
-        # TODO: just form X_predicted here and then run prediction outside the loop !
-        try:
-            if ann_model_object:
-                AnnPriceClassification.compute_all(AnnPriceClassification, ann_model_object, **indicator_params_dict)
-                logger.info("  ... ANN indicators completed,  ELAPSED Time: " + str(time.time() - timestamp))
-            else:
-                logger.error(" No ANN model, calculation does not make sence")
-        except Exception as e:
-            logger.error("ANN Indicator Exception (ANN has not been calculated): " + str(e))
+        if RUN_ANN:
+            # TODO: just form X_predicted here and then run prediction outside the loop !
+            try:
+                if ann_model_object:
+                    AnnPriceClassification.compute_all(AnnPriceClassification, ann_model_object, **indicator_params_dict)
+                    logger.info("  ... ANN indicators completed,  ELAPSED Time: " + str(time.time() - timestamp))
+                else:
+                    logger.error(" No ANN model, calculation does not make sence")
+            except Exception as e:
+                logger.error("ANN Indicator Exception (ANN has not been calculated): " + str(e))
 
 
 
@@ -199,11 +202,10 @@ def _compute_and_save_indicators(source, resample_period):
             except Exception as e:
                 logger.error(" Event Exception: " + str(e))
 
-    # clean session to prevent memory leak
-    logger.debug("   ... Cleaning Keras session...")
-    from keras import backend as K
-    K.clear_session()
-
-
-    # TODO check if I can do a batch Keras prediction for all currencies at once
-    # NOTE: you can form an X vector inside this cycle and then run prediction!!!
+    if RUN_ANN:
+        # clean session to prevent memory leak
+        logger.debug("   ... Cleaning Keras session...")
+        from keras import backend as K
+        K.clear_session()
+        # TODO check if I can do a batch Keras prediction for all currencies at once
+        # NOTE: you can form an X vector inside this cycle and then run prediction!!!
