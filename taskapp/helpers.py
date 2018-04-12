@@ -18,6 +18,7 @@ from apps.indicator.models.events_elementary import EventsElementary
 from apps.indicator.models.events_logical import EventsLogical
 
 from apps.ai.models.nn_model import get_ann_model_object
+from apps.strategy.models.rsi_sma_strategies import RsiSimpleStrategy, SmaCrossOverStrategy
 
 from settings import USDT_COINS, BTC_COINS
 from settings import SHORT, MEDIUM, LONG
@@ -176,7 +177,8 @@ def _compute_and_save_indicators(source, resample_period):
                 logger.error(str(ind) + " Indicator Exception: " + str(e))
 
 
-        # calculate ANN indicator(s)
+        #############################
+        #  calculate ANN indicator(s)
         # TODO: just form X_predicted here and then run prediction outside the loop !
         try:
             if ann_model_object:
@@ -198,6 +200,16 @@ def _compute_and_save_indicators(source, resample_period):
                 logger.debug("  ... Events completed,  ELAPSED Time: " + str(time.time() - timestamp))
             except Exception as e:
                 logger.error(" Event Exception: " + str(e))
+
+        #############################
+        # check if we have to emit any <Strategy> signals
+        strategies_list = [RsiSimpleStrategy, SmaCrossOverStrategy]
+        for strategy in strategies_list:
+            try:
+                strategy.is_signal_now(timestamp)
+                logger.debug("   ... Check for any strategy signals.")
+            except Exception as e:
+                logger.error(" Error Strategy checking")
 
     # clean session to prevent memory leak
     logger.debug("   ... Cleaning Keras session...")
