@@ -1,18 +1,34 @@
 from abc import ABC, abstractmethod
 
 class AbstractStrategy(ABC):
+    timestamp = None
+    source = None
+    resample_period = None
 
-    @abstractmethod
-    def is_signal_now(self,timestamp):
+    transaction_currency = None
+    counter_currency = None
+
+
+    def __init__(self, parameters):
+        self.timestamp = parameters['timestamp']
+        self.source = parameters['source']
+        self.resample_period = parameters['resample_period']
+        self.transaction_currency = parameters['transaction_currency']
+        self.counter_currency = parameters['counter_currency']
+
+
+    def is_signal_now(self):
         pass
 
-    @abstractmethod
+
     def get_all_signals_in_time_period(self, start_timestamp, end_timestamp):
         pass
 
-    @abstractmethod
+
     def print(self):
         '''
-        word description of stragety here
+        word description of stragegy here
         '''
-        pass
+        description = " word description"
+        return description
+

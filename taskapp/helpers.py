@@ -158,6 +158,7 @@ def _compute_and_save_indicators(params):
         ################# Can be commented after first time run
 
 
+        #############################
         # calculate and save resampling price
         # todo - prevent adding an empty record if no value was computed (static method below)
         try:
@@ -169,6 +170,7 @@ def _compute_and_save_indicators(params):
             logger.error(" -> RESAMPLE EXCEPTION: " + str(e))
 
 
+        ############################
         # calculate and save simple indicators
         indicators_list = [Sma, Rsi]
         for ind in indicators_list:
@@ -208,7 +210,8 @@ def _compute_and_save_indicators(params):
         strategies_list = [RsiSimpleStrategy, SmaCrossOverStrategy]
         for strategy in strategies_list:
             try:
-                strategy.is_signal_now(timestamp)
+                s = strategy(**indicator_params_dict)
+                s.is_signal_now()
                 # TODO: emit a signal without saving it in the table!
                 logger.debug("   ... Checking for strategy signals completed.")
             except Exception as e:

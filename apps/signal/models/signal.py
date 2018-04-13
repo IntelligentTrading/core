@@ -177,3 +177,14 @@ def send_signal(sender, instance, **kwargs):
             logging.debug("signal sent and timstamp saved")
         except Exception as e:
             logging.error(str(e))
+
+
+def get_signals(starttime, endtime, **kvargs):
+    signals_qobjects = Signal.objects.filter(
+        source=source,
+        resample_period=resample_period,
+        transaction_currency=transaction_currency,
+        counter_currency=counter_currency,
+        timestamp__gte=starttime,
+        timestamp__lte=endtime,
+    ).values('id', 'signal', 'trend', 'strength_value').order_by('timestamp')
