@@ -109,7 +109,7 @@ def _compute_and_save_indicators(params):
 
     #TODO: get pairs from def(SOURCE)
     #pairs_to_iterate = [(itm,Price.USDT) for itm in USDT_COINS] + [(itm,Price.BTC) for itm in BTC_COINS]
-    pairs_to_iterate = get_currency_pairs(source=source, period_in_seconds=resample_period*60*4)
+    pairs_to_iterate = get_currency_pairs(source=source, period_in_seconds=resample_period*60*40)
     logger.debug("## Pairs to iterate: " + str(pairs_to_iterate))
 
     for transaction_currency, counter_currency in pairs_to_iterate:
@@ -130,7 +130,7 @@ def _compute_and_save_indicators(params):
         BACK_TIME = timestamp - BACK_REC * resample_period * 60  # same in sec
 
         last_time_computed = get_first_resampled_time(source, transaction_currency, counter_currency, resample_period)
-        records_to_compute = int((last_time_computed-BACK_TIME)/(resample_period * 60))
+        records_to_compute = int((last_time_computed-BACK_TIME)/(resample_period * 40))
 
         if records_to_compute >= 0:
             logger.info("  ... calculate resampl back in time, needed records: " + str(records_to_compute))
@@ -158,7 +158,7 @@ def _compute_and_save_indicators(params):
         ################# Can be commented after first time run
 
 
-        #############################
+        # 1 ############################
         # calculate and save resampling price
         # todo - prevent adding an empty record if no value was computed (static method below)
         try:
@@ -170,7 +170,7 @@ def _compute_and_save_indicators(params):
             logger.error(" -> RESAMPLE EXCEPTION: " + str(e))
 
 
-        ############################
+        # 2 ###########################
         # calculate and save simple indicators
         indicators_list = [Sma, Rsi]
         for ind in indicators_list:
@@ -181,7 +181,7 @@ def _compute_and_save_indicators(params):
                 logger.error(str(ind) + " Indicator Exception: " + str(e))
 
 
-        #############################
+        # 3 ############################
         #  calculate ANN indicator(s)
         # TODO: just form X_predicted here and then run prediction outside the loop !
         try:
@@ -195,7 +195,7 @@ def _compute_and_save_indicators(params):
 
 
 
-        ##############################
+        # 4 #############################
         # check for events and save if any
         events_list = [EventsElementary, EventsLogical]
         for event in events_list:
@@ -205,17 +205,19 @@ def _compute_and_save_indicators(params):
             except Exception as e:
                 logger.error(" Event Exception: " + str(e))
 
-        #############################
+        # 5 ############################
         # check if we have to emit any <Strategy> signals
+        # TODO: get this strategy list from DB Strategy table??
         strategies_list = [RsiSimpleStrategy, SmaCrossOverStrategy]
         for strategy in strategies_list:
             try:
                 s = strategy(**indicator_params_dict)
-                s.is_signal_now()
+                now_signals = s.check_signal_now()
+                logger.debug("  NOW: found Signal belongs to strategy : " + str(strategy) + " : " + str(now_signals))
                 # TODO: emit a signal without saving it in the table!
                 logger.debug("   ... Checking for strategy signals completed.")
             except Exception as e:
-                logger.error(" Error Strategy checking:" + str(e))
+                logger.error(" Error Strategy checking:  " + str(e))
 
     # clean session to prevent memory leak
     logger.debug("   ... Cleaning Keras session...")

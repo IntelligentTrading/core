@@ -26,6 +26,29 @@ UI_CHOICES = (
 )
 
 
+###### Create a list of all possible signals
+# in futher releases we can move it out to a separate class / Table
+from collections import namedtuple
+
+SignalType = namedtuple('SignalType', 'signal, trend, strength')
+
+ALL_SIGNALS = {
+    # TEST
+    'rsi_sell_3_test': SignalType(signal = 'RSI', trend = 1, strength = 1),
+    'rsi_buy_3_test': SignalType(signal = 'RSI', trend = -1, strength = 1),
+
+    'rsi_sell_3': SignalType(signal = 'RSI', trend = 1, strength = 3),
+    'rsi_buy_3' : SignalType('RSI', -1, 3),
+    'rsi_cumulat_sell_3': SignalType('RSI_cumulative', 1, 1),
+    'rsi_cumulat_buy_3' : SignalType('RSI_cumulative', -1, 1),
+    'ichi_kimo_up' : SignalType('', -1, 3),
+    'ichi_kumo_down' : SignalType('', -1, 3),
+
+}
+
+
+
+
 class Signal(Timestampable, models.Model):
 
     UI = models.SmallIntegerField(choices=UI_CHOICES, null=False, default=TELEGRAM)
@@ -179,12 +202,37 @@ def send_signal(sender, instance, **kwargs):
             logging.error(str(e))
 
 
-def get_signals(starttime, endtime, **kvargs):
-    signals_qobjects = Signal.objects.filter(
-        source=source,
-        resample_period=resample_period,
-        transaction_currency=transaction_currency,
-        counter_currency=counter_currency,
-        timestamp__gte=starttime,
-        timestamp__lte=endtime,
+def get_all_signals_names_now(**kwargs):
+    '''
+    signals_quaryset = Signal.objects.filter(
+        **kwargs
     ).values('id', 'signal', 'trend', 'strength_value').order_by('timestamp')
+    '''
+
+    # this is for debug purposes!!! remove and uncomment in production!!!
+    signals_queryset = Signal.objects.filter(
+        source = kwargs['source'],
+        transaction_currency=kwargs['transaction_currency'],
+        counter_currency = kwargs['counter_currency'],
+        resample_period = kwargs['resample_period']
+    ).values('id', 'signal', 'trend', 'strength_value').order_by('timestamp')
+
+    # lookup for signals names in ALL_SIGNALS
+    signals_set = set()
+    for signal in signals_queryset:
+        # for RSI_Cumulative it is None unfortunatelly, so hve to assign 1
+        if not signal['strength_value']:
+            signal['strength_value'] = 1
+
+        sig_converted = SignalType(signal=signal['signal'], trend=int(signal['trend']), strength=int(signal['strength_value']))
+        #print(sig_converted)
+        id = [x for x in ALL_SIGNALS if ALL_SIGNALS[x] == sig_converted]
+        if id:
+            signals_set.update(id)
+
+        # TODO: you can do it in one list comprehension! please change later
+    return signals_set
+
+
+def get_signals(start_time, end_time, **kwargs):
+    pass

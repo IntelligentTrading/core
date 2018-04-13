@@ -1,4 +1,7 @@
 from apps.strategy.models.abstract_strategy import AbstractStrategy
+from apps.signal.models.signal import ALL_SIGNALS, get_all_signals_names_now
+import logging
+logger = logging.getLogger(__name__)
 
 class RsiSimpleStrategy(AbstractStrategy):
     '''
@@ -7,14 +10,22 @@ class RsiSimpleStrategy(AbstractStrategy):
     - RSI simple strategy is buy when RSI < 25 and sell when RSI > 85
     '''
 
-    def is_signal_now(self):
-        # check if now there are any on RSI<25 and RSI>85
-        # return a signal_id (?) if any
+    def check_signal_now(self):
+        # list of signals belonging to this strategy
+        # NOTE: check signals.ALL_SIGNALS namedtuple
+        strategy_signals = set(['rsi_sell_3', 'rsi_buy_3'])
 
-        #list
+        # get all signals emitted now
+        current_signals = get_all_signals_names_now(**self.parameters)
 
-        # get all RS
-        pass
+        # check if any of them belongs to our strategy
+        final_set = strategy_signals.intersection(current_signals)
+
+        if len(final_set) > 1 :
+            logger.error(" Ouch... two contradictory signals for one strategy at the same time... please investigate!")
+
+        return final_set
+
 
 
     def get_all_signals_in_time_period(self, start_timestamp, end_timestamp):
@@ -24,7 +35,7 @@ class RsiSimpleStrategy(AbstractStrategy):
 
 class SmaCrossOverStrategy(AbstractStrategy):
 
-    def is_signal_now(self):
+    def check_signal_now(self):
         pass
 
 
@@ -34,7 +45,7 @@ class SmaCrossOverStrategy(AbstractStrategy):
 
 
 class RsiSmaMixedStrategy(AbstractStrategy):
-    def is_signal_now(self):
+    def check_signal_now(self):
         pass
 
     def get_all_signals_in_time_period(self, start_timestamp, end_timestamp):
