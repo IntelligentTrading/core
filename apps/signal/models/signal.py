@@ -39,8 +39,10 @@ ALL_SIGNALS = {
 
     'rsi_sell_3': SignalType(signal = 'RSI', trend = 1, strength = 3),
     'rsi_buy_3' : SignalType('RSI', -1, 3),
-    'rsi_cumulat_sell_3': SignalType('RSI_cumulative', 1, 1),
-    'rsi_cumulat_buy_3' : SignalType('RSI_cumulative', -1, 1),
+
+    'rsi_cumulat_sell_3': SignalType('RSI_cumulative', 1, 3),
+    'rsi_cumulat_buy_3' : SignalType('RSI_cumulative', -1, 3),
+
     'ichi_kimo_up' : SignalType('', -1, 3),
     'ichi_kumo_down' : SignalType('', -1, 3),
 
@@ -203,6 +205,7 @@ def send_signal(sender, instance, **kwargs):
 
 
 def get_all_signals_names_now(**kwargs):
+    # get all signals happened just now (in current temestamp from **kwargs)
     '''
     signals_quaryset = Signal.objects.filter(
         **kwargs
@@ -220,17 +223,21 @@ def get_all_signals_names_now(**kwargs):
     # lookup for signals names in ALL_SIGNALS
     signals_set = set()
     for signal in signals_queryset:
-        # for RSI_Cumulative it is None unfortunatelly, so hve to assign 1
+        # now in DB for RSI_Cumulative it is None unfortunatelly, so have to assign 3
         if not signal['strength_value']:
-            signal['strength_value'] = 1
+            signal['strength_value'] = 3
 
+        # create a signal record for the signal extracted from DB
         sig_converted = SignalType(signal=signal['signal'], trend=int(signal['trend']), strength=int(signal['strength_value']))
         #print(sig_converted)
+
+        # check if that signal is in our list of all signals and gets its id if it exists
         id = [x for x in ALL_SIGNALS if ALL_SIGNALS[x] == sig_converted]
+
+        # if it exists, add it to returning set
         if id:
             signals_set.update(id)
 
-        # TODO: you can do it in one list comprehension! please change later
     return signals_set
 
 

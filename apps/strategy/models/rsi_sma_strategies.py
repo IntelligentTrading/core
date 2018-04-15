@@ -10,30 +10,31 @@ class RsiSimpleStrategy(AbstractStrategy):
     - RSI simple strategy is buy when RSI < 25 and sell when RSI > 85
     '''
 
-    def check_signal_now(self):
-        # list of signals belonging to this strategy
-        # NOTE: check signals.ALL_SIGNALS namedtuple
-        strategy_signals = set(['rsi_sell_3', 'rsi_buy_3'])
+    # list of signals belonging to this strategy
+    # NOTE: check signals.ALL_SIGNALS namedtuple
+    strategy_signals_set = set(['rsi_sell_3', 'rsi_buy_3'])
 
+    def check_signal_now(self):
         # get all signals emitted now
-        current_signals = get_all_signals_names_now(**self.parameters)
+        current_signals_set = get_all_signals_names_now(**self.parameters)
 
         # check if any of them belongs to our strategy
-        final_set = strategy_signals.intersection(current_signals)
+        final_set = self.strategy_signals_set.intersection(current_signals_set)
 
         if len(final_set) > 1 :
-            logger.error(" Ouch... two contradictory signals for one strategy at the same time... please investigate!")
+            logger.error(" Ouch... several signals for one strategy at the same time... highly unlikely, please investigate!")
 
         return final_set
 
 
-
     def get_all_signals_in_time_period(self, start_timestamp, end_timestamp):
+        # return in a form of time/signal name
         pass
 
 
 
 class SmaCrossOverStrategy(AbstractStrategy):
+    strategy_signals_set = set() # add here
 
     def check_signal_now(self):
         pass
