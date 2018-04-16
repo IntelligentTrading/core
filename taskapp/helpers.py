@@ -19,11 +19,17 @@ from apps.indicator.models.events_logical import EventsLogical
 
 from apps.ai.models.nn_model import get_ann_model_object
 
-from settings import USDT_COINS, BTC_COINS
+#from settings import USDT_COINS, BTC_COINS
 from settings import SHORT, MEDIUM, LONG, RUN_ANN
+from settings import SOURCE_CHOICES, EXCHANGE_MARKETS
+
+
 
 logger = logging.getLogger(__name__)
 
+def get_exchanges():
+    "Return list of exchange codes for signal calculations"
+    return [code for code, name in SOURCE_CHOICES if name in EXCHANGE_MARKETS]
 
 
 def get_currency_pairs(source, period_in_seconds):
