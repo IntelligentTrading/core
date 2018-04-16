@@ -18,6 +18,7 @@ from apps.indicator.models.events_elementary import EventsElementary
 from apps.indicator.models.events_logical import EventsLogical
 
 from apps.ai.models.nn_model import get_ann_model_object
+from apps.strategy.models.strategy_ref import get_all_strategy_classes
 from apps.strategy.models.rsi_sma_strategies import RsiSimpleStrategy, SmaCrossOverStrategy
 from apps.backtesting.models.back_test import BackTest
 
@@ -228,21 +229,25 @@ def _compute_and_save_indicators(params):
     # NOTE: you can form an X vector inside this cycle and then run prediction!!!
 
 
-# TODO 2@Karla: this is only a stub, please add whatever you deem necesary here
+
+#TODO 2@Karla: this is only a stub, please add whatever you deem necesary here
 def _backtest_all_strategies():
-    strategies_list = [RsiSimpleStrategy, SmaCrossOverStrategy]
+
+    strategies_class_list = get_all_strategy_classes()  #[RsiSimpleStrategy, SmaCrossOverStrategy]
 
     # TODO: change to appropriate period
     time_end = time.time()
     time_start = time_end - 3600 * 10
 
-    # TODO: we can iterate hete
+    # TODO: we can iterate coins here
     counter_currency = 'ETH'
     transaction_currency = 2  #USDT
 
     # run reavaluation
-    for strategy in strategies_list:
-        back_test_run = BackTest(strategy,time_start, time_end)
+    for strategy_class in strategies_class_list:
+        back_test_run = BackTest(strategy_class, time_start, time_end)
+        back_test_run.run_backtest_on_all_currency()
+
 
     # save in testesging table
 

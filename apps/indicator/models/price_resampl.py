@@ -101,6 +101,7 @@ def get_n_last_resampl_df(n, source, transaction_currency, counter_currency, res
 
     return df
 
+
 # get the first element ever resampled
 def get_first_resampled_time(source, transaction_currency, counter_currency, resample_period):
     first_time = PriceResampl.objects.filter(
@@ -114,3 +115,9 @@ def get_first_resampled_time(source, transaction_currency, counter_currency, res
         return first_time['timestamp'].timestamp()
     else:
         return time.time()
+
+
+# TODO: to implement a backtesting @Karla need a price at a given time point
+# returns a resampled price at a given time point
+def get_price_at_timepoint(timestamp, source, transaction_currency, counter_currency, resample_period):
+    pass

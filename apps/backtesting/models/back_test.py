@@ -1,38 +1,47 @@
 import logging
 from unixtimestampfield.fields import UnixTimeStampField
-
 from django.db import models
-from apps.strategy.models.strategy import Strategy
 
 logger = logging.getLogger(__name__)
 
 
 class BackTest(models.Model):
     '''
-    for each backtest run we have one record in db with results data
+    This is a log of all backtesting runs.
+    For each backtest run we have one record in db with resulted metrics
     '''
 
     timestamp = UnixTimeStampField(null=False)
-    strategy = models.ForeignKey(Strategy, on_delete=models.CASCADE)  # id of a strategy Strategy Table
-    strategy_name = models.CharField(max_length=32, null=False, blank=False)
+    strategy_class_name = models.CharField(max_length=64, null=True)
+
+    # TODO: @Karla, please add as many metrics as you need with their appropriate names
+    # feel free to rename
+    backtested_performance_1 = models.FloatField(null=True)
+    backtested_performance_2 = models.FloatField(null=True)
+    # gain_to_counter_currency, gain_to_random_strategy etc
 
 
-    backtested_performance = models.FloatField(null=True)
-
-    def __init__(self, strategy, start_timeframe, end_timeframe):
-        self.strategy = strategy
+    def __init__(self, strategy_class_name, start_timeframe, end_timeframe):
+        self.strategy_class_name = strategy_class_name
 
 
-    def run_backtest_one_curency_pair(self, counter_currency, transaction_currency):
+    def run_backtest_on_one_curency_pair(self, counter_currency, transaction_currency):
         # TODO:
-        # - make strategy to return ids of all signals for that strategy
-        # - having a list of signals do a backtesting
+        # - get a starting amount of currency ( 1 BTC? )
+        # - get all strategy signals by calling RsiSimpleStrategy.get_all_signals_in_time_period(..)
+        # - run your buy/sells on this signals
+        # - you will need to implement a get_price_at_timepoint function in price_resample model
+        # NOTE: get timestamps from returned signals!! they are keys in DB!!!
+        # - save the resulted metrics in self.backtested_performance_1
+        # - make sure it is saved as a separate record in BackTest DB table
 
-        gain_to_counter_currency = None
-        gain_to_random_strategy = None
+        self.backtested_performance_1 = None
+        self.backtested_performance_2 = None
 
 
-        return gain_to_counter_currency, gain_to_random_strategy
+    def run_backtest_on_all_currency(self):
+        # iterate over all currencies with run_backtest_on_one_curency_pair
+        return False
 
 
     def run_backtest_portfolio(self):

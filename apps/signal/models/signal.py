@@ -44,7 +44,7 @@ ALL_SIGNALS = {
     'rsi_cumulat_sell_3': SignalType('RSI_cumulative', 1, 3),
     'rsi_cumulat_buy_3' : SignalType('RSI_cumulative', -1, 3),
 
-    'ichi_kimo_up' : SignalType('', -1, 3),
+    'ichi_kumo_up' : SignalType('', -1, 3),
     'ichi_kumo_down' : SignalType('', -1, 3),
 
 }
