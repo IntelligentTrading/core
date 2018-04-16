@@ -1,6 +1,7 @@
 import copy
 import json
 import logging
+import pandas as pd
 
 import boto
 from boto.sqs.message import Message
@@ -204,6 +205,25 @@ def send_signal(sender, instance, **kwargs):
             logging.error(str(e))
 
 
+#################### @AlexY for Straging Strategies
+
+def _get_signal_idname(signal):
+    # now in DB for RSI_Cumulative it is None unfortunatelly, so have to assign 3
+    if not signal['strength_value']:
+        signal['strength_value'] = 3
+
+    # create a signal record for the signal extracted from DB
+    sign_record = SignalType(signal=signal['signal'], trend=int(signal['trend']),
+                             strength=int(signal['strength_value']))
+    # print(sig_converted)
+
+    # check if that signal is in our list of all signals and gets its id if it exists
+    id = [x for x in ALL_SIGNALS if ALL_SIGNALS[x] == sign_record]
+
+    return id
+
+
+
 def get_all_signals_names_now(**kwargs):
     # get all signals happened just now (in current temestamp from **kwargs)
     '''
@@ -214,6 +234,7 @@ def get_all_signals_names_now(**kwargs):
 
     # this is for debug purposes!!! remove and uncomment in production!!!
     signals_queryset = Signal.objects.filter(
+        # all times - for testing
         source = kwargs['source'],
         transaction_currency=kwargs['transaction_currency'],
         counter_currency = kwargs['counter_currency'],
@@ -223,16 +244,9 @@ def get_all_signals_names_now(**kwargs):
     # lookup for signals names in ALL_SIGNALS
     signals_set = set()
     for signal in signals_queryset:
-        # now in DB for RSI_Cumulative it is None unfortunatelly, so have to assign 3
-        if not signal['strength_value']:
-            signal['strength_value'] = 3
 
-        # create a signal record for the signal extracted from DB
-        sig_converted = SignalType(signal=signal['signal'], trend=int(signal['trend']), strength=int(signal['strength_value']))
-        #print(sig_converted)
-
-        # check if that signal is in our list of all signals and gets its id if it exists
-        id = [x for x in ALL_SIGNALS if ALL_SIGNALS[x] == sig_converted]
+        # convert a query set to unique name of the signal
+        id = _get_signal_idname(signal)
 
         # if it exists, add it to returning set
         if id:
@@ -241,5 +255,27 @@ def get_all_signals_names_now(**kwargs):
     return signals_set
 
 
-def get_signals(start_time, end_time, **kwargs):
-    pass
+
+def get_signals_ts(start_time, end_time, **kwargs):
+    # get from DB
+    signals_queryset = Signal.objects.filter(
+        source=kwargs['source'],
+        transaction_currency=kwargs['transaction_currency'],
+        counter_currency=kwargs['counter_currency'],
+        resample_period=kwargs['resample_period'],
+        timestamp_lte=end_time,
+        timestamp_gte=start_time
+    ).values('id', 'signal', 'trend', 'strength_value').order_by('timestamp')
+
+    # convert to ts
+    times = [ x['timestamp'] for x in signals_queryset]
+    index = pd.DatetimeIndex(times)
+
+    data = []
+    for signal in signals_queryset:
+        id = _get_signal_idname(signal)
+        data.append(id)
+
+    signal_ts = pd.Series(data, index=index)
+
+    return signal_ts

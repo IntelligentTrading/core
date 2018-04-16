@@ -19,6 +19,7 @@ from apps.indicator.models.events_logical import EventsLogical
 
 from apps.ai.models.nn_model import get_ann_model_object
 from apps.strategy.models.rsi_sma_strategies import RsiSimpleStrategy, SmaCrossOverStrategy
+from apps.backtesting.models.back_test import BackTest
 
 from settings import USDT_COINS, BTC_COINS
 from settings import SHORT, MEDIUM, LONG
@@ -212,7 +213,7 @@ def _compute_and_save_indicators(params):
         for strategy in strategies_list:
             try:
                 s = strategy(**indicator_params_dict)
-                now_signals = s.check_signal_now()
+                now_signals = s.check_signals_now()
                 logger.debug("  NOW: found Signal belongs to strategy : " + str(strategy) + " : " + str(now_signals))
                 # TODO: emit a signal without saving it in the table!
                 logger.debug("   ... Checking for strategy signals completed.")
@@ -223,7 +224,27 @@ def _compute_and_save_indicators(params):
     logger.debug("   ... Cleaning Keras session...")
     from keras import backend as K
     K.clear_session()
-
-
     # TODO check if I can do a batch Keras prediction for all currencies at once
     # NOTE: you can form an X vector inside this cycle and then run prediction!!!
+
+
+# TODO 2@Karla: this is only a stub, please add whatever you deem necesary here
+def _backtest_all_strategies():
+    strategies_list = [RsiSimpleStrategy, SmaCrossOverStrategy]
+
+    # TODO: change to appropriate period
+    time_end = time.time()
+    time_start = time_end - 3600 * 10
+
+    # TODO: we can iterate hete
+    counter_currency = 'ETH'
+    transaction_currency = 2  #USDT
+
+    # run reavaluation
+    for strategy in strategies_list:
+        back_test_run = BackTest(strategy,time_start, time_end)
+
+    # save in testesging table
+
+
+    pass
