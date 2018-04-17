@@ -18,10 +18,12 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         logger.info("Getting ready to trawl Poloniex...")
-        schedule.every().minute.do(_pull_poloniex_data, 0 )
+        SOURCE = 0
+        schedule.every().minute.do(_pull_poloniex_data, SOURCE )
 
         logger.info("Getting ready to reevaluation all strategies...")
-        schedule.every().minute.do(_backtest_all_strategies, 0)
+        schedule.every().minute.do(_backtest_all_strategies)
+
 
         # @Alex
         # run resampling for all periods and calculate indicator values
@@ -43,6 +45,7 @@ class Command(BaseCommand):
                     {'source': 0,
                      'period': horizont_period}
                 )
+
 
         keep_going = True
         while keep_going:

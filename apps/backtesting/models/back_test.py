@@ -25,7 +25,7 @@ class BackTest(models.Model):
         self.strategy_class_name = strategy_class_name
 
 
-    def run_backtest_on_one_curency_pair(self, counter_currency, transaction_currency):
+    def run_backtest_on_one_curency_pair(self, source, transaction_currency, counter_currency ):
         # TODO:
         # - get a starting amount of currency ( 1 BTC? )
         # - get all strategy signals by calling RsiSimpleStrategy.get_all_signals_in_time_period(..)
@@ -39,10 +39,22 @@ class BackTest(models.Model):
         self.backtested_performance_2 = None
 
 
+    def run_backtest_on_several_currency_pairs(self):
+        # allow moving all money into another currency
+        pass
+
+
     def run_backtest_on_all_currency(self):
-        # iterate over all currencies with run_backtest_on_one_curency_pair
+        # iterate over all currencies and exchangers (POLONIEX etc) with run_backtest_on_one_curency_pair
+        atomic_tuples = [ (0, 'BTC', 2), (0, 'ETH', 0)] # generate all you need
+        for source, transaction_currency, counter_currency in atomic_tuples:
+            self.run_backtest_on_one_curency_pair(self, source, transaction_currency, counter_currency)
+            pass
+
+        # run the same for several-currenciy strategies
         return False
 
 
     def run_backtest_portfolio(self):
+        # allow holding several currencies at the same time (portfolio)
         pass

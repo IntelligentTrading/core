@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 class StrategyRef(models.Model):
     '''
-    Strategy class lists all Strategies and stores their meta-information
+    Strategy class contains a Reference list of all Strategies and their meta-information
     The actual implementation is in separate classes
     '''
 
@@ -25,3 +25,5 @@ def get_all_strategy_classes():
     # retrieve from DB all claas names for futher itaration like
 
     return [RsiSimpleStrategy, SmaCrossOverStrategy]
+
+# TODO: add a pre-population of all strategies by adding fixture yaml files

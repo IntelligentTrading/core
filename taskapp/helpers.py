@@ -216,7 +216,7 @@ def _compute_and_save_indicators(params):
                 s = strategy(**indicator_params_dict)
                 now_signals = s.check_signals_now()
                 logger.debug("  NOW: found Signal belongs to strategy : " + str(strategy) + " : " + str(now_signals))
-                # TODO: emit a signal without saving it in the table!
+                # TODO: emit a signal without saving it in the Signal table!
                 logger.debug("   ... Checking for strategy signals completed.")
             except Exception as e:
                 logger.error(" Error Strategy checking:  " + str(e))
@@ -237,9 +237,10 @@ def _backtest_all_strategies():
 
     # TODO: change to appropriate period
     time_end = time.time()
-    time_start = time_end - 3600 * 10
+    time_start = time_end - 3600 * 24 * 30  # a month back
 
-    # TODO: we can iterate coins here
+    # TODO: we can iterate coins / exchangers here
+    SOURCE = 0 # POLONIEX
     counter_currency = 'ETH'
     transaction_currency = 2  #USDT
 
@@ -249,7 +250,5 @@ def _backtest_all_strategies():
         back_test_run.run_backtest_on_all_currency()
 
 
-    # save in testesging table
+    # save in backtest db table
 
-
-    pass
