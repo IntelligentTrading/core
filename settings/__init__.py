@@ -218,7 +218,7 @@ BTC_COINS = [
     "VTC", "BURST", "LBC", "GNO", "DCR", "FLO", "POT", "OMNI",
     "CVC", "PASC", "ARDR", "BCY", "GRC", "CLAM", "XCP", "VIA",
     "BTCD", "FLDC", "NAV", "NEOS", "PPC", "BLK", "EXP", "RIC",
-    "NXC", "BELA", "XPM", "XVC", "XBC", "RADS", "SBD", "PINK", "NMC", "HUC", "BTM"
+    "NXC", "BELA", "XPM", "XVC", "XBC", "RADS", "SBD", "PINK", "NMC", "HUC", "BTM", "VEN", "ADA", "EOS", "CND", "NEO", "IOST", "ICX", "XLM",
 ]
 
 # list of the exchanges on which we generate signals. Make it in sync with same list in Data app settings
