@@ -26,9 +26,9 @@ UI_CHOICES = (
     (WEB, 'web app'),
 )
 
-
+# @AlexY
 ###### Create a list of all possible signals
-# in futher releases we can move it out to a separate class / Table
+# in further releases we can move it out to a separate class / Table
 from collections import namedtuple
 
 SignalType = namedtuple('SignalType', 'signal, trend, strength')
@@ -48,7 +48,7 @@ ALL_SIGNALS = {
     'ichi_kumo_down' : SignalType('', -1, 3),
 
 }
-
+#################
 
 
 
@@ -144,6 +144,7 @@ class Signal(Timestampable, models.Model):
 
         # todo: call send in a post_save signal?? is there any reason to delay or schedule a signal?
 
+        # TODO: please use common/utilities/sqs.send_sqs
         message = Message()
         message.set_body(json.dumps(self.as_dict()))
 
@@ -226,6 +227,7 @@ def _get_signal_idname(signal):
 
 def get_all_signals_names_now(**kwargs):
     # get all signals happened just now (in current temestamp from **kwargs)
+
     '''
     signals_quaryset = Signal.objects.filter(
         **kwargs
@@ -257,7 +259,7 @@ def get_all_signals_names_now(**kwargs):
 
 
 def get_signals_ts(start_time, end_time, **kwargs):
-    # get from DB
+    # get all signals from DB as a timeseries
     signals_queryset = Signal.objects.filter(
         source=kwargs['source'],
         transaction_currency=kwargs['transaction_currency'],

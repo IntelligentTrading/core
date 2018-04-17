@@ -3,6 +3,7 @@ import logging
 import time
 
 from requests import get, RequestException
+from apps.common.utilities.sqs import send_sqs
 
 from apps.channel.models import ExchangeData
 #from apps.channel.models.exchange_data import POLONIEX
@@ -111,7 +112,7 @@ def _compute_and_save_indicators(params):
 
     #TODO: get pairs from def(SOURCE)
     #pairs_to_iterate = [(itm,Price.USDT) for itm in USDT_COINS] + [(itm,Price.BTC) for itm in BTC_COINS]
-    pairs_to_iterate = get_currency_pairs(source=source, period_in_seconds=resample_period*60*40)
+    pairs_to_iterate = get_currency_pairs(source=source, period_in_seconds=resample_period*60*100)
     logger.debug("## Pairs to iterate: " + str(pairs_to_iterate))
 
     for transaction_currency, counter_currency in pairs_to_iterate:
@@ -210,13 +211,23 @@ def _compute_and_save_indicators(params):
         # 5 ############################
         # check if we have to emit any <Strategy> signals
         # TODO: get this strategy list from DB Strategy table??
-        strategies_list = [RsiSimpleStrategy, SmaCrossOverStrategy]
+        #strategies_list = [RsiSimpleStrategy, SmaCrossOverStrategy]
+        strategies_list = get_all_strategy_classes()  # [RsiSimpleStrategy, SmaCrossOverStrategy]
         for strategy in strategies_list:
             try:
                 s = strategy(**indicator_params_dict)
-                now_signals = s.check_signals_now()
-                logger.debug("  NOW: found Signal belongs to strategy : " + str(strategy) + " : " + str(now_signals))
-                # TODO: emit a signal without saving it in the Signal table!
+                now_signals_set = s.check_signals_now()
+                logger.debug("  NOW: found Signal belongs to strategy : " + str(strategy) + " : " + str(now_signals_set))
+
+                # Emit to a signal from a strategy to sqs without saving it in the Signal table
+                # combine a dictionary with all data
+                dict_to_emit = {
+                    **indicator_params_dict,
+                    "horizon"  : '',
+                    "strategy" : strategy,
+                    "signal_name" : now_signals_set
+                }
+                send_sqs(dict_to_emit)
                 logger.debug("   ... Checking for strategy signals completed.")
             except Exception as e:
                 logger.error(" Error Strategy checking:  " + str(e))
@@ -231,8 +242,10 @@ def _compute_and_save_indicators(params):
 
 
 #TODO 2@Karla: this is only a stub, please add whatever you deem necesary here
+# run by scheduler from trawl_poloniex every XXX hours
 def _backtest_all_strategies():
 
+    # get all strategies in the system from Strategies model
     strategies_class_list = get_all_strategy_classes()  #[RsiSimpleStrategy, SmaCrossOverStrategy]
 
     # TODO: change to appropriate period
@@ -248,6 +261,7 @@ def _backtest_all_strategies():
     for strategy_class in strategies_class_list:
         back_test_run = BackTest(strategy_class, time_start, time_end)
         back_test_run.run_backtest_on_all_currency()
+        back_test_run.save()
 
 
     # save in backtest db table
