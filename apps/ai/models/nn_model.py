@@ -1,10 +1,12 @@
 import logging
 import time
 from django.db import models
-from apps.channel.models.exchange_data import SOURCE_CHOICES
+#from apps.channel.models.exchange_data import SOURCE_CHOICES
+
 from unixtimestampfield.fields import UnixTimeStampField
 from apps.common.utilities.s3 import download_file_from_s3
-from settings import RUN_ANN
+from settings import RUN_ANN, SOURCE_CHOICES
+
 
 if RUN_ANN:
     from keras.models import load_model

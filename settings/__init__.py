@@ -226,10 +226,15 @@ BTC_COINS = [
 EXCHANGE_MARKETS = ('poloniex', 'bittrex')
 
 # Please only add new exchanges to this settings, never remove or modify
-(POLONIEX, BITTREX) = list(range(2))
+(POLONIEX, BITTREX, BINANCE, BITFINEX, KUCOIN, GDAX, HITBTC) = list(range(7))
 SOURCE_CHOICES = (
     (POLONIEX, 'poloniex'),
     (BITTREX, 'bittrex'),
+    (BINANCE, 'binance'),
+    (BITFINEX, 'bitfinex'),
+    (KUCOIN, 'kucoin'),
+    (GDAX, 'gdax'),
+    (HITBTC, 'hitbtc'),
 )
 
 
