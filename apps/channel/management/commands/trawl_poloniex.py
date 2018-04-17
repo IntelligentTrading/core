@@ -7,13 +7,13 @@ from django.core.management.base import BaseCommand
 from requests import get, RequestException
 
 from apps.channel.models import ExchangeData
-from apps.channel.models.exchange_data import POLONIEX
+#from apps.channel.models.exchange_data import POLONIEX
 from apps.indicator.models import Price, Volume
 from apps.indicator.models.price import get_currency_value_from_string
 from apps.indicator.models.price_resampl import get_first_resampled_time
 
 from settings import time_speed  # 1 / 10
-from settings import USDT_COINS, BTC_COINS
+from settings import USDT_COINS, BTC_COINS, POLONIEX
 from settings import PERIODS_LIST, SHORT, MEDIUM, LONG
 
 from taskapp.helpers import _pull_poloniex_data, _compute_and_save_indicators

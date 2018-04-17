@@ -12,11 +12,11 @@ from django.db.models.signals import post_save, pre_save
 from apps.common.behaviors import Timestampable
 from apps.indicator.models import Price
 from settings import QUEUE_NAME, AWS_OPTIONS, BETA_QUEUE_NAME, TEST_QUEUE_NAME, PERIODS_LIST
-from settings import SNS_SIGNALS_TOPIC_ARN
+from settings import SNS_SIGNALS_TOPIC_ARN, SOURCE_CHOICES, POLONIEX
 
 from django.db import models
 from unixtimestampfield.fields import UnixTimeStampField
-from apps.channel.models.exchange_data import SOURCE_CHOICES, POLONIEX
+#from apps.channel.models.exchange_data import POLONIEX
 from apps.user.models.user import RISK_CHOICES, HORIZON_CHOICES
 
 logger = logging.getLogger(__name__)

@@ -4,12 +4,12 @@ import time
 
 from django.core.management.base import BaseCommand
 
-from apps.channel.models.exchange_data import SOURCE_CHOICES
+#from apps.channel.models.exchange_data import SOURCE_CHOICES
 from apps.indicator.models import Price, Volume
 
 from apps.channel.incoming_queue import SqsListener
 
-from settings import INCOMING_SQS_QUEUE
+from settings import INCOMING_SQS_QUEUE, SOURCE_CHOICES
 
 
 

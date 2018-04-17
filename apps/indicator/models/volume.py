@@ -1,8 +1,10 @@
 from django.db import models
 from unixtimestampfield.fields import UnixTimeStampField
 
-from apps.channel.models.exchange_data import SOURCE_CHOICES
+#from apps.channel.models.exchange_data import SOURCE_CHOICES
 from apps.indicator.models.price import Price
+
+from settings import SOURCE_CHOICES
 
 from datetime import timedelta, datetime
 import pandas as pd
