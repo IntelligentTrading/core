@@ -17,6 +17,9 @@ class RsiSimpleStrategy(AbstractStrategy):
     # NOTE: check signals.ALL_SIGNALS namedtuple
     strategy_signals_set = set(['rsi_sell_3', 'rsi_buy_3'])
 
+    def __str__(self):
+        return "RsiSimpleStrategy"
+
     def check_signals_now(self):
         # get all signals emitted now
         current_signals_set = get_all_signals_names_now(**self.parameters)

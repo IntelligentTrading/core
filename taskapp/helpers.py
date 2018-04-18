@@ -226,8 +226,8 @@ def _compute_and_save_indicators(params):
                 dict_to_emit = {
                     **indicator_params_dict,
                     "horizon"  : '',
-                    "strategy" : strategy,
-                    "signal_name" : now_signals_set
+                    "strategy" : str(s),
+                    "signal_name" : str(now_signals_set)
                 }
                 send_sqs(dict_to_emit)
                 logger.debug("   ... Checking for strategy signals completed.")
