@@ -19,7 +19,7 @@ from apps.indicator.models.events_elementary import EventsElementary
 from apps.indicator.models.events_logical import EventsLogical
 
 from apps.ai.models.nn_model import get_ann_model_object
-from apps.strategy.models.strategy_ref import get_all_strategy_classes
+from apps.strategy.models.strategy_ref import get_all_strategy_classes, add_all_strategies
 from apps.strategy.models.rsi_sma_strategies import RsiSimpleStrategy, SmaCrossOverStrategy
 from apps.backtesting.models.back_test import BackTest
 
@@ -210,9 +210,11 @@ def _compute_and_save_indicators(params):
 
         # 5 ############################
         # check if we have to emit any <Strategy> signals
-        # TODO: get this strategy list from DB Strategy table??
-        #strategies_list = [RsiSimpleStrategy, SmaCrossOverStrategy]
+
         strategies_list = get_all_strategy_classes()  # [RsiSimpleStrategy, SmaCrossOverStrategy]
+        if not strategies_list:
+            strategies_list = add_all_strategies()
+
         for strategy in strategies_list:
             try:
                 s = strategy(**indicator_params_dict)

@@ -11,6 +11,7 @@ class StrategyRef(models.Model):
     '''
 
     name = models.CharField(max_length=64, null=False, blank=False)
+    implementation_module_name = models.CharField(max_length=128, null=True)
     implementation_class_name = models.CharField(max_length=64, null=True)
     description = models.TextField(null=True)
 
@@ -21,9 +22,33 @@ class StrategyRef(models.Model):
 
 # get all class names
 def get_all_strategy_classes():
-    from apps.strategy.models.rsi_sma_strategies import RsiSimpleStrategy, SmaCrossOverStrategy
-    # retrieve from DB all claas names for futher itaration like
+    '''
+    :return: all strategies in the system as class objects
+    '''
+    import importlib
+    strategy_object_list = []
+    strategy_string_list = list(StrategyRef.objects.all().values('implementation_module_name','implementation_class_name'))
 
-    return [RsiSimpleStrategy, SmaCrossOverStrategy]
+    for strategy in strategy_string_list:
+        module_name = strategy['implementation_module_name']
+        class_name = strategy['implementation_class_name']
+        module = importlib.import_module(module_name)
+        class_obj = getattr(module, class_name)
+        strategy_object_list.append(class_obj)
 
-# TODO: add a pre-population of all strategies by adding fixture yaml files
+    return strategy_object_list
+
+
+# pre-population of all strategies
+def add_all_strategies():
+    #TODO: check id DB is emtty, if so add strategies
+    s1 = StrategyRef(
+        name='RSI Simple',
+        implementation_module_name='apps.strategy.models.rsi_sma_strategies',
+        implementation_class_name='RsiSimpleStrategy',
+        description='Buy at RSI < 25, sell at RSI > 80',
+        generated = 'manual'
+    )
+    s1.save()
+
+    return get_all_strategy_classes()
