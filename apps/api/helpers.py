@@ -6,7 +6,7 @@ from dateutil.parser import parse
 
 from apps.indicator.models import Price
 
-from settings import SHORT
+from settings import SHORT, POLONIEX
 
 
 
@@ -37,11 +37,13 @@ def filter_queryset_by_timestamp(self, queryset=None):
         return queryset
 
 def queryset_for_list_with_resample_period(self):
+    source = self.request.query_params.get('source', POLONIEX) # Set source POLNIEX by default
     transaction_currency = self.kwargs['transaction_currency']
     counter_currency = default_counter_currency(transaction_currency)
     resample_period = self.request.query_params.get('resample_period', SHORT) # SHORT resample period by default
 
     queryset = self.model.objects.filter(
+        source = source,
         resample_period = resample_period,
         transaction_currency=transaction_currency,
         counter_currency=counter_currency,
@@ -50,10 +52,12 @@ def queryset_for_list_with_resample_period(self):
     return queryset
 
 def queryset_for_list_without_resample_period(self): # for Price and Volume
+        source = self.request.query_params.get('source', POLONIEX) # Set source POLNIEX by default
         transaction_currency = self.kwargs['transaction_currency']
         counter_currency = default_counter_currency(transaction_currency)
 
         queryset = self.model.objects.filter(
+            source=source,
             transaction_currency=transaction_currency,
             counter_currency=counter_currency,
         )

@@ -23,7 +23,7 @@ class ListSignals(ListAPIView):
         signal -- string SMA, RSI
         trend -- 1, -1
         counter_currency -- number 0=BTC, 1=ETH, 2=USDT, 3=XMR
-        source -- number 0=poloniex, 1=bittrex
+        source -- number 0=poloniex, 1=bittrex, 2=binance
         resample_period -- in minutes, SHORT = 60
         startdate -- from this date (inclusive). Example 2018-02-12T09:09:15
         enddate -- to this date (inclusive)
@@ -60,9 +60,9 @@ class ListSignal(ListAPIView):
 
         signal -- string SMA, RSI
         trend -- 1, -1
-        counter_currency -- number 0=BTC, 1=ETH, 2=USDT, 3=XMR
-        source -- number 0=poloniex, 1=bittrex
-        resample_period -- in minutes, SHORT = 60
+        counter_currency -- number 0=BTC, 1=ETH, 2=USDT, 3=XMR. Default 0=BTC, for BTC 2=USDT
+        source -- number 0=poloniex, 1=bittrex, 2=binance. Default 0=poloniex
+        resample_period -- in minutes. Default SHORT = 60
         startdate -- show inclusive from this date. For example 2018-02-12T09:09:15
         enddate -- until this date inclusive in same format
         horizon --
