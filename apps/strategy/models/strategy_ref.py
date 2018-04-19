@@ -41,7 +41,7 @@ def get_all_strategy_classes():
 
 # pre-population of all strategies
 def add_all_strategies():
-    #TODO: check id DB is emtty, if so add strategies
+
     s1 = StrategyRef(
         name='RSI Simple',
         implementation_module_name='apps.strategy.models.rsi_sma_strategies',
@@ -50,5 +50,23 @@ def add_all_strategies():
         generated = 'manual'
     )
     s1.save()
+
+    s2 = StrategyRef(
+        name='Ichimoku Kumo Breakout',
+        implementation_module_name='apps.strategy.models.ichi_strategies',
+        implementation_class_name='IchiKumoBreakoutStrategy',
+        description='Buy at Ichimoku Kumo breakout up and sell at Ichimoku bearkout down',
+        generated='manual'
+    )
+    s2.save()
+
+    s3 = StrategyRef(
+        name='ANN Simple',
+        implementation_module_name='apps.strategy.models.ai_strategies',
+        implementation_class_name='AnnSimpleStrategy',
+        description='Buy if ANN predict price will grow  and sell if it predicts that price goes down',
+        generated='manual'
+    )
+    s3.save()
 
     return get_all_strategy_classes()

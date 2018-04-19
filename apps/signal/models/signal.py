@@ -266,7 +266,7 @@ def get_all_signals_names_now(**kwargs):
 
         # if it exists, add it to returning set
         if unique_name:
-            signals_set.update(id)
+            signals_set.update(unique_name)
 
     return signals_set
 

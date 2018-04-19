@@ -1,6 +1,4 @@
 from apps.strategy.models.abstract_strategy import AbstractStrategy
-from apps.signal.models.signal import get_all_signals_names_now, get_signals_ts
-
 
 import logging
 logger = logging.getLogger(__name__)
@@ -20,26 +18,6 @@ class RsiSimpleStrategy(AbstractStrategy):
     def __str__(self):
         return "RsiSimpleStrategy"
 
-    def check_signals_now(self):
-        # get all signals emitted now
-        current_signals_set = get_all_signals_names_now(**self.parameters)
-
-        # check if any of them belongs to our strategy
-        strategy_signal_set = self.strategy_signals_set.intersection(current_signals_set)
-
-        if len(strategy_signal_set) > 1 :
-            logger.error(" Ouch... several signals for one strategy at the same time... highly unlikely, please investigate!")
-
-        return strategy_signal_set
-
-
-    def get_all_signals_in_time_period(self, start_timestamp, end_timestamp):
-        # get all signals in prodived timeframe
-        all_signals_ts = get_signals_ts(start_timestamp, end_timestamp, **self.parameters)
-
-        # filter out those not belonging to our strategy
-        strategy_ts = all_signals_ts[all_signals_ts in self.strategy_signals_set]
-        return
 
 ####################################
 

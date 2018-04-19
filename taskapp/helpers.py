@@ -17,6 +17,7 @@ from apps.indicator.models.rsi import Rsi
 from apps.indicator.models.ann_future_price_classification import AnnPriceClassification
 from apps.indicator.models.events_elementary import EventsElementary
 from apps.indicator.models.events_logical import EventsLogical
+from apps.user.models.user import get_horizon_value_from_string
 
 from apps.ai.models.nn_model import get_ann_model_object
 from apps.strategy.models.strategy_ref import get_all_strategy_classes, add_all_strategies
@@ -24,7 +25,8 @@ from apps.strategy.models.rsi_sma_strategies import RsiSimpleStrategy, SmaCrossO
 from apps.backtesting.models.back_test import BackTest
 
 from settings import USDT_COINS, BTC_COINS
-from settings import SHORT, MEDIUM, LONG
+from settings import SHORT, MEDIUM, LONG, HORIZONS_TIME2NAMES
+
 
 logger = logging.getLogger(__name__)
 
@@ -96,6 +98,7 @@ def _save_prices_and_volumes(data, timestamp, source):
 def _compute_and_save_indicators(params):
     source = params['source']
     resample_period = params['period']
+    horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[resample_period])
 
     timestamp = time.time() // (1 * 60) * (1 * 60)   # rounded to a minute
 
@@ -225,7 +228,7 @@ def _compute_and_save_indicators(params):
                 # combine a dictionary with all data
                 dict_to_emit = {
                     **indicator_params_dict,
-                    "horizon"  : '',
+                    "horizon"  : horizon,
                     "strategy" : str(s),
                     "signal_name" : str(now_signals_set)
                 }
