@@ -40,6 +40,14 @@ def get_currency_pairs(source, period_in_seconds):
     price_objects = Price.objects.values('transaction_currency', 'counter_currency').filter(source=source).filter(timestamp__gte=get_from_time).distinct()
     return [(item['transaction_currency'], item['counter_currency']) for item in price_objects]
 
+def get_source_name(source_code):
+    "return poloniex for code=0"
+    return next((source_text for code, source_text in SOURCE_CHOICES if code==source_code), None)
+
+def get_source_code(source_name):
+    "return 2 for source_name=binance"
+    return next((code for code, source_text in SOURCE_CHOICES if source_text==source_name), None)
+
 
 def _pull_poloniex_data(source):
     logger.info("pulling Poloniex data...")

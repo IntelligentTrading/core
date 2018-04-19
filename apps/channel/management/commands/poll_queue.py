@@ -6,6 +6,7 @@ from django.core.management.base import BaseCommand
 
 #from apps.channel.models.exchange_data import SOURCE_CHOICES
 from apps.indicator.models import Price, Volume
+from taskapp.helpers import get_source_name
 
 from apps.channel.incoming_queue import SqsListener
 
@@ -37,11 +38,12 @@ class Command(BaseCommand):
 # ]
 
 def process_message_from_queue(message_body):
+    "Save SQS message to DB: Price and Volume"
+    
     body_dict = json.loads(message_body)
     exchange = json.loads(body_dict['Message'])
-    
-    #logger.info("Message with: {} coins received and will be processed".format(len(exchange)/2)
-    # FIXME we need to add some filtering
+    processed = []
+
     for item in exchange:
         #logger.debug("Save {category} for {symbol} from {source}".format(**item))
     
@@ -63,6 +65,7 @@ def process_message_from_queue(message_body):
                     price=price,
                     timestamp=item['timestamp']
                 )
+                processed.append("{}/{}".format(transaction_currency, counter_currency_code))
                 #logger.debug(">>> Price saved: source={}, transaction_currency={}, counter_currency={}, price={}, timestamp={}".format(
                 #            source_code, transaction_currency, counter_currency_code, price, item['timestamp']))
             except Exception as e:
@@ -83,4 +86,6 @@ def process_message_from_queue(message_body):
                 #            source_code, transaction_currency, counter_currency_code, volume, item['timestamp']))
             except Exception as e:
                 logger.debug(">>>> Error saving Volume for {}: {}".format(item['symbol'], e))
-    logger.debug("Message processed and saved")
+    
+    logger.debug("Message for {} saved to db. Coins: {}".format(get_source_name(source_code), ",".join(processed)))
+    logger.info("Message for {} ({}) saved to db".format(get_source_name(source_code), len(processed)))

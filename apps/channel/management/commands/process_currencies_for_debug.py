@@ -3,7 +3,7 @@ import time
 
 from django.core.management.base import BaseCommand
 
-from settings import PERIODS_LIST, SHORT, MEDIUM, LONG
+from settings import PERIODS_LIST, SHORT, MEDIUM, LONG, POLONIEX, BINANCE
 
 from taskapp.helpers import _pull_poloniex_data, _compute_and_save_indicators
 
@@ -12,8 +12,7 @@ from taskapp.helpers import _pull_poloniex_data, _compute_and_save_indicators
 logger = logging.getLogger(__name__)
 
 #CURRENCY_PAIRS = [('BTC', 2), ('ETH', 0), ('ETH', 1)] # BTC_USDT, ETH_BTC, ETH_USDT
-EXCHANGES = (0, 1, 3) # ('poloniex', 'bittrex', 'binance')
-EXCHANGES = (0,)
+EXCHANGES = (POLONIEX, BINANCE) # ('poloniex', 'bittrex', 'binance')
 
 class Command(BaseCommand):
     help = "Process some currency pairs from some exchanges"
