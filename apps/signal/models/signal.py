@@ -34,18 +34,30 @@ from collections import namedtuple
 SignalType = namedtuple('SignalType', 'signal, trend, strength')
 
 ALL_SIGNALS = {
-    # TEST
+    # TEST, delete in production
     'rsi_sell_3_test': SignalType(signal = 'RSI', trend = 1, strength = 1),
     'rsi_buy_3_test': SignalType(signal = 'RSI', trend = -1, strength = 1),
+    ############################
 
-    'rsi_sell_3': SignalType(signal = 'RSI', trend = 1, strength = 3),
-    'rsi_buy_3' : SignalType('RSI', -1, 3),
+    'rsi_buy_3' : SignalType('RSI', 1, 3),
+    'rsi_sell_3': SignalType(signal = 'RSI', trend = -1, strength = 3),
 
-    'rsi_cumulat_sell_3': SignalType('RSI_cumulative', 1, 3),
-    'rsi_cumulat_buy_3' : SignalType('RSI_cumulative', -1, 3),
+    'rsi_cumulat_buy_3' : SignalType('RSI_cumulative', 1, 3),
+    'rsi_cumulat_sell_3': SignalType('RSI_cumulative', -1, 3),
 
-    'ichi_kumo_up' : SignalType('', -1, 3),
-    'ichi_kumo_down' : SignalType('', -1, 3),
+    'ichi_kumo_up' : SignalType('kumo_breakout', 1, 3),
+    'ichi_kumo_down' : SignalType('kumo_breakout', -1, 3),
+
+    'sma_bull_1' : SignalType('SMA', 1, 1),  # price crosses sma50 up
+    'sma_bear_1' : SignalType('SMA', -1, 1),
+    'sma_bull_2' : SignalType('SMA', 1, 2),   # price crosses sma200 up
+    'sma_bear_2' : SignalType('SMA', -1, 2),
+    'sma_bull_3': SignalType('SMA', 1, 3),    # sma50 crosses sma200 up
+    'sma_bear_3': SignalType('SMA', -1, 3),
+
+    'ann_simple_bull': SignalType('ANN_Simple', 1, 3),  # price cross sma200 up
+    'ann_simple_bear': SignalType('ANN_Simple', -1, 3),
+
 
 }
 #################
