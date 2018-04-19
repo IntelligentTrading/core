@@ -101,14 +101,15 @@ def _compute_and_save_indicators(source, resample_period):
 
     logger.info("################# Resampling with Period: " + str(resample_period) + ", Source:" + str(source) + " #######################")
 
-    # choose the pre-trained ANN model depending on period, here are the same
-    # period2model = {
-    #     SHORT : 'lstm_model_2_2.h5',
-    #     MEDIUM: 'lstm_model_2_2.h5',
-    #     LONG  : 'lstm_model_2_2.h5'
-    # }
+
 
     if RUN_ANN:
+        # choose the pre-trained ANN model depending on period, here are the same
+        period2model = {
+            SHORT : 'lstm_model_2_2.h5',
+            MEDIUM: 'lstm_model_2_2.h5',
+            LONG  : 'lstm_model_2_2.h5'
+        }
         # load model from S3 and database
         ann_model_object = get_ann_model_object(period2model[resample_period])
 
@@ -118,7 +119,7 @@ def _compute_and_save_indicators(source, resample_period):
     logger.debug("## Pairs to iterate: " + str(pairs_to_iterate))
 
     for transaction_currency, counter_currency in pairs_to_iterate:
-        logger.info('   ======== ' + str(resample_period)+ ': checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
+        logger.info('   ======== EXCNAGER: ' + str(source) + '| period: ' + str(resample_period)+ '| checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
 
         # create a dictionary of parameters to improve readability
         indicator_params_dict = {
@@ -131,7 +132,7 @@ def _compute_and_save_indicators(source, resample_period):
 
 
         ################# BACK CALCULATION (need only once when run first time)
-        BACK_REC = 10   # how many records to calculate back in time
+        BACK_REC = 5   # how many records to calculate back in time
         BACK_TIME = timestamp - BACK_REC * resample_period * 60  # same in sec
 
         last_time_computed = get_first_resampled_time(source, transaction_currency, counter_currency, resample_period)
