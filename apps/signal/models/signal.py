@@ -52,8 +52,8 @@ ALL_SIGNALS = {
     'sma_bear_1' : SignalType('SMA', -1, 1),
     'sma_bull_2' : SignalType('SMA', 1, 2),   # price crosses sma200 up
     'sma_bear_2' : SignalType('SMA', -1, 2),
-    'sma_bull_3': SignalType('SMA', 1, 3),    # sma50 crosses sma200 up
-    'sma_bear_3': SignalType('SMA', -1, 3),
+    'sma_bull_3' : SignalType('SMA', 1, 3),    # sma50 crosses sma200 up
+    'sma_bear_3' : SignalType('SMA', -1, 3),
 
     'ann_simple_bull': SignalType('ANN_Simple', 1, 3),  # price cross sma200 up
     'ann_simple_bear': SignalType('ANN_Simple', -1, 3),
@@ -241,14 +241,16 @@ def get_all_signals_names_now(**kwargs):
     # get all signals happened just now (in current temestamp from **kwargs)
 
     '''
+    # for PRODUCTION
     signals_quaryset = Signal.objects.filter(
         **kwargs
     ).values('id', 'signal', 'trend', 'strength_value').order_by('timestamp')
     '''
 
+    # for TESTING
     # this is for debug purposes!!! remove and uncomment in production!!!
     signals_queryset = Signal.objects.filter(
-        # all times - for testing
+        #TODO: for all times (for testing), please uncomment above for production
         source = kwargs['source'],
         transaction_currency=kwargs['transaction_currency'],
         counter_currency = kwargs['counter_currency'],
@@ -260,14 +262,16 @@ def get_all_signals_names_now(**kwargs):
     for signal in signals_queryset:
 
         # convert a query set to unique name of the signal
-        id = _get_signal_idname(signal)
+        unique_name = _get_signal_idname(signal)
 
         # if it exists, add it to returning set
-        if id:
+        if unique_name:
             signals_set.update(id)
 
     return signals_set
 
+def get_prevous_signal_name(**kwargs):
+    pass
 
 
 def get_signals_ts(start_time, end_time, **kwargs):
