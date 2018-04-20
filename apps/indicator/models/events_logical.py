@@ -116,10 +116,12 @@ class EventsLogical(AbstractIndicator):
 
             # add a long period signal to the current signals
             if not long_period_events_df.empty:
+                logger.debug("      @nice! long period events:  " + str(long_period_events_df))
                 last_events_df['long_sma50_above_sma200'] = int(long_period_events_df['sma50_above_sma200'])
                 last_events_df['long_sma50_below_sma200'] = int(long_period_events_df['sma50_below_sma200'])
 
                 # detect
+                logger.debug("      - before RSI_Cumulative_bullish")
                 last_events_df['RSI_Cumulative_bullish'] = np.where(
                 (
                     last_events_df['long_sma50_above_sma200'] &
@@ -135,6 +137,7 @@ class EventsLogical(AbstractIndicator):
                 1, 0)
 
                 # save and emit signals if neccesary
+                logger.debug("      - saving ... ")
                 if all(last_events_df['RSI_Cumulative_bullish']):
                     logger.info('    YOH! RSI_Cumulative_bullish has been DETECTED!')
                     try:
