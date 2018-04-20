@@ -426,23 +426,24 @@ def get_last_ever_entered_elementory_events_df(timestamp, source, transaction_cu
     df = pd.DataFrame()
 
     # if there is at least one record and this record is not too far away (not later then 50 hours ago)
-    if bool(last_time) & (abs(timestamp - last_time['timestamp'].timestamp()) < (3600000 * 50)):
-        # get all records for this time
-        last_events = list(EventsElementary.objects.filter(
-            timestamp=last_time['timestamp'],
-            source=source,
-            transaction_currency=transaction_currency,
-            counter_currency=counter_currency,
-            resample_period=resample_period,
-        ).order_by('-timestamp').values('timestamp', 'event_name', 'event_value'))
+    if bool(last_time): # if there is any record
+        if (abs(timestamp - last_time['timestamp'].timestamp()) < (3600000 * 50)):
+            # get all records for this time
+            last_events = list(EventsElementary.objects.filter(
+                timestamp=last_time['timestamp'],
+                source=source,
+                transaction_currency=transaction_currency,
+                counter_currency=counter_currency,
+                resample_period=resample_period,
+            ).order_by('-timestamp').values('timestamp', 'event_name', 'event_value'))
 
-        # assert all timestamps are the same
-        ts = [rec['timestamp'] for rec in last_events]
-        event_names = [rec['event_name'] for rec in last_events]
-        event_values = [rec['event_value'] for rec in last_events]
+            # assert all timestamps are the same
+            ts = [rec['timestamp'] for rec in last_events]
+            event_names = [rec['event_name'] for rec in last_events]
+            event_values = [rec['event_value'] for rec in last_events]
 
-        df = pd.DataFrame(columns = ALL_POSSIBLE_ELEMENTARY_EVENTS, index=pd.Series(ts[0])) # DF has only one line
-        df[event_names] = event_values
-        df = df.fillna(value=0)
+            df = pd.DataFrame(columns = ALL_POSSIBLE_ELEMENTARY_EVENTS, index=pd.Series(ts[0])) # DF has only one line
+            df[event_names] = event_values
+            df = df.fillna(value=0)
 
     return df
