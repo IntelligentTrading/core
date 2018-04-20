@@ -46,7 +46,7 @@ class BackTest(models.Model):
 
     def run_backtest_on_all_currency(self):
         # iterate over all currencies and exchangers (POLONIEX etc) with run_backtest_on_one_curency_pair
-        atomic_tuples = [ (0, 'BTC', 2), (0, 'ETH', 0)] # generate all you need
+        atomic_tuples = [ (0, 'BTC', 2), (0, 'ETH', 0)] # generate all triples you need (source/transact_curr/counter_curr)
         for source, transaction_currency, counter_currency in atomic_tuples:
             self.run_backtest_on_one_curency_pair(self, source, transaction_currency, counter_currency)
             pass
