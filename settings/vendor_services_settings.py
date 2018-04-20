@@ -87,6 +87,8 @@ CELERY_BROKER_POOL_LIMIT = 1 # for free tier of the ampq https://devcenter.herok
 CELERYD_TASK_TIME_LIMIT = 2*60*60 # 2 hours, in seconds
 CELERY_BROKER_HEARTBEAT = None # CloudAMQP using TCP keep-alive instead
 CELERY_BROKER_CONNECTION_TIMEOUT = 30 # default 4 is not enough for CloudAMQP
+CELERY_TASK_PUBLISH_RETRY = False # Do not retry tasks in the case of connection loss
+CELERYD_PREFETCH_MULTIPLIER = 1 # Disable prefetching
 
 # Telegram settings for itt-info-bot
 INFO_BOT_TELEGRAM_BOT_API_TOKEN = os.environ.get('INFO_BOT_TELEGRAM_BOT_API_TOKEN', '123ABC')
