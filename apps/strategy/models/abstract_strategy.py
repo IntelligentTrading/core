@@ -38,13 +38,14 @@ class AbstractStrategy(ABC):
 
         # check if the previos signal is the same, return None, i.e. if you bough something, do not buy it again
         prev_signal = self.get_previous_signal()
+        #TODO
 
         return self.signal_now_set
 
 
     def get_previous_signal(self):
         # get signals quite fa in a history
-        tshift = 3600 * 24 * 10  # 10 days back
+        tshift = 3600 * 24 * 20  # 20 days back
         previous_signal = self.get_all_signals_in_time_period(self.timestamp-tshift, self.timestamp).tail(1)
         return previous_signal
 

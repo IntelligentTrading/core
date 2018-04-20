@@ -283,7 +283,7 @@ def get_signals_ts(start_time, end_time, **kwargs):
         resample_period=kwargs['resample_period'],
         timestamp__lte=end_time,
         timestamp__gte=start_time
-    ).values('id', 'signal', 'trend', 'strength_value').order_by('timestamp')
+    ).values('id', 'timestamp', 'signal', 'trend', 'strength_value').order_by('timestamp')
 
     # convert to ts
     times = [ x['timestamp'] for x in signals_queryset]
