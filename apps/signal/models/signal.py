@@ -281,8 +281,8 @@ def get_signals_ts(start_time, end_time, **kwargs):
         transaction_currency=kwargs['transaction_currency'],
         counter_currency=kwargs['counter_currency'],
         resample_period=kwargs['resample_period'],
-        timestamp_lte=end_time,
-        timestamp_gte=start_time
+        timestamp__lte=end_time,
+        timestamp__gte=start_time
     ).values('id', 'signal', 'trend', 'strength_value').order_by('timestamp')
 
     # convert to ts

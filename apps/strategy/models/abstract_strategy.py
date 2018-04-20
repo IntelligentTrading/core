@@ -36,11 +36,17 @@ class AbstractStrategy(ABC):
         if len(self.signal_now_set) > 1 :
             logger.error(" Ouch... several signals for one strategy at the same time... highly unlikely, please investigate!")
 
+        # check if the previos signal is the same, return None, i.e. if you bough something, do not buy it again
+        prev_signal = self.get_previous_signal()
+
         return self.signal_now_set
 
 
     def get_previous_signal(self):
-        pass
+        # get signals quite fa in a history
+        tshift = 3600 * 24 * 10  # 10 days back
+        previous_signal = self.get_all_signals_in_time_period(self.timestamp-tshift, self.timestamp).tail(1)
+        return previous_signal
 
 
     def get_all_signals_in_time_period(self, start_timestamp, end_timestamp):
