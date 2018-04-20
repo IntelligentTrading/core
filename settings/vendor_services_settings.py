@@ -83,13 +83,14 @@ CACHE_MIDDLEWARE_KEY_PREFIX = ''
 
 # Celery settings (optimized for CloudAMQP)
 CELERY_BROKER_URL =  os.environ.get('CLOUDAMQP_URL', 'amqp://guest:guest@localhost//')
-CELERY_BROKER_POOL_LIMIT = 1 # for free tier of the ampq https://devcenter.heroku.com/articles/cloudamqp#celery
-CELERYD_TASK_TIME_LIMIT = 2*60*60 # 2 hours, in seconds
-CELERY_BROKER_HEARTBEAT = None # CloudAMQP using TCP keep-alive instead
-CELERY_BROKER_CONNECTION_TIMEOUT = 30 # default 4 is not enough for CloudAMQP
-CELERY_TASK_PUBLISH_RETRY = False # Do not retry tasks in the case of connection loss
-CELERYD_PREFETCH_MULTIPLIER = 1 # Disable prefetching
-CELERY_ACKS_LATE = True # Task will be acknowledged after the task has been executed, not just before (the default behavior)
+# CELERY_BROKER_POOL_LIMIT = 1 # for free tier of the ampq https://devcenter.heroku.com/articles/cloudamqp#celery
+# CELERYD_TASK_TIME_LIMIT = 2*60*60 # 2 hours, in seconds
+# CELERY_BROKER_HEARTBEAT = None # CloudAMQP using TCP keep-alive instead
+# CELERY_BROKER_CONNECTION_TIMEOUT = 30 # default 4 is not enough for CloudAMQP
+# CELERY_TASK_PUBLISH_RETRY = False # Do not retry tasks in the case of connection loss
+# CELERYD_PREFETCH_MULTIPLIER = 1 # Disable prefetching
+# CELERY_ACKS_LATE = True # Task will be acknowledged after the task has been executed, not just before (the default behavior)
+
 
 # Telegram settings for itt-info-bot
 INFO_BOT_TELEGRAM_BOT_API_TOKEN = os.environ.get('INFO_BOT_TELEGRAM_BOT_API_TOKEN', '123ABC')

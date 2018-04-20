@@ -46,14 +46,16 @@ from taskapp.celery import app as celery_app
 #     from taskapp.helpers import get_exchanges
 #     for exchange in get_exchanges():
 #         compute_and_save_indicators.delay(source=exchange, resample_period=resample_period)
-@celery_app.task
+
+@celery_app.task(retry=False)
 def compute_and_save_indicators_for_all_sources(resample_period):
     from taskapp.helpers import get_exchanges
     for exchange in get_exchanges():
         compute_and_save_indicators.delay(source=exchange, resample_period=resample_period)
         #compute_and_save_indicators.apply_async(args=[exchange, resample_period], kwargs={ retry: False })
 
-@shared_task
+#@shared_task
+@celery_app.task(retry=False)
 def compute_and_save_indicators(source, resample_period):
     from taskapp.helpers import _compute_and_save_indicators
     _compute_and_save_indicators(source=source, resample_period=resample_period)
