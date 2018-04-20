@@ -12,7 +12,7 @@ from apps.signal.models.signal import Signal
 from apps.indicator.models.ann_future_price_classification import AnnPriceClassification, get_n_last_ann_classif_df
 
 from apps.user.models.user import get_horizon_value_from_string
-from settings import HORIZONS_TIME2NAMES, EMIT_RSI, EMIT_SMA
+from settings import HORIZONS_TIME2NAMES, EMIT_RSI, EMIT_SMA, RUN_ANN
 
 
 logger = logging.getLogger(__name__)
@@ -373,8 +373,9 @@ class EventsElementary(AbstractIndicator):
 
 
         ############## calculate and save ANN Events   #################
-        logger.info("   ... Check AI Elementary Events: ")
-        _process_ai_simple(horizon, **kwargs)
+        if RUN_ANN:
+            logger.info("   ... Check AI Elementary Events: ")
+            _process_ai_simple(horizon, **kwargs)
 
 
 
