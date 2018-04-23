@@ -12,7 +12,8 @@ from django.db.models.signals import post_save, pre_save
 from apps.common.behaviors import Timestampable
 from apps.indicator.models import Price
 from settings import QUEUE_NAME, AWS_OPTIONS, BETA_QUEUE_NAME, TEST_QUEUE_NAME, PERIODS_LIST
-from settings import SNS_SIGNALS_TOPIC_ARN, SOURCE_CHOICES, POLONIEX
+from settings import SOURCE_CHOICES, POLONIEX, COUNTER_CURRENCY_CHOICES, BTC
+from settings import SNS_SIGNALS_TOPIC_ARN
 
 from django.db import models
 from unixtimestampfield.fields import UnixTimeStampField
@@ -38,7 +39,7 @@ class Signal(Timestampable, models.Model):
     timestamp = UnixTimeStampField(null=False)
     source = models.SmallIntegerField(choices=SOURCE_CHOICES, null=False, default=POLONIEX)
     transaction_currency = models.CharField(max_length=6, null=False, blank=False)
-    counter_currency = models.SmallIntegerField(choices=Price.COUNTER_CURRENCY_CHOICES, null=False, default=Price.BTC)
+    counter_currency = models.SmallIntegerField(choices=COUNTER_CURRENCY_CHOICES, null=False, default=BTC)
     resample_period = models.PositiveSmallIntegerField(null=False, default=PERIODS_LIST[0])
 
     signal = models.CharField(max_length=15, null=True)

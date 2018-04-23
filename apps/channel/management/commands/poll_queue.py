@@ -10,7 +10,7 @@ from taskapp.helpers import get_source_name
 
 from apps.channel.incoming_queue import SqsListener
 
-from settings import INCOMING_SQS_QUEUE, SOURCE_CHOICES
+from settings import INCOMING_SQS_QUEUE, SOURCE_CHOICES, COUNTER_CURRENCY_CHOICES
 
 
 
@@ -51,7 +51,7 @@ def process_message_from_queue(message_body):
 
         (transaction_currency, counter_curency_text) = item['symbol'].split('/')
 
-        counter_currency_code = next((code for code, counter_currency in Price.COUNTER_CURRENCY_CHOICES if counter_currency==counter_curency_text), None)
+        counter_currency_code = next((code for code, counter_currency in COUNTER_CURRENCY_CHOICES if counter_currency==counter_curency_text), None)
         if None in (source_code, counter_currency_code):
             continue # skip this source or counter_currency
 

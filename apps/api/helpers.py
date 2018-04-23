@@ -6,15 +6,15 @@ from dateutil.parser import parse
 
 from apps.indicator.models import Price
 
-from settings import SHORT, POLONIEX
+from settings import SHORT, POLONIEX, USDT, BTC
 
 
 
 def default_counter_currency(transaction_currency):
     if transaction_currency == 'BTC':
-        counter_currency = Price.USDT
+        counter_currency = USDT
     else:
-        counter_currency = Price.BTC
+        counter_currency = BTC
     return counter_currency
 
 

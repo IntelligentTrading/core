@@ -225,7 +225,6 @@ BTC_COINS = [
 #EXCHANGE_MARKETS = ('poloniex', 'binance', 'bittrex', 'bitfinex', 'kucoin')
 EXCHANGE_MARKETS = ('poloniex', 'binance', 'bittrex')
 
-
 # Please only add new exchanges to this settings, never remove or modify
 (POLONIEX, BITTREX, BINANCE, BITFINEX, KUCOIN, GDAX, HITBTC) = list(range(7))
 SOURCE_CHOICES = (
@@ -238,6 +237,16 @@ SOURCE_CHOICES = (
     (HITBTC, 'hitbtc'),
 )
 
+# list of supported counter currencies
+COUNTER_CURRENCIES = ('BTC', 'ETH', 'USDT')
+# Please only add new counter currencies to this settings, never remove or modify
+(BTC, ETH, USDT, XMR) = list(range(4))
+COUNTER_CURRENCY_CHOICES = (
+    (BTC, 'BTC'),
+    (ETH, 'ETH'),
+    (USDT, 'USDT'),
+    (XMR, 'XMR'),
+)
 
 # mapping from bin size to a name short/medium
 # CHANGES TO THESE VALUES REQUIRE MAKING AND RUNNING DB MIGRATIONS
