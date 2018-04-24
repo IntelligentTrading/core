@@ -72,7 +72,6 @@ def replace_exchange_code_with_name(items):
         item['exchange'] = get_source_name(item['source'])
         item.pop('source', None)
         replaced.update(item)
-        print(item)
     return items
 
 def group_items(items, key='transaction_currency', group_by=['exchange', 'counter_currency']):
