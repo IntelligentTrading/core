@@ -7,9 +7,9 @@ from apps.api.permissions import RestAPIPermission
 
 from settings import EXCHANGE_MARKETS, COUNTER_CURRENCIES
 
-from taskapp.helpers import get_source_code
-from apps.api.helpers import group_items, replace_exchange_code_with_name, get_counter_currency_index
 from apps.indicator.models import Price
+
+from apps.api.helpers import group_items, replace_exchange_code_with_name, get_counter_currency_index, get_source_index
 
 
 
@@ -40,7 +40,7 @@ class TransactionCurrenciesView(APIView):
         res_qs = Price.objects.values('source', 'transaction_currency', 'counter_currency')
 
         if (exchange is not None) and (exchange in EXCHANGE_MARKETS):
-            source =  get_source_code(exchange)
+            source =  get_source_index(exchange)
             timestamp_qs = timestamp_qs.filter(source=source)
             res_qs = res_qs.filter(source=source)
 

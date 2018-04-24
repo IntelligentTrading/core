@@ -5,7 +5,6 @@ import time
 from requests import get, RequestException
 
 from apps.channel.models import ExchangeData
-#from apps.channel.models.exchange_data import POLONIEX
 from apps.indicator.models import Price, Volume
 from apps.indicator.models.price import get_currency_value_from_string
 from apps.indicator.models.price_resampl import get_first_resampled_time
@@ -19,7 +18,6 @@ from apps.indicator.models.events_logical import EventsLogical
 
 from apps.ai.models.nn_model import get_ann_model_object
 
-#from settings import USDT_COINS, BTC_COINS
 from settings import SHORT, MEDIUM, LONG, RUN_ANN
 from settings import SOURCE_CHOICES, EXCHANGE_MARKETS
 
@@ -43,11 +41,6 @@ def get_currency_pairs(source, period_in_seconds):
 def get_source_name(source_code):
     "return poloniex for code=0"
     return next((source_text for code, source_text in SOURCE_CHOICES if code==source_code), None)
-
-def get_source_code(source_name):
-    "return 2 for source_name=binance"
-    return next((code for code, source_text in SOURCE_CHOICES if source_text==source_name), None)
-
 
 def _pull_poloniex_data(source):
     logger.info("pulling Poloniex data...")
