@@ -81,12 +81,12 @@ CACHE_MIDDLEWARE_SECONDS = 60 * 60 # cache pages for 60 min same as SHORT period
 CACHE_MIDDLEWARE_ALIAS = 'default'
 CACHE_MIDDLEWARE_KEY_PREFIX = ''
 
-# Temporary disable cache
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
-    }
-}
+# Temporary disable cache for debug
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+#     }
+# }
 
 
 # Celery settings (optimized for CloudAMQP)
