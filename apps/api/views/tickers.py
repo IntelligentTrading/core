@@ -8,7 +8,7 @@ from apps.api.permissions import RestAPIPermission
 from settings import SOURCE_CHOICES, COUNTER_CURRENCY_CHOICES, EXCHANGE_MARKETS, COUNTER_CURRENCIES
 
 from taskapp.helpers import get_exchanges, get_currency_pairs, get_source_code
-from apps.api.helpers import group_items
+from apps.api.helpers import group_items, replace_exchange_code_with_name
 from apps.indicator.models import Price
 
 
@@ -51,4 +51,6 @@ class TransactionCurrenciesView(APIView):
         to_timestamp = timestamp_qs.first()['timestamp']
         from_timestamp = timestamp_qs.filter(timestamp__lte=to_timestamp - timedelta(minutes=60*4)).first()['timestamp']
         res = res_qs.filter(timestamp__range=(from_timestamp, to_timestamp)).distinct()
-        return Response(group_items(res))
+        return_res = replace_exchange_code_with_name(res)
+        return_res = group_items(return_res)
+        return Response(return_res)

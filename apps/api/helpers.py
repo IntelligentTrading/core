@@ -6,6 +6,7 @@ import copy
 from dateutil.parser import parse
 
 from apps.indicator.models import Price
+from taskapp.helpers import get_source_name
 
 from settings import SHORT, POLONIEX, USDT, BTC
 
@@ -65,7 +66,16 @@ def queryset_for_list_without_resample_period(self): # for Price and Volume
         return queryset
 
 
-def group_items(items, key='transaction_currency', group_by=['source', 'counter_currency']):
+def replace_exchange_code_with_name(items):
+    replaced = {}
+    for item in items:
+        item['exchange'] = get_source_name(item['source'])
+        item.pop('source', None)
+        replaced.update(item)
+        print(item)
+    return items
+
+def group_items(items, key='transaction_currency', group_by=['exchange', 'counter_currency']):
     grouped = {}
     initial_item = {key: [] for key in group_by}
 
