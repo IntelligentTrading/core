@@ -3,6 +3,7 @@ from rest_framework_swagger.views import get_swagger_view
 
 from apps.api.views import v1_price, v1_volume, v1_user, v1_csv
 from apps.api.views import price, resampled_price, volume, signal, rsi, events_elementary
+from apps.api.views import tickers
 
 
 schema_view = get_swagger_view(title='ITT Core API')
@@ -44,6 +45,10 @@ urlpatterns = [
 
     url(r'^v2/events-elementary/$', events_elementary.ListEventsElementary.as_view(), name='events-elementary'),
     url(r'^v2/events-elementary/(?P<transaction_currency>.+)$',  events_elementary.ListEventElementary.as_view(), name='event-elementary'),
+
+    # Tickers
+    #url(r'^v2/tickers/$', tickers.TickersView.as_view(), name='tickers info'),
+    url(r'^v2/tickers/transaction-currencies/$', tickers.TransactionCurrenciesView.as_view(), name='info'),
 
 
     url(r'^$', schema_view), # swagger

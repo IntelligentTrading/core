@@ -14,7 +14,7 @@ from telegram import ParseMode
 from django.core.cache import cache
 
 from settings import INFO_BOT_CRYPTOPANIC_API_TOKEN, INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS
-from settings import USDT_COINS, BTC_COINS
+from settings import USDT_COINS, BTC_COINS, BTC, USDT
 
 from apps.indicator.models import Price, Volume
 from apps.signal.models import Signal
@@ -75,11 +75,11 @@ def sentiment_from_cryptopanic(currency):
 @cache_memoize(INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS)
 def currency_info(currency):
     if currency in USDT_COINS:
-        counter_currency = Price.USDT
+        counter_currency = USDT
         counter_currency_txt = 'USDT'
         currency_symbol = '$'
     else:
-        counter_currency = Price.BTC
+        counter_currency = BTC
         counter_currency_txt = 'BTC'
         currency_symbol = ''
 
