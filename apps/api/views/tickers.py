@@ -51,6 +51,17 @@ class TransactionCurrenciesView(APIView):
         to_timestamp = timestamp_qs.first()['timestamp']
         from_timestamp = timestamp_qs.filter(timestamp__lte=to_timestamp - timedelta(minutes=60*4)).first()['timestamp']
         res = res_qs.filter(timestamp__range=(from_timestamp, to_timestamp)).distinct()
-        return_res = replace_exchange_code_with_name(res)
-        return_res = group_items(return_res)
+        return_res = group_items(replace_exchange_code_with_name(res))
         return Response(return_res)
+
+
+class ExchangesView(APIView):
+    '''Return list of exchanges.\n
+
+    /api/v2/tickers/exchanges\n
+    '''
+
+    permission_classes = (RestAPIPermission, )
+
+    def get(self, request, format=None):
+        return Response(EXCHANGE_MARKETS)
