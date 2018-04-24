@@ -1,6 +1,7 @@
 """
 Helpers and common methods for RESTful API
 """
+import copy
 
 from dateutil.parser import parse
 
@@ -62,3 +63,17 @@ def queryset_for_list_without_resample_period(self): # for Price and Volume
         )
         queryset = filter_queryset_by_timestamp(self, queryset)
         return queryset
+
+
+def group_items(items, key='transaction_currency', group_by=['source', 'counter_currency']):
+    grouped = {}
+    initial_item = {key: [] for key in group_by}
+
+    for item in items:
+        if item[key] not in grouped:
+            grouped[item[key]] = copy.deepcopy(initial_item)
+            grouped[item[key]][key] = item[key]
+        for group in group_by:
+            if item[group] not in grouped[item[key]][group]:
+                grouped[item[key]][group].append(item[group])
+    return list(grouped.values())
