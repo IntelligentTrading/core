@@ -8,7 +8,7 @@ from dateutil.parser import parse
 from apps.indicator.models import Price
 from taskapp.helpers import get_source_name
 
-from settings import SHORT, POLONIEX, USDT, BTC
+from settings import SHORT, POLONIEX, USDT, BTC, COUNTER_CURRENCY_CHOICES
 
 
 
@@ -87,3 +87,7 @@ def group_items(items, key='transaction_currency', group_by=['exchange', 'counte
             if item[group] not in grouped[item[key]][group]:
                 grouped[item[key]][group].append(item[group])
     return list(grouped.values())
+
+def get_counter_currency_index(counter_currency_name):
+    "return 2 for counter_currency_name='USDT'"
+    return next((index for index, cc_name in COUNTER_CURRENCY_CHOICES if cc_name==counter_currency_name), None)

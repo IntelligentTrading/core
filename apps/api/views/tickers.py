@@ -5,10 +5,10 @@ from rest_framework.response import Response
 
 from apps.api.permissions import RestAPIPermission
 
-from settings import SOURCE_CHOICES, COUNTER_CURRENCY_CHOICES, EXCHANGE_MARKETS, COUNTER_CURRENCIES
+from settings import SOURCE_CHOICES, EXCHANGE_MARKETS, COUNTER_CURRENCIES
 
 from taskapp.helpers import get_exchanges, get_currency_pairs, get_source_code
-from apps.api.helpers import group_items, replace_exchange_code_with_name
+from apps.api.helpers import group_items, replace_exchange_code_with_name, get_counter_currency_index
 from apps.indicator.models import Price
 
 
@@ -58,10 +58,25 @@ class TransactionCurrenciesView(APIView):
 class ExchangesView(APIView):
     '''Return list of exchanges.\n
 
-    /api/v2/tickers/exchanges\n
+    /api/v2/tickers/exchanges
     '''
 
     permission_classes = (RestAPIPermission, )
 
     def get(self, request, format=None):
         return Response(EXCHANGE_MARKETS)
+
+
+class CounterCurrenciesView(APIView):
+    '''Return list of counter currencies.\n
+
+    /api/v2/tickers/counter-currencies
+    '''
+
+    permission_classes = (RestAPIPermission, )
+
+    def get(self, request, format=None):
+        res = []
+        for cc in COUNTER_CURRENCIES:
+            res.append({'symbol': cc, 'index': get_counter_currency_index(cc), 'enabled':True})
+        return Response(res)

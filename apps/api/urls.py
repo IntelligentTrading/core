@@ -48,9 +48,9 @@ urlpatterns = [
 
     # Tickers
     #url(r'^v2/tickers/$', tickers.TickersView.as_view(), name='tickers info'),
-    url(r'^v2/tickers/transaction-currencies/$', tickers.TransactionCurrenciesView.as_view(), name='coins'),
+    url(r'^v2/tickers/transaction-currencies/$', tickers.TransactionCurrenciesView.as_view(), name='transaction-currencies'),
     url(r'^v2/tickers/exchanges/$', tickers.ExchangesView.as_view(), name='exchanges'),
-
+    url(r'^v2/tickers/counter-currencies/$', tickers.CounterCurrenciesView.as_view(), name='counter-currencies'),
 
     url(r'^$', schema_view), # swagger
  ]
