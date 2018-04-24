@@ -2,7 +2,6 @@
 Helpers and common methods for RESTful API
 """
 import copy
-
 from dateutil.parser import parse
 
 from apps.indicator.models import Price
@@ -64,7 +63,6 @@ def queryset_for_list_without_resample_period(self): # for Price and Volume
         )
         queryset = filter_queryset_by_timestamp(self, queryset)
         return queryset
-
 
 def replace_exchange_code_with_name(items):
     replaced = {}
