@@ -20,6 +20,8 @@ class ITTPriceView(APIView):
         return Response(get_itt_token_price())
 
 
+# Helpers methods
+
 # Cache for 8 hours.
 @cache_memoize(8*60*60)
 def get_itt_token_price():

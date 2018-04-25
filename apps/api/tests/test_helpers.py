@@ -1,11 +1,15 @@
 import copy
+import logging
 
 from django.test import TestCase
 
-from apps.api.helpers import get_source_index, get_itt_token_price
-from apps.api.helpers import group_items, get_counter_currency_index, replace_exchange_code_with_name
+from apps.api.helpers import group_items, get_counter_currency_index, replace_exchange_code_with_name, get_source_index
+from apps.api.views.itt import get_itt_token_price
 
 
+
+logging.getLogger("ccxt").setLevel(logging.INFO)
+logging.getLogger("urllib3").setLevel(logging.INFO)
 
 class TestPriceV1APITests(TestCase):
 
