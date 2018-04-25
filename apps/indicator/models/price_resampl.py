@@ -23,6 +23,12 @@ class PriceResampl(AbstractIndicator):
     price_variance = models.FloatField(null=True)  # for future signal smoothing
 
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['timestamp', 'source', 'resample_period', 'transaction_currency', 'counter_currency']),
+        ]
+
+
     # MODEL PROPERTIES
     @property
     def price_change_24h(self):

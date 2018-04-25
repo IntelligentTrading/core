@@ -17,6 +17,13 @@ class Sma(AbstractIndicator):
     sma_close_price = models.BigIntegerField(null=True)
     sma_midpoint_price = models.BigIntegerField(null=True)
 
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['source', 'resample_period', 'transaction_currency', 'counter_currency', 'sma_period']),
+        ]
+
+
     def _compute_sma(self):
         # get neccesary records from price_resample
         resampl_prices_df = price_resampl.get_n_last_resampl_df(
