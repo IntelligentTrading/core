@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from django.views.generic import View
 
 from apps.indicator.models import Price as PriceModel
+from setting import BTC
 
 
 class Price(View):
@@ -14,7 +15,7 @@ class Price(View):
     def get(self, request, *args, **kwargs):
 
         transaction_currency = request.GET.get('transaction_currency', 'NA').upper()
-        counter_currency = PriceModel.BTC  # it is default one, get in from GET in futore
+        counter_currency = BTC  # it is default one, get in from GET in futore
 
         if transaction_currency == 'NA':
             return HttpResponse(json.dumps({'error': 'transaction_currency parameter is required'}),
