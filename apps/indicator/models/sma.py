@@ -20,7 +20,7 @@ class Sma(AbstractIndicator):
 
     class Meta:
         indexes = [
-            models.Index(fields=['source', 'resample_period', 'transaction_currency', 'counter_currency', 'sma_period']),
+            models.Index(fields=['source', 'resample_period', 'counter_currency', 'transaction_currency', 'sma_period']),
         ]
 
 
