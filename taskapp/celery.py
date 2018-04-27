@@ -21,16 +21,12 @@ app = Celery('core')
 #   should have a `CELERY_` prefix.
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
-# https://www.cloudamqp.com/docs/celery.html
 app.conf.update(
     worker_prefetch_multiplier = 1, # Disable prefetching
     task_acks_late = True, # Task will be acknowledged after the task has been executed, not just before (the default behavior)
     task_publish_retry = False, # Do not retry tasks in the case of connection loss
-#    broker_connection_timeout = 30, # default 4 is not enough for CloudAMQP
-#    broker_heartbeat = None, # CloudAMQP using TCP keep-alive instead
-    broker_pool_limit = 1, # for free tier of the ampq https://devcenter.heroku.com/articles/cloudamqp#celery
+    broker_pool_limit = 1,
 #    task_time_limit = 1.5*60*60, # 1.5 hours, in seconds
-#    redbeat_redis_url = "redis://localhost:6379/1"
 )
 
 # Load task modules from all registered Django app configs.
