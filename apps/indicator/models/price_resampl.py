@@ -117,21 +117,7 @@ def get_first_resampled_time(source, transaction_currency, counter_currency, res
         return time.time()
 
 
-# TODO: check logic for when there is no price data
+# TODO: to implement a backtesting @Karla need a price at a given time point
 # returns a resampled price at a given time point
 def get_price_at_timepoint(timestamp, source, transaction_currency, counter_currency, resample_period):
-    price_at_timepoint = PriceResampl.objects.filter(
-        timestamp=timestamp,
-        source=source,
-        transaction_currency=transaction_currency,
-        counter_currency=counter_currency,
-        resample_period=resample_period
-    ).values('mean_price').order_by('timestamp').first()
-
-    if price_at_timepoint['mean_price'] is not None:
-        return price_at_timepoint['mean_price']
-    else:
-        logger.error("No price data for transaction_currency={}, counter_currency={}, source={},"
-                     "resample_period={} at timestamp {}".format(transaction_currency, counter_currency, source,
-                                                                 resample_period, timestamp))
-        return None
+    pass

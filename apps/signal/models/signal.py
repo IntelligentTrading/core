@@ -226,7 +226,7 @@ def _get_signal_idname(signal):
         signal['strength_value'] = 3
 
     # create a signal record for the signal extracted from DB
-    sign_record = SignalType(signal=signal['signal'], trend=int(float(signal['trend'])), # float first because ANN has float-type trend
+    sign_record = SignalType(signal=signal['signal'], trend=int(signal['trend']),
                              strength=int(signal['strength_value']))
     # print(sig_converted)
 
