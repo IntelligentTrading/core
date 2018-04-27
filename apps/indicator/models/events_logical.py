@@ -116,7 +116,7 @@ class EventsLogical(AbstractIndicator):
 
             # add a long period signal to the current signals
             if not long_period_events_df.empty:
-                logger.debug("      @nice! long period events:  " + str(long_period_events_df))
+                #logger.debug("      @nice! long period events:  " + str(long_period_events_df))
                 last_events_df['long_sma50_above_sma200'] = int(long_period_events_df['sma50_above_sma200'])
                 last_events_df['long_sma50_below_sma200'] = int(long_period_events_df['sma50_below_sma200'])
 
