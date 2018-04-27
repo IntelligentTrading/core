@@ -186,7 +186,8 @@ def _process_sma_crossovers(horizon, prices_df, **kwargs):
 
             # Fire all sinals, except two which we dont need and imitting is allowed
             if EMIT_SMA & (event_name not in ['sma50_above_sma200', 'sma50_below_sma200']):
-                 try:
+                logger.debug('======> DISCREPANCY CHECK :: period= ' + str(kwargs['resample_period']) + '/ horozon= ' + str(horizon))
+                try:
                     trend = _col2trend[event_name]
                     signal_sma_cross = Signal(
                         **kwargs,
@@ -198,7 +199,7 @@ def _process_sma_crossovers(horizon, prices_df, **kwargs):
                     )
                     signal_sma_cross.save()
                     logger.debug("   >>> FIRED - Event " + event_name)
-                 except Exception as e:
+                except Exception as e:
                     logger.error(" #Error firing SMA signal ")
 
 

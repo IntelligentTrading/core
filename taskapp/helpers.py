@@ -117,7 +117,7 @@ def _compute_and_save_indicators(source, resample_period):
     #TODO: get pairs from def(SOURCE)
     #pairs_to_iterate = [(itm,Price.USDT) for itm in USDT_COINS] + [(itm,Price.BTC) for itm in BTC_COINS]
     pairs_to_iterate = get_currency_pairs(source=source, period_in_seconds=resample_period*60*2)
-    logger.debug("## Pairs to iterate: " + str(pairs_to_iterate))
+    #logger.debug("## Pairs to iterate: " + str(pairs_to_iterate))
 
     for transaction_currency, counter_currency in pairs_to_iterate:
         logger.info('   ======== EXCNAGER: ' + str(source) + '| period: ' + str(resample_period)+ '| checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
