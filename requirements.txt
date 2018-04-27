@@ -1,7 +1,8 @@
-amqp==2.2.2
+#amqp==2.2.2
 boto==2.45.0
 boto3==1.6.23
 celery==4.1.0
+celery-redbeat==0.11.1
 ccxt==1.13.38
 decorator==4.0.10
 dj-database-url==0.4.1
@@ -29,6 +30,7 @@ python-telegram-bot==9.0.0
 psycopg2==2.7.3
 pytz==2016.10
 PyYAML==3.12
+redis==2.10.6
 requests-oauthlib==0.8.0
 requests==2.18.4
 schedule==0.4.3
