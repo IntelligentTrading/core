@@ -55,7 +55,7 @@ class AbstractStrategy(ABC):
         all_signals_ts = get_signals_ts(start_timestamp, end_timestamp, **self.parameters)
 
         # filter out those not belonging to our strategy
-        self.strategy_ts = all_signals_ts[all_signals_ts in self.strategy_signals_set]
+        self.strategy_ts = all_signals_ts[all_signals_ts.isin(self.strategy_signals_set)]
         return self.strategy_ts
 
 

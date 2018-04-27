@@ -87,14 +87,14 @@ def _process_ai_simple(horizon, **kwargs):
             new_instance = EventsElementary.objects.create(
                 **kwargs,
                 event_name="ann_price_2class_simple",
-                event_value=df.iloc[-1]['class_change'],
+                event_value=int(df.iloc[-1]['class_change']),
             )
             logger.debug("   >>> ANN event detected and saved")
 
             signal_ai = Signal(
                 **kwargs,
                 signal='ANN_Simple',
-                trend=df.iloc[-1]['class_change'],
+                trend=int(df.iloc[-1]['class_change']),
                 strength_value= int(3),
                 horizon=horizon,
                 predicted_ahead_for= ann_classif_df.tail(1)['predicted_ahead_for'][0],

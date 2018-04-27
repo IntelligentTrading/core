@@ -232,8 +232,9 @@ def _get_signal_idname(signal):
 
     # check if that signal is in our list of all signals and gets its id if it exists
     id = [x for x in ALL_SIGNALS if ALL_SIGNALS[x] == sign_record]
+    assert len(id) == 1
 
-    return id
+    return id[0]   #unlist it
 
 
 
@@ -266,7 +267,7 @@ def get_all_signals_names_now(**kwargs):
 
         # if it exists, add it to returning set
         if unique_name:
-            signals_set.update(unique_name)
+            signals_set.update([unique_name])
 
     return signals_set
 

@@ -222,6 +222,7 @@ def _compute_and_save_indicators(params):
             try:
                 s = strategy(**indicator_params_dict)
                 now_signals_set = s.check_signals_now()
+
                 logger.debug("  NOW: found Signal belongs to strategy : " + str(strategy) + " : " + str(now_signals_set))
 
                 # Emit to a signal from a strategy to sqs without saving it in the Signal table
