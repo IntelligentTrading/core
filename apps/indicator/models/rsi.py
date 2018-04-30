@@ -28,17 +28,17 @@ class Rsi(AbstractIndicator):
         if rsi >= 0 and rsi <= 100 :
             logger.debug("   RSI= " + str(rsi))
             if rsi >= 80:
-                rsi_strength = 3  # Extremely overbought
+                rsi_strength = -3  # Extremely overbought
             elif rsi >= 75:
-                rsi_strength = 2  # very overbought
+                rsi_strength = -2  # very overbought
             elif rsi >= 70:
-                rsi_strength = 1  # overbought
+                rsi_strength = -1  # overbought
             elif rsi <= 20:
-                rsi_strength = -3  # Extremely oversold
+                rsi_strength = 3  # Extremely oversold
             elif rsi <= 25:
-                rsi_strength = -2   # very oversold
+                rsi_strength = 2   # very oversold
             elif rsi <= 30:
-                rsi_strength = -1  # oversold
+                rsi_strength = 1  # oversold
         return rsi_strength
 
 
