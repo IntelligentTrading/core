@@ -41,8 +41,11 @@ class PriceResampl(AbstractIndicator):
                 counter_currency=self.counter_currency,
                 timestamp__lte=self.timestamp - timedelta(minutes=1440) # 1440m = 24h
             ).order_by('-timestamp').first()
-        if current_price_r and price_r_24h_older:
-            return float(current_price_r - price_r_24h_older.close_price)  / price_r_24h_older.close_price
+        try: # FIXME This code smell
+            if current_price_r and price_r_24h_older:
+                return float(current_price_r - price_r_24h_older.close_price)  / price_r_24h_older.close_price
+        except Exception:
+            return None
 
 
     # compute resampled prices
