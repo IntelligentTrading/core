@@ -111,7 +111,7 @@ class EventsLogical(AbstractIndicator):
             long_param_dict['resample_period'] = LONG
             long_period_events_df = get_last_ever_entered_elementory_events_df(**long_param_dict)
 
-            # get current rsi object
+            # get last rsi object for current period
             rs_obj = Rsi.objects.filter(**kwargs).last()
 
             # add a long period signal to the current signals
@@ -121,18 +121,18 @@ class EventsLogical(AbstractIndicator):
                 last_events_df['long_sma50_below_sma200'] = int(long_period_events_df['sma50_below_sma200'])
 
                 # detect
-                logger.debug("      - before RSI_Cumulative_bullish")
+                #logger.debug("      - before RSI_Cumulative_bullish")
                 last_events_df['RSI_Cumulative_bullish'] = np.where(
                 (
                     last_events_df['long_sma50_above_sma200'] &
-                    ( np.abs(last_events_df['rsi_bracket']).isin([2,3]) )
+                    ( last_events_df['rsi_bracket']).isin([-2,-3] )
                  ) == True,
                 1, 0)
 
                 last_events_df['RSI_Cumulative_bearish'] = np.where(
                 (
                     last_events_df['long_sma50_below_sma200'] &
-                    (last_events_df['rsi_bracket'].isin([-2,-3]) )
+                    (last_events_df['rsi_bracket'].isin([2,3]) )
                  ) == True,
                 1, 0)
 
@@ -154,6 +154,8 @@ class EventsLogical(AbstractIndicator):
                             rsi_value=rs_obj.rsi,
                             trend=np.sign(last_events_df['rsi_bracket'].tail(1).values[0]),
                             horizon=horizon,
+                            strength_value=np.abs(last_events_df['rsi_bracket'].tail(1).values[0]),
+                            strength_max=int(3),
                         )
                         signal_rsi_cum.save()
                         logger.info('    RSI_Cumulative_bullish has been Saved!')
@@ -178,6 +180,8 @@ class EventsLogical(AbstractIndicator):
                             rsi_value=rs_obj.rsi,
                             trend=np.sign(last_events_df['rsi_bracket'].tail(1).values[0]),
                             horizon=horizon,
+                            strength_value=np.abs(last_events_df['rsi_bracket'].tail(1).values[0]),
+                            strength_max=int(3),
                         )
                         signal_rsi_cum.save()
                         logger.info('    RSI_Cumulative_bearish has been Saved!')
