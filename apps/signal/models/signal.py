@@ -36,13 +36,19 @@ SignalType = namedtuple('SignalType', 'signal, trend, strength')
 ALL_SIGNALS = {
     # TEST, delete in production
     'rsi_sell_3_test': SignalType(signal = 'RSI', trend = 1, strength = 1),
-    'rsi_buy_3_test': SignalType(signal = 'RSI', trend = -1, strength = 1),
+    'rsi_buy_3_test' : SignalType(signal = 'RSI', trend = -1, strength = 1),
     ############################
 
+    'rsi_buy_1' : SignalType('RSI', 1, 1),
+    'rsi_buy_2' : SignalType('RSI', 1, 2),
     'rsi_buy_3' : SignalType('RSI', 1, 3),
-    'rsi_sell_3': SignalType(signal = 'RSI', trend = -1, strength = 3),
+    'rsi_sell_1': SignalType(signal='RSI', trend=-1, strength=1),
+    'rsi_sell_2': SignalType(signal='RSI', trend=-1, strength=2),
+    'rsi_sell_3': SignalType(signal='RSI', trend=-1, strength=3),
 
+    'rsi_cumulat_buy_2' : SignalType('RSI_cumulative', 1, 2),
     'rsi_cumulat_buy_3' : SignalType('RSI_cumulative', 1, 3),
+    'rsi_cumulat_sell_2': SignalType('RSI_cumulative', -1, 2),
     'rsi_cumulat_sell_3': SignalType('RSI_cumulative', -1, 3),
 
     'ichi_kumo_up' : SignalType('kumo_breakout', 1, 3),
@@ -232,7 +238,7 @@ def _get_signal_idname(signal):
 
     # check if that signal is in our list of all signals and gets its id if it exists
     id = [x for x in ALL_SIGNALS if ALL_SIGNALS[x] == sign_record]
-    assert len(id) == 1
+    assert len(id) == 1, 'ERROR: there is no such signal in ALL_SIGNALS: '+ str(signal)
 
     return id[0]   #unlist it
 
