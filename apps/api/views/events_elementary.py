@@ -58,7 +58,7 @@ class ListEventElementary(ListAPIView):
 
         event_name -- string sma200_cross_price_up, lagging_above_highest
         counter_currency -- number 0=BTC, 1=ETH, 2=USDT, 3=XMR. Default 0=BTC, for BTC 2=USDT
-        source -- number 0=poloniex, 1=bittrex, 2=binance. Default 0=poloniex
+        source -- number 0=poloniex, 1=bittrex, 2=binance.
         resample_period -- in minutes. Default SHORT = 60
         startdate -- show inclusive from this date. For example 2018-02-12T09:09:15
         enddate -- until this date inclusive in same format
@@ -78,7 +78,7 @@ class ListEventElementary(ListAPIView):
     filter_fields = ('source', 'counter_currency', 'event_name')
 
     model = serializer_class.Meta.model
-    
+
     def get_queryset(self):
         queryset = queryset_for_list_with_resample_period(self)
         return queryset 

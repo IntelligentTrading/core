@@ -61,17 +61,23 @@ def queryset_for_list_with_resample_period(self):
     return queryset
 
 def queryset_for_list_without_resample_period(self): # for Price and Volume
-        source = self.request.query_params.get('source', POLONIEX) # Set source POLNIEX by default
-        transaction_currency = self.kwargs['transaction_currency']
-        counter_currency = default_counter_currency(transaction_currency)
-
+    source = self.request.query_params.get('source', None) # Return from the all sources by default
+    transaction_currency = self.kwargs['transaction_currency']
+    counter_currency = default_counter_currency(transaction_currency)
+    if source:
         queryset = self.model.objects.filter(
             source=source,
             transaction_currency=transaction_currency,
             counter_currency=counter_currency,
         )
-        queryset = filter_queryset_by_timestamp(self, queryset)
-        return queryset
+    else:
+        queryset = self.model.objects.filter(
+            transaction_currency=transaction_currency,
+            counter_currency=counter_currency,
+        )
+        
+    queryset = filter_queryset_by_timestamp(self, queryset)
+    return queryset
 
 def replace_exchange_code_with_name(items):
     replaced = {}

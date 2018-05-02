@@ -32,7 +32,7 @@ class ListPrices(ListAPIView):
         /api/v2/prices/?startdate=2018-01-26T10:24:37&enddate=2018-01-26T10:59:02
         /api/v2/prices/?transaction_currency=ETH&counter_currency=0
     """
-     
+
     permission_classes = (RestAPIPermission, )
     pagination_class = StandardResultsSetPagination
     serializer_class = PriceSerializer
@@ -57,7 +57,7 @@ class ListPrice(ListAPIView):
     For filtering
 
         counter_currency -- number 0=BTC, 1=ETH, 2=USDT, 3=XMR. Default 0=BTC, for BTC 2=USDT
-        source -- number 0=poloniex, 1=bittrex, 2=binance. Default 0=poloniex. 
+        source -- number 0=poloniex, 1=bittrex, 2=binance.
         startdate -- show inclusive from date. For example 2018-02-12T09:09:15
         enddate -- until this date inclusive in same format
 
