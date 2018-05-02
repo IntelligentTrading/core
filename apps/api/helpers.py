@@ -35,19 +35,28 @@ def filter_queryset_by_timestamp(self, queryset=None):
             enddate = parse(enddate)
             queryset = queryset.filter(timestamp__lte=enddate)
         return queryset
+        
 
 def queryset_for_list_with_resample_period(self):
-    source = self.request.query_params.get('source', POLONIEX) # Set source POLNIEX by default
+    source = self.request.query_params.get('source', None) # Return from the all sources by default
     transaction_currency = self.kwargs['transaction_currency']
     counter_currency = default_counter_currency(transaction_currency)
     resample_period = self.request.query_params.get('resample_period', SHORT) # SHORT resample period by default
 
-    queryset = self.model.objects.filter(
-        source = source,
-        resample_period = resample_period,
-        transaction_currency=transaction_currency,
-        counter_currency=counter_currency,
-    )
+    if source:
+        queryset = self.model.objects.filter(
+            source = source,
+            resample_period = resample_period,
+            transaction_currency=transaction_currency,
+            counter_currency=counter_currency,
+        )
+    else:
+        queryset = self.model.objects.filter(
+            resample_period = resample_period,
+            transaction_currency=transaction_currency,
+            counter_currency=counter_currency,
+        )
+        
     queryset = filter_queryset_by_timestamp(self, queryset)
     return queryset
 
