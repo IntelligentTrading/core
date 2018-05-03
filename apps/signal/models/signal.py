@@ -35,8 +35,8 @@ SignalType = namedtuple('SignalType', 'signal, trend, strength')
 
 ALL_SIGNALS = {
     # TEST, delete in production
-    'rsi_sell_3_test': SignalType(signal = 'RSI', trend = 1, strength = 1),
-    'rsi_buy_3_test' : SignalType(signal = 'RSI', trend = -1, strength = 1),
+    #'rsi_sell_3_test': SignalType(signal = 'RSI', trend = 1, strength = 1),
+    #'rsi_buy_3_test' : SignalType(signal = 'RSI', trend = -1, strength = 1),
     ############################
 
     'rsi_buy_1' : SignalType('RSI', 1, 1),
@@ -46,10 +46,10 @@ ALL_SIGNALS = {
     'rsi_sell_2': SignalType(signal='RSI', trend=-1, strength=2),
     'rsi_sell_3': SignalType(signal='RSI', trend=-1, strength=3),
 
-    'rsi_cumulat_buy_2' : SignalType('RSI_cumulative', 1, 2),
-    'rsi_cumulat_buy_3' : SignalType('RSI_cumulative', 1, 3),
-    'rsi_cumulat_sell_2': SignalType('RSI_cumulative', -1, 2),
-    'rsi_cumulat_sell_3': SignalType('RSI_cumulative', -1, 3),
+    'rsi_cumulat_buy_2' : SignalType('RSI_Cumulative', 1, 2),
+    'rsi_cumulat_buy_3' : SignalType('RSI_Cumulative', 1, 3),
+    'rsi_cumulat_sell_2': SignalType('RSI_Cumulative', -1, 2),
+    'rsi_cumulat_sell_3': SignalType('RSI_Cumulative', -1, 3),
 
     'ichi_kumo_up' : SignalType('kumo_breakout', 1, 3),
     'ichi_kumo_down' : SignalType('kumo_breakout', -1, 3),
@@ -231,9 +231,12 @@ def _get_signal_idname(signal):
     if not signal['strength_value']:
         signal['strength_value'] = 3
 
+    # temp fix, will remove everything after . to good int conversion of float string 1.0
+    trend, sep, tail = signal['trend'].partition('.')
+    strength_value, sep, tail = signal['strength_value'].partition('.')
+
     # create a signal record for the signal extracted from DB
-    sign_record = SignalType(signal=signal['signal'], trend=int(signal['trend']),
-                             strength=int(signal['strength_value']))
+    sign_record = SignalType(signal=signal['signal'], trend=int(trend), strength=int(strength_value))
     # print(sig_converted)
 
     # check if that signal is in our list of all signals and gets its id if it exists
