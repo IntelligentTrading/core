@@ -233,10 +233,9 @@ def _get_signal_idname(signal):
 
     # temp fix, will remove everything after . to good int conversion of float string 1.0
     trend, sep, tail = signal['trend'].partition('.')
-    strength_value, sep, tail = signal['strength_value'].partition('.')
 
     # create a signal record for the signal extracted from DB
-    sign_record = SignalType(signal=signal['signal'], trend=int(trend), strength=int(strength_value))
+    sign_record = SignalType(signal=signal['signal'], trend=int(trend), strength=int(signal['strength_value']))
     # print(sig_converted)
 
     # check if that signal is in our list of all signals and gets its id if it exists
