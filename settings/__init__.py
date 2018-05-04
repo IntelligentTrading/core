@@ -224,7 +224,6 @@ BTC_COINS = [
 # list of the exchanges on which we generate signals. Make it in sync with same list in Data app settings
 #EXCHANGE_MARKETS = ('poloniex', 'binance', 'bittrex', 'bitfinex', 'kucoin')
 EXCHANGE_MARKETS = ('poloniex', 'binance', 'bittrex')
-#EXCHANGE_MARKETS = ('poloniex', )
 
 # Please only add new exchanges to this settings, never remove or modify
 (POLONIEX, BITTREX, BINANCE, BITFINEX, KUCOIN, GDAX, HITBTC) = list(range(7))
