@@ -27,7 +27,9 @@ class ListSignals(ListAPIView):
         resample_period -- in minutes, SHORT = 60
         startdate -- from this date (inclusive). Example 2018-02-12T09:09:15
         enddate -- to this date (inclusive)
-        horizon --
+        horizon -- 0=SHORT, 1=MEDIUM , 2=LONG
+        id -- id in database, like 186208
+
 
     For pagination
         cursor -- indicator that the client may use to page through the result set
@@ -40,7 +42,7 @@ class ListSignals(ListAPIView):
     serializer_class = SignalSerializer
     pagination_class = StandardResultsSetPagination
 
-    filter_fields = ('source', 'resample_period', 'transaction_currency', 'counter_currency', 'signal', 'trend', 'horizon')
+    filter_fields = ('source', 'resample_period', 'transaction_currency', 'counter_currency', 'signal', 'trend', 'horizon', 'id')
 
     model = serializer_class.Meta.model
 
@@ -65,7 +67,8 @@ class ListSignal(ListAPIView):
         resample_period -- in minutes. Default SHORT = 60
         startdate -- show inclusive from this date. For example 2018-02-12T09:09:15
         enddate -- until this date inclusive in same format
-        horizon --
+        horizon -- 0=SHORT, 1=MEDIUM , 2=LONG
+
 
     For pagination
         cursor - indicator that the client may use to page through the result set
