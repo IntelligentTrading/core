@@ -144,12 +144,11 @@ class Signal(Timestampable, models.Model):
             test_queue = sqs_connection.get_queue(TEST_QUEUE_NAME)
             test_queue.write(message)
 
-        logger.info("EMITTED SIGNAL: " + str(self.as_dict()))
-
         publish_message_to_sns(message=json.dumps(self.as_dict()), topic_arn=SNS_SIGNALS_TOPIC_ARN)
 
         self.sent_at = datetime.now()  # to prevent emitting the same signal twice
 
+        logger.info("EMITTED SIGNAL: " + str(self.as_dict()))
 
         return
 

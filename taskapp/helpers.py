@@ -120,7 +120,7 @@ def _compute_and_save_indicators(source, resample_period):
     #logger.debug("## Pairs to iterate: " + str(pairs_to_iterate))
 
     for transaction_currency, counter_currency in pairs_to_iterate:
-        logger.info('   ======== EXCNAGER: ' + str(source) + '| period: ' + str(resample_period)+ '| checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
+        logger.info('   ======== EXCHANGE: ' + str(source) + '| period: ' + str(resample_period)+ '| checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
 
         # create a dictionary of parameters to improve readability
         indicator_params_dict = {
