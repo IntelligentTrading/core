@@ -51,12 +51,12 @@ def help(bot, update):
     update.message.reply_text(dedent("""
         *Available commands:*
 
-        *•* /itt <cryptocurrency> - Short info about currency. For example: `/itt BTC`
-        *•* /arbitrage <cryptocurrency> - Arbitrage. For example: `/arbitrage BTC`
+        *•* /itt <cryptocurrency> - Short info about currency. For example: `/itt BTC` ot `/itt XRP_ETH`
+        *•* /arbitrage <cryptocurrency> - Arbitrage. For example: `/arbitrage BTC_USDT`
         *•* /info - List of supported coins and exchanges
         *•* /help - List of all commands
 
-        To use this commands in telegram channel, invite @itf_info_bot as admin with 'Post Messages' rights into your channel.
+        To use this commands in telegram channel, invite @itf\_info\_bot as admin with 'Post Messages' rights into your channel.
     """), ParseMode.MARKDOWN)
 
 def getme(bot, update):

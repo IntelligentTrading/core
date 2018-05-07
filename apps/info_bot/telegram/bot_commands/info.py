@@ -19,7 +19,7 @@ def info_view(update):
     coins = set(coin for coin, _ in trading_pairs)
     view += f'And {len(coins)} coins:\n`{", ".join(coins)}`\n\n'
 
-    view += f'And {len(trading_pairs)} trading pairs, like `BTC_USDT, ETH_BTC, XRP_ETH ...` I love long text messages, but this is too much even for me 🙂  '
+    view += f'And {len(trading_pairs)} trading pairs, like `BTC_USDT, ETH_BTC, XRP_ETH ...` I love long text messages, but this message is already too long, even for me 🙂  '
 
     return view
 

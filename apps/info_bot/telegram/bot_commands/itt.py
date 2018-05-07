@@ -140,11 +140,11 @@ def itt_view(trading_pair):
             if signal.signal == 'RSI':
                 view += f"\n{format_timestamp(signal.timestamp)} {general_trend} *{signal.signal}* ({int(signal.rsi_value)}), {trend_labels[int(signal.trend)+1]} for {signal.get_horizon_display()} horizon"
             elif signal.signal == 'RSI_Cumulative':
-                view += f"\n{format_timestamp(signal.timestamp)} *ITF Proprietary Alert* (available for ITF subscribers)"
+                view += f"\n{format_timestamp(signal.timestamp)} {general_trend} *ITF Proprietary Alert*, {trend_labels[int(signal.trend)+1]} for {signal.get_horizon_display()} horizon"
             elif signal.signal == 'SMA':
                 view += f"\n{format_timestamp(signal.timestamp)} {general_trend} *{signal.signal}* ({format_currency(signal.price, currency_symbol)}), {trend_labels[int(signal.trend)+1]} for {signal.get_horizon_display()} horizon"
 
-        itf_more_info_url = 'http://intelligenttrading.org/'
+        itf_more_info_url = 'http://intelligenttrading.org/features/'
         view += f"\n[Get more signals on ITF website]({itf_more_info_url})"
         view += f" or [Ask our representative](tg://user?id=458693263)"
     except: # no signals
@@ -156,8 +156,8 @@ def itt_view(trading_pair):
         view += f"\n\n\"{title}\"\n[Read on CryptoPanic]({url})"
 
     return view
-## user commands
 
+## user commands
 def itt(bot, update, args):
     try:
         arg = args[0].upper()
