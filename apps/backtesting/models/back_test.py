@@ -291,7 +291,6 @@ class BackTest(models.Model):
         return df
 
 
-# TODO: fix according to the changed trend of RSI in the database
 # checks if a signal indicates sell
 def indicates_sell(signal_name):
     if ALL_SIGNALS[signal_name].trend == -1:
