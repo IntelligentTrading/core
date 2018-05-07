@@ -27,6 +27,7 @@ class ListVolumes(ListAPIView):
 
     For pagination
         cursor - indicator that the client may use to page through the result set
+        page_size -- a numeric value indicating the page size
 
     Examples
         /api/v2/volumes/?startdate=2018-02-10T22:14:37&enddate=2018-02-10T22:27:58
@@ -63,6 +64,7 @@ class ListVolume(ListAPIView):
 
     For pagination
         cursor - indicator that the client may use to page through the result set
+        page_size -- a numeric value indicating the page size
 
     Examples
         /api/v2/volumes/ETH # ETH in BTC

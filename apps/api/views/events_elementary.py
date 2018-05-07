@@ -31,6 +31,7 @@ class ListEventsElementary(ListAPIView):
 
     For pagination:
         cursor - the pagination cursor value
+        page_size -- a numeric value indicating the page size
 
     Examples:
         /api/v2/events-elementary/?transaction_currency=ETH&event_name=sma200_cross_price_down
@@ -65,6 +66,7 @@ class ListEventElementary(ListAPIView):
 
     For pagination
         cursor - the pagination cursor value
+        page_size -- a numeric value indicating the page size
 
     Examples
         /api/v2/events-elementary/BTC

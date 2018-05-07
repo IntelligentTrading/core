@@ -27,6 +27,7 @@ class ListPrices(ListAPIView):
 
     For pagination
         cursor - indicator that the client may use to page through the result set
+        page_size -- a numeric value indicating the page size
 
     Examples
         /api/v2/prices/?startdate=2018-01-26T10:24:37&enddate=2018-01-26T10:59:02
@@ -63,6 +64,7 @@ class ListPrice(ListAPIView):
 
     For pagination
         cursor - indicator that the client may use to page through the result set
+        page_size -- a numeric value indicating the page size
 
     Examples
         /api/v2/prices/ETH # ETH in BTC

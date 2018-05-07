@@ -28,6 +28,7 @@ class ListPrices(ListAPIView):
 
     For pagination
         cursor - the pagination cursor value
+        page_size -- a numeric value indicating the page size
 
     Results
         price_change_24h - calculated (current close_price - 24h old close_price)/current close_price
@@ -69,6 +70,7 @@ class ListPrice(ListAPIView):
 
     For pagination
         cursor - the pagination cursor value
+        page_size -- a numeric value indicating the page size
 
     Results
         price_change_24h - calculated (current close_price - 24h old close_price)/current close_price

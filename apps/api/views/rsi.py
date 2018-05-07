@@ -32,6 +32,7 @@ class ListRsis(ListAPIView):
 
     For pagination
         cursor - the pagination cursor value
+        page_size -- a numeric value indicating the page size
 
     Examples
         /api/v2/rsi/?transaction_currency=BTC
@@ -68,6 +69,7 @@ class ListRsi(ListAPIView):
 
     For pagination
         cursor - the pagination cursor value
+        page_size -- a numeric value indicating the page size
 
     Examples
         /api/v2/rsi/BTC
