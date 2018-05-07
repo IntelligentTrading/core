@@ -117,7 +117,57 @@ def get_first_resampled_time(source, transaction_currency, counter_currency, res
         return time.time()
 
 
-# TODO: to implement a backtesting @Karla need a price at a given time point
 # returns a resampled price at a given time point
 def get_price_at_timepoint(timestamp, source, transaction_currency, counter_currency, resample_period):
-    pass
+    price_at_timepoint = PriceResampl.objects.filter(
+        timestamp=timestamp,
+        source=source,
+        transaction_currency=transaction_currency,
+        counter_currency=counter_currency,
+        resample_period=resample_period
+    ).values('mean_price').order_by('timestamp').first()
+
+    if price_at_timepoint is not None and price_at_timepoint['mean_price'] is not None:
+        return price_at_timepoint['mean_price']
+
+    # we don't have exact price data
+    # extract first earlier price that is not null
+    last_price_before = PriceResampl.objects.filter(
+        timestamp__lte=timestamp,
+        source=source,
+        transaction_currency=transaction_currency,
+        counter_currency=counter_currency,
+        resample_period=resample_period,
+        mean_price__isnull=False
+    ).values('timestamp', 'mean_price').order_by('-timestamp').first()  # largest timestamp smaller than timestamp
+
+    # extract first later price that is not null
+    first_price_after = PriceResampl.objects.filter(
+        timestamp__gte=timestamp,
+        source=source,
+        transaction_currency=transaction_currency,
+        counter_currency=counter_currency,
+        resample_period=resample_period,
+        mean_price__isnull=False
+    ).values('timestamp', 'mean_price').order_by('timestamp').first()  # smallest timestamp larger than timestamp
+
+    # three cases: (1) we have only left price point, (2) we have only right price point and (3) we have both
+    if first_price_after is None:           # (1) if we don't have data for the price after timestamp
+        if last_price_before is not None:   # if there's data for the price before, we return that
+            return last_price_before['mean_price']
+        else:
+            logger.error("Unable to interpolate price data.")   # otherwise, we can't estimate price
+            return None
+    elif last_price_before is None:             # (2) if we don't have data for the price before timestamp
+        return first_price_after['mean_price']  # we checked before that first_price_after is not None, so return that
+
+    else:  # (3) we have two price points, before and after timestamp, interpolation can be done
+        timestamp_before = last_price_before['timestamp']
+        price_before = last_price_before['mean_price']
+        timestamp_after = first_price_after['timestamp']
+        price_after = first_price_after['mean_price']
+
+        interpolated_price = np.interp(x=timestamp.timestamp(),
+                                       xp=[timestamp_before.timestamp(), timestamp_after.timestamp()],
+                                       fp=[price_before, price_after])
+        return interpolated_price
