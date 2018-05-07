@@ -36,7 +36,6 @@ class SqsListener:
         sqs = self._session.client('sqs', region_name=self._region_name)
         queues = sqs.list_queues(QueueNamePrefix=self._queue_name) # we filter to narrow down the list
         self._queue_url = queues['QueueUrls'][0]
-        print('qname:', self._queue_name, '; region:', self._region_name, '; sqs:', sqs, '; queue_url:', self._queue_url)
         return sqs
 
     def listen(self):

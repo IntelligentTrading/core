@@ -34,8 +34,6 @@ class TransactionCurrenciesView(APIView):
         exchange = request.query_params.get('exchange', None)
         transaction_currency = request.query_params.get('transaction_currency', None)
 
-        print(transaction_currency)
-
         timestamp_qs = Price.objects.values('timestamp').order_by('-timestamp')
         res_qs = Price.objects.values('source', 'transaction_currency', 'counter_currency')
 
