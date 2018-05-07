@@ -109,6 +109,7 @@ class BackTest(models.Model):
 
     def run_backtest_on_several_currency_pairs(self):
         # allow moving all money into another currency
+        # TODO: need signals from Alex to carry currency info
         pass
 
     def run_backtest_on_all_currency(self):
@@ -120,6 +121,7 @@ class BackTest(models.Model):
         self.timestamp = time.time()
         resample_period = 60
 
+        # TODO: decide which tuples we will use in the end
         tuples = get_all_currency_tuples()
 
         # iterate over all currencies and exchangers (POLONIEX etc) with run_backtest_on_one_curency_pair
@@ -160,9 +162,10 @@ class BackTest(models.Model):
         self.mean_percent_gain_over_buy_and_hold = strategy_backtest_results["percent_gain_over_buy_and_hold"].mean()
         self.mean_percent_gain_over_buy_and_hold_USDT = strategy_backtest_results["percent_gain_over_buy_and_hold_USDT"].mean()
 
-        writer = pd.ExcelWriter("backtest-{}-{}-{}.xlsx".format(self.strategy_class_name, self.start_timeframe, self.end_timeframe))
-        strategy_backtest_results.to_excel(writer, 'Results')
-        writer.save()
+        # for debugging
+        # writer = pd.ExcelWriter("backtest-{}-{}-{}.xlsx".format(self.strategy_class_name, self.start_timeframe, self.end_timeframe))
+        # strategy_backtest_results.to_excel(writer, 'Results')
+        # writer.save()
 
         # TODO: run the same for several-currency strategies
 
