@@ -11,7 +11,7 @@ from cache_memoize import cache_memoize
 from telegram import ParseMode
 
 from settings import INFO_BOT_CRYPTOPANIC_API_TOKEN, INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS
-from settings import COUNTER_CURRENCIES
+from settings import COUNTER_CURRENCIES, LOCAL
 
 from apps.indicator.models import Price, Volume
 from apps.signal.models import Signal
@@ -138,15 +138,15 @@ def itt_view(trading_pair):
         for signal in sorted(latest_signals, key=lambda s: s.timestamp, reverse=True):
             general_trend = 'Bullish' if signal.trend == 1 else 'Bearish'
             if signal.signal == 'RSI':
-                view += f"\n{format_timestamp(signal.timestamp)} {general_trend} *{signal.signal}* ({int(signal.rsi_value)}), {trend_labels[int(signal.trend)+1]} for {signal.get_horizon_display()} horizon"
+                view += f"\n {format_timestamp(signal.timestamp)} {general_trend} *{signal.signal}* ({int(signal.rsi_value)}), {trend_labels[int(signal.trend)+1]} for {signal.get_horizon_display()} horizon"
             elif signal.signal == 'RSI_Cumulative':
-                view += f"\n{format_timestamp(signal.timestamp)} {general_trend} *ITF Proprietary Alert*, {trend_labels[int(signal.trend)+1]} for {signal.get_horizon_display()} horizon"
+                view += f"\n {format_timestamp(signal.timestamp)} {general_trend} *ITF Proprietary Alert*, {trend_labels[int(signal.trend)+1]} for {signal.get_horizon_display()} horizon"
             elif signal.signal == 'SMA':
-                view += f"\n{format_timestamp(signal.timestamp)} {general_trend} *{signal.signal}* ({format_currency(signal.price, currency_symbol)}), {trend_labels[int(signal.trend)+1]} for {signal.get_horizon_display()} horizon"
+                view += f"\n {format_timestamp(signal.timestamp)} {general_trend} *{signal.signal}* ({format_currency(signal.price, currency_symbol)}), {trend_labels[int(signal.trend)+1]} for {signal.get_horizon_display()} horizon"
 
         itf_more_info_url = 'http://intelligenttrading.org/features/'
         view += f"\n[Get more signals on ITF website]({itf_more_info_url})"
-        view += f" or [Ask our representative](tg://user?id=458693263)"
+#        view += f" or [Ask our representative](tg://user?id=458693263)"
     except: # no signals
         pass
 
@@ -165,7 +165,9 @@ def itt(bot, update, args):
         update.message.reply_text("Please add coin abbreviation or trading pair to command. For example: `/itt BTC` or `/itt ETH_USDT`", ParseMode.MARKDOWN)
         return
 
-    trading_pairs_available = get_currency_pairs()
+    period_in_seconds = 2*60*60 if not LOCAL else 2000*60*60
+
+    trading_pairs_available = get_currency_pairs(source='all', period_in_seconds=period_in_seconds, counter_currency_format="text")
     trading_pair = parse_trading_pair_string(arg)
 
     # wrong arg format
@@ -182,7 +184,7 @@ def itt(bot, update, args):
             view = itt_view(trading_pair)
     # wrong counter currency
     elif (trading_pair['transaction_currency'], trading_pair['counter_currency']) not in trading_pairs_available:
-        good_trading_pairs = "` or `".join([f"{tc}_{cc}" for (tc,cc) in trading_pairs_for(trading_pair['transaction_currency'], trading_pairs_available)])
+        good_trading_pairs = "` or `".join([f"{tc}_{cc}" for (tc, cc) in trading_pairs_for(trading_pair['transaction_currency'], trading_pairs_available)])
         view = f"Sorry, I don't support this trading pair `{trading_pair['transaction_currency']}_{trading_pair['counter_currency']}`\n\n"
         if good_trading_pairs:
             view += f"Please use: `{good_trading_pairs}`"
