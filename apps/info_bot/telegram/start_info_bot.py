@@ -10,7 +10,7 @@ import logging
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram.ext import InlineQueryHandler
 
-from apps.info_bot.telegram.bot_commands import itt, info, arbitrage
+from apps.info_bot.telegram.bot_commands import itt, info, price
 from apps.info_bot.telegram.bot_commands import inline
 from apps.info_bot.telegram.bot_commands import special_commands
 
@@ -32,7 +32,7 @@ command1 - Description
 command2 - Another description
 
 itt - short info about coin or trading pair. For example: `/itt BTC` or `/itt XRP_ETH`
-arbitrage - show price for the trading pair at the different exchanges. For example: `/arbitrage BTC_USDT`
+price - show price for the trading pair at the different exchanges. For example: `/price BTC_USDT`
 info - list of supported coins, trading pairs and exchanges
 help - list available commands
 
@@ -50,7 +50,7 @@ help - list available commands
     dp.add_handler(CommandHandler('getme', special_commands.getme))
 
     dp.add_handler(CommandHandler('itt', itt.itt, pass_args=True))
-    dp.add_handler(CommandHandler('arbitrage', arbitrage.arbitrage, pass_args=True))
+    dp.add_handler(CommandHandler('price', price.price, pass_args=True))
     dp.add_handler(CommandHandler('info', info.info))
 
 

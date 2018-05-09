@@ -15,10 +15,10 @@ logger = logging.getLogger(__name__)
 
 POPULAR_COINS = ('BTC', 'DASH', 'ETH', 'LTC', 'XMR', 'XRP', 'ZEC')
 
-def precache_currency_info_for_info_bot():
-    for currency in POPULAR_COINS:
-        logger.info('Precaching: {} for telegram info_bot'.format(currency))
-        currency_info(currency, _refresh=True) # "heat the cache up" right after we've cleared it
+# def precache_currency_info_for_info_bot():
+#     for currency in POPULAR_COINS:
+#         logger.info('Precaching: {} for telegram info_bot'.format(currency))
+#         currency_info(currency, _refresh=True) # "heat the cache up" right after we've cleared it
 
 
 def parse_trading_pair_string(trading_pair_string):
@@ -36,12 +36,12 @@ def parse_trading_pair_string(trading_pair_string):
         if with_counter_currency:
             transaction_currency, counter_currency = with_counter_currency.groups()
 
-    return { 'transaction_currency': transaction_currency, 'counter_currency': counter_currency }
+    return {'transaction_currency': transaction_currency, 'counter_currency': counter_currency}
 
 # FIXME this function is dublicate for taskapp.helpers get_currency_pairs. Combine them in the future
 # Cache for 4 hours.
 @cache_memoize(4*60*60)
-def get_currency_pairs(source='all', period_in_seconds=400*60*60, counter_currency_format="text"):
+def get_currency_pairs(source='all', period_in_seconds=2*60*60, counter_currency_format="text"):
     """
     Return: [('BTC', 'USDT'), ('PINK', 'ETH'), ('ETH', 'BTC'),....] for counter_currency_format="text"
     or [('BTC', 2), ('PINK', 1), ('ETH', 0),....]
@@ -62,15 +62,24 @@ def get_currency_pairs(source='all', period_in_seconds=400*60*60, counter_curren
 
 def counter_currency_name(counter_currency_index):
     "return BTC for counter_currency_index=0"
-    return next((currency_name for index, currency_name in COUNTER_CURRENCY_CHOICES if index==counter_currency_index), None)
+    return next((currency_name for index, currency_name in COUNTER_CURRENCY_CHOICES if index == counter_currency_index), None)
 
-def default_counter_currency_for(transaction_currency, trading_pairs=[]):
+def default_counter_currency_for(transaction_currency, trading_pairs=None):
     # first USDT, BTC, ETH then others
     this_comes_first = ['USDT', 'BTC', 'ETH']
     counter_currencies = this_comes_first + list(set(COUNTER_CURRENCIES) - set(this_comes_first))
     for counter_currency in counter_currencies:
-        if (transaction_currency, counter_currency) in trading_pairs:
+        if trading_pairs and (transaction_currency, counter_currency) in trading_pairs:
             return counter_currency
+    return None
 
-def trading_pairs_for(transaction_currency, trading_pairs=[]):
-    return [(tc,cc) for (tc, cc) in trading_pairs if tc == transaction_currency]
+def trading_pairs_for(transaction_currency, trading_pairs=None):
+    if trading_pairs:
+        return [(tc, cc) for (tc, cc) in trading_pairs if tc == transaction_currency]
+    return None
+
+
+def natural_join(val, cnj="and"):
+    if isinstance(val, list):
+        return " ".join((", ".join(val[0:-1]), "%s %s" % (cnj, val[-1]))) if len(val) > 1 else val[0]
+    return val
