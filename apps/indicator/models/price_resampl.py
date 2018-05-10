@@ -120,4 +120,29 @@ def get_first_resampled_time(source, transaction_currency, counter_currency, res
 # TODO: to implement a backtesting @Karla need a price at a given time point
 # returns a resampled price at a given time point
 def get_price_at_timepoint(timestamp, source, transaction_currency, counter_currency, resample_period):
-    pass
+    prices_range = list(PriceResampl.objects.filter(
+        source=source,
+        resample_period=resample_period,
+        transaction_currency=transaction_currency,
+        counter_currency=counter_currency,
+        timestamp__gte = timestamp + timedelta(minutes=resample_period * 5),  # 5 period ahead in time
+        timestamp__lte=timestamp - timedelta(minutes=resample_period * 5),  # 5 period back in time
+    ).values('timestamp',  'close_price').order_by('timestamp'))
+
+    #convert to a timeseries
+    price = None
+    if prices_range:
+        ts = [rec['timestamp'] for rec in prices_range]
+        close_prices_ts = pd.Series(data=[rec['close_price'] for rec in prices_range], index=ts)
+    else:
+        logger.error(' no reasmple close prace at timepoint  ' + str(timestamp) + ' backtesting is not possible')
+        return None
+
+    # check if we have a price at a given timestamp and if not interpolate
+    #TODO: need to check it, possible does not work
+    price = close_prices_ts[timestamp]
+    if not price:
+        close_prices_ts.interpolate()
+        price = close_prices_ts[timestamp]
+
+    return price
