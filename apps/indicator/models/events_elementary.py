@@ -87,7 +87,7 @@ def _process_ai_simple(horizon, **kwargs):
             new_instance = EventsElementary.objects.create(
                 **kwargs,
                 event_name="ann_price_2class_simple",
-                event_value=df.iloc[-1]['class_change'],
+                event_value=int(df.iloc[-1]['class_change']),
             )
             logger.debug("   >>> ANN event detected and saved")
 
