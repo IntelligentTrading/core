@@ -19,10 +19,10 @@ class Rsi(AbstractIndicator):
 
     def get_rsi_bracket_value(self):
         rsi = self.rsi
-        if rsi is None:
+        if rsi is None or rsi==0.0 or rsi ==100.0:
             return 0
 
-        assert (rsi>=0.0) & (rsi<=100.0)
+        assert (rsi>0.0) & (rsi<100.0), '>>> ERROR: RSI has extreme value of 0 or 100, highly unlikely'
 
         rsi_strength = 0
         if rsi >= 0 and rsi <= 100 :
