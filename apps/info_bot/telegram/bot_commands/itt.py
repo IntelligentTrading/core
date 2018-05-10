@@ -1,25 +1,22 @@
 """ Commands:
 
-itt - Short info about currency. For example: /itt BTC
+itt - Short info about currency. For example: /itt BTC, /itt OMG_ETH
 """
-
-import math
+from datetime import timedelta
 import requests
-from datetime import datetime, timedelta
 
 from cache_memoize import cache_memoize
 from telegram import ParseMode
 
 from settings import INFO_BOT_CRYPTOPANIC_API_TOKEN, INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS
-from settings import COUNTER_CURRENCIES, LOCAL
+from settings import COUNTER_CURRENCIES
 
 from apps.indicator.models import Price, Volume
 from apps.signal.models import Signal
 
-from taskapp.helpers import get_source_name
+from apps.info_bot.helpers import format_currency, format_timestamp, parse_telegram_cryptocurrency_args
 
-from apps.info_bot.helpers import parse_trading_pair_string, get_currency_pairs
-from apps.info_bot.helpers import default_counter_currency_for, trading_pairs_for
+from taskapp.helpers import get_source_name
 
 
 
@@ -40,26 +37,6 @@ def diff_symbol(diff): # ↑ increase, ↓ decrease
         d_sym = ""
     return d_sym
 
-def format_timestamp(timestamp):
-    return timestamp.strftime('%b %d, %H:%M')
-
-def format_currency(amount, currency_symbol='', in_satoshi=True):
-    if amount == 0:
-        return currency_symbol + '0.00'
-
-    if in_satoshi: # convert from satoshis
-        amount = float(amount * float(10**-8))
-
-    common_logarithm = int(math.log10(abs(amount)))
-    if common_logarithm > 3: # 12345.2212 -> 12345
-        currency_norm = "{:,.0f}".format(amount)
-    elif common_logarithm > 0: # 123.2212 -> 123.22
-        currency_norm = "{:.2f}".format(amount)
-    else: # 0.123400000 -> 0.1234
-        currency_norm = "{:.6f}".format(amount).rstrip('0').rstrip('.')
-
-    return currency_symbol + currency_norm
-
 def sentiment_from_cryptopanic(currency):
     INFO_BOT_CRYPTOPANIC_API_URL = "https://cryptopanic.com/api/posts/?auth_token={}&filter=trending&currencies={}".format(
         INFO_BOT_CRYPTOPANIC_API_TOKEN, currency)
@@ -78,9 +55,6 @@ def sentiment_from_cryptopanic(currency):
 # def precache_currency_info():
 #     for currency in POPULAR_COINS:
 #         currency_info(currency, _refresh=True) # "heat the cache up" right after we've cleared it
-
-
-
 
 
 ## New helpers
@@ -138,14 +112,14 @@ def itt_view(trading_pair):
         for signal in sorted(latest_signals, key=lambda s: s.timestamp, reverse=True):
             general_trend = 'Bullish' if signal.trend == 1 else 'Bearish'
             if signal.signal == 'RSI':
-                view += f"\n {format_timestamp(signal.timestamp)} {general_trend} *{signal.signal}* ({int(signal.rsi_value)}), {trend_labels[int(signal.trend)+1]} for {signal.get_horizon_display()} horizon"
+                view += f"\n *•* {format_timestamp(signal.timestamp)} {general_trend} *{signal.signal}* ({int(signal.rsi_value)}), {trend_labels[int(signal.trend)+1]} for {signal.get_horizon_display()} horizon. Price {format_currency(signal.price, currency_symbol)}."
             elif signal.signal == 'RSI_Cumulative':
-                view += f"\n {format_timestamp(signal.timestamp)} {general_trend} *ITF Proprietary Alert*, {trend_labels[int(signal.trend)+1]} for {signal.get_horizon_display()} horizon"
+                view += f"\n *•* {format_timestamp(signal.timestamp)} {general_trend} *ITF Proprietary Alert*, {trend_labels[int(signal.trend)+1]} for {signal.get_horizon_display()} horizon. Price {format_currency(signal.price, currency_symbol)}."
             elif signal.signal == 'SMA':
-                view += f"\n {format_timestamp(signal.timestamp)} {general_trend} *{signal.signal}* ({format_currency(signal.price, currency_symbol)}), {trend_labels[int(signal.trend)+1]} for {signal.get_horizon_display()} horizon"
+                view += f"\n *•* {format_timestamp(signal.timestamp)} {general_trend} *{signal.signal}* ({format_currency(signal.price, currency_symbol)}), {trend_labels[int(signal.trend)+1]} for {signal.get_horizon_display()} horizon. Price {format_currency(signal.price, currency_symbol)}."
 
         itf_more_info_url = 'http://intelligenttrading.org/features/'
-        view += f"\n[Get more signals on ITF website]({itf_more_info_url})"
+        view += f"\n\n[Get more signals on ITF website]({itf_more_info_url})"
 #        view += f" or [Ask our representative](tg://user?id=458693263)"
     except: # no signals
         pass
@@ -159,39 +133,8 @@ def itt_view(trading_pair):
 
 ## user commands
 def itt(bot, update, args):
-    try:
-        arg = args[0].upper()
-    except:
-        update.message.reply_text("Please add coin abbreviation or trading pair to command. For example: `/itt BTC` or `/itt ETH_USDT`", ParseMode.MARKDOWN)
-        return
-
-    period_in_seconds = 2*60*60 if not LOCAL else 2000*60*60
-
-    trading_pairs_available = get_currency_pairs(source='all', period_in_seconds=period_in_seconds, counter_currency_format="text")
-    trading_pair = parse_trading_pair_string(arg)
-
-    # wrong arg format
-    if trading_pair['transaction_currency'] == trading_pair['counter_currency'] == None:
-        view = f"Sorry, I can't understand this coin format: `{args[0]}`. Please enter: `/itt BTC` or `/itt ETH_USDT`"
-
-    # we don have info on this coin
-    elif trading_pair['counter_currency'] == None:
-        trading_pair['counter_currency'] = default_counter_currency_for(trading_pair['transaction_currency'], trading_pairs_available)
-        if trading_pair['counter_currency'] == None:
-            coins = set(coin for coin, _ in trading_pairs_available)
-            view = f"Sorry, I don't support `{trading_pair['transaction_currency']}`\n\nPlease use one of this coins:\n\n{', '.join(coins)}.\n\nOr just enter `/itt BTC` or `/itt ETH_USDT`"
-        else:
-            view = itt_view(trading_pair)
-    # wrong counter currency
-    elif (trading_pair['transaction_currency'], trading_pair['counter_currency']) not in trading_pairs_available:
-        good_trading_pairs = "` or `".join([f"{tc}_{cc}" for (tc, cc) in trading_pairs_for(trading_pair['transaction_currency'], trading_pairs_available)])
-        view = f"Sorry, I don't support this trading pair `{trading_pair['transaction_currency']}_{trading_pair['counter_currency']}`\n\n"
-        if good_trading_pairs:
-            view += f"Please use: `{good_trading_pairs}`"
-
-    # all good and well
-    else:
+    trading_pair = parse_telegram_cryptocurrency_args(args=args, update=update, command='itt')
+    if trading_pair:
         view = itt_view(trading_pair)
-
-    update.message.reply_text(view, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+        update.message.reply_text(view, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
     return

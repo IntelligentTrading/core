@@ -1,11 +1,14 @@
 import logging
+import math
 import re
 import time
+
+from telegram import ParseMode
 
 from cache_memoize import cache_memoize
 
 from apps.indicator.models import Price, Volume
-from settings import COUNTER_CURRENCY_CHOICES, COUNTER_CURRENCIES
+from settings import COUNTER_CURRENCY_CHOICES, COUNTER_CURRENCIES, LOCAL
 
 #from apps.info_bot.telegram.bot_commands.itt import currency_info
 
@@ -83,3 +86,61 @@ def natural_join(val, cnj="and"):
     if isinstance(val, list):
         return " ".join((", ".join(val[0:-1]), "%s %s" % (cnj, val[-1]))) if len(val) > 1 else val[0]
     return val
+
+def format_timestamp(timestamp):
+    return timestamp.strftime('%b %d, %H:%M')
+
+def format_currency(amount, currency_symbol='', in_satoshi=True):
+    if amount == 0:
+        return currency_symbol + '0.00'
+
+    if in_satoshi: # convert from satoshis
+        amount = float(amount * float(10**-8))
+
+    common_logarithm = int(math.log10(abs(amount)))
+    if common_logarithm > 3: # 12345.2212 -> 12345
+        currency_norm = "{:,.0f}".format(amount)
+    elif common_logarithm > 0: # 123.2212 -> 123.22
+        currency_norm = "{:.2f}".format(amount)
+    else: # 0.123400000 -> 0.1234
+        currency_norm = "{:.6f}".format(amount).rstrip('0').rstrip('.')
+
+    return currency_symbol + currency_norm
+
+
+def parse_telegram_cryptocurrency_args(args, update, command):
+    try:
+        arg = args[0].upper()
+    except:
+        update.message.reply_text(f"Please add coin abbreviation or trading pair to command. For example: `/{command} BTC` or `/{command} ETH_USDT`", ParseMode.MARKDOWN)
+        return None
+
+    period_in_seconds = 2*60*60 if not LOCAL else 2000*60*60 # we search trading_pairs for this period back in time
+
+    trading_pairs_available = get_currency_pairs(source='all', period_in_seconds=period_in_seconds, counter_currency_format="text")
+    trading_pair = parse_trading_pair_string(arg)
+
+    # wrong arg format
+    if trading_pair['transaction_currency'] == trading_pair['counter_currency'] == None:
+        update.message.reply_text(f"Sorry, I can't understand this coin format: `{args[0]}`. Please enter: `/{command} BTC` or `/{command} ETH_USDT`", ParseMode.MARKDOWN)
+        return None
+    # we don have info on this coin
+    elif trading_pair['counter_currency'] is None:
+        trading_pair['counter_currency'] = default_counter_currency_for(trading_pair['transaction_currency'], trading_pairs_available)
+        if trading_pair['counter_currency'] is None:
+            coins = set(coin for coin, _ in trading_pairs_available)
+            update.message.reply_text(f"Sorry, I don't support `{trading_pair['transaction_currency']}`\n\nPlease use one of this coins:\n\n{', '.join(coins)}.\n\nOr just enter `/{command} BTC` or `/{command} ETH_USDT`", ParseMode.MARKDOWN)
+            return None
+        else:
+            return trading_pair
+    # wrong counter currency
+    elif (trading_pair['transaction_currency'], trading_pair['counter_currency']) not in trading_pairs_available:
+        good_trading_pairs = "` or `".join([f"{tc}_{cc}" for (tc, cc) in trading_pairs_for(trading_pair['transaction_currency'], trading_pairs_available)])
+        view = f"Sorry, I don't support this trading pair `{trading_pair['transaction_currency']}_{trading_pair['counter_currency']}`\n\n"
+        if good_trading_pairs:
+            view += f"Please use: `{good_trading_pairs}`"
+        update.message.reply_text(view, ParseMode.MARKDOWN)
+        return None
+    # all good and well
+    else:
+        return trading_pair

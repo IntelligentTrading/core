@@ -11,6 +11,7 @@ from apps.info_bot.helpers import get_currency_pairs
 from settings import LOCAL
 
 
+
 def info_view(update):
     view = f'Hello, hello, {update.message.from_user.first_name}!\n\n'
 
