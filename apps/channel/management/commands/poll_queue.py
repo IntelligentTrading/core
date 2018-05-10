@@ -87,5 +87,5 @@ def process_message_from_queue(message_body):
             except Exception as e:
                 logger.debug(">>>> Error saving Volume for {}: {}".format(item['symbol'], e))
     
-    logger.debug("Message for {} saved to db. Coins: {}".format(get_source_name(source_code), ",".join(processed)))
+    #logger.debug("Message for {} saved to db. Coins: {}".format(get_source_name(source_code), ",".join(processed)))
     logger.info("Message for {} ({}) saved to db".format(get_source_name(source_code), len(processed)))
