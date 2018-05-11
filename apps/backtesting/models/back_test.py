@@ -1,5 +1,4 @@
 import logging
-import time
 from unixtimestampfield.fields import UnixTimeStampField
 from django.db import models
 from apps.strategy.models.rsi_sma_strategies import *
@@ -8,9 +7,6 @@ from apps.strategy.models.ichi_strategies import *
 from apps.indicator.models.price_resampl import get_price_at_timepoint, PriceResampl
 from apps.signal.models.signal import ALL_SIGNALS
 from datetime import datetime
-from apps.indicator.models.price import Price
-from settings import PERIODS_LIST
-import pandas as pd
 from enum import Enum
 
 logger = logging.getLogger(__name__)
@@ -52,6 +48,9 @@ class BackTest(models.Model):
 
     # counter currency
     counter_currency = models.SmallIntegerField(null=False)
+
+    # source exchange
+    source = models.SmallIntegerField(null=False)
 
     # resample period
     resample_period = models.PositiveSmallIntegerField(null=False)
@@ -97,8 +96,8 @@ class BackTest(models.Model):
         super(BackTest, self).__init__()
 
         self.strategy_class_name = str(strategy_class_name).split(".")[-1][:-2]  # TODO: fix the received names
-        self.start_timestamp = start_timeframe   # we need to keep this separately, as Django fields are autocast to datetime
-        self.end_timestamp = end_timeframe
+        self.start_timeframe = start_timeframe   # we need to keep this separately, as Django fields are autocast to datetime
+        self.end_timeframe = end_timeframe
         self.timestamp = end_timeframe
 
     def run_backtest_on_one_curency_pair(self, source, transaction_currency, counter_currency, resample_period):
@@ -118,13 +117,13 @@ class BackTest(models.Model):
                                  resample_period=resample_period)
 
         # extract all strategy signals
-        signals = strategy.get_all_signals_in_time_period(self.start_timestamp, self.end_timestamp)
+        signals = strategy.get_all_signals_in_time_period(self.start_timeframe, self.end_timeframe)
 
         # simulate trading based on strategy signals
         dict = self.simulate_trading(signals, START_CASH, transaction_currency, counter_currency,
-                                   self.start_timestamp, self.end_timestamp, resample_period, source)
+                                     self.start_timeframe, self.end_timeframe, resample_period, source)
         if dict is not None:
-            self.create_row_and_save(transaction_currency, counter_currency, resample_period, dict)
+            self.create_row_and_save(dict)
         return dict
 
 
@@ -138,65 +137,19 @@ class BackTest(models.Model):
         Backtests the strategy provided in the constructor on all currency pairs and all exchangers and
         computes aggregated statistics.
         """
-
-        # TODO: decide which tuples we will use in the end
-        tuples = get_all_currency_tuples()
-
-        # iterate over all currencies and exchangers (POLONIEX etc) with run_backtest_on_one_curency_pair
-        logger.info("Started backtesting on all currency...")
-        strategy_backtest_results = None
-
-        #atomic_tuples = [(0, 'BTC', 2), (0, 'ETH', 0)] # generate all triples you need (source/transact_curr/counter_curr)
-        #for source, transaction_currency, counter_currency in atomic_tuples:
-        for tuple in tuples:
-            for resample_period in PERIODS_LIST:
-                source = tuple["source"]
-                transaction_currency = tuple["transaction_currency"]
-                counter_currency = tuple["counter_currency"]
-                backtest_result = self.run_backtest_on_one_curency_pair(source, transaction_currency, counter_currency, resample_period)
-                if backtest_result is None:  # the strategy generated no trades
-                    continue
-                backtest_result_df = pd.DataFrame.from_records([backtest_result])
-                self.create_row_and_save(transaction_currency, counter_currency, resample_period, backtest_result)
-                if strategy_backtest_results is None:
-                    strategy_backtest_results = backtest_result_df
-                else:
-                    strategy_backtest_results = strategy_backtest_results.append(backtest_result_df, ignore_index=True)
-
-        logger.info("Ended backtesting on all currency.")
-
-        # compute aggregated statistics for backtest runs on all currency pairs
-        #self.mean_profit_percent = strategy_backtest_results["profit_percent"].mean()
-        #self.mean_profit_percent_USDT = strategy_backtest_results["profit_percent_USDT"].mean()
-        #self.mean_num_trades = strategy_backtest_results["num_trades"].mean()
-        #self.mean_num_profitable_trade_pairs = strategy_backtest_results["num_profitable_trades"].mean()
-        #self.mean_num_buys = strategy_backtest_results["num_buys"].mean()
-        #self.mean_num_sells = strategy_backtest_results["num_sells"].mean()
-        #self.mean_avg_profit_per_trade_pair = strategy_backtest_results["average_profit_percent_per_trade"].mean()
-        #self.mean_buy_and_hold_profit_percent = strategy_backtest_results["profit_buy_and_hold_percent"].mean()
-        #self.mean_buy_and_hold_profit_percent_USDT = strategy_backtest_results[
-        #    "profit_buy_and_hold_percent_USDT"].mean()
-        #self.mean_percent_gain_over_buy_and_hold = strategy_backtest_results["percent_gain_over_buy_and_hold"].mean()
-        #self.mean_percent_gain_over_buy_and_hold_USDT = strategy_backtest_results["percent_gain_over_buy_and_hold_USDT"].mean()
-
-        # for debugging
-        # add mean and stdev columns to the dataframe (for debugging)
-        strategy_backtest_results.loc["mean"] = strategy_backtest_results.mean(axis=0)
-        strategy_backtest_results.loc["stdev"] = strategy_backtest_results.std(axis=0)
-
-        writer = pd.ExcelWriter("backtest-{}-{}-{}.xlsx".format(self.strategy_class_name, self.start_timeframe, self.end_timeframe))
-        strategy_backtest_results.to_excel(writer, 'Results')
-        writer.save()
+        pass
+        # in the current version, the looping over currency pairs is done in helpers.py
 
         # TODO: run the same for several-currency strategies
 
-    def create_row_and_save(self, transaction_currency, counter_currency, resample_period, strategy_backtest_results):
-        self.start_timeframe = self.start_timestamp
-        self.end_timeframe = self.end_timestamp
-        self.timestamp = self.end_timestamp
-        self.transaction_currency = transaction_currency
-        self.counter_currency = counter_currency
-        self.resample_period = resample_period
+    def create_row_and_save(self, strategy_backtest_results):
+        self.start_timeframe = self.start_timeframe
+        self.end_timeframe = self.end_timeframe
+        self.timestamp = self.end_timeframe
+        self.transaction_currency = strategy_backtest_results["transaction_currency"]
+        self.counter_currency = strategy_backtest_results["counter_currency"]
+        self.resample_period = strategy_backtest_results["resample_period"]
+        self.source = strategy_backtest_results["source"]
         self.profit_percent = strategy_backtest_results["profit_percent"]
         self.profit_percent_USDT = strategy_backtest_results["profit_percent_USDT"]
         self.num_trades = strategy_backtest_results["num_trades"]
@@ -217,16 +170,16 @@ class BackTest(models.Model):
         pass
 
     # TODO: different transaction costs for different exchangers
-    def simulate_trading(self, signals, start_cash, transaction_currency, counter_currency, start_timestamp,
-                         end_timestamp, resample_period, source, transaction_cost_percent=0.0025):
+    def simulate_trading(self, signals, start_cash, transaction_currency, counter_currency, start_timeframe,
+                         end_timeframe, resample_period, source, transaction_cost_percent=0.0025):
         """
         Simulates trading with one currency based on signals.
         :param signals: a queryset of signals
         :param start_cash: starting amount of counter_currency
         :param transaction_currency: currency that we're buying
         :param counter_currency: our base currency
-        :param start_timestamp: start of the time period that is being evaluated
-        :param end_timestamp: end of the time period that is being evaluated
+        :param start_timeframe: start of the time period that is being evaluated
+        :param end_timeframe: end of the time period that is being evaluated
         :param resample_period: resample period (horizon)
         :param source: code of exchanger used
         :param transaction_cost_percent: exchanger fee per each trade
@@ -243,7 +196,7 @@ class BackTest(models.Model):
         average_profit_percent_per_trade = 0    # average profit obtained by a buy-sell pair
 
         # convert start value to USDT (for performance statistics)
-        start_cash_USDT = calculate_value_in_USDT(start_cash, start_timestamp,
+        start_cash_USDT = calculate_value_in_USDT(start_cash, start_timeframe,
                                                   counter_currency, source, resample_period)
 
         # store the time of the last trade
@@ -265,7 +218,7 @@ class BackTest(models.Model):
                 num_sells += 1
 
                 # how much did we make on this buy - sell pair (in percent)
-                buy_sell_pair_profit_percent = (invested_on_buy - cash) / invested_on_buy
+                buy_sell_pair_profit_percent = (cash - invested_on_buy) / invested_on_buy
                 invested_on_buy = 0  # reset the invested amount for the trade pair
                 average_profit_percent_per_trade += buy_sell_pair_profit_percent
 
@@ -288,14 +241,14 @@ class BackTest(models.Model):
         # housekeeping in case that the last signal was a buy signal, meaning we didn't end up with cash but with crypto
         # calculate the value of this crypto in counter_currency to estimate profit
         if crypto > 0:
-            price = get_price_at_timepoint(end_timestamp, source, transaction_currency,  # TODO what if no price data?
-                                           counter_currency, resample_period)
+            price = get_price_at_timepoint(datetime.utcfromtimestamp(end_timeframe), source,
+                                           transaction_currency, counter_currency, resample_period)
             if price is None:
                 end_cash = None
                 end_cash_USDT = None
             else:
                 end_cash = execute_sell(crypto, price, transaction_cost_percent)  # simulate selling at the end of timeframe
-                end_cash_USDT = calculate_value_in_USDT(end_cash, end_timestamp, counter_currency, source, resample_period)
+                end_cash_USDT = calculate_value_in_USDT(end_cash, end_timeframe, counter_currency, source, resample_period)
         else:
             end_cash = cash
             end_cash_USDT = calculate_value_in_USDT(end_cash, last_trade_timestamp.timestamp(),
@@ -311,7 +264,7 @@ class BackTest(models.Model):
 
         average_profit_percent_per_trade /= num_trades
         profit_buy_and_hold = calculate_profit_buy_and_hold(start_cash, source, transaction_currency, counter_currency,
-                                                            resample_period, start_timestamp, end_timestamp,
+                                                            resample_period, start_timeframe, end_timeframe,
                                                             transaction_cost_percent)
         if profit_buy_and_hold is not None and profit is not None:
             profit_buy_and_hold_percent = profit_buy_and_hold / start_cash
@@ -331,8 +284,8 @@ class BackTest(models.Model):
             profit_buy_and_hold_USDT = profit_buy_and_hold
         else:
             profit_buy_and_hold_USDT = calculate_profit_buy_and_hold_USDT(start_cash, source, transaction_currency,
-                                                                          counter_currency, resample_period, start_timestamp,
-                                                                          end_timestamp, transaction_cost_percent)
+                                                                          counter_currency, resample_period, start_timeframe,
+                                                                          end_timeframe, transaction_cost_percent)
         if profit_buy_and_hold_USDT is not None:
             profit_buy_and_hold_percent_USDT = profit_buy_and_hold_USDT / start_cash_USDT
             percent_gain_over_buy_and_hold_USDT = profit_percent_USDT - profit_buy_and_hold_percent_USDT
@@ -367,18 +320,12 @@ class BackTest(models.Model):
 
 # checks if a signal indicates sell
 def indicates_sell(signal_name):
-    if ALL_SIGNALS[signal_name].trend == -1:
-        return True
-    else:
-        return False
+    return ALL_SIGNALS[signal_name].trend == -1
 
 
 # checks if a signal indicates buy
 def indicates_buy(signal_name):
-    if ALL_SIGNALS[signal_name].trend == 1:
-        return True
-    else:
-        return False
+    return ALL_SIGNALS[signal_name].trend == 1
 
 
 # calculates how much currency we can buy for a given amount of cash and given the transaction costs
@@ -422,14 +369,12 @@ def calculate_profit_buy_and_hold_USDT(cash, source, transaction_currency, count
 
     # convert cash value to USDT
     cash_USDT = calculate_value_in_USDT(cash, start_timeframe, counter_currency, source, resample_period)
-
     if cash_USDT is None:
         return None
 
     # buying at the start of timeframe for all cash
     start_price = get_price_at_timepoint(datetime.utcfromtimestamp(start_timeframe),
                                          source, transaction_currency, counter_currency, resample_period)
-
     if start_price is None:
         return None
 
@@ -438,7 +383,6 @@ def calculate_profit_buy_and_hold_USDT(cash, source, transaction_currency, count
     # selling everything at the end of timeframe
     end_price = get_price_at_timepoint(datetime.utcfromtimestamp(end_timeframe),
                                        source, transaction_currency, counter_currency, resample_period)
-
     if end_price is None:
         return None
 
@@ -446,7 +390,6 @@ def calculate_profit_buy_and_hold_USDT(cash, source, transaction_currency, count
 
     # convert end cash value to USDT
     end_cash_USDT = calculate_value_in_USDT(end_cash, end_timeframe, counter_currency, source, resample_period)
-
     if end_cash_USDT is None:
         return None
 
