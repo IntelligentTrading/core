@@ -273,7 +273,7 @@ class BackTest(models.Model):
             profit_buy_and_hold_percent = None
             percent_gain_over_buy_and_hold = None
 
-        if end_cash_USDT is not None:
+        if end_cash_USDT is not None and start_cash_USDT is not None:
             profit_USDT = end_cash_USDT - start_cash_USDT
             profit_percent_USDT = profit_USDT / start_cash_USDT
         else:
@@ -286,7 +286,7 @@ class BackTest(models.Model):
             profit_buy_and_hold_USDT = calculate_profit_buy_and_hold_USDT(start_cash, source, transaction_currency,
                                                                           counter_currency, resample_period, start_timeframe,
                                                                           end_timeframe, transaction_cost_percent)
-        if profit_buy_and_hold_USDT is not None:
+        if profit_buy_and_hold_USDT is not None and profit_percent_USDT is not None and start_cash_USDT is not None:
             profit_buy_and_hold_percent_USDT = profit_buy_and_hold_USDT / start_cash_USDT
             percent_gain_over_buy_and_hold_USDT = profit_percent_USDT - profit_buy_and_hold_percent_USDT
         else:
