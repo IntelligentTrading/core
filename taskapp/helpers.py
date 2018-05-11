@@ -26,7 +26,9 @@ from apps.backtesting.models.back_test import BackTest
 
 from settings import USDT_COINS, BTC_COINS
 from settings import SHORT, MEDIUM, LONG, HORIZONS_TIME2NAMES
-
+from apps.backtesting.models.back_test import get_all_currency_tuples
+import pandas as pd
+from settings import PERIODS_LIST
 
 logger = logging.getLogger(__name__)
 
@@ -222,7 +224,6 @@ def _compute_and_save_indicators(params):
             try:
                 s = strategy(**indicator_params_dict)
                 now_signals_set = s.check_signals_now()
-
                 logger.debug("  NOW: found Signal belongs to strategy : " + str(strategy) + " : " + str(now_signals_set))
 
                 # Emit to a signal from a strategy to sqs without saving it in the Signal table
@@ -265,10 +266,60 @@ def _backtest_all_strategies():
 
     # run reavaluation
     for strategy_class in strategies_class_list:
-        back_test_run = BackTest(strategy_class, time_start, time_end)
-        back_test_run.run_backtest_on_all_currency()
-        back_test_run.save()
 
+
+        tuples = get_all_currency_tuples()
+
+        # iterate over all currencies and exchangers (POLONIEX etc) with run_backtest_on_one_curency_pair
+        logger.info("Started backtesting on all currency...")
+        strategy_backtest_results = None
+
+        # atomic_tuples = [(0, 'BTC', 2), (0, 'ETH', 0)] # generate all triples you need (source/transact_curr/counter_curr)
+        # for source, transaction_currency, counter_currency in atomic_tuples:
+        strategy_backtest_results = None
+        for tuple in tuples:
+            for resample_period in PERIODS_LIST:
+                source = tuple["source"]
+                transaction_currency = tuple["transaction_currency"]
+                counter_currency = tuple["counter_currency"]
+                back_test_run = BackTest(strategy_class, time_start, time_end)
+                backtest_result = back_test_run.run_backtest_on_one_curency_pair(source, transaction_currency, counter_currency, resample_period)
+
+                if backtest_result is None:  # the strategy generated no trades
+                    continue
+                backtest_result["status"] = backtest_result["status"].value # for saving to Excel
+                backtest_result_df = pd.DataFrame.from_records([backtest_result])
+                if strategy_backtest_results is None:
+                    strategy_backtest_results = backtest_result_df
+                else:
+                    strategy_backtest_results = strategy_backtest_results.append(backtest_result_df, ignore_index=True)
+
+        logger.info("Ended backtesting on all currency.")
+
+        # compute aggregated statistics for backtest runs on all currency pairs
+        # self.mean_profit_percent = strategy_backtest_results["profit_percent"].mean()
+        # self.mean_profit_percent_USDT = strategy_backtest_results["profit_percent_USDT"].mean()
+        # self.mean_num_trades = strategy_backtest_results["num_trades"].mean()
+        # self.mean_num_profitable_trade_pairs = strategy_backtest_results["num_profitable_trades"].mean()
+        # self.mean_num_buys = strategy_backtest_results["num_buys"].mean()
+        # self.mean_num_sells = strategy_backtest_results["num_sells"].mean()
+        # self.mean_avg_profit_per_trade_pair = strategy_backtest_results["average_profit_percent_per_trade"].mean()
+        # self.mean_buy_and_hold_profit_percent = strategy_backtest_results["profit_buy_and_hold_percent"].mean()
+        # self.mean_buy_and_hold_profit_percent_USDT = strategy_backtest_results[
+        #    "profit_buy_and_hold_percent_USDT"].mean()
+        # self.mean_percent_gain_over_buy_and_hold = strategy_backtest_results["percent_gain_over_buy_and_hold"].mean()
+        # self.mean_percent_gain_over_buy_and_hold_USDT = strategy_backtest_results["percent_gain_over_buy_and_hold_USDT"].mean()
+
+        # for debugging
+        # add mean and stdev columns to the dataframe (for debugging)
+        strategy_backtest_results.loc["mean"] = strategy_backtest_results.mean(axis=0)
+        strategy_backtest_results.loc["stdev"] = strategy_backtest_results.std(axis=0)
+        strategy_class_name = str(strategy_class).split(".")[-1][:-2]
+
+        writer = pd.ExcelWriter(
+            "backtest-{}-{}-{}.xlsx".format(strategy_class_name, time_start, time_end))
+        strategy_backtest_results.to_excel(writer, 'Results')
+        writer.save()
 
     # save in backtest db table
 
