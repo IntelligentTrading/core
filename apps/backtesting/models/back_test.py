@@ -96,7 +96,7 @@ class BackTest(models.Model):
         super(BackTest, self).__init__()
 
         self.strategy_class_name = str(strategy_class_name).split(".")[-1][:-2]  # TODO: fix the received names
-        self.start_timeframe = start_timeframe   # we need to keep this separately, as Django fields are autocast to datetime
+        self.start_timeframe = start_timeframe 
         self.end_timeframe = end_timeframe
         self.timestamp = timestamp
 
