@@ -248,7 +248,6 @@ def _compute_and_save_indicators(params):
 
 
 
-#TODO 2@Karla: this is only a stub, please add whatever you deem necesary here
 # run by scheduler from trawl_poloniex every XXX hours
 def _backtest_all_strategies():
 
@@ -264,14 +263,11 @@ def _backtest_all_strategies():
 
     # run reavaluation
     for strategy_class in strategies_class_list:
-        begin = time.time()
-        strategy_class_name = str(strategy_class).split(".")[-1][:-2]  # TODO: get this from strategy?
-        #time_start = 1518523200  # first instance of RSI_Cumulative signal
-        #time_end = 1524355233.882  # April 23
-        #tuples = [{"source":0, "transaction_currency":"OMG", "counter_currency":0}, ]
+        # begin = time.time()
+        strategy_class_name = str(strategy_class).split(".")[-1][:-2]  # TODO: get this from strategy
 
         # iterate over all currencies and exchangers (POLONIEX etc) with run_backtest_on_one_curency_pair
-        logger.info("Started backtesting on all currency...")
+        logger.info("Started backtesting {} on all currency...".format(strategy_class_name))
 
         # strategy_backtest_results = None
         for tuple in tuples:
@@ -279,36 +275,14 @@ def _backtest_all_strategies():
                 source = tuple["source"]
                 transaction_currency = tuple["transaction_currency"]
                 counter_currency = tuple["counter_currency"]
-                #logger.info("Evaluating {} (resample period {})".format(tuple, resample_period))
-                back_test_run = BackTest(strategy_class, time_start, time_end)
+                timestamp = time.time()
+                back_test_run = BackTest(strategy_class, timestamp, time_start, time_end)
                 back_test_run.run_backtest_on_one_curency_pair(source, transaction_currency,
                                                                counter_currency, resample_period)
 
-
-                # backtest_result = back_test_run.run_backtest_on_one_curency_pair(source, transaction_currency, counter_currency, resample_period)
-                # if backtest_result is None:  # the strategy generated no trades
-                #    continue
-                # backtest_result["status"] = backtest_result["status"].value # for saving to Excel
-                # backtest_result_df = pd.DataFrame.from_records([backtest_result])
-                # if strategy_backtest_results is None:
-                #    strategy_backtest_results = backtest_result_df
-                # else:
-                #    strategy_backtest_results = strategy_backtest_results.append(backtest_result_df, ignore_index=True)
-
         logger.info("Ended backtesting {} on all currency.".format(strategy_class_name))
-        end = time.time()
-        logger.info("Time to test strategy {}: {} minutes".format(strategy_class_name, (end-begin)/60))
-
-        # for debugging, save strategy stats to Excel
-        # add mean and stdev columns to the dataframe (for debugging)
-        # strategy_backtest_results.loc["mean"] = strategy_backtest_results.mean(axis=0)
-        # strategy_backtest_results.loc["stdev"] = strategy_backtest_results.std(axis=0)
-
-
-        # writer = pd.ExcelWriter(
-        #    "backtest-{}-{}-{}.xlsx".format(strategy_class_name, time_start, time_end))
-        # strategy_backtest_results.to_excel(writer, 'Results')
-        # writer.save()
+        # end = time.time()
+        # logger.info("Time to test strategy {}: {} minutes".format(strategy_class_name, (end-begin)/60))
 
 
 

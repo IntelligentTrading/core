@@ -91,14 +91,14 @@ class BackTest(models.Model):
     # calculation status
     status = models.CharField(max_length=6, null=False, blank=False)
 
-    def __init__(self, strategy_class_name, start_timeframe, end_timeframe):
+    def __init__(self, strategy_class_name, timestamp, start_timeframe, end_timeframe):
         # see https://stackoverflow.com/questions/24537091/error-no-attribute-state
         super(BackTest, self).__init__()
 
         self.strategy_class_name = str(strategy_class_name).split(".")[-1][:-2]  # TODO: fix the received names
         self.start_timeframe = start_timeframe   # we need to keep this separately, as Django fields are autocast to datetime
         self.end_timeframe = end_timeframe
-        self.timestamp = end_timeframe
+        self.timestamp = timestamp
 
     def run_backtest_on_one_curency_pair(self, source, transaction_currency, counter_currency, resample_period):
         """
@@ -126,7 +126,6 @@ class BackTest(models.Model):
             self.create_row_and_save(dict)
         return dict
 
-
     def run_backtest_on_several_currency_pairs(self):
         # allow moving all money into another currency
         # TODO: need signals from Alex to carry currency info
@@ -143,9 +142,6 @@ class BackTest(models.Model):
         # TODO: run the same for several-currency strategies
 
     def create_row_and_save(self, strategy_backtest_results):
-        self.start_timeframe = self.start_timeframe
-        self.end_timeframe = self.end_timeframe
-        self.timestamp = self.end_timeframe
         self.transaction_currency = strategy_backtest_results["transaction_currency"]
         self.counter_currency = strategy_backtest_results["counter_currency"]
         self.resample_period = strategy_backtest_results["resample_period"]
@@ -317,7 +313,6 @@ class BackTest(models.Model):
         return dict
 
 
-
 # checks if a signal indicates sell
 def indicates_sell(signal_name):
     return ALL_SIGNALS[signal_name].trend == -1
@@ -395,7 +390,7 @@ def calculate_profit_buy_and_hold_USDT(cash, source, transaction_currency, count
 
     return end_cash_USDT - cash_USDT
 
-
+# calculates the value of counter_currency amount in USDT on a given timestamp
 def calculate_value_in_USDT(amount, timestamp, counter_currency, source, resample_period):
     value = None
     if counter_currency == 2:   # trivial case, if the value is already in USDT
