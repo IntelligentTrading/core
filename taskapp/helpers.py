@@ -268,8 +268,6 @@ def _backtest_all_strategies():
 
         # iterate over all currencies and exchangers (POLONIEX etc) with run_backtest_on_one_curency_pair
         logger.info("Started backtesting {} on all currency...".format(strategy_class_name))
-
-        # strategy_backtest_results = None
         for tuple in tuples:
             for resample_period in PERIODS_LIST:
                 source = tuple["source"]
