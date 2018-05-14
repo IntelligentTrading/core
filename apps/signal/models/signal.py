@@ -13,7 +13,7 @@ from apps.common.behaviors import Timestampable
 from apps.indicator.models import Price
 from settings import QUEUE_NAME, AWS_OPTIONS, BETA_QUEUE_NAME, TEST_QUEUE_NAME, PERIODS_LIST
 from settings import SOURCE_CHOICES, POLONIEX, COUNTER_CURRENCY_CHOICES, BTC
-from settings import SNS_SIGNALS_TOPIC_ARN
+from settings import SNS_SIGNALS_TOPIC_ARN, EMIT_SIGNALS
 
 from django.db import models
 from unixtimestampfield.fields import UnixTimeStampField
@@ -160,7 +160,7 @@ class Signal(Timestampable, models.Model):
         return False
 
 def publish_message_to_sns(message, topic_arn=None):
-    if topic_arn is not None:
+    if topic_arn is not None and EMIT_SIGNALS:
         sns_connection = boto.sns.connect_to_region(
             region_name="us-east-1",
             aws_access_key_id=AWS_OPTIONS['AWS_ACCESS_KEY_ID'],
@@ -188,7 +188,9 @@ def check_has_price(sender, instance, **kwargs):
 @receiver(post_save, sender=Signal, dispatch_uid="send_signal")
 def send_signal(sender, instance, **kwargs):
     logging.debug("signal saved, checking if signal has been sent yet")
-    if not instance.sent_at:   # to prevent emitting the same signal twice
+    if not EMIT_SIGNALS:
+        logging.debug("signals not sending because env variable EMIT_SIGNALS set to false")
+    elif not instance.sent_at:   # to prevent emitting the same signal twice
         try:
             logging.debug("signal not sent yet, sending now...")
             instance._send()
