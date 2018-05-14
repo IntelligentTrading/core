@@ -15,6 +15,8 @@ class Rsi(AbstractIndicator):
     def rsi(self):  # relative strength index
         if self.relative_strength is not None:
             return 100.0 - (100.0 / (1.0 + self.relative_strength))
+        else:
+            return None
 
 
     def get_rsi_bracket_value(self):
@@ -75,18 +77,28 @@ class Rsi(AbstractIndicator):
             rs_ts = roll_up / roll_down
 
             self.relative_strength = float(rs_ts.tail(1))  # get the last element for the last time point
+            return self.relative_strength
         else:
             logger.debug(':RSI was not calculated:: Not enough closing prices')
             logger.debug('     current period=' + str(self.resample_period) + ', close prices available for that period=' + str(resampl_close_price_ts.size) )
-
+            return None
 
 
     @staticmethod
     def compute_all(cls, **kwargs):
-        new_instance = cls.objects.create(**kwargs)
-        new_instance.compute_rs()
-        new_instance.save()
-        logger.info("   ...RS calculations done and saved.")
+        #new_instance = cls.objects.create(**kwargs)
+        #rs = new_instance.compute_rs()
+        #if rs:
+        #    new_instance.save()
+        #    logger.info("   ...RS calculations done and saved.")
+
+        # now we avoid creating DB record if no rsi has been computed
+        new_instance = cls(**kwargs)
+        rs = new_instance.compute_rs()
+        if rs:
+            new_instance.save()
+            logger.info("   ...RS calculations are done and saved.")
+
 
 
 
