@@ -23,5 +23,5 @@ class Command(BaseCommand):
         logger.info("Getting ready to process currency pairs from {}".format(EXCHANGES))
 
         for exchange in EXCHANGES:
-            _compute_and_save_indicators(source=exchange, resample_period=LONG)
+            _compute_and_save_indicators(source=exchange, resample_period=SHORT)
 
