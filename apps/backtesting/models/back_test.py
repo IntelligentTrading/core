@@ -5,18 +5,13 @@ from apps.strategy.models.rsi_sma_strategies import *
 from apps.strategy.models.ai_strategies import *
 from apps.strategy.models.ichi_strategies import *
 from apps.indicator.models.price_resampl import get_price_at_timepoint, PriceResampl
+from apps.signal.models import Signal
 from apps.signal.models.signal import ALL_SIGNALS
 from datetime import datetime
 from enum import Enum
+from settings import COUNTER_CURRENCY_CHOICES
 
 logger = logging.getLogger(__name__)
-
-CURRENCY_NAMES = {
-    0: "BTC",
-    1: "ETH",
-    2: "USDT",
-    3: "XMR"
-}
 
 class BacktestStatus(Enum):
     OK = 'OK'
@@ -91,11 +86,10 @@ class BackTest(models.Model):
     # calculation status
     status = models.CharField(max_length=6, null=False, blank=False)
 
-    def __init__(self, strategy_class_name, timestamp, start_timeframe, end_timeframe):
+    def __init__(self, strategy_class_object, timestamp, start_timeframe, end_timeframe):
         # see https://stackoverflow.com/questions/24537091/error-no-attribute-state
         super(BackTest, self).__init__()
-
-        self.strategy_class_name = str(strategy_class_name).split(".")[-1][:-2]  # TODO: fix the received names
+        self.strategy_class_object = strategy_class_object
         self.start_timeframe = start_timeframe 
         self.end_timeframe = end_timeframe
         self.timestamp = timestamp
@@ -110,11 +104,11 @@ class BackTest(models.Model):
         :return:
         """
 
-        # TODO: perhaps move strategy and signal init to constructor?
-        # create strategy object from name
-        strategy = init_strategy(strategy_name=self.strategy_class_name, transaction_currency=transaction_currency,
+        # instantiate strategy object from class object
+        strategy = self.strategy_class_object(transaction_currency=transaction_currency,
                                  counter_currency=counter_currency, source=source, timestamp=self.timestamp,
                                  resample_period=resample_period)
+        self.strategy_class_name = str(strategy)
 
         # extract all strategy signals
         signals = strategy.get_all_signals_in_time_period(self.start_timeframe, self.end_timeframe)
@@ -126,10 +120,12 @@ class BackTest(models.Model):
             self.create_row_and_save(dict)
         return dict
 
+
     def run_backtest_on_several_currency_pairs(self):
         # allow moving all money into another currency
         # TODO: need signals from Alex to carry currency info
         pass
+
 
     def run_backtest_on_all_currency(self):
         """
@@ -140,6 +136,7 @@ class BackTest(models.Model):
         # in the current version, the looping over currency pairs is done in helpers.py
 
         # TODO: run the same for several-currency strategies
+
 
     def create_row_and_save(self, strategy_backtest_results):
         self.transaction_currency = strategy_backtest_results["transaction_currency"]
@@ -390,6 +387,7 @@ def calculate_profit_buy_and_hold_USDT(cash, source, transaction_currency, count
 
     return end_cash_USDT - cash_USDT
 
+
 # calculates the value of counter_currency amount in USDT on a given timestamp
 def calculate_value_in_USDT(amount, timestamp, counter_currency, source, resample_period):
     value = None
@@ -397,23 +395,25 @@ def calculate_value_in_USDT(amount, timestamp, counter_currency, source, resampl
         return amount
     else:
         price_USDT = get_price_at_timepoint(timestamp=datetime.utcfromtimestamp(timestamp), source=source,
-                                            transaction_currency=CURRENCY_NAMES[counter_currency],
+                                            transaction_currency=get_currency_name(counter_currency),
                                             counter_currency=2, resample_period=resample_period)
         if price_USDT is not None:  # if no data for USDT price, None will be returned
             value = amount * price_USDT
     return value
 
 
-def init_strategy(strategy_name, **kwargs):
-    if strategy_name == "RsiSimpleStrategy":
-        return RsiSimpleStrategy(**kwargs)
-    elif strategy_name == "AnnSimpleStrategy":
-        return AnnSimpleStrategy(**kwargs)
-    elif strategy_name == "IchiKumoBreakoutStrategy":
-        return IchiKumoBreakoutStrategy(**kwargs)
-
-
-def get_all_currency_tuples():
-    distinct = PriceResampl.objects.values("source", "transaction_currency", "counter_currency").distinct()
+# finds all distinct tuples (source, transaction_currency, counter_currency for which we have signals
+# between start_timeframe and end_timeframe
+def get_all_currency_tuples(start_timeframe, end_timeframe):
+    distinct = Signal.objects.filter(
+        timestamp__gte=start_timeframe,
+        timestamp__lte=end_timeframe)\
+        .values("source", "transaction_currency", "counter_currency").distinct()
     return distinct
 
+
+# retrieves currency name from id, e.g. 0 = "BTC"
+def get_currency_name(currency_id):
+    for id, name in COUNTER_CURRENCY_CHOICES:
+        if id == currency_id:
+            return name
