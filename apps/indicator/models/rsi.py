@@ -59,8 +59,9 @@ class Rsi(AbstractIndicator):
         )
 
         resampl_close_price_ts = resampl_price_df.close_price
+        logger.debug( '  RSI:   current period=' + str(self.resample_period) + ', close prices available for that period=' + str(resampl_close_price_ts.size))
 
-        if resampl_close_price_ts is not None & resampl_close_price_ts.size > 12:
+        if (resampl_close_price_ts is not None) and (resampl_close_price_ts.size > 12):
             # difference btw start and close of the day, remove the first NA
             delta = resampl_close_price_ts.diff()
             delta = delta[1:]
