@@ -58,7 +58,7 @@ class Rsi(AbstractIndicator):
 
         resampl_close_price_ts = resampl_price_df.close_price
 
-        if resampl_close_price_ts is not None:
+        if resampl_close_price_ts is not None & resampl_close_price_ts.size > 12:
             # difference btw start and close of the day, remove the first NA
             delta = resampl_close_price_ts.diff()
             delta = delta[1:]
@@ -76,7 +76,8 @@ class Rsi(AbstractIndicator):
 
             self.relative_strength = float(rs_ts.tail(1))  # get the last element for the last time point
         else:
-            logger.debug('Not enough closing prices for RS calculation')
+            logger.debug(':RSI was not calculated:: Not enough closing prices')
+            logger.debug('     current period=' + str(self.resample_period) + ', close prices available for that period=' + str(resampl_close_price_ts.size) )
 
 
 
