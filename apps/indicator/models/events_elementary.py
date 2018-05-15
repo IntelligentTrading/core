@@ -44,8 +44,12 @@ ICHI_ELEMENTARY_EVENTS = [
     'close_below_cloud',
 ]
 
+AI_ELEMENTARY_EVENTS = [
+    'ann_price_2class_simple'
+]
+
 # list of all events to return by get_last_elementory_events_df
-ALL_POSSIBLE_ELEMENTARY_EVENTS = SMA_ELEMENTARY_EVENTS + ICHI_ELEMENTARY_EVENTS
+ALL_POSSIBLE_ELEMENTARY_EVENTS = SMA_ELEMENTARY_EVENTS + ICHI_ELEMENTARY_EVENTS + AI_ELEMENTARY_EVENTS
 
 # dictionary to convert name of sma event to one-number trend
 _col2trend = {
