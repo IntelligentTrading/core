@@ -269,7 +269,7 @@ REST_API_SECRET_KEY = os.environ.get('REST_API_SECRET_KEY', "123ABC")
 time_speed = 1  # set to 1 for production, 10 for fast debugging
 EMIT_SMA = True
 EMIT_RSI = True
-RUN_ANN = True
+RUN_ANN = False
 
 EMIT_SIGNALS = os.environ.get("EMIT_SIGNALS", "true").lower() == "true" # emit if no variable set or when it set to 'true', env variables are strings
 
