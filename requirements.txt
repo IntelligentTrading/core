@@ -39,6 +39,6 @@ toolz==0.8.2
 waitress==1.0.2
 whitenoise==3.3.1
 
-#tensorflow
-#keras
-#h5py
+tensorflow
+keras
+h5py
