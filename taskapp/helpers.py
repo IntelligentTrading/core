@@ -26,7 +26,9 @@ from apps.backtesting.models.back_test import BackTest
 
 from settings import USDT_COINS, BTC_COINS
 from settings import SHORT, MEDIUM, LONG, HORIZONS_TIME2NAMES
-
+from apps.backtesting.models.back_test import get_all_currency_tuples
+import pandas as pd
+from settings import PERIODS_LIST
 
 logger = logging.getLogger(__name__)
 
@@ -222,7 +224,6 @@ def _compute_and_save_indicators(params):
             try:
                 s = strategy(**indicator_params_dict)
                 now_signals_set = s.check_signals_now()
-
                 logger.debug("  NOW: found Signal belongs to strategy : " + str(strategy) + " : " + str(now_signals_set))
 
                 # Emit to a signal from a strategy to sqs without saving it in the Signal table
@@ -247,28 +248,39 @@ def _compute_and_save_indicators(params):
 
 
 
-#TODO 2@Karla: this is only a stub, please add whatever you deem necesary here
 # run by scheduler from trawl_poloniex every XXX hours
 def _backtest_all_strategies():
 
     # get all strategies in the system from Strategies model
-    strategies_class_list = get_all_strategy_classes()  #[RsiSimpleStrategy, SmaCrossOverStrategy]
+    strategies_class_list = get_all_strategy_classes()
 
-    # TODO: change to appropriate period
+    # TODO: decide which period we're going to use
     time_end = time.time()
     time_start = time_end - 3600 * 24 * 30  # a month back
 
-    # TODO: we can iterate coins / exchangers here
-    SOURCE = 0 # POLONIEX
-    counter_currency = 'ETH'
-    transaction_currency = 2  #USDT
+    # get all triplets (source, transaction_currency, counter_currency)
+    tuples = get_all_currency_tuples(time_start, time_end)
 
     # run reavaluation
     for strategy_class in strategies_class_list:
-        back_test_run = BackTest(strategy_class, time_start, time_end)
-        back_test_run.run_backtest_on_all_currency()
-        back_test_run.save()
+        # begin = time.time()
+        strategy_class_name = strategy_class.__name__
+
+        # iterate over all currencies and exchangers (POLONIEX etc) with run_backtest_on_one_curency_pair
+        logger.info("Started backtesting {} on all currency...".format(strategy_class_name))
+        for tuple in tuples:
+            for resample_period in PERIODS_LIST:
+                source = tuple["source"]
+                transaction_currency = tuple["transaction_currency"]
+                counter_currency = tuple["counter_currency"]
+                timestamp = time.time()
+                back_test_run = BackTest(strategy_class, timestamp, time_start, time_end)
+                back_test_run.run_backtest_on_one_curency_pair(source, transaction_currency,
+                                                               counter_currency, resample_period)
+
+        logger.info("Ended backtesting {} on all currency.".format(strategy_class_name))
+        # end = time.time()
+        # logger.info("Time to test strategy {}: {} minutes".format(strategy_class_name, (end-begin)/60))
 
 
-    # save in backtest db table
 
