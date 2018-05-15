@@ -256,7 +256,7 @@ def _backtest_all_strategies():
 
     # TODO: decide which period we're going to use
     time_end = time.time()
-    time_start = time_end - 3600 * 24 * 30  # a month back
+    time_start = time_end - 3600 * 24 * 75  # 2,5 month back
 
     # get all triplets (source, transaction_currency, counter_currency)
     tuples = get_all_currency_tuples(time_start, time_end)
@@ -269,10 +269,10 @@ def _backtest_all_strategies():
         # iterate over all currencies and exchangers (POLONIEX etc) with run_backtest_on_one_curency_pair
         logger.info("Started backtesting {} on all currency...".format(strategy_class_name))
         for tuple in tuples:
+            source = tuple["source"]
+            transaction_currency = tuple["transaction_currency"]
+            counter_currency = tuple["counter_currency"]
             for resample_period in PERIODS_LIST:
-                source = tuple["source"]
-                transaction_currency = tuple["transaction_currency"]
-                counter_currency = tuple["counter_currency"]
                 timestamp = time.time()
                 back_test_run = BackTest(strategy_class, timestamp, time_start, time_end)
                 back_test_run.run_backtest_on_one_curency_pair(source, transaction_currency,

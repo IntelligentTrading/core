@@ -112,6 +112,7 @@ class BackTest(models.Model):
 
         # extract all strategy signals
         signals = strategy.get_all_signals_in_time_period(self.start_timeframe, self.end_timeframe)
+        #TODO check is this ts is empty, no sence to continue if no signals are generated
 
         # simulate trading based on strategy signals
         dict = self.simulate_trading(signals, START_CASH, transaction_currency, counter_currency,
