@@ -154,7 +154,7 @@ class Signal(Timestampable, models.Model):
 
         
 
-        logger.info("EMITTED SIGNAL: " + str(sbody_dict))
+        logger.info("EMITTED SIGNAL: " + str(body_dict))
 
         return
 
