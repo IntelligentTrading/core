@@ -122,7 +122,6 @@ class Signal(Timestampable, models.Model):
 
         # todo: call send in a post_save signal?? is there any reason to delay or schedule a signal?
 
-        import pdb; pdb.set_trace()
 
         message = Message()
         body_dict = self.as_dict()
