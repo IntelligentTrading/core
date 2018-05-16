@@ -129,6 +129,8 @@ class Signal(Timestampable, models.Model):
                             aws_access_key_id=AWS_OPTIONS['AWS_ACCESS_KEY_ID'],
                             aws_secret_access_key=AWS_OPTIONS['AWS_SECRET_ACCESS_KEY'])
 
+        self.sent_at = datetime.now()  # to prevent emitting the same signal twice
+
         if QUEUE_NAME:
             logging.debug("emitted to QUEUE_NAME queue :" + QUEUE_NAME)
             production_queue = sqs_connection.get_queue(QUEUE_NAME)
@@ -146,7 +148,7 @@ class Signal(Timestampable, models.Model):
 
         publish_message_to_sns(message=json.dumps(self.as_dict()), topic_arn=SNS_SIGNALS_TOPIC_ARN)
 
-        self.sent_at = datetime.now()  # to prevent emitting the same signal twice
+        
 
         logger.info("EMITTED SIGNAL: " + str(self.as_dict()))
 
