@@ -26,7 +26,7 @@ from apps.backtesting.models.back_test import BackTest
 
 from settings import USDT_COINS, BTC_COINS
 from settings import SHORT, MEDIUM, LONG, HORIZONS_TIME2NAMES
-from apps.backtesting.models.back_test import get_all_currency_tuples
+from apps.backtesting.models.back_test import get_distinct_trading_pairs
 import pandas as pd
 from settings import PERIODS_LIST
 
@@ -251,6 +251,8 @@ def _compute_and_save_indicators(params):
 # run by scheduler from trawl_poloniex every XXX hours
 def _backtest_all_strategies():
 
+    now_timestamp = time.time()
+
     # get all strategies in the system from Strategies model
     strategies_class_list = get_all_strategy_classes()
 
@@ -259,7 +261,7 @@ def _backtest_all_strategies():
     time_start = time_end - 3600 * 24 * 30  # a month back
 
     # get all triplets (source, transaction_currency, counter_currency)
-    tuples = get_all_currency_tuples(time_start, time_end)
+    trading_pairs = get_distinct_trading_pairs(time_start, time_end)
 
     # run reavaluation
     for strategy_class in strategies_class_list:
@@ -268,15 +270,18 @@ def _backtest_all_strategies():
 
         # iterate over all currencies and exchangers (POLONIEX etc) with run_backtest_on_one_curency_pair
         logger.info("Started backtesting {} on all currency...".format(strategy_class_name))
-        for tuple in tuples:
-            for resample_period in PERIODS_LIST:
-                source = tuple["source"]
-                transaction_currency = tuple["transaction_currency"]
-                counter_currency = tuple["counter_currency"]
-                timestamp = time.time()
-                back_test_run = BackTest(strategy_class, timestamp, time_start, time_end)
-                back_test_run.run_backtest_on_one_curency_pair(source, transaction_currency,
-                                                               counter_currency, resample_period)
+
+        for resample_period in PERIODS_LIST:
+            for trading_pair in trading_pairs:
+                back_test_run = BackTest(strategy_class, now_timestamp, time_start, time_end)
+
+                if back_test_run.run_backtest_on_one_curency_pair(trading_pair["source"],
+                                                                  trading_pair["transaction_currency"],
+                                                                  trading_pair["counter_currency"],
+                                                                  resample_period):
+
+                    # save only if there were backtesting results
+                    back_test_run.save()
 
         logger.info("Ended backtesting {} on all currency.".format(strategy_class_name))
         # end = time.time()

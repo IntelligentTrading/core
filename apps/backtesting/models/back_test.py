@@ -1,10 +1,7 @@
 import logging
 from unixtimestampfield.fields import UnixTimeStampField
 from django.db import models
-from apps.strategy.models.rsi_sma_strategies import *
-from apps.strategy.models.ai_strategies import *
-from apps.strategy.models.ichi_strategies import *
-from apps.indicator.models.price_resampl import get_price_at_timepoint, PriceResampl
+from apps.indicator.models.price_resampl import get_price_at_timepoint
 from apps.signal.models import Signal
 from apps.signal.models.signal import ALL_SIGNALS
 from datetime import datetime
@@ -101,7 +98,7 @@ class BackTest(models.Model):
         :param transaction_currency: currency being traded
         :param counter_currency: counter currency
         :param resample_period: horizon information
-        :return:
+        :return: True if any trades were made, False otherwise
         """
 
         # instantiate strategy object from class object
@@ -118,7 +115,7 @@ class BackTest(models.Model):
                                      self.start_timeframe, self.end_timeframe, resample_period, source)
         if dict is not None:
             self.create_row_and_save(dict)
-        return dict
+        return dict is not None
 
 
     def run_backtest_on_several_currency_pairs(self):
@@ -186,7 +183,7 @@ class BackTest(models.Model):
         num_sells = 0       # total number of sells
         num_profitable_trades = 0   # total number of profitable trades (=number of sells for which we make a profit)
         invested_on_buy = 0         # the amount of cash spent on the last buy
-        average_profit_percent_per_trade = 0    # average profit obtained by a buy-sell pair
+        total_profit_percent_per_trade = 0    # average profit obtained by a buy-sell pair
 
         # convert start value to USDT (for performance statistics)
         start_cash_USDT = calculate_value_in_USDT(start_cash, start_timeframe,
@@ -213,7 +210,7 @@ class BackTest(models.Model):
                 # how much did we make on this buy - sell pair (in percent)
                 buy_sell_pair_profit_percent = (cash - invested_on_buy) / invested_on_buy
                 invested_on_buy = 0  # reset the invested amount for the trade pair
-                average_profit_percent_per_trade += buy_sell_pair_profit_percent
+                total_profit_percent_per_trade += buy_sell_pair_profit_percent
 
                 # check if the trade was profitable
                 if buy_sell_pair_profit_percent > 0:
@@ -240,7 +237,7 @@ class BackTest(models.Model):
                 end_cash = None
                 end_cash_USDT = None
             else:
-                end_cash = execute_sell(crypto, price, transaction_cost_percent)  # simulate selling at the end of timeframe
+                end_cash = execute_sell(crypto, price, transaction_cost_percent=0)  # simulate selling at the end of timeframe
                 end_cash_USDT = calculate_value_in_USDT(end_cash, end_timeframe, counter_currency, source, resample_period)
         else:
             end_cash = cash
@@ -255,7 +252,7 @@ class BackTest(models.Model):
             profit = None
             profit_percent = None
 
-        average_profit_percent_per_trade /= num_trades
+        average_profit_percent_per_trade = total_profit_percent_per_trade / num_trades
         profit_buy_and_hold = calculate_profit_buy_and_hold(start_cash, source, transaction_currency, counter_currency,
                                                             resample_period, start_timeframe, end_timeframe,
                                                             transaction_cost_percent)
@@ -404,7 +401,7 @@ def calculate_value_in_USDT(amount, timestamp, counter_currency, source, resampl
 
 # finds all distinct tuples (source, transaction_currency, counter_currency for which we have signals
 # between start_timeframe and end_timeframe
-def get_all_currency_tuples(start_timeframe, end_timeframe):
+def get_distinct_trading_pairs(start_timeframe, end_timeframe):
     distinct = Signal.objects.filter(
         timestamp__gte=start_timeframe,
         timestamp__lte=end_timeframe)\
