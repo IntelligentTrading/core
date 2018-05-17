@@ -122,8 +122,11 @@ class Signal(Timestampable, models.Model):
 
         # todo: call send in a post_save signal?? is there any reason to delay or schedule a signal?
 
+
         message = Message()
-        message.set_body(json.dumps(self.as_dict()))
+        body_dict = self.as_dict()
+        body_dict['sent'] = str(datetime.now())
+        message.set_body(json.dumps(body_dict))
 
         sqs_connection = boto.sqs.connect_to_region("us-east-1",
                             aws_access_key_id=AWS_OPTIONS['AWS_ACCESS_KEY_ID'],
@@ -144,11 +147,13 @@ class Signal(Timestampable, models.Model):
             test_queue = sqs_connection.get_queue(TEST_QUEUE_NAME)
             test_queue.write(message)
 
-        publish_message_to_sns(message=json.dumps(self.as_dict()), topic_arn=SNS_SIGNALS_TOPIC_ARN)
-
         self.sent_at = datetime.now()  # to prevent emitting the same signal twice
 
-        logger.info("EMITTED SIGNAL: " + str(self.as_dict()))
+        publish_message_to_sns(message=json.dumps(body_dict), topic_arn=SNS_SIGNALS_TOPIC_ARN)
+
+        
+
+        logger.info("EMITTED SIGNAL: " + str(body_dict))
 
         return
 
