@@ -235,6 +235,13 @@ SOURCE_CHOICES = (
     (BITTREX, 'bittrex'),
 )
 
+(BTC, ETH, USDT, XMR) = list(range(4))
+COUNTER_CURRENCY_CHOICES = (
+    (BTC, 'BTC'),
+    (ETH, 'ETH'),
+    (USDT, 'USDT'),
+    (XMR, 'XMR'),
+)
 
 # mapping from bin size to a name short/medium
 # CHANGES TO THESE VALUES REQUIRE MAKING AND RUNNING DB MIGRATIONS

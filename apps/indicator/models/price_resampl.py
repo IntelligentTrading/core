@@ -125,12 +125,12 @@ def get_price_at_timepoint(timestamp, source, transaction_currency, counter_curr
         resample_period=resample_period,
         transaction_currency=transaction_currency,
         counter_currency=counter_currency,
-        timestamp__gte = timestamp + timedelta(minutes=resample_period * 5),  # 5 period ahead in time
-        timestamp__lte=timestamp - timedelta(minutes=resample_period * 5),  # 5 period back in time
+        timestamp__gte = timestamp - timedelta(minutes=resample_period * 5),  # 5 period ahead in time
+        timestamp__lte=timestamp + timedelta(minutes=resample_period * 5),  # 5 period back in time
     ).values('timestamp',  'close_price').order_by('timestamp'))
 
     #convert to a timeseries
-    price = None
+    #TODO: use  = ts.reindex(index=range(1, max_range), fill_value=0)
     if prices_range:
         ts = [rec['timestamp'] for rec in prices_range]
         close_prices_ts = pd.Series(data=[rec['close_price'] for rec in prices_range], index=ts)
@@ -138,10 +138,13 @@ def get_price_at_timepoint(timestamp, source, transaction_currency, counter_curr
         logger.error(' no reasmple close prace at timepoint  ' + str(timestamp) + ' backtesting is not possible')
         return None
 
-    # check if we have a price at a given timestamp and if not interpolate
-    #TODO: need to check it, possible does not work
-    price = close_prices_ts[timestamp]
-    if not price:
+    # check if we have a price at a given timestamp and if not we interpolate
+    # TODO: might not handle all cases, double check later
+    if timestamp in close_prices_ts.index:
+        price = close_prices_ts[timestamp]
+    else:
+        # add our missing index and then interpolate
+        close_prices_ts.append(pd.Series(value=np.nan, index=timestamp))
         close_prices_ts.interpolate()
         price = close_prices_ts[timestamp]
 
