@@ -107,9 +107,10 @@ def _save_prices_and_volumes(data, timestamp, source):
 
 
 
-def _compute_and_save_indicators(params):
-    source = params['source']
-    resample_period = params['period']
+def _compute_and_save_indicators(source, resample_period):#params):
+    #source = params['source']
+    #resample_period = params['period']
+
     horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[resample_period])
 
     timestamp = time.time() // (1 * 60) * (1 * 60)   # rounded to a minute
