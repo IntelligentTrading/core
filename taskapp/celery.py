@@ -55,11 +55,11 @@ def setup_periodic_tasks(sender, **kwargs):
         name='at the beginning of every hour',
         )
 
-    sender.add_periodic_task(
-        crontab(minute=20, hour=16),
-        tasks.compute_and_save_indicators_for_all_sources.s(resample_period=SHORT),
-        name='at the beginning of every hour',
-        )
+    # sender.add_periodic_task(
+    #     crontab(minute=20, hour=16),
+    #     tasks.compute_and_save_indicators_for_all_sources.s(resample_period=SHORT),
+    #     name='at the beginning of every hour',
+    #     )
 
 
     # calculate MEDIUM period at the start of every 4 hours

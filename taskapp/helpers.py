@@ -233,7 +233,7 @@ def _compute_and_save_indicators(source, resample_period):#params):
 
         # 5 ############################
         # check if we have to emit any <Strategy> signals
-
+        '''
         strategies_list = get_all_strategy_classes()  # [RsiSimpleStrategy, SmaCrossOverStrategy]
         if not strategies_list:
             strategies_list = add_all_strategies()
@@ -256,6 +256,7 @@ def _compute_and_save_indicators(source, resample_period):#params):
                 logger.debug("   ... Checking for strategy signals completed.")
             except Exception as e:
                 logger.error(" Error Strategy checking:  " + str(e))
+        '''
 
     # clean session to prevent memory leak
     if RUN_ANN:
