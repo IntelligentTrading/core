@@ -2,7 +2,8 @@ import logging
 import time
 from django.core.management.base import BaseCommand
 from apps.ai.models.nn_model import AnnModel
-from apps.channel.models.exchange_data import POLONIEX
+#from apps.channel.models.exchange_data import POLONIEX
+from settings import POLONIEX
 
 logger = logging.getLogger(__name__)
 

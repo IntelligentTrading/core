@@ -6,7 +6,6 @@ from requests import get, RequestException
 from apps.common.utilities.sqs import send_sqs
 
 from apps.channel.models import ExchangeData
-#from apps.channel.models.exchange_data import POLONIEX
 from apps.indicator.models import Price, Volume
 from apps.indicator.models.price import get_currency_value_from_string
 from apps.indicator.models.price_resampl import get_first_resampled_time
@@ -24,14 +23,22 @@ from apps.strategy.models.strategy_ref import get_all_strategy_classes, add_all_
 from apps.strategy.models.rsi_sma_strategies import RsiSimpleStrategy, SmaCrossOverStrategy
 from apps.backtesting.models.back_test import BackTest
 
+
 from settings import USDT_COINS, BTC_COINS
-from settings import SHORT, MEDIUM, LONG, HORIZONS_TIME2NAMES
+from settings import SHORT, MEDIUM, LONG, HORIZONS_TIME2NAMES, RUN_ANN
 from apps.backtesting.models.back_test import get_distinct_trading_pairs
 import pandas as pd
 from settings import PERIODS_LIST
+from settings import SOURCE_CHOICES, EXCHANGE_MARKETS
+
+
+
 
 logger = logging.getLogger(__name__)
 
+def get_exchanges():
+    "Return list of exchange codes for signal calculations"
+    return [code for code, name in SOURCE_CHOICES if name in EXCHANGE_MARKETS]
 
 
 def get_currency_pairs(source, period_in_seconds):
@@ -42,6 +49,9 @@ def get_currency_pairs(source, period_in_seconds):
     price_objects = Price.objects.values('transaction_currency', 'counter_currency').filter(source=source).filter(timestamp__gte=get_from_time).distinct()
     return [(item['transaction_currency'], item['counter_currency']) for item in price_objects]
 
+def get_source_name(source_code):
+    "return poloniex for code=0"
+    return next((source_text for code, source_text in SOURCE_CHOICES if code==source_code), None)
 
 def _pull_poloniex_data(source):
     logger.info("pulling Poloniex data...")
@@ -106,22 +116,26 @@ def _compute_and_save_indicators(params):
 
     logger.info("################# Resampling with Period: " + str(resample_period) + ", Source:" + str(source) + " #######################")
 
-    # choose the pre-trained ANN model depending on period, here are the same
-    period2model = {
-        SHORT : 'lstm_model_2_2.h5',
-        MEDIUM: 'lstm_model_2_2.h5',
-        LONG  : 'lstm_model_2_2.h5'
-    }
-    # load model from S3 and database
-    ann_model_object = get_ann_model_object(period2model[resample_period])
+
+
+    if RUN_ANN:
+        # choose the pre-trained ANN model depending on period, here are the same
+        period2model = {
+            SHORT : 'lstm_model_2_2.h5',
+            MEDIUM: 'lstm_model_2_2.h5',
+            LONG  : 'lstm_model_2_2.h5'
+        }
+        # load model from S3 and database
+        ann_model_object = get_ann_model_object(period2model[resample_period])
 
     #TODO: get pairs from def(SOURCE)
     #pairs_to_iterate = [(itm,Price.USDT) for itm in USDT_COINS] + [(itm,Price.BTC) for itm in BTC_COINS]
-    pairs_to_iterate = get_currency_pairs(source=source, period_in_seconds=resample_period*60*100)
-    logger.debug("## Pairs to iterate: " + str(pairs_to_iterate))
+
+    pairs_to_iterate = get_currency_pairs(source=source, period_in_seconds=resample_period*60*2)
+    #logger.debug("## Pairs to iterate: " + str(pairs_to_iterate))
 
     for transaction_currency, counter_currency in pairs_to_iterate:
-        logger.info('   ======== ' + str(resample_period)+ ': checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
+        logger.info('   ======== EXCHANGE: ' + str(source) + '| period: ' + str(resample_period)+ '| checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
 
         # create a dictionary of parameters to improve readability
         indicator_params_dict = {
@@ -134,7 +148,7 @@ def _compute_and_save_indicators(params):
 
 
         ################# BACK CALCULATION (need only once when run first time)
-        BACK_REC = 10   # how many records to calculate back in time
+        BACK_REC = 5   # how many records to calculate back in time
         BACK_TIME = timestamp - BACK_REC * resample_period * 60  # same in sec
 
         last_time_computed = get_first_resampled_time(source, transaction_currency, counter_currency, resample_period)
@@ -189,17 +203,19 @@ def _compute_and_save_indicators(params):
                 logger.error(str(ind) + " Indicator Exception: " + str(e))
 
 
-        # 3 ############################
-        #  calculate ANN indicator(s)
-        # TODO: just form X_predicted here and then run prediction outside the loop !
-        try:
-            if ann_model_object:
-                AnnPriceClassification.compute_all(AnnPriceClassification, ann_model_object, **indicator_params_dict)
-                logger.info("  ... ANN indicators completed,  ELAPSED Time: " + str(time.time() - timestamp))
-            else:
-                logger.error(" No ANN model, calculation does not make sence")
-        except Exception as e:
-            logger.error("ANN Indicator Exception (ANN has not been calculated): " + str(e))
+
+        # calculate ANN indicator(s)
+        # TODO: now run only for a short period, since it is not really tuned for other periods
+        if (RUN_ANN) and (resample_period==SHORT):
+            # TODO: just form X_predicted here and then run prediction outside the loop !
+            try:
+                if ann_model_object:
+                    AnnPriceClassification.compute_all(AnnPriceClassification, ann_model_object, **indicator_params_dict)
+                    logger.info("  ... ANN indicators completed,  ELAPSED Time: " + str(time.time() - timestamp))
+                else:
+                    logger.error(" No ANN model, calculation does not make sence")
+            except Exception as e:
+                logger.error("ANN Indicator Exception (ANN has not been calculated): " + str(e))
 
 
 
@@ -212,6 +228,7 @@ def _compute_and_save_indicators(params):
                 logger.debug("  ... Events completed,  ELAPSED Time: " + str(time.time() - timestamp))
             except Exception as e:
                 logger.error(" Event Exception: " + str(e))
+
 
         # 5 ############################
         # check if we have to emit any <Strategy> signals
@@ -240,12 +257,11 @@ def _compute_and_save_indicators(params):
                 logger.error(" Error Strategy checking:  " + str(e))
 
     # clean session to prevent memory leak
-    logger.debug("   ... Cleaning Keras session...")
-    from keras import backend as K
-    K.clear_session()
-    # TODO check if I can do a batch Keras prediction for all currencies at once
-    # NOTE: you can form an X vector inside this cycle and then run prediction!!!
-
+    if RUN_ANN:
+        # clean session to prevent memory leak
+        logger.debug("   ... Cleaning Keras session...")
+        from keras import backend as K
+        K.clear_session()
 
 
 # run by scheduler from trawl_poloniex every XXX hours
@@ -286,6 +302,7 @@ def _backtest_all_strategies():
         logger.info("Ended backtesting {} on all currency.".format(strategy_class_name))
         # end = time.time()
         # logger.info("Time to test strategy {}: {} minutes".format(strategy_class_name, (end-begin)/60))
+
 
 
 

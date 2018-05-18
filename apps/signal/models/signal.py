@@ -4,6 +4,7 @@ import logging
 import pandas as pd
 
 import boto
+import boto.sns
 from boto.sqs.message import Message
 from datetime import datetime
 
@@ -12,9 +13,12 @@ from django.db.models.signals import post_save, pre_save
 from apps.common.behaviors import Timestampable
 from apps.indicator.models import Price
 from settings import QUEUE_NAME, AWS_OPTIONS, BETA_QUEUE_NAME, TEST_QUEUE_NAME, PERIODS_LIST
+from settings import SOURCE_CHOICES, POLONIEX, COUNTER_CURRENCY_CHOICES, BTC
+from settings import SNS_SIGNALS_TOPIC_ARN, EMIT_SIGNALS
+
 from django.db import models
 from unixtimestampfield.fields import UnixTimeStampField
-from apps.channel.models.exchange_data import SOURCE_CHOICES, POLONIEX
+#from apps.channel.models.exchange_data import POLONIEX
 from apps.user.models.user import RISK_CHOICES, HORIZON_CHOICES
 
 logger = logging.getLogger(__name__)
@@ -79,7 +83,7 @@ class Signal(Timestampable, models.Model):
     timestamp = UnixTimeStampField(null=False)
     source = models.SmallIntegerField(choices=SOURCE_CHOICES, null=False, default=POLONIEX)
     transaction_currency = models.CharField(max_length=6, null=False, blank=False)
-    counter_currency = models.SmallIntegerField(choices=Price.COUNTER_CURRENCY_CHOICES, null=False, default=Price.BTC)
+    counter_currency = models.SmallIntegerField(choices=COUNTER_CURRENCY_CHOICES, null=False, default=BTC)
     resample_period = models.PositiveSmallIntegerField(null=False, default=PERIODS_LIST[0])
 
     signal = models.CharField(max_length=15, null=True)
@@ -162,9 +166,13 @@ class Signal(Timestampable, models.Model):
 
         # todo: call send in a post_save signal?? is there any reason to delay or schedule a signal?
 
+
         # TODO: please use common/utilities/sqs.send_sqs
+
         message = Message()
-        message.set_body(json.dumps(self.as_dict()))
+        body_dict = self.as_dict()
+        body_dict['sent'] = str(datetime.now())
+        message.set_body(json.dumps(body_dict))
 
         sqs_connection = boto.sqs.connect_to_region("us-east-1",
                             aws_access_key_id=AWS_OPTIONS['AWS_ACCESS_KEY_ID'],
@@ -185,8 +193,14 @@ class Signal(Timestampable, models.Model):
             test_queue = sqs_connection.get_queue(TEST_QUEUE_NAME)
             test_queue.write(message)
 
-        logger.info("EMITTED SIGNAL: " + str(self.as_dict()))
         self.sent_at = datetime.now()  # to prevent emitting the same signal twice
+
+        publish_message_to_sns(message=json.dumps(body_dict), topic_arn=SNS_SIGNALS_TOPIC_ARN)
+
+        
+
+        logger.info("EMITTED SIGNAL: " + str(body_dict))
+
         return
 
     def print(self):
@@ -195,6 +209,18 @@ class Signal(Timestampable, models.Model):
     def _same_as_previous(self):
         # todo: get one day back in time and check if all fileds are the same - no reason to send it twice
         return False
+
+def publish_message_to_sns(message, topic_arn=None):
+    if topic_arn is not None and EMIT_SIGNALS:
+        sns_connection = boto.sns.connect_to_region(
+            region_name="us-east-1",
+            aws_access_key_id=AWS_OPTIONS['AWS_ACCESS_KEY_ID'],
+            aws_secret_access_key=AWS_OPTIONS['AWS_SECRET_ACCESS_KEY'],
+        )
+        sns_connection.publish(topic=SNS_SIGNALS_TOPIC_ARN, message=message)
+        logger.debug("Message published to SNS topic")
+    else:
+        logger.debug("No SNS topic. Skipping sending message to SNS")
 
 
 from django.db.models.signals import post_save
@@ -213,7 +239,9 @@ def check_has_price(sender, instance, **kwargs):
 @receiver(post_save, sender=Signal, dispatch_uid="send_signal")
 def send_signal(sender, instance, **kwargs):
     logging.debug("signal saved, checking if signal has been sent yet")
-    if not instance.sent_at:   # to prevent emitting the same signal twice
+    if not EMIT_SIGNALS:
+        logging.debug("signals not sending because env variable EMIT_SIGNALS set to false")
+    elif not instance.sent_at:   # to prevent emitting the same signal twice
         try:
             logging.debug("signal not sent yet, sending now...")
             instance._send()

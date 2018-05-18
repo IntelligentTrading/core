@@ -12,7 +12,7 @@ from apps.signal.models.signal import Signal
 from apps.indicator.models.ann_future_price_classification import AnnPriceClassification, get_n_last_ann_classif_df
 
 from apps.user.models.user import get_horizon_value_from_string
-from settings import HORIZONS_TIME2NAMES, EMIT_RSI, EMIT_SMA
+from settings import HORIZONS_TIME2NAMES, EMIT_RSI, EMIT_SMA, RUN_ANN
 
 
 logger = logging.getLogger(__name__)
@@ -44,8 +44,12 @@ ICHI_ELEMENTARY_EVENTS = [
     'close_below_cloud',
 ]
 
+AI_ELEMENTARY_EVENTS = [
+    'ann_price_2class_simple'
+]
+
 # list of all events to return by get_last_elementory_events_df
-ALL_POSSIBLE_ELEMENTARY_EVENTS = SMA_ELEMENTARY_EVENTS + ICHI_ELEMENTARY_EVENTS
+ALL_POSSIBLE_ELEMENTARY_EVENTS = SMA_ELEMENTARY_EVENTS + ICHI_ELEMENTARY_EVENTS + AI_ELEMENTARY_EVENTS
 
 # dictionary to convert name of sma event to one-number trend
 _col2trend = {
@@ -187,7 +191,8 @@ def _process_sma_crossovers(horizon, prices_df, **kwargs):
 
             # Fire all sinals, except two which we dont need and imitting is allowed
             if EMIT_SMA & (event_name not in ['sma50_above_sma200', 'sma50_below_sma200']):
-                 try:
+                logger.debug('======> DISCREPANCY CHECK :: period= ' + str(kwargs['resample_period']) + '/ horozon= ' + str(horizon))
+                try:
                     trend = _col2trend[event_name]
                     signal_sma_cross = Signal(
                         **kwargs,
@@ -199,7 +204,7 @@ def _process_sma_crossovers(horizon, prices_df, **kwargs):
                     )
                     signal_sma_cross.save()
                     logger.debug("   >>> FIRED - Event " + event_name)
-                 except Exception as e:
+                except Exception as e:
                     logger.error(" #Error firing SMA signal ")
 
 
@@ -374,8 +379,9 @@ class EventsElementary(AbstractIndicator):
 
 
         ############## calculate and save ANN Events   #################
-        logger.info("   ... Check AI Elementary Events: ")
-        _process_ai_simple(horizon, **kwargs)
+        if RUN_ANN:
+            logger.info("   ... Check AI Elementary Events: ")
+            _process_ai_simple(horizon, **kwargs)
 
 
 
@@ -426,23 +432,24 @@ def get_last_ever_entered_elementory_events_df(timestamp, source, transaction_cu
     df = pd.DataFrame()
 
     # if there is at least one record and this record is not too far away (not later then 50 hours ago)
-    if bool(last_time) & (abs(timestamp - last_time['timestamp'].timestamp()) < (3600000 * 50)):
-        # get all records for this time
-        last_events = list(EventsElementary.objects.filter(
-            timestamp=last_time['timestamp'],
-            source=source,
-            transaction_currency=transaction_currency,
-            counter_currency=counter_currency,
-            resample_period=resample_period,
-        ).order_by('-timestamp').values('timestamp', 'event_name', 'event_value'))
+    if bool(last_time): # if there is any record
+        if (abs(timestamp - last_time['timestamp'].timestamp()) < (3600000 * 50)):
+            # get all records for this time
+            last_events = list(EventsElementary.objects.filter(
+                timestamp=last_time['timestamp'],
+                source=source,
+                transaction_currency=transaction_currency,
+                counter_currency=counter_currency,
+                resample_period=resample_period,
+            ).order_by('-timestamp').values('timestamp', 'event_name', 'event_value'))
 
-        # assert all timestamps are the same
-        ts = [rec['timestamp'] for rec in last_events]
-        event_names = [rec['event_name'] for rec in last_events]
-        event_values = [rec['event_value'] for rec in last_events]
+            # assert all timestamps are the same
+            ts = [rec['timestamp'] for rec in last_events]
+            event_names = [rec['event_name'] for rec in last_events]
+            event_values = [rec['event_value'] for rec in last_events]
 
-        df = pd.DataFrame(columns = ALL_POSSIBLE_ELEMENTARY_EVENTS, index=pd.Series(ts[0])) # DF has only one line
-        df[event_names] = event_values
-        df = df.fillna(value=0)
+            df = pd.DataFrame(columns = ALL_POSSIBLE_ELEMENTARY_EVENTS, index=pd.Series(ts[0])) # DF has only one line
+            df[event_names] = event_values
+            df = df.fillna(value=0)
 
     return df

@@ -2,12 +2,14 @@ from django.db import models
 from django.contrib.postgres.fields import JSONField
 from unixtimestampfield.fields import UnixTimeStampField
 
+from settings import SOURCE_CHOICES
 
-(POLONIEX, BITTREX) = list(range(2))
-SOURCE_CHOICES = (
-    (POLONIEX, 'poloniex'),
-    (BITTREX, 'bittrex'),
-)
+
+# (POLONIEX, BITTREX) = list(range(2))
+# SOURCE_CHOICES = (
+#     (POLONIEX, 'poloniex'),
+#     (BITTREX, 'bittrex'),
+# )
 
 
 class ExchangeData(models.Model):

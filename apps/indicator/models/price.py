@@ -1,19 +1,20 @@
 from datetime import timedelta
 from django.db import models
 from unixtimestampfield.fields import UnixTimeStampField
-from apps.channel.models.exchange_data import SOURCE_CHOICES
+#from apps.channel.models.exchange_data import SOURCE_CHOICES
+from settings import SOURCE_CHOICES, COUNTER_CURRENCY_CHOICES, BTC
 from datetime import timedelta, datetime
 import pandas as pd
 
 
 class Price(models.Model):
-    (BTC, ETH, USDT, XMR) = list(range(4))
-    COUNTER_CURRENCY_CHOICES = (
-        (BTC, 'BTC'),
-        (ETH, 'ETH'),
-        (USDT, 'USDT'),
-        (XMR, 'XMR'),
-    )
+    # (BTC, ETH, USDT, XMR) = list(range(4))
+    # COUNTER_CURRENCY_CHOICES = (
+    #     (BTC, 'BTC'),
+    #     (ETH, 'ETH'),
+    #     (USDT, 'USDT'),
+    #     (XMR, 'XMR'),
+    # )
     source = models.SmallIntegerField(choices=SOURCE_CHOICES, null=False)
     transaction_currency = models.CharField(max_length=6, null=False, blank=False)
     counter_currency = models.SmallIntegerField(choices=COUNTER_CURRENCY_CHOICES,
@@ -21,6 +22,13 @@ class Price(models.Model):
     price = models.BigIntegerField(null=False)
 
     timestamp = UnixTimeStampField(null=False)
+
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['timestamp', 'source', 'transaction_currency', 'counter_currency']),
+        ]
+
 
     # MODEL PROPERTIES
 
@@ -56,7 +64,7 @@ def get_n_last_prices_ts(n, source, transaction_currency, counter_currency ):
 
 
 def get_currency_value_from_string(currency_string):
-    currency_dict = {str: i for (i, str) in Price.COUNTER_CURRENCY_CHOICES}
+    currency_dict = {str: i for (i, str) in COUNTER_CURRENCY_CHOICES}
     return currency_dict.get(currency_string, None)
 
 def int_price2float(int_price):

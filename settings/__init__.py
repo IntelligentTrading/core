@@ -225,15 +225,24 @@ BTC_COINS = [
 
 # list of the exchanges on which we generate signals. Make it in sync with same list in Data app settings
 #EXCHANGE_MARKETS = ('poloniex', 'binance', 'bittrex', 'bitfinex', 'kucoin')
-#EXCHANGE_MARKETS = ('poloniex', 'bittrex')
-EXCHANGE_MARKETS = ('poloniex',)
+EXCHANGE_MARKETS = ('poloniex', 'binance', 'bittrex')
 
 # Please only add new exchanges to this settings, never remove or modify
-(POLONIEX, BITTREX) = list(range(2))
+(POLONIEX, BITTREX, BINANCE, BITFINEX, KUCOIN, GDAX, HITBTC) = list(range(7))
 SOURCE_CHOICES = (
     (POLONIEX, 'poloniex'),
     (BITTREX, 'bittrex'),
+    (BINANCE, 'binance'),
+    (BITFINEX, 'bitfinex'),
+    (KUCOIN, 'kucoin'),
+    (GDAX, 'gdax'),
+    (HITBTC, 'hitbtc'),
 )
+
+
+# list of supported counter currencies
+COUNTER_CURRENCIES = ('BTC', 'ETH', 'USDT')
+# Please only add new counter currencies to this settings, never remove or modify
 
 (BTC, ETH, USDT, XMR) = list(range(4))
 COUNTER_CURRENCY_CHOICES = (
@@ -264,6 +273,9 @@ REST_API_SECRET_KEY = os.environ.get('REST_API_SECRET_KEY', "123ABC")
 time_speed = 1  # set to 1 for production, 10 for fast debugging
 EMIT_SMA = True
 EMIT_RSI = True
+RUN_ANN = True
+
+EMIT_SIGNALS = os.environ.get("EMIT_SIGNALS", "true").lower() == "true" # emit if no variable set or when it set to 'true', env variables are strings
 
 # @Alexander REST Framework settings
 REST_FRAMEWORK = {

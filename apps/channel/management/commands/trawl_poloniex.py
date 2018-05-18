@@ -3,7 +3,20 @@ import schedule
 import time
 
 from django.core.management.base import BaseCommand
+
 from settings import time_speed  # 1 / 10
+
+from requests import get, RequestException
+
+from apps.channel.models import ExchangeData
+#from apps.channel.models.exchange_data import POLONIEX
+from apps.indicator.models import Price, Volume
+from apps.indicator.models.price import get_currency_value_from_string
+from apps.indicator.models.price_resampl import get_first_resampled_time
+
+from settings import time_speed  # 1 / 10
+from settings import USDT_COINS, BTC_COINS, POLONIEX
+
 from settings import PERIODS_LIST, SHORT, MEDIUM, LONG
 
 from taskapp.helpers import _pull_poloniex_data, _compute_and_save_indicators, _backtest_all_strategies
@@ -19,10 +32,12 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         logger.info("Getting ready to trawl Poloniex...")
         SOURCE = 0
+
         schedule.every().minute.do(_pull_poloniex_data, SOURCE )
 
         logger.info("Getting ready to reevaluation all strategies...")
         schedule.every().minute.do(_backtest_all_strategies)
+
 
 
         # @Alex
@@ -34,8 +49,10 @@ class Command(BaseCommand):
             if horizont_period in [SHORT, MEDIUM]:
                 schedule.every(hours).hours.at("00:00").do(
                     _compute_and_save_indicators,
+
                     { 'source': 0,
                       'period': horizont_period }
+
                 )
 
             # if long period start exacly at the beginning of a day
@@ -44,6 +61,7 @@ class Command(BaseCommand):
                     _compute_and_save_indicators,
                     {'source': 0,
                      'period': horizont_period}
+
                 )
 
 
@@ -56,3 +74,4 @@ class Command(BaseCommand):
                 logger.debug(str(e))
                 logger.info("Poloniex Trawl shut down.")
                 keep_going = False
+

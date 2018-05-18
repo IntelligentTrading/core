@@ -20,8 +20,8 @@ class ResampledPriceSerializer(serializers.ModelSerializer):
 class SignalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Signal
-        fields = ['source', 'resample_period', 'transaction_currency', 'counter_currency',\
-                    'timestamp', 'signal', 'trend', 'horizon', 'price', 'rsi_value']
+        fields = ['id', 'source', 'resample_period', 'transaction_currency', 'counter_currency',\
+                    'timestamp', 'signal', 'trend', 'horizon', 'price', 'rsi_value', 'sent_at']
 
 # Rsi
 class RsiSerializer(serializers.ModelSerializer):

@@ -51,9 +51,16 @@ def help(bot, update):
     update.message.reply_text(dedent("""
         *Available commands:*
 
-        *•* /help - Get a list of all commands
-        *•* /itt <cryptocurrency> - Short info about currency. For example: `/itt BTC`
+        *•* `/itt <cryptocurrency>` - Short info about currency. Example: `/itt BTC` ot `/itt XRP_ETH`
+        *•* `/price <cryptocurrency>` - Prices from all exchanges. Example: `/price ETH_USDT`
+        *•* `/info` - List of supported coins and exchanges
+        *•* `/help` - List of all commands
+
+        To use this commands in telegram channel, invite @itf\_info\_bot as admin with 'Post Messages' rights into your channel.
     """), ParseMode.MARKDOWN)
+
+def getme(bot, update):
+    update.message.reply_text(f"Your username:{update.message.from_user.username} and userId {str(update.message.from_user.id)}")
 
 def error(bot, update, error):
     """Log Errors caused by Updates."""

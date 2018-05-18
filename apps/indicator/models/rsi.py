@@ -15,30 +15,32 @@ class Rsi(AbstractIndicator):
     def rsi(self):  # relative strength index
         if self.relative_strength is not None:
             return 100.0 - (100.0 / (1.0 + self.relative_strength))
+        else:
+            return None
 
 
     def get_rsi_bracket_value(self):
         rsi = self.rsi
-        if rsi is None:
+        if rsi is None or rsi==0.0 or rsi ==100.0:
             return 0
 
-        assert (rsi>=0.0) & (rsi<=100.0)
+        assert (rsi>0.0) & (rsi<100.0), '>>> ERROR: RSI has extreme value of 0 or 100, highly unlikely'
 
         rsi_strength = 0
         if rsi >= 0 and rsi <= 100 :
             logger.debug("   RSI= " + str(rsi))
             if rsi >= 80:
-                rsi_strength = 3  # Extremely overbought
+                rsi_strength = -3  # Extremely overbought
             elif rsi >= 75:
-                rsi_strength = 2  # very overbought
+                rsi_strength = -2  # very overbought
             elif rsi >= 70:
-                rsi_strength = 1  # overbought
+                rsi_strength = -1  # overbought
             elif rsi <= 20:
-                rsi_strength = -3  # Extremely oversold
+                rsi_strength = 3  # Extremely oversold
             elif rsi <= 25:
-                rsi_strength = -2   # very oversold
+                rsi_strength = 2   # very oversold
             elif rsi <= 30:
-                rsi_strength = -1  # oversold
+                rsi_strength = 1  # oversold
         return rsi_strength
 
 
@@ -57,8 +59,9 @@ class Rsi(AbstractIndicator):
         )
 
         resampl_close_price_ts = resampl_price_df.close_price
+        logger.debug( '  RSI:   current period=' + str(self.resample_period) + ', close prices available for that period=' + str(resampl_close_price_ts.size))
 
-        if resampl_close_price_ts is not None:
+        if (resampl_close_price_ts is not None) and (resampl_close_price_ts.size > 12):
             # difference btw start and close of the day, remove the first NA
             delta = resampl_close_price_ts.diff()
             delta = delta[1:]
@@ -75,17 +78,28 @@ class Rsi(AbstractIndicator):
             rs_ts = roll_up / roll_down
 
             self.relative_strength = float(rs_ts.tail(1))  # get the last element for the last time point
+            return self.relative_strength
         else:
-            logger.debug('Not enough closing prices for RS calculation')
-
+            logger.debug(':RSI was not calculated:: Not enough closing prices')
+            logger.debug('     current period=' + str(self.resample_period) + ', close prices available for that period=' + str(resampl_close_price_ts.size) )
+            return None
 
 
     @staticmethod
     def compute_all(cls, **kwargs):
-        new_instance = cls.objects.create(**kwargs)
-        new_instance.compute_rs()
-        new_instance.save()
-        logger.info("   ...RS calculations done and saved.")
+        #new_instance = cls.objects.create(**kwargs)
+        #rs = new_instance.compute_rs()
+        #if rs:
+        #    new_instance.save()
+        #    logger.info("   ...RS calculations done and saved.")
+
+        # now we avoid creating DB record if no rsi has been computed
+        new_instance = cls(**kwargs)
+        rs = new_instance.compute_rs()
+        if rs:
+            new_instance.save()
+            logger.info("   ...RS calculations are done and saved.")
+
 
 
 

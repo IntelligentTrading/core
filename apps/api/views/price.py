@@ -21,18 +21,19 @@ class ListPrices(ListAPIView):
 
         transaction_currency: -- string 'BTC', 'ETH' etc
         counter_currency -- number 0=BTC, 1=ETH, 2=USDT, 3=XMR
-        source -- number 0=poloniex, 1=bittrex
+        source -- number 0=poloniex, 1=bittrex, 2=binance
         startdate -- from this date (inclusive). Example 2018-02-12T09:09:15
         enddate -- to this date (inclusive)
 
     For pagination
         cursor - indicator that the client may use to page through the result set
+        page_size -- a numeric value indicating the page size
 
     Examples
         /api/v2/prices/?startdate=2018-01-26T10:24:37&enddate=2018-01-26T10:59:02
         /api/v2/prices/?transaction_currency=ETH&counter_currency=0
     """
-     
+
     permission_classes = (RestAPIPermission, )
     pagination_class = StandardResultsSetPagination
     serializer_class = PriceSerializer
@@ -56,13 +57,14 @@ class ListPrice(ListAPIView):
 
     For filtering
 
-        counter_currency -- number 0=BTC, 1=ETH, 2=USDT, 3=XMR (Default 0, for BTC - 2)
-        source -- number 0=poloniex, 1=bittrex
+        counter_currency -- number 0=BTC, 1=ETH, 2=USDT, 3=XMR. Default 0=BTC, for BTC 2=USDT
+        source -- number 0=poloniex, 1=bittrex, 2=binance.
         startdate -- show inclusive from date. For example 2018-02-12T09:09:15
         enddate -- until this date inclusive in same format
 
     For pagination
         cursor - indicator that the client may use to page through the result set
+        page_size -- a numeric value indicating the page size
 
     Examples
         /api/v2/prices/ETH # ETH in BTC

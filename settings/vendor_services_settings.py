@@ -81,12 +81,17 @@ CACHE_MIDDLEWARE_SECONDS = 60 * 60 # cache pages for 60 min same as SHORT period
 CACHE_MIDDLEWARE_ALIAS = 'default'
 CACHE_MIDDLEWARE_KEY_PREFIX = ''
 
-# Celery settings (optimized for CloudAMQP)
-CELERY_BROKER_URL =  os.environ.get('CLOUDAMQP_URL', 'amqp://guest:guest@localhost//')
-CELERY_BROKER_POOL_LIMIT = 1 # for free tier of the ampq https://devcenter.heroku.com/articles/cloudamqp#celery
-CELERYD_TASK_TIME_LIMIT = 1*60*60 # 1 hour, in seconds
-CELERY_BROKER_HEARTBEAT = None # CloudAMQP using TCP keep-alive instead
-CELERY_BROKER_CONNECTION_TIMEOUT = 30 # default 4 is not enough for CloudAMQP
+# Temporary disable cache for debug
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+#     }
+# }
+
+
+# Celery settings
+#CELERY_BROKER_URL =  os.environ.get('CLOUDAMQP_URL', 'amqp://guest:guest@localhost//')
+CELERY_BROKER_URL =  os.environ.get('REDIS_URL', 'redis://localhost:6379') # if env not set use local redis server
 
 # Telegram settings for itt-info-bot
 INFO_BOT_TELEGRAM_BOT_API_TOKEN = os.environ.get('INFO_BOT_TELEGRAM_BOT_API_TOKEN', '123ABC')
@@ -94,3 +99,4 @@ INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS = 4 * 60 * 60 # cache telegram bot reply for
 INFO_BOT_CRYPTOPANIC_API_TOKEN = os.environ.get('INFO_BOT_CRYPTOPANIC_API_TOKEN', '123ABC')
 
 INCOMING_SQS_QUEUE = os.environ.get('INCOMING_SQS_QUEUE')
+SNS_SIGNALS_TOPIC_ARN = os.environ.get('SNS_SIGNALS_TOPIC_ARN', None)
