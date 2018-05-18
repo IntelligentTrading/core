@@ -99,6 +99,7 @@ def _process_ai_simple(horizon, **kwargs):
                 **kwargs,
                 signal='ANN_Simple',
                 trend=int(df.iloc[-1]['class_change']),
+                strength_value= int(3),
                 horizon=horizon,
                 predicted_ahead_for= ann_classif_df.tail(1)['predicted_ahead_for'][0],
                 probability_same = ann_classif_df.tail(1)['probability_same'][0],

@@ -92,6 +92,8 @@ INSTALLED_APPS = [
     'apps.api',
     'apps.info_bot',
     'taskapp',
+    'apps.backtesting',
+    'apps.strategy',
 
     # DJANGO APPS
     'django.contrib.admin',
@@ -237,9 +239,11 @@ SOURCE_CHOICES = (
     (HITBTC, 'hitbtc'),
 )
 
+
 # list of supported counter currencies
 COUNTER_CURRENCIES = ('BTC', 'ETH', 'USDT')
 # Please only add new counter currencies to this settings, never remove or modify
+
 (BTC, ETH, USDT, XMR) = list(range(4))
 COUNTER_CURRENCY_CHOICES = (
     (BTC, 'BTC'),

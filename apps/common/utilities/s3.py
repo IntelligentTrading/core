@@ -1,5 +1,4 @@
 import boto
-import typing
 from settings import AWS_OPTIONS, DEFAULT_FILE_STORAGE
 import logging
 logger = logging.getLogger(__name__)

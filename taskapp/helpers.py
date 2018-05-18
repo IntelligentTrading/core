@@ -3,6 +3,7 @@ import logging
 import time
 
 from requests import get, RequestException
+from apps.common.utilities.sqs import send_sqs
 
 from apps.channel.models import ExchangeData
 from apps.indicator.models import Price, Volume
@@ -15,11 +16,21 @@ from apps.indicator.models.rsi import Rsi
 from apps.indicator.models.ann_future_price_classification import AnnPriceClassification
 from apps.indicator.models.events_elementary import EventsElementary
 from apps.indicator.models.events_logical import EventsLogical
+from apps.user.models.user import get_horizon_value_from_string
 
 from apps.ai.models.nn_model import get_ann_model_object
+from apps.strategy.models.strategy_ref import get_all_strategy_classes, add_all_strategies
+from apps.strategy.models.rsi_sma_strategies import RsiSimpleStrategy, SmaCrossOverStrategy
+from apps.backtesting.models.back_test import BackTest
 
-from settings import SHORT, MEDIUM, LONG, RUN_ANN
+
+from settings import USDT_COINS, BTC_COINS
+from settings import SHORT, MEDIUM, LONG, HORIZONS_TIME2NAMES, RUN_ANN
+from apps.backtesting.models.back_test import get_distinct_trading_pairs
+import pandas as pd
+from settings import PERIODS_LIST
 from settings import SOURCE_CHOICES, EXCHANGE_MARKETS
+
 
 
 
@@ -96,7 +107,10 @@ def _save_prices_and_volumes(data, timestamp, source):
 
 
 
-def _compute_and_save_indicators(source, resample_period):
+def _compute_and_save_indicators(params):
+    source = params['source']
+    resample_period = params['period']
+    horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[resample_period])
 
     timestamp = time.time() // (1 * 60) * (1 * 60)   # rounded to a minute
 
@@ -116,6 +130,7 @@ def _compute_and_save_indicators(source, resample_period):
 
     #TODO: get pairs from def(SOURCE)
     #pairs_to_iterate = [(itm,Price.USDT) for itm in USDT_COINS] + [(itm,Price.BTC) for itm in BTC_COINS]
+
     pairs_to_iterate = get_currency_pairs(source=source, period_in_seconds=resample_period*60*2)
     #logger.debug("## Pairs to iterate: " + str(pairs_to_iterate))
 
@@ -137,7 +152,7 @@ def _compute_and_save_indicators(source, resample_period):
         BACK_TIME = timestamp - BACK_REC * resample_period * 60  # same in sec
 
         last_time_computed = get_first_resampled_time(source, transaction_currency, counter_currency, resample_period)
-        records_to_compute = int((last_time_computed-BACK_TIME)/(resample_period * 60))
+        records_to_compute = int((last_time_computed-BACK_TIME)/(resample_period * 40))
 
         if records_to_compute >= 0:
             logger.info("  ... calculate resampl back in time, needed records: " + str(records_to_compute))
@@ -165,6 +180,7 @@ def _compute_and_save_indicators(source, resample_period):
         ################# Can be commented after first time run
 
 
+        # 1 ############################
         # calculate and save resampling price
         # todo - prevent adding an empty record if no value was computed (static method below)
         try:
@@ -176,6 +192,7 @@ def _compute_and_save_indicators(source, resample_period):
             logger.error(" -> RESAMPLE EXCEPTION: " + str(e))
 
 
+        # 2 ###########################
         # calculate and save simple indicators
         indicators_list = [Sma, Rsi]
         for ind in indicators_list:
@@ -184,6 +201,7 @@ def _compute_and_save_indicators(source, resample_period):
                 logger.debug("  ... Regular indicators completed,  ELAPSED Time: " + str(time.time() - timestamp))
             except Exception as e:
                 logger.error(str(ind) + " Indicator Exception: " + str(e))
+
 
 
         # calculate ANN indicator(s)
@@ -201,7 +219,7 @@ def _compute_and_save_indicators(source, resample_period):
 
 
 
-        ##############################
+        # 4 #############################
         # check for events and save if any
         events_list = [EventsElementary, EventsLogical]
         for event in events_list:
@@ -211,10 +229,80 @@ def _compute_and_save_indicators(source, resample_period):
             except Exception as e:
                 logger.error(" Event Exception: " + str(e))
 
+
+        # 5 ############################
+        # check if we have to emit any <Strategy> signals
+
+        strategies_list = get_all_strategy_classes()  # [RsiSimpleStrategy, SmaCrossOverStrategy]
+        if not strategies_list:
+            strategies_list = add_all_strategies()
+
+        for strategy in strategies_list:
+            try:
+                s = strategy(**indicator_params_dict)
+                now_signals_set = s.check_signals_now()
+                logger.debug("  NOW: found Signal belongs to strategy : " + str(strategy) + " : " + str(now_signals_set))
+
+                # Emit to a signal from a strategy to sqs without saving it in the Signal table
+                # combine a dictionary with all data
+                dict_to_emit = {
+                    **indicator_params_dict,
+                    "horizon"  : horizon,
+                    "strategy" : str(s),
+                    "signal_name" : str(now_signals_set)
+                }
+                send_sqs(dict_to_emit)
+                logger.debug("   ... Checking for strategy signals completed.")
+            except Exception as e:
+                logger.error(" Error Strategy checking:  " + str(e))
+
+    # clean session to prevent memory leak
     if RUN_ANN:
         # clean session to prevent memory leak
         logger.debug("   ... Cleaning Keras session...")
         from keras import backend as K
         K.clear_session()
-        # TODO check if I can do a batch Keras prediction for all currencies at once
-        # NOTE: you can form an X vector inside this cycle and then run prediction!!!
+
+
+# run by scheduler from trawl_poloniex every XXX hours
+def _backtest_all_strategies():
+
+    now_timestamp = time.time()
+
+    # get all strategies in the system from Strategies model
+    strategies_class_list = get_all_strategy_classes()
+
+    # TODO: decide which period we're going to use
+    time_end = time.time()
+    time_start = time_end - 3600 * 24 * 30  # a month back
+
+    # get all triplets (source, transaction_currency, counter_currency)
+    trading_pairs = get_distinct_trading_pairs(time_start, time_end)
+
+    # run reavaluation
+    for strategy_class in strategies_class_list:
+        # begin = time.time()
+        strategy_class_name = strategy_class.__name__
+
+        # iterate over all currencies and exchangers (POLONIEX etc) with run_backtest_on_one_curency_pair
+        logger.info("Started backtesting {} on all currency...".format(strategy_class_name))
+
+        for resample_period in PERIODS_LIST:
+            for trading_pair in trading_pairs:
+                back_test_run = BackTest(strategy_class, now_timestamp, time_start, time_end)
+
+                if back_test_run.run_backtest_on_one_curency_pair(trading_pair["source"],
+                                                                  trading_pair["transaction_currency"],
+                                                                  trading_pair["counter_currency"],
+                                                                  resample_period):
+
+                    # save only if there were backtesting results
+                    back_test_run.save()
+
+        logger.info("Ended backtesting {} on all currency.".format(strategy_class_name))
+        # end = time.time()
+        # logger.info("Time to test strategy {}: {} minutes".format(strategy_class_name, (end-begin)/60))
+
+
+
+

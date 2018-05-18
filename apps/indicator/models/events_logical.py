@@ -53,6 +53,7 @@ class EventsLogical(AbstractIndicator):
                         **kwargs,
                         signal='kumo_breakout',
                         trend = int(1),  # positive trend means it is UP / bullish signal
+                        strength_value=int(3),
                         horizon=horizon,
                     )
                     signal_kumo_up.save()
@@ -87,6 +88,7 @@ class EventsLogical(AbstractIndicator):
                         **kwargs,
                         signal='kumo_breakout',
                         trend=int(-1),  # negative is bearish
+                        strength_value=int(3),
                         horizon=horizon,
                     )
                     signal_kumo_down.save()
@@ -153,6 +155,7 @@ class EventsLogical(AbstractIndicator):
                             signal='RSI_Cumulative',
                             rsi_value=rs_obj.rsi,
                             trend=np.sign(last_events_df['rsi_bracket'].tail(1).values[0]),
+                            strength_value=int(3),
                             horizon=horizon,
                             strength_value=np.abs(last_events_df['rsi_bracket'].tail(1).values[0]),
                             strength_max=int(3),
@@ -179,6 +182,7 @@ class EventsLogical(AbstractIndicator):
                             signal='RSI_Cumulative',
                             rsi_value=rs_obj.rsi,
                             trend=np.sign(last_events_df['rsi_bracket'].tail(1).values[0]),
+                            strength_value=int(3),
                             horizon=horizon,
                             strength_value=np.abs(last_events_df['rsi_bracket'].tail(1).values[0]),
                             strength_max=int(3),

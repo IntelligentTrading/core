@@ -1,6 +1,7 @@
 import copy
 import json
 import logging
+import pandas as pd
 
 import boto
 import boto.sns
@@ -28,6 +29,49 @@ UI_CHOICES = (
     (TELEGRAM, 'telegram bot'),
     (WEB, 'web app'),
 )
+
+# @AlexY
+###### Create a list of all possible signals
+# in further releases we can move it out to a separate class / Table
+from collections import namedtuple
+
+SignalType = namedtuple('SignalType', 'signal, trend, strength')
+
+ALL_SIGNALS = {
+    # TEST, delete in production
+    #'rsi_sell_3_test': SignalType(signal = 'RSI', trend = 1, strength = 1),
+    #'rsi_buy_3_test' : SignalType(signal = 'RSI', trend = -1, strength = 1),
+    ############################
+
+    'rsi_buy_1' : SignalType('RSI', 1, 1),
+    'rsi_buy_2' : SignalType('RSI', 1, 2),
+    'rsi_buy_3' : SignalType('RSI', 1, 3),
+    'rsi_sell_1': SignalType(signal='RSI', trend=-1, strength=1),
+    'rsi_sell_2': SignalType(signal='RSI', trend=-1, strength=2),
+    'rsi_sell_3': SignalType(signal='RSI', trend=-1, strength=3),
+
+    'rsi_cumulat_buy_2' : SignalType('RSI_Cumulative', 1, 2),
+    'rsi_cumulat_buy_3' : SignalType('RSI_Cumulative', 1, 3),
+    'rsi_cumulat_sell_2': SignalType('RSI_Cumulative', -1, 2),
+    'rsi_cumulat_sell_3': SignalType('RSI_Cumulative', -1, 3),
+
+    'ichi_kumo_up' : SignalType('kumo_breakout', 1, 3),
+    'ichi_kumo_down' : SignalType('kumo_breakout', -1, 3),
+
+    'sma_bull_1' : SignalType('SMA', 1, 1),  # price crosses sma50 up
+    'sma_bear_1' : SignalType('SMA', -1, 1),
+    'sma_bull_2' : SignalType('SMA', 1, 2),   # price crosses sma200 up
+    'sma_bear_2' : SignalType('SMA', -1, 2),
+    'sma_bull_3' : SignalType('SMA', 1, 3),    # sma50 crosses sma200 up
+    'sma_bear_3' : SignalType('SMA', -1, 3),
+
+    'ann_simple_bull': SignalType('ANN_Simple', 1, 3),  # price cross sma200 up
+    'ann_simple_bear': SignalType('ANN_Simple', -1, 3),
+
+
+}
+#################
+
 
 
 class Signal(Timestampable, models.Model):
@@ -123,6 +167,8 @@ class Signal(Timestampable, models.Model):
         # todo: call send in a post_save signal?? is there any reason to delay or schedule a signal?
 
 
+        # TODO: please use common/utilities/sqs.send_sqs
+
         message = Message()
         body_dict = self.as_dict()
         body_dict['sent'] = str(datetime.now())
@@ -204,3 +250,87 @@ def send_signal(sender, instance, **kwargs):
             logging.debug("signal sent and timstamp saved")
         except Exception as e:
             logging.error(str(e))
+
+
+#################### @AlexY for Straging Strategies
+
+def _get_signal_idname(signal):
+    # now in DB for RSI_Cumulative it is None unfortunatelly, so have to assign 3
+    if not signal['strength_value']:
+        signal['strength_value'] = 3
+
+    # temp fix, will remove everything after . to good int conversion of float string 1.0
+    trend, sep, tail = signal['trend'].partition('.')
+
+    # create a signal record for the signal extracted from DB
+    sign_record = SignalType(signal=signal['signal'], trend=int(trend), strength=int(signal['strength_value']))
+    # print(sig_converted)
+
+    # check if that signal is in our list of all signals and gets its id if it exists
+    id = [x for x in ALL_SIGNALS if ALL_SIGNALS[x] == sign_record]
+    assert len(id) == 1, 'ERROR: there is no such signal in ALL_SIGNALS: '+ str(signal)
+
+    return id[0]   #unlist it
+
+
+
+def get_all_signals_names_now(**kwargs):
+    # get all signals happened just now (in current temestamp from **kwargs)
+
+    '''
+    # for PRODUCTION
+    signals_quaryset = Signal.objects.filter(
+        **kwargs
+    ).values('id', 'signal', 'trend', 'strength_value').order_by('timestamp')
+    '''
+
+    # for TESTING
+    # this is for debug purposes!!! remove and uncomment in production!!!
+    signals_queryset = Signal.objects.filter(
+        #TODO: for all times (for testing), please uncomment above for production
+        source = kwargs['source'],
+        transaction_currency=kwargs['transaction_currency'],
+        counter_currency = kwargs['counter_currency'],
+        resample_period = kwargs['resample_period']
+    ).values('id', 'signal', 'trend', 'strength_value').order_by('timestamp')
+
+    # lookup for signals names in ALL_SIGNALS
+    signals_set = set()
+    for signal in signals_queryset:
+
+        # convert a query set to unique name of the signal
+        unique_name = _get_signal_idname(signal)
+
+        # if it exists, add it to returning set
+        if unique_name:
+            signals_set.update([unique_name])
+
+    return signals_set
+
+def get_prevous_signal_name(**kwargs):
+    pass
+
+
+def get_signals_ts(start_time, end_time, **kwargs):
+    # get all signals from DB as a timeseries
+    signals_queryset = Signal.objects.filter(
+        source=kwargs['source'],
+        transaction_currency=kwargs['transaction_currency'],
+        counter_currency=kwargs['counter_currency'],
+        resample_period=kwargs['resample_period'],
+        timestamp__lte=end_time,
+        timestamp__gte=start_time
+    ).values('id', 'timestamp', 'signal', 'trend', 'strength_value').order_by('timestamp')
+
+    # convert to ts
+    times = [ x['timestamp'] for x in signals_queryset]
+    index = pd.DatetimeIndex(times)
+
+    data = []
+    for signal in signals_queryset:
+        id = _get_signal_idname(signal)
+        data.append(id)
+
+    signal_ts = pd.Series(data, index=index)
+
+    return signal_ts
