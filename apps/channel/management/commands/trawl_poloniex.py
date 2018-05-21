@@ -39,7 +39,6 @@ class Command(BaseCommand):
         schedule.every().minute.do(_backtest_all_strategies)
 
 
-
         # @Alex
         # run resampling for all periods and calculate indicator values
         logger.info("Getting ready to recalculate all idicators...")
@@ -49,9 +48,8 @@ class Command(BaseCommand):
             if horizont_period in [SHORT, MEDIUM]:
                 schedule.every(hours).hours.at("00:00").do(
                     _compute_and_save_indicators,
-
-                    { 'source': 0,
-                      'period': horizont_period }
+                    source=0,
+                    resample_period=horizont_period
 
                 )
 
@@ -59,8 +57,8 @@ class Command(BaseCommand):
             if horizont_period == LONG:
                 schedule.every().day.at("00:00").do(
                     _compute_and_save_indicators,
-                    {'source': 0,
-                     'period': horizont_period}
+                    source=0,
+                    resample_period=horizont_period
 
                 )
 

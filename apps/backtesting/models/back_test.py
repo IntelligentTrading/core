@@ -1,7 +1,7 @@
 import logging
 from unixtimestampfield.fields import UnixTimeStampField
 from django.db import models
-from apps.indicator.models.price_resampl import get_price_at_timepoint
+from apps.indicator.models.price_resampl import get_resampl_price_at_timepoint
 from apps.signal.models import Signal
 from apps.signal.models.signal import ALL_SIGNALS
 from datetime import datetime
@@ -198,7 +198,7 @@ class BackTest(models.Model):
         for timestamp, signal in signals.items():
             last_trade_timestamp = timestamp  # storing the time of the last trade, needed for USDT conversion etc.
 
-            price = get_price_at_timepoint(timestamp, source, transaction_currency, counter_currency, resample_period)
+            price = get_resampl_price_at_timepoint(timestamp, source, transaction_currency, counter_currency, resample_period)
             if price is None or price == 0:
                 logger.error("Unable to find or interpolate price data or price is zero - highly unlikely, please investigate!")
                 continue  # covers a very rare case when we don't have price data and can't interpolate either
@@ -232,8 +232,8 @@ class BackTest(models.Model):
         # housekeeping in case that the last signal was a buy signal, meaning we didn't end up with cash but with crypto
         # calculate the value of this crypto in counter_currency to estimate profit
         if crypto > 0:
-            price = get_price_at_timepoint(datetime.utcfromtimestamp(end_timeframe), source,
-                                           transaction_currency, counter_currency, resample_period)
+            price = get_resampl_price_at_timepoint(datetime.utcfromtimestamp(end_timeframe), source,
+                                                   transaction_currency, counter_currency, resample_period)
             if price is None:
                 end_cash = None
                 end_cash_USDT = None
@@ -332,10 +332,10 @@ def execute_sell(crypto_amount, unit_price, transaction_cost_percent):
 def calculate_profit_buy_and_hold(cash, source, transaction_currency, counter_currency,
                                   resample_period, start_timeframe, end_timeframe, transaction_cost_percent):
 
-    start_price = get_price_at_timepoint(datetime.utcfromtimestamp(start_timeframe),
-                                         source, transaction_currency, counter_currency, resample_period)
-    end_price = get_price_at_timepoint(datetime.utcfromtimestamp(end_timeframe),
-                                       source, transaction_currency, counter_currency, resample_period)
+    start_price = get_resampl_price_at_timepoint(datetime.utcfromtimestamp(start_timeframe),
+                                                 source, transaction_currency, counter_currency, resample_period)
+    end_price = get_resampl_price_at_timepoint(datetime.utcfromtimestamp(end_timeframe),
+                                               source, transaction_currency, counter_currency, resample_period)
 
     if start_price is None or end_price is None:
         return None
@@ -363,16 +363,16 @@ def calculate_profit_buy_and_hold_USDT(cash, source, transaction_currency, count
         return None
 
     # buying at the start of timeframe for all cash
-    start_price = get_price_at_timepoint(datetime.utcfromtimestamp(start_timeframe),
-                                         source, transaction_currency, counter_currency, resample_period)
+    start_price = get_resampl_price_at_timepoint(datetime.utcfromtimestamp(start_timeframe),
+                                                 source, transaction_currency, counter_currency, resample_period)
     if start_price is None:
         return None
 
     crypto = execute_buy(cash, start_price, transaction_cost_percent)
 
     # selling everything at the end of timeframe
-    end_price = get_price_at_timepoint(datetime.utcfromtimestamp(end_timeframe),
-                                       source, transaction_currency, counter_currency, resample_period)
+    end_price = get_resampl_price_at_timepoint(datetime.utcfromtimestamp(end_timeframe),
+                                               source, transaction_currency, counter_currency, resample_period)
     if end_price is None:
         return None
 
@@ -392,9 +392,9 @@ def calculate_value_in_USDT(amount, timestamp, counter_currency, source, resampl
     if counter_currency == 2:   # trivial case, if the value is already in USDT
         return amount
     else:
-        price_USDT = get_price_at_timepoint(timestamp=datetime.utcfromtimestamp(timestamp), source=source,
-                                            transaction_currency=get_currency_name(counter_currency),
-                                            counter_currency=2, resample_period=resample_period)
+        price_USDT = get_resampl_price_at_timepoint(timestamp=datetime.utcfromtimestamp(timestamp), source=source,
+                                                    transaction_currency=get_currency_name(counter_currency),
+                                                    counter_currency=2, resample_period=resample_period)
         if price_USDT is not None:  # if no data for USDT price, None will be returned
             value = amount * price_USDT
     return value

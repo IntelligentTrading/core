@@ -1,7 +1,21 @@
 import logging
 from django.db import models
+from collections import namedtuple
 
 logger = logging.getLogger(__name__)
+
+
+
+# SignalRefType = namedtuple(
+#     'SignalRefType',
+#     'name implementation_module_name implementation_class_name description generated ')
+#
+# ALL_STRATEGIES = {
+#
+#     'rsi_buy_1' : SignalRefType('RSI', 1, 1),
+#     'rsi_buy_2' : SignalRefType('RSI', 1, 2),
+#
+# }
 
 
 class StrategyRef(models.Model):
@@ -33,6 +47,7 @@ def get_all_strategy_classes():
         module_name = strategy['implementation_module_name']
         class_name = strategy['implementation_class_name']
         module = importlib.import_module(module_name)
+
         class_obj = getattr(module, class_name)
         strategy_object_list.append(class_obj)
 

@@ -126,35 +126,40 @@ def get_first_resampled_time(source, transaction_currency, counter_currency, res
         return time.time()
 
 
-# TODO: to implement a backtesting @Karla need a price at a given time point
-# returns a resampled price at a given time point
-def get_price_at_timepoint(timestamp, source, transaction_currency, counter_currency, resample_period):
+# returns an interpolated resampled price at a given arbitrary time point
+def get_resampl_price_at_timepoint(timestamp, source, transaction_currency, counter_currency, resample_period):
+    '''
+    Resampled table contains only agregated prices on 60/240min pime periods, but
+    sometimes we need price in between of this points.
+    To do that we use this method, which returns an imterpolated prices at arbitraty time point
+    based on resample ts data
+    Note: to get more presise price use the same method in Price model
+    '''
     prices_range = list(PriceResampl.objects.filter(
         source=source,
         resample_period=resample_period,
         transaction_currency=transaction_currency,
         counter_currency=counter_currency,
-        timestamp__gte = timestamp - timedelta(minutes=resample_period * 5),  # 5 period ahead in time
-        timestamp__lte=timestamp + timedelta(minutes=resample_period * 5),  # 5 period back in time
+        timestamp__gte = timestamp - timedelta(minutes=resample_period * 10),  # 5 period ahead in time
+        timestamp__lte=timestamp + timedelta(minutes=resample_period * 10),  # 5 period back in time
     ).values('timestamp',  'close_price').order_by('timestamp'))
 
     #convert to a timeseries
-    #TODO: use  = ts.reindex(index=range(1, max_range), fill_value=0)
     if prices_range:
         ts = [rec['timestamp'] for rec in prices_range]
         close_prices_ts = pd.Series(data=[rec['close_price'] for rec in prices_range], index=ts)
     else:
-        logger.error(' no reasmple close prace at timepoint  ' + str(timestamp) + ' backtesting is not possible')
+        logger.error(' we dont have any resample price in 10 period proximity of the date you provided:  ' + str(timestamp) + ' :backtesting is not possible')
         return None
 
     # check if we have a price at a given timestamp and if not we interpolate
-    # TODO: might not handle all cases, double check later
     if timestamp in close_prices_ts.index:
         price = close_prices_ts[timestamp]
     else:
-        # add our missing index and then interpolate
-        close_prices_ts.append(pd.Series(value=np.nan, index=timestamp))
-        close_prices_ts.interpolate()
-        price = close_prices_ts[timestamp]
+        # add our missing index, resort and then interpolate
+        close_prices_ts = close_prices_ts.append(pd.Series(None, index=[timestamp]))
+        close_prices_ts.sort_index(inplace=True)
+        close_prices_ts = close_prices_ts.interpolate()
+        price = int(close_prices_ts[timestamp])
 
     return price

@@ -117,7 +117,9 @@ def _compute_and_save_indicators(source, resample_period):#params):
 
     logger.info("################# Resampling with Period: " + str(resample_period) + ", Source:" + str(source) + " #######################")
 
-
+    # Uncomment  to test backtesting
+    #strategies_list = add_all_strategies()
+    #_backtest_all_strategies()
 
     if RUN_ANN:
         # choose the pre-trained ANN model depending on period, here are the same
@@ -276,7 +278,7 @@ def _backtest_all_strategies():
 
     # TODO: decide which period we're going to use
     time_end = time.time()
-    time_start = time_end - 3600 * 24 * 30  # a month back
+    time_start = time_end - 3600 * 24 * 60  # a month back
 
     # get all triplets (source, transaction_currency, counter_currency)
     trading_pairs = get_distinct_trading_pairs(time_start, time_end)
