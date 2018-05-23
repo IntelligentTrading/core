@@ -110,7 +110,8 @@ def format_currency(amount, currency_symbol='', in_satoshi=True):
 
 def parse_telegram_cryptocurrency_args(args, update, command):
     try:
-        arg = args[0].upper()
+        arg = f"{args[0]}_{args[1]}" if len(args) > 1 else args[0]
+        arg = arg.upper()
     except:
         update.message.reply_text(f"Please add coin abbreviation or trading pair to command. For example: `/{command} BTC` or `/{command} ETH_USDT`", ParseMode.MARKDOWN)
         return None

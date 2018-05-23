@@ -58,7 +58,7 @@ def sentiment_from_cryptopanic(currency):
 
 
 ## New helpers
-@cache_memoize(INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS)
+@cache_memoize(INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS) # 4 hours
 def itt_view(trading_pair):
     view = ''
 
@@ -168,6 +168,8 @@ def get_kumo_template(signal):
         'ichimoku_header_emoji': 'ℹ️',
         'ichimoku_text': f'Ichimoku: {ichi_breakout} Cloud Breakout {ichi_emoji}\nITF Bias: {ichi_bias} trend continuation likely.'
     }
+
+
 
 ## user commands
 def itt(bot, update, args):
