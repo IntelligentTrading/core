@@ -58,7 +58,7 @@ def sentiment_from_cryptopanic(currency):
 
 
 ## New helpers
-@cache_memoize(INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS) # 4 hours
+#@cache_memoize(INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS) # 4 hours
 def itt_view(trading_pair):
     view = ''
 
@@ -77,15 +77,17 @@ def itt_view(trading_pair):
         ).order_by('-timestamp').first()
 
     source = price_new_object.source
+    view += f"*{currency}*\_{trading_pair['counter_currency']} *{format_currency(price_new_object.price, currency_symbol)}*"
+
     price_24h_old_object = Price.objects.filter(
         source=source, transaction_currency=currency, counter_currency=counter_currency,
         timestamp__lte=price_new_object.timestamp - timedelta(minutes=1440)
         ).order_by('-timestamp').first()
-
-    percents_price_diff_24h = percents(price_new_object.price, price_24h_old_object.price)
-
-    view += f"*{currency}*\_{trading_pair['counter_currency']} *{format_currency(price_new_object.price, currency_symbol)}*"
-    view += f" *{diff_symbol(percents_price_diff_24h)}*\n24hr Change: {'{:+.2f}%'.format(percents_price_diff_24h)}"
+    try:
+        percents_price_diff_24h = percents(price_new_object.price, price_24h_old_object.price)
+        view += f" *{diff_symbol(percents_price_diff_24h)}*\n24hr Change: {'{:+.2f}%'.format(percents_price_diff_24h)}"
+    except:
+        view += "\n"
 
     # Volume section
     volume_object = Volume.objects.filter(
