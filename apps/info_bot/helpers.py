@@ -135,10 +135,19 @@ def parse_telegram_cryptocurrency_args(args, update, command):
             return trading_pair
     # wrong counter currency
     elif (trading_pair['transaction_currency'], trading_pair['counter_currency']) not in trading_pairs_available:
-        good_trading_pairs = "` or `".join([f"{tc}_{cc}" for (tc, cc) in trading_pairs_for(trading_pair['transaction_currency'], trading_pairs_available)])
+        good_trading_pairs = []
+        # try flip pair
+        if (trading_pair['counter_currency'], trading_pair['transaction_currency']) in trading_pairs_available:
+            good_trading_pairs.append(f"{trading_pair['counter_currency']}_{trading_pair['transaction_currency']}")
+
+        for (tc, cc) in trading_pairs_for(trading_pair['transaction_currency'], trading_pairs_available):
+            good_trading_pairs.append(f"{tc}_{cc}")
+
+        # check other pairs for this transaction_currency
+        good_trading_pairs_text = "` or `".join(good_trading_pairs)
         view = f"Sorry, I don't support this trading pair `{trading_pair['transaction_currency']}_{trading_pair['counter_currency']}`\n\n"
         if good_trading_pairs:
-            view += f"Please try a different pair. For example: `{good_trading_pairs}`"
+            view += f"Please try a different pair. For example: `{good_trading_pairs_text}`"
         update.message.reply_text(view, ParseMode.MARKDOWN)
         return None
     # all good and well
