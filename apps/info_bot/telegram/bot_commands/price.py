@@ -25,10 +25,12 @@ from taskapp.helpers import get_source_name, get_exchanges
 def price_view(trading_pair):
     view = ''
 
-    if trading_pair['counter_currency'] == 'USDT':
-        currency_symbol = '$'
-    else:
-        currency_symbol = ''
+    currency_symbol = trading_pair['counter_currency']
+    
+    # if trading_pair['counter_currency'] == 'USDT':
+    #     currency_symbol = '$'
+    # else:
+    #     currency_symbol = ''
 
     counter_currency = COUNTER_CURRENCIES.index(trading_pair['counter_currency'])
     currency = trading_pair['transaction_currency']
@@ -47,10 +49,10 @@ def price_view(trading_pair):
     unique_last_prices = [price for price in last_prices_object if not (price.source in seen or seen_add(price.source))]
     exchanges_with_price = natural_join([get_source_name(price.source).title() for price in unique_last_prices])
 
-    view += f"I found *{currency}*\_{trading_pair['counter_currency']} in {exchanges_with_price}\n"
+    #view += f"I found *{currency}*\_{trading_pair['counter_currency']} in {exchanges_with_price}\n"
 
     for price_obj in sorted(unique_last_prices, key=lambda pr: pr.price):
-        view += f"\n*{format_currency(price_obj.price, currency_symbol)}* on {get_source_name(price_obj.source).title()} at {format_timestamp(price_obj.timestamp)}"
+        view += f"\n{format_currency(price_obj.price, currency_symbol)} on {get_source_name(price_obj.source).title()} at {format_timestamp(price_obj.timestamp)}"
 
     return view
 

@@ -33,9 +33,9 @@ command1 - Description
 command2 - Another description
 
 itt - short info about coin or trading pair. For example: `/itt BTC` or `/itt XRP_ETH`
-price - show price for the trading pair at the different exchanges. For example: `/price BTC_USDT`
+price - show price for trading pair on different exchanges. For example: `/price BTC_USDT`
 info - list of supported coins, trading pairs and exchanges
-help - list available commands
+help - list of available commands
 
     About:
     Description:

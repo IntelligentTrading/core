@@ -13,7 +13,7 @@ from settings import LOCAL
 
 
 def info_view(update):
-    view = f'Hello, hello, {update.message.from_user.first_name}!\n\n'
+    view = f'Hello, {update.message.from_user.first_name}!\n\n'
 
     exchanges = (get_source_name(index).capitalize() for index in get_exchanges())
     view += f'I support these exchanges: `{", ".join(exchanges)}\n\n`'
@@ -22,9 +22,10 @@ def info_view(update):
     trading_pairs = get_currency_pairs(source='all', period_in_seconds=period_in_seconds, counter_currency_format="text")
 
     coins = set(coin for coin, _ in trading_pairs)
-    view += f'And {len(coins)} coins:\n`{", ".join(coins)}`\n\n'
 
-    view += f'And {len(trading_pairs)} trading pairs, like `BTC_USDT, ETH_BTC, XRP_ETH ...`\nI love long text messages, but this message is already too long, even for me 🙂  '
+    view += f'And {len(coins)} coins:\n`{", ".join(sorted(coins))}`\n\n'
+
+    view += f'And {len(trading_pairs)} trading pairs, like `BTC_USDT, ETH_BTC, XRP_ETH ...`'
 
     return view
 

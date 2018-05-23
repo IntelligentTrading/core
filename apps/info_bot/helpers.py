@@ -92,7 +92,7 @@ def format_timestamp(timestamp):
 
 def format_currency(amount, currency_symbol='', in_satoshi=True):
     if amount == 0:
-        return currency_symbol + '0.00'
+        return f"0.00 {currency_symbol}"
 
     if in_satoshi: # convert from satoshis
         amount = float(amount * float(10**-8))
@@ -105,7 +105,7 @@ def format_currency(amount, currency_symbol='', in_satoshi=True):
     else: # 0.123400000 -> 0.1234
         currency_norm = "{:.6f}".format(amount).rstrip('0').rstrip('.')
 
-    return currency_symbol + currency_norm
+    return f"{currency_norm} {currency_symbol}"
 
 
 def parse_telegram_cryptocurrency_args(args, update, command):
@@ -129,7 +129,7 @@ def parse_telegram_cryptocurrency_args(args, update, command):
         trading_pair['counter_currency'] = default_counter_currency_for(trading_pair['transaction_currency'], trading_pairs_available)
         if trading_pair['counter_currency'] is None:
             coins = set(coin for coin, _ in trading_pairs_available)
-            update.message.reply_text(f"Sorry, I don't support `{trading_pair['transaction_currency']}`\n\nPlease use one of this coins:\n\n{', '.join(coins)}.\n\nOr just enter `/{command} BTC` or `/{command} ETH_USDT`", ParseMode.MARKDOWN)
+            update.message.reply_text(f"Sorry, I don't support `{trading_pair['transaction_currency']}`\n\nPlease use one of these coins:\n\n{', '.join(coins)}.\n\nOr just enter `/{command} BTC` or `/{command} ETH_USDT`", ParseMode.MARKDOWN)
             return None
         else:
             return trading_pair
@@ -138,7 +138,7 @@ def parse_telegram_cryptocurrency_args(args, update, command):
         good_trading_pairs = "` or `".join([f"{tc}_{cc}" for (tc, cc) in trading_pairs_for(trading_pair['transaction_currency'], trading_pairs_available)])
         view = f"Sorry, I don't support this trading pair `{trading_pair['transaction_currency']}_{trading_pair['counter_currency']}`\n\n"
         if good_trading_pairs:
-            view += f"Please use: `{good_trading_pairs}`"
+            view += f"Please try a different pair. For example: `{good_trading_pairs}`"
         update.message.reply_text(view, ParseMode.MARKDOWN)
         return None
     # all good and well
