@@ -115,13 +115,13 @@ def itt_view(trading_pair):
         #     general_trend = 'Bullish' if signal.trend == 1 else 'Bearish'
             if signal.signal == 'RSI':
                 rsi = get_rsi_template(signal)
-                view +=  f"\n *•* {format_timestamp(signal.timestamp)} {rsi['rsi_header_emoji']} {rsi['rsi_text']}\nITF Bias: {rsi['rsi_itt_bias']} ({signal.get_horizon_display().capitalize()} horizon)"
+                view +=  f"\n *•* {format_timestamp(signal.timestamp)} {rsi['rsi_header_emoji']} {rsi['rsi_text']}\nITF Bias: {rsi['rsi_itt_bias']} ({signal.get_horizon_display().capitalize()} horizon)\n"
             elif signal.signal == 'RSI_Cumulative':
                 rsi = get_rsi_template(signal)
-                view +=  f"\n *•* {format_timestamp(signal.timestamp)} {rsi['rsi_header_emoji_pro']} ITF Proprietary Alert\nITF Bias: *{rsi['rsi_general_trend']}* - {rsi['rsi_itt_bias']} ({signal.get_horizon_display().capitalize()} horizon)"
+                view +=  f"\n *•* {format_timestamp(signal.timestamp)} {rsi['rsi_header_emoji_pro']} ITF Proprietary Alert\nITF Bias: *{rsi['rsi_general_trend']}* - {rsi['rsi_itt_bias']} ({signal.get_horizon_display().capitalize()} horizon)\n"
             elif signal.signal == 'kumo_breakout':
                 kumo = get_kumo_template(signal)
-                view += f"\n *•* {format_timestamp(signal.timestamp)} {kumo['ichimoku_header_emoji']} {kumo['ichimoku_text']} ({signal.get_horizon_display().capitalize()} horizon)"
+                view += f"\n *•* {format_timestamp(signal.timestamp)} {kumo['ichimoku_header_emoji']} {kumo['ichimoku_text']} ({signal.get_horizon_display().capitalize()} horizon)\n"
 
         itf_more_info_url = 'http://intelligenttrading.org/features/'
         view += f"\n\n[Get more signals on ITF website]({itf_more_info_url})"
@@ -140,7 +140,7 @@ def itt_view(trading_pair):
 # signal templates
 def get_rsi_template(signal):
     rsi_emoji = '⚠️' if signal.trend == 1 else '🆘'
-    rsi_strength_values = ['', 'Very', 'Extremely']
+    rsi_strength_values = ['', 'Very ', 'Extremely ']
     rsi_trend = ['Overbought', 'Neutral', 'Oversold']
 
     rsi = {
@@ -148,7 +148,7 @@ def get_rsi_template(signal):
         'rsi_header_emoji_pro': '🔰',
         'premium': 'ITF Proprietary Alert',
     }
-    rsi['rsi_text'] = f"RSI: *{rsi_strength_values[int(signal.strength_value) - 1]} {rsi_trend[int(signal.trend) + 1]}* ({int(signal.rsi_value)}) {rsi_emoji}"
+    rsi['rsi_text'] = f"RSI: *{rsi_strength_values[int(signal.strength_value) - 1]}{rsi_trend[int(signal.trend) + 1]}* ({int(signal.rsi_value)}) {rsi_emoji}"
 
     if signal.trend == 1:
         rsi['rsi_general_trend'] = "Bullish"
