@@ -26,7 +26,7 @@ from taskapp.helpers import get_source_name
 ## helpers
 
 def percents(new_value, old_value):
-    return (100*(new_value - old_value)/old_value)
+    return 100*(new_value - old_value)/old_value
 
 def diff_symbol(diff): # ↑ increase, ↓ decrease
     if diff > 0:
@@ -139,7 +139,8 @@ def itt_view(trading_pair):
 
 # signal templates
 def get_rsi_template(signal):
-    rsi_emoji = '⚠️' if signal.trend == 1 else '🆘'
+    trend = int(signal.trend)
+    rsi_emoji = '⚠️' if trend == 1 else '🆘'
     rsi_strength_values = ['', 'Very ', 'Extremely ']
     rsi_trend = ['Overbought', 'Neutral', 'Oversold']
 
@@ -148,9 +149,9 @@ def get_rsi_template(signal):
         'rsi_header_emoji_pro': '🔰',
         'premium': 'ITF Proprietary Alert',
     }
-    rsi['rsi_text'] = f"RSI: *{rsi_strength_values[int(signal.strength_value) - 1]}{rsi_trend[int(signal.trend) + 1]}* ({int(signal.rsi_value)}) {rsi_emoji}"
+    rsi['rsi_text'] = f"RSI: *{rsi_strength_values[int(signal.strength_value) - 1]}{rsi_trend[trend + 1]}* ({int(signal.rsi_value)}) {rsi_emoji}"
 
-    if signal.trend == 1:
+    if trend == 1:
         rsi['rsi_general_trend'] = "Bullish"
         rsi['rsi_itt_bias'] = "Trend reversal to the *upside* is near."
     else:
@@ -160,9 +161,10 @@ def get_rsi_template(signal):
 
 
 def get_kumo_template(signal):
-    ichi_emoji = '🆘' if signal.trend == -1  else '✅'
-    ichi_breakout = 'Negative' if signal.trend == -1 else 'Positive'
-    ichi_bias = 'Bear' if signal.trend == -1 else 'Bull'
+    trend = int(signal.trend)
+    ichi_emoji = '🆘' if trend == -1  else '✅'
+    ichi_breakout = 'Negative' if trend == -1 else 'Positive'
+    ichi_bias = 'Bear' if trend == -1 else 'Bull'
 
     return {
         'ichimoku_header_emoji': 'ℹ️',
