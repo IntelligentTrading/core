@@ -124,7 +124,7 @@ def itt_view(trading_pair):
                 view += f"\n *•* {format_timestamp(signal.timestamp)} {kumo['ichimoku_header_emoji']} {kumo['ichimoku_text']} ({signal.get_horizon_display().capitalize()} horizon)\n"
 
         itf_more_info_url = 'http://intelligenttrading.org/features/'
-        view += f"\n\n[Get more signals on ITF website]({itf_more_info_url})"
+        view += f"\n[Get more signals on ITF website]({itf_more_info_url})"
     #        view += f" or [Ask our representative](tg://user?id=458693263)"
     
     except: # no signals
@@ -138,8 +138,10 @@ def itt_view(trading_pair):
     return view
 
 # signal templates
+# https://github.com/IntelligentTrading/ui/blob/master/util/signal-helper.js
 def get_rsi_template(signal):
     trend = int(signal.trend)
+    #print(f"trading_pair tc:{signal.transaction_currency} cc:{signal.counter_currency} signal: {signal.signal}, trend: {trend} ({type(trend)}, strenght:{signal.strength_value}({type(signal.strength_value)}")
     rsi_emoji = '⚠️' if trend == 1 else '🆘'
     rsi_strength_values = ['', 'Very ', 'Extremely ']
     rsi_trend = ['Overbought', 'Neutral', 'Oversold']
@@ -157,6 +159,7 @@ def get_rsi_template(signal):
     else:
         rsi['rsi_general_trend'] = "Bearish"
         rsi['rsi_itt_bias'] = "Trend reversal to the *downside* is near."
+    #print(rsi)
     return rsi
 
 
