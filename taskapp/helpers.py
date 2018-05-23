@@ -19,7 +19,7 @@ from apps.indicator.models.events_logical import EventsLogical
 from apps.user.models.user import get_horizon_value_from_string
 
 from apps.ai.models.nn_model import get_ann_model_object
-from apps.strategy.models.strategy_ref import get_all_strategy_classes, add_all_strategies
+from apps.strategy.models.strategy_ref import get_all_strategy_classes
 from apps.strategy.models.rsi_sma_strategies import RsiSimpleStrategy, SmaCrossOverStrategy
 from apps.backtesting.models.back_test import BackTest
 
@@ -27,14 +27,12 @@ from apps.backtesting.models.back_test import BackTest
 from settings import USDT_COINS, BTC_COINS
 from settings import SHORT, MEDIUM, LONG, HORIZONS_TIME2NAMES, RUN_ANN
 from apps.backtesting.models.back_test import get_distinct_trading_pairs
-import pandas as pd
 from settings import PERIODS_LIST
 from settings import SOURCE_CHOICES, EXCHANGE_MARKETS
 
 
-
-
 logger = logging.getLogger(__name__)
+
 
 def get_exchanges():
     "Return list of exchange codes for signal calculations"
@@ -49,9 +47,11 @@ def get_currency_pairs(source, period_in_seconds):
     price_objects = Price.objects.values('transaction_currency', 'counter_currency').filter(source=source).filter(timestamp__gte=get_from_time).distinct()
     return [(item['transaction_currency'], item['counter_currency']) for item in price_objects]
 
+
 def get_source_name(source_code):
     "return poloniex for code=0"
     return next((source_text for code, source_text in SOURCE_CHOICES if code==source_code), None)
+
 
 def _pull_poloniex_data(source):
     logger.info("pulling Poloniex data...")
@@ -67,6 +67,7 @@ def _pull_poloniex_data(source):
     )
     logger.info("Saving Poloniex price, volume data...")
     _save_prices_and_volumes(data, timestamp, source)
+
 
 def _save_prices_and_volumes(data, timestamp, source):
     for currency_pair in data:
@@ -102,7 +103,6 @@ def _save_prices_and_volumes(data, timestamp, source):
 #     Return list of exchange codes for signal calculations
 #     """
 #     return [code for code, name in SOURCE_CHOICES if name in EXCHANGE_MARKETS]
-
 
 
 
