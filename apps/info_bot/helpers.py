@@ -162,7 +162,7 @@ def save_history(update):
     InfoBotHistory.objects.create(
         update_id=update.update_id,
         group_chat_id=update.message.chat.id,
-        chat_title=update.message.chat.title,
+        chat_title=update.message.chat.title or "",
         user_chat_id=update.message.from_user.id,
         username=update.message.from_user.username,
         bot_command_text=update.message.text,
