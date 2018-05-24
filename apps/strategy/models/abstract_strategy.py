@@ -37,7 +37,7 @@ class AbstractStrategy(ABC):
         self.signal_now_set = self.strategy_signals_set.intersection(current_signals_set)
 
         if len(self.signal_now_set) > 1 :
-            logger.error(" Ouch... several signals for one strategy at the same time... highly unlikely, please investigate!")
+            logger.error(" Ouch... several signals for one strategy at the same time... highly unlikely, please investigate!" + str(self.signal_now_set))
 
         # check if the previos signal is the same, return None, i.e. if you bough something, do not buy it again
         prev_signal = self.get_previous_signal()
