@@ -60,7 +60,7 @@ help - list of available commands
             filters=Filters.user(username=INFO_BOT_ADMIN_USERNAME)))
 
     # inline mode
-    dp.add_handler(InlineQueryHandler(inline.inlinequery))
+    #dp.add_handler(InlineQueryHandler(inline.inlinequery))
 
     # log all errors
     dp.add_error_handler(special_commands.error)

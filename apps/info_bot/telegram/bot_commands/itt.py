@@ -15,6 +15,7 @@ from apps.indicator.models import Price, Volume
 from apps.signal.models import Signal
 
 from apps.info_bot.helpers import format_currency, format_timestamp, parse_telegram_cryptocurrency_args
+from apps.info_bot.helpers import save_history
 
 from taskapp.helpers import get_source_name
 
@@ -37,6 +38,7 @@ def diff_symbol(diff): # ↑ increase, ↓ decrease
         d_sym = ""
     return d_sym
 
+@cache_memoize(8*60*60) # 8 hours
 def sentiment_from_cryptopanic(currency):
     INFO_BOT_CRYPTOPANIC_API_URL = "https://cryptopanic.com/api/posts/?auth_token={}&filter=trending&currencies={}".format(
         INFO_BOT_CRYPTOPANIC_API_TOKEN, currency)
@@ -58,16 +60,11 @@ def sentiment_from_cryptopanic(currency):
 
 
 ## New helpers
-#@cache_memoize(INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS) # 4 hours
+@cache_memoize(INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS) # 1 hours
 def itt_view(trading_pair):
     view = ''
 
     currency_symbol = trading_pair['counter_currency']
-    # if trading_pair['counter_currency'] == 'USDT':
-    #     currency_symbol = '$'
-    # else:
-    #     currency_symbol = ''
-
     counter_currency = COUNTER_CURRENCIES.index(trading_pair['counter_currency'])
     currency = trading_pair['transaction_currency']
 
@@ -117,10 +114,10 @@ def itt_view(trading_pair):
         #     general_trend = 'Bullish' if signal.trend == 1 else 'Bearish'
             if signal.signal == 'RSI':
                 rsi = get_rsi_template(signal)
-                view +=  f"\n *•* {format_timestamp(signal.timestamp)} {rsi['rsi_header_emoji']} {rsi['rsi_text']}\nITF Bias: {rsi['rsi_itt_bias']} ({signal.get_horizon_display().capitalize()} horizon)\n"
+                view += f"\n *•* {format_timestamp(signal.timestamp)} {rsi['rsi_header_emoji']} {rsi['rsi_text']}\nITF Bias: {rsi['rsi_itt_bias']} ({signal.get_horizon_display().capitalize()} horizon)\n"
             elif signal.signal == 'RSI_Cumulative':
                 rsi = get_rsi_template(signal)
-                view +=  f"\n *•* {format_timestamp(signal.timestamp)} {rsi['rsi_header_emoji_pro']} ITF Proprietary Alert\nITF Bias: *{rsi['rsi_general_trend']}* - {rsi['rsi_itt_bias']} ({signal.get_horizon_display().capitalize()} horizon)\n"
+                view += f"\n *•* {format_timestamp(signal.timestamp)} {rsi['rsi_header_emoji_pro']} ITF Proprietary Alert\nITF Bias: *{rsi['rsi_general_trend']}* - {rsi['rsi_itt_bias']} ({signal.get_horizon_display().capitalize()} horizon)\n"
             elif signal.signal == 'kumo_breakout':
                 kumo = get_kumo_template(signal)
                 view += f"\n *•* {format_timestamp(signal.timestamp)} {kumo['ichimoku_header_emoji']} {kumo['ichimoku_text']} ({signal.get_horizon_display().capitalize()} horizon)\n"
@@ -128,7 +125,7 @@ def itt_view(trading_pair):
         itf_more_info_url = 'http://intelligenttrading.org/features/'
         view += f"\n[Get more signals on ITF website]({itf_more_info_url})"
     #        view += f" or [Ask our representative](tg://user?id=458693263)"
-    
+
     except: # no signals
         pass
 
@@ -177,9 +174,9 @@ def get_kumo_template(signal):
     }
 
 
-
 ## user commands
 def itt(bot, update, args):
+    save_history(update)
     trading_pair = parse_telegram_cryptocurrency_args(args=args, update=update, command='itt')
     if trading_pair:
         view = itt_view(trading_pair)
