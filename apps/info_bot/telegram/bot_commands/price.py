@@ -2,19 +2,13 @@
 Commands:
 /price - Show price for the trading pair at the different exchanges. For example: /price BTC_USDT
 """
-
-import math
-from datetime import timedelta
-import requests
-
 from telegram import ParseMode
 
-from settings import COUNTER_CURRENCIES, LOCAL
+from settings import COUNTER_CURRENCIES
 
 from apps.indicator.models import Price
-from apps.signal.models import Signal
 
-from apps.info_bot.helpers import (default_counter_currency_for, format_currency, format_timestamp,
+from apps.info_bot.helpers import (format_currency, format_timestamp,
                                    get_currency_pairs, natural_join, parse_trading_pair_string,
                                    parse_telegram_cryptocurrency_args, trading_pairs_for, save_history)
 
