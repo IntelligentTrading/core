@@ -5,6 +5,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 class AbstractStrategy(ABC):
+    '''
+    The base class to inherit all Strategies from
+    '''
     timestamp = None
     source = None
     resample_period = None
@@ -52,6 +55,7 @@ class AbstractStrategy(ABC):
 
     def get_all_signals_in_time_period(self, start_timestamp, end_timestamp):
         # get all signals in prodived timeframe
+        # TODO that methon might be overriden in child class if we need more soficticated strategy rules
         all_signals_ts = get_signals_ts(start_timestamp, end_timestamp, **self.parameters)
 
         # filter out those not belonging to our strategy

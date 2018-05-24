@@ -135,13 +135,16 @@ def get_resampl_price_at_timepoint(timestamp, source, transaction_currency, coun
     based on resample ts data
     Note: to get more presise price use the same method in Price model
     '''
+
+    # look for all prices +/- GRACE_RECORDS around the timepoint
+    GRACE_RECORDS = 20
     prices_range = list(PriceResampl.objects.filter(
         source=source,
         resample_period=resample_period,
         transaction_currency=transaction_currency,
         counter_currency=counter_currency,
-        timestamp__gte = timestamp - timedelta(minutes=resample_period * 10),  # 5 period ahead in time
-        timestamp__lte=timestamp + timedelta(minutes=resample_period * 10),  # 5 period back in time
+        timestamp__gte = timestamp - timedelta(minutes=resample_period * GRACE_RECORDS),  # 5 period ahead in time
+        timestamp__lte=timestamp + timedelta(minutes=resample_period * GRACE_RECORDS),  # 5 period back in time
     ).values('timestamp',  'close_price').order_by('timestamp'))
 
     #convert to a timeseries
