@@ -52,27 +52,26 @@ if not LOCAL:
 # Memcached Cloud settings
 # https://devcenter.heroku.com/articles/memcachedcloud
 def get_cache():
-  import os
-  try:
-    servers = os.environ['MEMCACHEDCLOUD_SERVERS']
-    username = os.environ['MEMCACHEDCLOUD_USERNAME']
-    password = os.environ['MEMCACHEDCLOUD_PASSWORD']
-    return {
-        'default': {
-            'BACKEND': 'django_bmemcached.memcached.BMemcached',
-            'LOCATION': servers.split(','),
-            'OPTIONS': {
-                'username': username,
-                'password': password,
+    try:
+        servers = os.environ['MEMCACHEDCLOUD_SERVERS']
+        username = os.environ['MEMCACHEDCLOUD_USERNAME']
+        password = os.environ['MEMCACHEDCLOUD_PASSWORD']
+        return {
+            'default': {
+                'BACKEND': 'django_bmemcached.memcached.BMemcached',
+                'LOCATION': servers.split(','),
+                'OPTIONS': {
+                    'username': username,
+                    'password': password,
+                }
             }
         }
-    }
-  except:
-    return {
-      'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'
-      }
-    }
+    except:
+        return {
+            'default': {
+                'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'
+            }
+        }
 
 CACHES = get_cache()
 
@@ -88,14 +87,12 @@ CACHE_MIDDLEWARE_KEY_PREFIX = ''
 #     }
 # }
 
-
 # Celery settings
-#CELERY_BROKER_URL =  os.environ.get('CLOUDAMQP_URL', 'amqp://guest:guest@localhost//')
-CELERY_BROKER_URL =  os.environ.get('REDIS_URL', 'redis://localhost:6379') # if env not set use local redis server
+CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379') # if env not set use local redis server
 
 # Telegram settings for itt-info-bot
 INFO_BOT_TELEGRAM_BOT_API_TOKEN = os.environ.get('INFO_BOT_TELEGRAM_BOT_API_TOKEN', '123ABC')
-INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS = 4 * 60 * 60 # cache telegram bot reply for 4 hour
+INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS = 1 * 60 * 60 # cache telegram bot reply for 1 hour
 INFO_BOT_CRYPTOPANIC_API_TOKEN = os.environ.get('INFO_BOT_CRYPTOPANIC_API_TOKEN', '123ABC')
 
 INCOMING_SQS_QUEUE = os.environ.get('INCOMING_SQS_QUEUE')

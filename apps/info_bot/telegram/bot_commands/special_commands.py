@@ -15,6 +15,8 @@ from textwrap import dedent
 from telegram import ParseMode
 from telegram.ext import Updater
 
+from apps.info_bot.helpers import save_history
+
 from settings import INFO_BOT_TELEGRAM_BOT_API_TOKEN, LOCAL
 
 
@@ -27,9 +29,9 @@ if LOCAL:
     updater = Updater(token=INFO_BOT_TELEGRAM_BOT_API_TOKEN)
 
     def stop_and_restart():
-            """Gracefully stop the Updater and replace the current process with a new one"""
-            updater.stop()
-            os.execl(sys.executable, sys.executable, *sys.argv)
+        """Gracefully stop the Updater and replace the current process with a new one"""
+        updater.stop()
+        os.execl(sys.executable, sys.executable, *sys.argv)
 
     def restart(bot, update):
         update.message.reply_text('itt bot is restarting...')
@@ -45,9 +47,11 @@ def unknown(bot, update):
         """).format(update.message.from_user.first_name), parse_mode=ParseMode.MARKDOWN)
 
 def start(bot, update):
+    save_history(update)
     update.message.reply_text("Welcome {}. I'm ITT info bot.".format(update.message.from_user.first_name))
 
 def help(bot, update):
+    save_history(update)
     update.message.reply_text(dedent("""
         *Available commands:*
 
@@ -60,6 +64,7 @@ def help(bot, update):
     """), ParseMode.MARKDOWN)
 
 def getme(bot, update):
+    save_history(update)
     update.message.reply_text(f"Your username:{update.message.from_user.username} and userId {str(update.message.from_user.id)}")
 
 def error(bot, update, error):
