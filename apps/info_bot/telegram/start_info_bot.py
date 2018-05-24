@@ -20,9 +20,9 @@ logger = logging.getLogger(__name__)
 
 
 
-# too much DEBUG messages from telegram
 logging.getLogger("telegram.bot").setLevel(logging.INFO)
 logging.getLogger("telegram.vendor").setLevel(logging.INFO)
+logging.getLogger("bmemcached.protocol").setLevel(logging.INFO)
 
 
 def start_info_bot():

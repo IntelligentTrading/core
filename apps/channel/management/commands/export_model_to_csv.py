@@ -29,7 +29,3 @@ class Command(BaseCommand):
             for instance in model.objects.all()[:10]:
                 csvfile.write([getattr(instance, f) for f in field_names])
 
-        # writer = csv.writer(sys.stdout, quoting=csv.QUOTE_ALL)
-        # writer.writerow(field_names)
-        # for instance in model.objects.all()[:10]:
-        #     writer.writerow([getattr(instance, f) for f in field_names])

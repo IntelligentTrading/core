@@ -159,10 +159,10 @@ def parse_telegram_cryptocurrency_args(args, update, command):
 
 # Helpers
 def save_history(update):
-#    try:
     InfoBotHistory.objects.create(
         update_id=update.update_id,
         group_chat_id=update.message.chat.id,
+        chat_title=update.message.chat.title,
         user_chat_id=update.message.from_user.id,
         username=update.message.from_user.username,
         bot_command_text=update.message.text,
