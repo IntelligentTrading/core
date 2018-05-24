@@ -145,7 +145,7 @@ def get_resampl_price_at_timepoint(timestamp, source, transaction_currency, coun
         counter_currency=counter_currency,
         timestamp__gte = timestamp - timedelta(minutes=resample_period * GRACE_RECORDS),  # 5 period ahead in time
         timestamp__lte=timestamp + timedelta(minutes=resample_period * GRACE_RECORDS),  # 5 period back in time
-    ).values('timestamp',  'close_price').order_by('timestamp')).distinct()   # we might have bad data with duplications
+    ).values('timestamp',  'close_price').order_by('timestamp').distinct())   # we might have bad data with duplications
 
     #convert to a timeseries
     if prices_range:
