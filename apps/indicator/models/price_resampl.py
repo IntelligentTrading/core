@@ -162,7 +162,8 @@ def get_resampl_price_at_timepoint(timestamp, source, transaction_currency, coun
         # add our missing index, resort and then interpolate
         close_prices_ts = close_prices_ts.append(pd.Series(None, index=[timestamp]))
         close_prices_ts.sort_index(inplace=True)
-        close_prices_ts = close_prices_ts.interpolate()
+        #todo: if not work, try to apply interpolation from scipy
+        close_prices_ts = close_prices_ts.interpolate(method='spline', order=1, limit=10, limit_direction='both')
         price = int(close_prices_ts[timestamp])
 
     return price
