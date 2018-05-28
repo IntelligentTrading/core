@@ -51,6 +51,42 @@ def sentiment_from_cryptopanic(currency):
         title, link = '', ''
     return (title, link)
 
+# signal templates
+# https://github.com/IntelligentTrading/ui/blob/master/util/signal-helper.js
+def get_rsi_template(signal):
+    trend = int(signal.trend)
+    strength_value = int(signal.strength_value) if signal.strength_value else 1
+    #print(f"trading_pair tc:{signal.transaction_currency} cc:{signal.counter_currency} signal: {signal.signal}, trend: {trend} ({type(trend)}, strenght:{signal.strength_value}({type(signal.strength_value)}")
+    rsi_emoji = '⚠️' if trend == 1 else '🆘'
+    rsi_strength_values = ['', 'Very ', 'Extremely ']
+    rsi_trend = ['Overbought', 'Neutral', 'Oversold']
+
+    rsi = {
+        'rsi_header_emoji': 'ℹ️',
+        'rsi_header_emoji_pro': '🔰',
+        'premium': 'ITF Proprietary Alert',
+    }
+    rsi['rsi_text'] = f"RSI: *{rsi_strength_values[strength_value - 1]}{rsi_trend[trend + 1]}* ({int(signal.rsi_value)}) {rsi_emoji}"
+
+    if trend == 1:
+        rsi['rsi_general_trend'] = "Bullish"
+        rsi['rsi_itt_bias'] = "Trend reversal to the *upside* is near."
+    else:
+        rsi['rsi_general_trend'] = "Bearish"
+        rsi['rsi_itt_bias'] = "Trend reversal to the *downside* is near."
+    return rsi
+
+
+def get_kumo_template(signal):
+    trend = int(signal.trend)
+    ichi_emoji = '🆘' if trend == -1  else '✅'
+    ichi_breakout = 'Negative' if trend == -1 else 'Positive'
+    ichi_bias = 'Bear' if trend == -1 else 'Bull'
+
+    return {
+        'ichimoku_header_emoji': 'ℹ️',
+        'ichimoku_text': f'Ichimoku: {ichi_breakout} Cloud Breakout {ichi_emoji}\nITF Bias: {ichi_bias} trend continuation likely.'
+    }
 
 ## utility functions
 
@@ -68,7 +104,7 @@ def itt_view(trading_pair):
     counter_currency = COUNTER_CURRENCIES.index(trading_pair['counter_currency'])
     currency = trading_pair['transaction_currency']
 
-    # Price section
+    # Price
     price_new_object = Price.objects.filter(
         transaction_currency=currency, counter_currency=counter_currency
         ).order_by('-timestamp').first()
@@ -86,7 +122,7 @@ def itt_view(trading_pair):
     except:
         view += "\n"
 
-    # Volume section
+    # Volume
     volume_object = Volume.objects.filter(
         source=source, transaction_currency=currency, counter_currency=counter_currency,
         ).order_by('-timestamp').first()
@@ -94,24 +130,22 @@ def itt_view(trading_pair):
 
     # Source (maybe show time in user local time not in UTC) and last update
     view += f"\n\nSource: {get_source_name(source).capitalize()}"
-    view += f"\nLast update: {price_new_object.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC')}"
+    view += f"\nLast update: {price_new_object.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
 
-    try:
     # Signals
-        latest_signals = list()
-        for signal in ['RSI', 'RSI_Cumulative', 'kumo_breakout']:
-            signal_object = Signal.objects.filter(
-                source=source, transaction_currency=currency, counter_currency=counter_currency,
-                signal=signal
-                ).order_by('-timestamp').first()
+    latest_signals = list()
+    for signal in ['RSI', 'RSI_Cumulative', 'kumo_breakout']:
+        signal_object = Signal.objects.filter(
+            source=source, transaction_currency=currency, counter_currency=counter_currency,
+            signal=signal
+            ).order_by('-timestamp').first()
+        if signal_object:
             latest_signals.append(signal_object)
 
-        view += f"\n\n*Latest signals*"
+    if latest_signals:
+        view += f"\n*Latest signals*"
 
-
-        # trend_labels = ['overbought', 'neutral', 'oversold']
         for signal in sorted(latest_signals, key=lambda s: s.timestamp, reverse=True):
-        #     general_trend = 'Bullish' if signal.trend == 1 else 'Bearish'
             if signal.signal == 'RSI':
                 rsi = get_rsi_template(signal)
                 view += f"\n *•* {format_timestamp(signal.timestamp)} {rsi['rsi_header_emoji']} {rsi['rsi_text']}\nITF Bias: {rsi['rsi_itt_bias']} ({signal.get_horizon_display().capitalize()} horizon)\n"
@@ -122,12 +156,13 @@ def itt_view(trading_pair):
                 kumo = get_kumo_template(signal)
                 view += f"\n *•* {format_timestamp(signal.timestamp)} {kumo['ichimoku_header_emoji']} {kumo['ichimoku_text']} ({signal.get_horizon_display().capitalize()} horizon)\n"
 
-        itf_more_info_url = 'http://intelligenttrading.org/features/'
+    # More info
+    itf_more_info_url = 'http://intelligenttrading.org/features/'
+    if latest_signals:
         view += f"\n[Get more signals on ITF website]({itf_more_info_url})"
-    #        view += f" or [Ask our representative](tg://user?id=458693263)"
-
-    except: # no signals
-        pass
+    else:
+        view += f"\n[Get signals on ITF website]({itf_more_info_url})"
+    #view += f" or [Ask our representative](tg://user?id=12345678)"
 
     # Sentiments from cryptopanic
     (title, url) = sentiment_from_cryptopanic(currency)
@@ -135,43 +170,6 @@ def itt_view(trading_pair):
         view += f"\n\n\"{title}\"\n[Read on CryptoPanic]({url})"
 
     return view
-
-# signal templates
-# https://github.com/IntelligentTrading/ui/blob/master/util/signal-helper.js
-def get_rsi_template(signal):
-    trend = int(signal.trend)
-    #print(f"trading_pair tc:{signal.transaction_currency} cc:{signal.counter_currency} signal: {signal.signal}, trend: {trend} ({type(trend)}, strenght:{signal.strength_value}({type(signal.strength_value)}")
-    rsi_emoji = '⚠️' if trend == 1 else '🆘'
-    rsi_strength_values = ['', 'Very ', 'Extremely ']
-    rsi_trend = ['Overbought', 'Neutral', 'Oversold']
-
-    rsi = {
-        'rsi_header_emoji': 'ℹ️',
-        'rsi_header_emoji_pro': '🔰',
-        'premium': 'ITF Proprietary Alert',
-    }
-    rsi['rsi_text'] = f"RSI: *{rsi_strength_values[int(signal.strength_value) - 1]}{rsi_trend[trend + 1]}* ({int(signal.rsi_value)}) {rsi_emoji}"
-
-    if trend == 1:
-        rsi['rsi_general_trend'] = "Bullish"
-        rsi['rsi_itt_bias'] = "Trend reversal to the *upside* is near."
-    else:
-        rsi['rsi_general_trend'] = "Bearish"
-        rsi['rsi_itt_bias'] = "Trend reversal to the *downside* is near."
-    #print(rsi)
-    return rsi
-
-
-def get_kumo_template(signal):
-    trend = int(signal.trend)
-    ichi_emoji = '🆘' if trend == -1  else '✅'
-    ichi_breakout = 'Negative' if trend == -1 else 'Positive'
-    ichi_bias = 'Bear' if trend == -1 else 'Bull'
-
-    return {
-        'ichimoku_header_emoji': 'ℹ️',
-        'ichimoku_text': f'Ichimoku: {ichi_breakout} Cloud Breakout {ichi_emoji}\nITF Bias: {ichi_bias} trend continuation likely.'
-    }
 
 
 ## user commands
