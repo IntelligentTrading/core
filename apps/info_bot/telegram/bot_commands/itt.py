@@ -126,7 +126,7 @@ def itt_view(trading_pair):
     volume_object = Volume.objects.filter(
         source=source, transaction_currency=currency, counter_currency=counter_currency,
         ).order_by('-timestamp').first()
-    view += f"\nVolume: {format_currency(volume_object.volume, in_satoshi=False)} {trading_pair['counter_currency']}"
+    view += f"\nVolume: {format_currency(amount=volume_object.volume, currency_symbol=currency, in_satoshi=False)}"
 
     # Source (maybe show time in user local time not in UTC) and last update
     view += f"\n\nSource: {get_source_name(source).capitalize()}"
