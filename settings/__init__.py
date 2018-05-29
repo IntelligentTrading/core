@@ -94,6 +94,7 @@ INSTALLED_APPS = [
     'taskapp',
     'apps.backtesting',
     'apps.strategy',
+    'apps.dashboard',
 
     # DJANGO APPS
     'django.contrib.admin',
