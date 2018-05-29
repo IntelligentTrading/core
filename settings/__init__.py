@@ -78,6 +78,7 @@ ALLOWED_HOSTS = [
     '.in7el.trade',
     '.herokuapp.com',
     'localhost',
+    '127.0.0.1',
 ]
 
 # APPLICATION DEFINITION

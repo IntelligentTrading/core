@@ -50,22 +50,23 @@
 
 <body>
 
-  <div class="container-fluid-spacious mb-5">
+  <div class="container-fluid mb-5">
     <div class="row">
 
-      <div class="col-md-3 sidebar">
-        {% block navigation %}
-          {% include 'navigation.html' %}
-        {% endblock navigation %}
-      </div>
+{#      <div class="col-md-3 sidebar">#}
+{#        {% block navigation %}#}
+{#          {% include 'navigation.html' %}#}
+{#        {% endblock navigation %}#}
+{#      </div>#}
 
-      <div class="col-md-9 content" style="padding-top: 2.1rem;">
+      <div class="col-md-12 content" style="padding-top: 2.1rem;">
 
         {% block messages %}
           {% include 'messages.html' %}
         {% endblock messages %}
 
         <div class="dashhead">
+
           <div class="dashhead-titles">
             <h6 class="dashhead-subtitle">
               {% block content_subtitle %}&nbsp;{% endblock %}
@@ -86,7 +87,7 @@
         <hr class="visible-xs mt-3">
 
         {% block content %}
-          <p>Welcome to ITF</p>
+          <p>Hello ITF World</p>
         {% endblock content %}
 
       </div>
