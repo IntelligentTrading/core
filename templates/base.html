@@ -42,7 +42,7 @@
 
   {% endif %}
 
-  <link href="{{ STATIC_URL }}vendor/bootstrap-theme/dist/toolkit-light.min.css" rel="stylesheet">
+  <link href="{{ STATIC_URL }}vendor/bootstrap-theme/dist/toolkit-inverse.min.css" rel="stylesheet">
   <link href="{{ STATIC_URL }}css/base.css?v=1" rel="stylesheet">
   {% block css %}
   {% endblock css %}
@@ -94,7 +94,7 @@
     </div>
   </div>
 
-  <nav class="navbar fixed-bottom navbar-light bg-faded">
+  <nav class="navbar fixed-bottom navbar bg-faded">
     {% block footer %}
       {% include 'footer.html' %}
     {% endblock footer %}
