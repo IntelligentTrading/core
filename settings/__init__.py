@@ -91,7 +91,6 @@ INSTALLED_APPS = [
     'apps.signal',
     'apps.api',
     'apps.info_bot',
-    'taskapp',
     'apps.backtesting',
     'apps.strategy',
 
@@ -107,6 +106,7 @@ INSTALLED_APPS = [
     'django_filters',
 
     # PLUGINS
+    'taskapp',
     'rest_framework',
     'rest_framework_swagger',
 
