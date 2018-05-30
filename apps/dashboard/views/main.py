@@ -1,6 +1,5 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.views.generic import View
-from django.core.cache import cache
 
 from apps.user.models.user import HORIZON_CHOICES
 
