@@ -13,12 +13,15 @@
 
 {#    {{ signals }}#}
 
-    <div class="row">
 
-      {% for horizon_name, horizon_stats in signals.items %}
+  {% for signal_name, signal_stats in signals.items %}
+
+    <div class="row my-2">
+
+      {% for horizon_name, horizon_stats in signal_stats.items %}
 
         <div class="col-md-3">
-          <div class="statcard p-4">
+          <div class="statcard p-4 {% cycle 'statcard-secondary' 'statcard-success' 'statcard-primary' 'statcard-info' %}">
             <h3 class="statcard-number">
               {{ horizon_stats.num_signals_24_hrs }}
               <small class="delta-indicator {% if horizon_stats.num_signals_24_hrs_delta_percent > 0 %}delta-positive{% else %}delta-negative{% endif %}">
@@ -26,7 +29,11 @@
               </small>
             </h3>
             <span class="statcard-desc">
-              Total {{ horizon_name }} (24hr)
+              {% if horizon_name == "all" %}
+                {{ signal_name }} (24hr)
+              {% else %}
+                {{ horizon_name }} {{ signal_name }}
+              {% endif %}
             </span>
           </div>
         </div>
@@ -35,45 +42,7 @@
 
     </div>
 
-    <div class="row">
-
-      {% for horizon_name, horizon_stats in rsi_signals.items %}
-
-        <div class="col-md-3">
-          <div class="statcard p-4">
-            <h3 class="statcard-number">
-              {{ horizon_stats.num_signals_24_hrs }}
-              <small class="delta-indicator {% if horizon_stats.num_signals_24_hrs_delta_percent > 0 %}delta-positive{% else %}delta-negative{% endif %}">
-                {{ horizon_stats.num_signals_24_hrs_delta_percent }}%
-              </small>
-            </h3>
-            <span class="statcard-desc">
-              RSI {{ horizon_name }} (24hr)
-            </span>
-          </div>
-        </div>
-
-      {% endfor %}
-
-    </div>
-
-
-
-{#    <div class="statcard statcard-success p-4 mb-2">#}
-{#      <h3 class="statcard-number">#}
-{#        758#}
-{#        <small class="delta-indicator delta-negative">1.3%</small>#}
-{#      </h3>#}
-{#      <span class="statcard-desc">Downloads</span>#}
-{#    </div>#}
-{#    <div class="statcard statcard-info p-4 mb-2">#}
-{#      <h3 class="statcard-number">#}
-{#        758#}
-{#        <small class="delta-indicator delta-negative">1.3%</small>#}
-{#      </h3>#}
-{#      <span class="statcard-desc">Downloads</span>#}
-{#    </div>#}
-
+  {% endfor %}
 
 
 {% endblock content %}
