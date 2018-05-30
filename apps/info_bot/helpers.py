@@ -12,7 +12,7 @@ from apps.info_bot.models import InfoBotHistory
 
 from settings import COUNTER_CURRENCY_CHOICES, COUNTER_CURRENCIES, LOCAL
 
-#from apps.info_bot.telegram.bot_commands.itt import currency_info
+#from apps.info_bot.telegram.bot_commands.itf import currency_info
 
 
 
@@ -159,14 +159,17 @@ def parse_telegram_cryptocurrency_args(args, update, command):
 
 # Helpers
 def save_history(update):
-    InfoBotHistory.objects.create(
-        update_id=update.update_id,
-        group_chat_id=update.message.chat.id,
-        chat_title=update.message.chat.title or "",
-        user_chat_id=update.message.from_user.id,
-        username=update.message.from_user.username,
-        bot_command_text=update.message.text,
-        language_code=update.message.from_user.language_code,
-        datetime=update.message.date,
-    )
-    logger.debug(f">>> InfoBot history saved, update_id:{update.update_id}, chat_id:{update.message.chat.id}, user_id: {update.message.from_user.id}")
+    try:
+        InfoBotHistory.objects.create(
+            update_id=update.update_id,
+            group_chat_id=update.message.chat.id,
+            chat_title=update.message.chat.title or "",
+            user_chat_id=update.message.from_user.id,
+            username=update.message.from_user.username,
+            bot_command_text=update.message.text,
+            language_code=update.message.from_user.language_code,
+            datetime=update.message.date,
+        )
+        logger.debug(f">>> InfoBot history saved, update_id:{update.update_id}, chat_id:{update.message.chat.id}, user_id: {update.message.from_user.id}")
+    except Exception as e:
+        logging.error(f">>>Error saving history:\n{update}<<<\n{e}")

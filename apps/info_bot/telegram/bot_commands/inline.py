@@ -6,8 +6,8 @@ Simply open any of your chats and type @botname <currency>. Then tap on the resu
 from telegram import InlineQueryResultArticle, InputTextMessageContent
 from telegram import ParseMode
 
-#from apps.info_bot.telegram.bot_commands.itt import ALL_COINS
-#from apps.info_bot.telegram.bot_commands.itt import currency_info
+#from apps.info_bot.telegram.bot_commands.itf import ALL_COINS
+#from apps.info_bot.telegram.bot_commands.itf import currency_info
 
 from settings import LOCAL
 

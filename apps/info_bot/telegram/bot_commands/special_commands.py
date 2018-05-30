@@ -34,7 +34,7 @@ if LOCAL:
         os.execl(sys.executable, sys.executable, *sys.argv)
 
     def restart(bot, update):
-        update.message.reply_text('itt bot is restarting...')
+        update.message.reply_text('itf bot is restarting...')
         Thread(target=stop_and_restart).start()
 
 
@@ -43,20 +43,20 @@ if LOCAL:
 def unknown(bot, update):
     update.message.reply_text(dedent("""
         Sorry {}, I don't understand this, please check the list of available commands with `/help`.
-        Or just type: `/itt BTC` to check info about Bitcoin.
+        Or just type: `/itf BTC` to check info about Bitcoin.
         """).format(update.message.from_user.first_name), parse_mode=ParseMode.MARKDOWN)
 
 def start(bot, update):
     save_history(update)
-    update.message.reply_text("Welcome {}. I'm ITT info bot.".format(update.message.from_user.first_name))
+    update.message.reply_text("Welcome {}. I'm ITF info bot.".format(update.message.from_user.first_name))
 
 def help(bot, update):
     save_history(update)
+    #*•* `/price <cryptocurrency>` - Prices from all exchanges. Example: `/price ETH_USDT`
     update.message.reply_text(dedent("""
         *Available commands:*
 
-        *•* `/itt <cryptocurrency>` - Short info about currency. Example: `/itt BTC` ot `/itt XRP_ETH`
-        *•* `/price <cryptocurrency>` - Prices from all exchanges. Example: `/price ETH_USDT`
+        *•* `/itf <cryptocurrency>` - Short info about currency. Example: `/itf BTC` ot `/itf XRP_ETH`
         *•* `/info` - List of supported coins and exchanges
         *•* `/help` - List of all commands
 
