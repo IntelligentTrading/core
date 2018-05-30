@@ -112,3 +112,4 @@ ENV/
 # generated staticfiles
 staticfiles/
 
+.DS_Store

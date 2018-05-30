@@ -78,6 +78,7 @@ ALLOWED_HOSTS = [
     '.in7el.trade',
     '.herokuapp.com',
     'localhost',
+    '127.0.0.1',
 ]
 
 # APPLICATION DEFINITION
@@ -94,6 +95,7 @@ INSTALLED_APPS = [
     'taskapp',
     'apps.backtesting',
     'apps.strategy',
+    'apps.dashboard',
 
     # DJANGO APPS
     'django.contrib.admin',
