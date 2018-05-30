@@ -60,7 +60,7 @@ def help(bot, update):
         *•* `/info` - List of supported coins and exchanges
         *•* `/help` - List of all commands
 
-        To use this commands in telegram channel, invite @itf\_info\_bot as admin with 'Post Messages' rights into your channel.
+        To use this commands in telegram channel, invite @Intelligent\_Trading\_Info\_Bot into your channel.
     """), ParseMode.MARKDOWN)
 
 def getme(bot, update):
