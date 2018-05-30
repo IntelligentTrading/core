@@ -20,9 +20,9 @@ logger = logging.getLogger(__name__)
 
 
 
-# too much DEBUG messages from telegram
 logging.getLogger("telegram.bot").setLevel(logging.INFO)
 logging.getLogger("telegram.vendor").setLevel(logging.INFO)
+logging.getLogger("bmemcached.protocol").setLevel(logging.INFO)
 
 
 def start_info_bot():
@@ -60,7 +60,7 @@ help - list of available commands
             filters=Filters.user(username=INFO_BOT_ADMIN_USERNAME)))
 
     # inline mode
-    dp.add_handler(InlineQueryHandler(inline.inlinequery))
+    #dp.add_handler(InlineQueryHandler(inline.inlinequery))
 
     # log all errors
     dp.add_error_handler(special_commands.error)

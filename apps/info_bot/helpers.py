@@ -8,6 +8,8 @@ from telegram import ParseMode
 from cache_memoize import cache_memoize
 
 from apps.indicator.models import Price, Volume
+from apps.info_bot.models import InfoBotHistory
+
 from settings import COUNTER_CURRENCY_CHOICES, COUNTER_CURRENCIES, LOCAL
 
 #from apps.info_bot.telegram.bot_commands.itt import currency_info
@@ -16,8 +18,8 @@ from settings import COUNTER_CURRENCY_CHOICES, COUNTER_CURRENCIES, LOCAL
 
 logger = logging.getLogger(__name__)
 
-POPULAR_COINS = ('BTC', 'DASH', 'ETH', 'LTC', 'XMR', 'XRP', 'ZEC')
-
+# POPULAR_COINS = ('BTC', 'DASH', 'ETH', 'LTC', 'XMR', 'XRP', 'ZEC')
+#
 # def precache_currency_info_for_info_bot():
 #     for currency in POPULAR_COINS:
 #         logger.info('Precaching: {} for telegram info_bot'.format(currency))
@@ -154,3 +156,17 @@ def parse_telegram_cryptocurrency_args(args, update, command):
     # all good and well
     else:
         return trading_pair
+
+# Helpers
+def save_history(update):
+    InfoBotHistory.objects.create(
+        update_id=update.update_id,
+        group_chat_id=update.message.chat.id,
+        chat_title=update.message.chat.title or "",
+        user_chat_id=update.message.from_user.id,
+        username=update.message.from_user.username,
+        bot_command_text=update.message.text,
+        language_code=update.message.from_user.language_code,
+        datetime=update.message.date,
+    )
+    logger.debug(f">>> InfoBot history saved, update_id:{update.update_id}, chat_id:{update.message.chat.id}, user_id: {update.message.from_user.id}")

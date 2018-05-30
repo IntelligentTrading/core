@@ -1,6 +1,4 @@
 import logging
-from django.db import models
-
 
 logger = logging.getLogger(__name__)
 
@@ -38,19 +36,19 @@ ALL_STRATEGIES = {
 }
 
 # TODO to be deleted if works fine / need to do the same for AI
-class StrategyRef(models.Model):
-    '''
-    Strategy class contains a Reference list of all Strategies and their meta-information
-    The actual implementation is in separate classes
-    '''
-
-    name = models.CharField(max_length=64, null=False, blank=False)
-    implementation_module_name = models.CharField(max_length=128, null=True)
-    implementation_class_name = models.CharField(max_length=64, null=True)
-    description = models.TextField(null=True)
-
-    generated = models.CharField(max_length=16, null=False, blank=False) # manual/auto
-    last_backtested_performance = models.FloatField(null=True)
+# class StrategyRef(models.Model):
+#     '''
+#     Strategy class contains a Reference list of all Strategies and their meta-information
+#     The actual implementation is in separate classes
+#     '''
+#
+#     name = models.CharField(max_length=64, null=False, blank=False)
+#     implementation_module_name = models.CharField(max_length=128, null=True)
+#     implementation_class_name = models.CharField(max_length=64, null=True)
+#     description = models.TextField(null=True)
+#
+#     generated = models.CharField(max_length=16, null=False, blank=False) # manual/auto
+#     last_backtested_performance = models.FloatField(null=True)
 
 
 

@@ -6,13 +6,14 @@ info - list of supported coins, trading pairs and exchanges
 from telegram import ParseMode
 
 from taskapp.helpers import get_exchanges, get_source_name
-from apps.info_bot.helpers import get_currency_pairs
+from apps.info_bot.helpers import get_currency_pairs, save_history
 
 from settings import LOCAL
 
 
 
 def info_view(update):
+
     view = f'Hello, {update.message.from_user.first_name}!\n\n'
 
     exchanges = (get_source_name(index).capitalize() for index in get_exchanges())
@@ -31,5 +32,6 @@ def info_view(update):
 
 # User Commands
 def info(bot, update):
+    save_history(update)
     update.message.reply_text(info_view(update), ParseMode.MARKDOWN)
     return
