@@ -46,6 +46,7 @@ if not LOCAL:
             'PASSWORD': os.environ['RDS_PASSWORD'],
             'HOST': os.environ['RDS_HOSTNAME'],
             'PORT': os.environ['RDS_PORT'],
+            'CONN_MAX_AGE': 14400, # we need it for bots because mysql drop connection after 28800 secs of idling
         }
     }
 
