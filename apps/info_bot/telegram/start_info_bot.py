@@ -33,10 +33,10 @@ command1 - Description
 command2 - Another description
 
 itf - short info about coin or trading pair. For example: `/itf BTC` or `/itf XRP_ETH`
+price - show price for trading pair on different exchanges. For example: `/price BTC_USDT`
 info - list of supported coins, trading pairs and exchanges
 help - list of available commands
 
-price - show price for trading pair on different exchanges. For example: `/price BTC_USDT`
 
     About:
     Description:

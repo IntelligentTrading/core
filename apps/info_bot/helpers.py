@@ -3,6 +3,8 @@ import math
 import re
 import time
 
+from django import db
+
 from telegram import ParseMode
 
 from cache_memoize import cache_memoize
@@ -159,6 +161,7 @@ def parse_telegram_cryptocurrency_args(args, update, command):
 
 # Helpers
 def save_history(update):
+    db.close_old_connections()
     try:
         InfoBotHistory.objects.create(
             update_id=update.update_id,

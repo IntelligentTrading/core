@@ -52,11 +52,11 @@ def start(bot, update):
 
 def help(bot, update):
     save_history(update)
-    #*•* `/price <cryptocurrency>` - Prices from all exchanges. Example: `/price ETH_USDT`
     update.message.reply_text(dedent("""
         *Available commands:*
 
         *•* `/itf <cryptocurrency>` - Short info about currency. Example: `/itf BTC` ot `/itf XRP_ETH`
+        *•* `/price <cryptocurrency>` - Prices from all exchanges. Example: `/price ETH_USDT`
         *•* `/info` - List of supported coins and exchanges
         *•* `/help` - List of all commands
 
