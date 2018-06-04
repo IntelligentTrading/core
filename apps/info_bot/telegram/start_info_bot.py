@@ -8,10 +8,8 @@ https://core.telegram.org/bots/api
 import logging
 
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
-from telegram.ext import InlineQueryHandler
 
 from apps.info_bot.telegram.bot_commands import itf, info, price
-from apps.info_bot.telegram.bot_commands import inline
 from apps.info_bot.telegram.bot_commands import special_commands
 
 from settings import LOCAL, INFO_BOT_TELEGRAM_BOT_API_TOKEN, INFO_BOT_ADMIN_USERNAME
@@ -59,9 +57,6 @@ help - list of available commands
     if LOCAL:
         dp.add_handler(CommandHandler('r', special_commands.restart, \
             filters=Filters.user(username=INFO_BOT_ADMIN_USERNAME)))
-
-    # inline mode
-    #dp.add_handler(InlineQueryHandler(inline.inlinequery))
 
     # log all errors
     dp.add_error_handler(special_commands.error)

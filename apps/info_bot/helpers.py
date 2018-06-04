@@ -3,13 +3,13 @@ import math
 import re
 import time
 
-#from django import db
+from django import db
 
 from telegram import ParseMode
 
 from cache_memoize import cache_memoize
 
-from apps.indicator.models import Price, Volume
+from apps.indicator.models import Price
 from apps.info_bot.models import InfoBotHistory
 
 from settings import COUNTER_CURRENCY_CHOICES, COUNTER_CURRENCIES, LOCAL
@@ -46,9 +46,9 @@ def parse_trading_pair_string(trading_pair_string):
     return {'transaction_currency': transaction_currency, 'counter_currency': counter_currency}
 
 # FIXME this function is dublicate for taskapp.helpers get_currency_pairs. Combine them in the future
-# Cache for 4 hours.
-@cache_memoize(4*60*60)
-def get_currency_pairs(source='all', period_in_seconds=2*60*60, counter_currency_format="text"):
+# Cache for 6 hours.
+@cache_memoize(6*60*60)
+def get_currency_pairs(source='all', period_in_seconds=5*60*60, counter_currency_format="text"):
     """
     Return: [('BTC', 'USDT'), ('PINK', 'ETH'), ('ETH', 'BTC'),....] for counter_currency_format="text"
     or [('BTC', 2), ('PINK', 1), ('ETH', 0),....]
@@ -63,9 +63,6 @@ def get_currency_pairs(source='all', period_in_seconds=2*60*60, counter_currency
     else:
         currency_pairs = [(item['transaction_currency'], counter_currency_name(item['counter_currency'])) for item in price_objects]
     return currency_pairs
-
-# def get_coins(currency_pairs):
-#     tuple(coin for coin, _ in all)
 
 def counter_currency_name(counter_currency_index):
     "return BTC for counter_currency_index=0"
@@ -161,7 +158,6 @@ def parse_telegram_cryptocurrency_args(args, update, command):
 
 # Helpers
 def save_history(update):
-    #db.close_old_connections()
     try:
         InfoBotHistory.objects.create(
             update_id=update.update_id,
@@ -176,3 +172,12 @@ def save_history(update):
         logger.debug(f">>> InfoBot history saved, update_id:{update.update_id}, chat_id:{update.message.chat.id}, user_id: {update.message.from_user.id}")
     except Exception as e:
         logging.error(f">>>Error saving history:\n{update}<<<\n{e}")
+
+
+def restore_db_connection(func):
+    "Mysql drop persistent connection after 28800 secs (8h) of idling"
+
+    def func_wrapper(*args, **kwargs):
+        db.close_old_connections()
+        return func(*args, **kwargs)
+    return func_wrapper
