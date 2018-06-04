@@ -1,5 +1,3 @@
-import logging
-
 from django.test import TestCase
 
 #from apps.api import helpers

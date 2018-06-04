@@ -12,7 +12,7 @@ from apps.info_bot.telegram.start_info_bot import start_info_bot
 logger = logging.getLogger(__name__)
 
 # Set via @BotFather:
-# inline mode, can be added to groups, has access to all messages
+# can be added to groups, has access to all messages
 #
 # https://core.telegram.org/bots/faq#what-messages-will-my-bot-get
 
