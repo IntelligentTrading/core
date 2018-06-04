@@ -12,7 +12,7 @@ from apps.signal.models.signal import Signal
 from apps.indicator.models.ann_future_price_classification import AnnPriceClassification, get_n_last_ann_classif_df
 
 from apps.user.models.user import get_horizon_value_from_string
-from settings import HORIZONS_TIME2NAMES, EMIT_RSI, EMIT_SMA, RUN_ANN
+from settings import HORIZONS_TIME2NAMES, EMIT_RSI, EMIT_SMA, RUN_ANN, MODIFY_DB
 
 
 logger = logging.getLogger(__name__)
@@ -91,11 +91,12 @@ def _process_ai_simple(horizon, **kwargs):
         # emit signal
         try:
             # TODO: change to emitting two signals UP and DOWN according to how others events are generated (for ML)
-            new_instance = EventsElementary.objects.create(
+            new_instance = EventsElementary(
                 **kwargs,
                 event_name="ann_price_2class_simple",
                 event_value= -int(df.iloc[-1]['class_change']),
             )
+            if MODIFY_DB: new_instance.save()
             logger.debug("   >>> ANN event detected and saved")
 
             signal_ai = Signal(
@@ -126,13 +127,15 @@ def _process_rsi(horizon, **kwargs):
         if rsi_bracket != 0:
             # save the event
             try:
-                new_instance = EventsElementary.objects.create(
+                new_instance = EventsElementary(
                     **kwargs,
                     event_name = "rsi_bracket",
                     event_value = rsi_bracket,
                     event_second_value = rs_obj.rsi,
                 )
+                if MODIFY_DB: new_instance.save()
                 logger.debug("   >>> RSI bracket event detected and saved")
+
                 if EMIT_RSI:
                     signal_rsi = Signal(
                         **kwargs,
@@ -183,12 +186,12 @@ def _process_sma_crossovers(horizon, prices_df, **kwargs):
 
             # save all elem events
             try:
-                sma_event = EventsElementary.objects.create(
+                sma_event = EventsElementary(
                     **kwargs,
                     event_name=event_name,
                     event_value=int(1),
                 )
-                sma_event.save()
+                if MODIFY_DB: sma_event.save()
             except Exception as e:
                 logger.error(" #Error saving SMA signal ")
 
@@ -370,12 +373,12 @@ class EventsElementary(AbstractIndicator):
             if event_value:
                 logger.debug('   >>> Ichi elem event was FIRED : ' + str(event_name))
                 try:
-                    ichi_event = cls.objects.create(
+                    ichi_event = cls(
                         **kwargs,
                         event_name=event_name,
                         event_value=int(1),
                     )
-                    ichi_event.save()
+                    if MODIFY_DB: ichi_event.save()
                 except Exception as e:
                     logger.error(" Error saving  " + event_name + " elementary event ")
 

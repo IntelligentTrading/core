@@ -1,9 +1,9 @@
-import logging
 from django.db import models
 from apps.indicator.models.abstract_indicator import AbstractIndicator
-import numpy as np
-
 from apps.indicator.models import price_resampl
+from settings import MODIFY_DB
+import numpy as np
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ class Rsi(AbstractIndicator):
             return None
 
 
-    def get_rsi_bracket_value(self):
+    def get_rsi_bracket_value(self) -> int:
         rsi = self.rsi
         if rsi is None or rsi==0.0 or rsi ==100.0:
             return 0
@@ -87,18 +87,16 @@ class Rsi(AbstractIndicator):
 
     @staticmethod
     def compute_all(cls, **kwargs):
-        #new_instance = cls.objects.create(**kwargs)
-        #rs = new_instance.compute_rs()
-        #if rs:
-        #    new_instance.save()
-        #    logger.info("   ...RS calculations done and saved.")
 
         # now we avoid creating DB record if no rsi has been computed
+        # the object is only saved if cls.objects.create called
         new_instance = cls(**kwargs)
         rs = new_instance.compute_rs()
-        if rs:
+        if rs and MODIFY_DB: # modify_db is for debug mode
             new_instance.save()
-            logger.info("   ...RS calculations are done and saved.")
+            logger.info("   ...RS calculation completed and saved.")
+        else:
+            logger.info("       RSI was not saved (either no value or debug model")
 
 
 

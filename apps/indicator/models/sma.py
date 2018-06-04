@@ -1,7 +1,7 @@
 from django.db import models
 from apps.indicator.models.abstract_indicator import AbstractIndicator
 from apps.indicator.models import price_resampl
-from settings import time_speed
+from settings import time_speed, MODIFY_DB
 import numpy as np
 import pandas as pd
 from datetime import timedelta, datetime
@@ -73,9 +73,10 @@ class Sma(AbstractIndicator):
         # todo - avoid creation empty record if no sma was computed..it also mith be fine
         for sma_period in SMA_LIST:
             try:
-                sma_instance = cls.objects.create(**kwargs, sma_period = sma_period)
+                sma_instance = cls(**kwargs, sma_period = sma_period)
+                #sma_instance = cls.objects.create(**kwargs, sma_period = sma_period)
                 sma_instance._compute_sma()
-                sma_instance.save()
+                if MODIFY_DB: sma_instance.save()
             except Exception as e:
                 logger.error(" SMA " + str(sma_period) + " Compute Exception: " + str(e))
         logger.info("   ...All SMA calculations have been done and saved.")
