@@ -22,10 +22,10 @@ def compute_and_save_indicators(source, resample_period):
     _compute_and_save_indicators(source=source, resample_period=resample_period)
 
 
-@shared_task
-def precache_info_bot():
-    from apps.info_bot.helpers import precache_currency_info_for_info_bot
-    precache_currency_info_for_info_bot()
+# @shared_task
+# def precache_info_bot():
+#     from apps.info_bot.helpers import precache_currency_info_for_info_bot
+#     precache_currency_info_for_info_bot()
 
 
 ## Debug Tasks

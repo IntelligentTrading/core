@@ -15,7 +15,7 @@ from apps.indicator.models import Price, Volume
 from apps.signal.models import Signal
 
 from apps.info_bot.helpers import format_currency, format_timestamp, parse_telegram_cryptocurrency_args
-from apps.info_bot.helpers import save_history
+from apps.info_bot.helpers import save_history, restore_db_connection
 
 from taskapp.helpers import get_source_name
 
@@ -173,6 +173,7 @@ def itf_view(trading_pair):
 
 
 ## user commands
+@restore_db_connection
 def itf(bot, update, args):
     save_history(update)
     trading_pair = parse_telegram_cryptocurrency_args(args=args, update=update, command='itf')
