@@ -111,6 +111,13 @@ class Signal(Timestampable, models.Model):
 
     sent_at = UnixTimeStampField(use_numeric=True)
 
+    # INDEXES
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['source', 'resample_period', 'counter_currency', 'transaction_currency']),
+        ]
+
     # MODEL PROPERTIES
 
 
