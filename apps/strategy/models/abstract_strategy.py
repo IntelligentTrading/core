@@ -29,7 +29,7 @@ class AbstractStrategy(ABC):
         self.parameters = parameters
 
 
-    def check_signals_now(self):
+    def check_signals_now(self)->set:
         # get all signals emitted now
         current_signals_set = get_all_signals_names_now(**self.parameters)
 

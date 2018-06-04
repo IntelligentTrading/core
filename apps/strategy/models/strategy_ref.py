@@ -35,24 +35,8 @@ ALL_STRATEGIES = {
 
 }
 
-# TODO to be deleted if works fine / need to do the same for AI
-# class StrategyRef(models.Model):
-#     '''
-#     Strategy class contains a Reference list of all Strategies and their meta-information
-#     The actual implementation is in separate classes
-#     '''
-#
-#     name = models.CharField(max_length=64, null=False, blank=False)
-#     implementation_module_name = models.CharField(max_length=128, null=True)
-#     implementation_class_name = models.CharField(max_length=64, null=True)
-#     description = models.TextField(null=True)
-#
-#     generated = models.CharField(max_length=16, null=False, blank=False) # manual/auto
-#     last_backtested_performance = models.FloatField(null=True)
 
-
-
-def get_all_strategy_classes():
+def get_all_strategy_classes() -> object:
     '''
     :return: all strategies in the system as class objects
     '''
@@ -67,6 +51,8 @@ def get_all_strategy_classes():
         module_name = strategy.implementation_module_name
         class_name = strategy.implementation_class_name
         module = importlib.import_module(module_name)
+
+        # create a class object
         class_obj = getattr(module, class_name)
 
         # add to a final list
