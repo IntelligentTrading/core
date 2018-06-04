@@ -84,6 +84,9 @@ def _process_ai_simple(horizon, **kwargs):
     df.loc[df['class'] == 'probability_down', 'class_num'] = int(1)
     df['class_change'] = df['class_num'].diff()   # detect change of state
 
+    # class change is a difference btw previos and current cell of class (which is Up or DOWN)
+    # so in case we have  0 0 0 0 1 1 (change prediction from up to down)
+    # it will generate    0 0 0 0 1 0
     if df.iloc[-1]['class_change'] != 0:
         # emit signal
         try:
@@ -91,14 +94,14 @@ def _process_ai_simple(horizon, **kwargs):
             new_instance = EventsElementary.objects.create(
                 **kwargs,
                 event_name="ann_price_2class_simple",
-                event_value=int(df.iloc[-1]['class_change']),
+                event_value= -int(df.iloc[-1]['class_change']),
             )
             logger.debug("   >>> ANN event detected and saved")
 
             signal_ai = Signal(
                 **kwargs,
                 signal='ANN_Simple',
-                trend=int(df.iloc[-1]['class_change']),
+                trend= -int(df.iloc[-1]['class_change']),
                 strength_value= int(3),
                 horizon=horizon,
                 predicted_ahead_for= ann_classif_df.tail(1)['predicted_ahead_for'][0],
