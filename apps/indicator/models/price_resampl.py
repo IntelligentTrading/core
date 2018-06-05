@@ -155,15 +155,25 @@ def get_resampl_price_at_timepoint(timestamp, source, transaction_currency, coun
         logger.error(' we dont have any resample price in 10 period proximity of the date you provided:  ' + str(timestamp) + ' :backtesting is not possible')
         return None
 
-    # check if we have a price at a given timestamp and if not we interpolate
-    if timestamp in close_prices_ts.index:
-        price = close_prices_ts[timestamp]
-    else:
+    # check if we have a timestamp and add it if neccesary
+    if timestamp not in close_prices_ts.index:
         # add our missing index, resort and then interpolate
         close_prices_ts = close_prices_ts.append(pd.Series(None, index=[timestamp]))
         close_prices_ts.sort_index(inplace=True)
-        #todo: if not work, try to apply interpolation from scipy
-        close_prices_ts = close_prices_ts.interpolate(method='spline', order=1, limit=10, limit_direction='both')
-        price = int(close_prices_ts[timestamp])
+
+    # do interpolation and get price
+    # we do interpolation because sometimes we have missing data because of bad data collection
+    close_prices_ts = close_prices_ts.interpolate(method='spline', order=1, limit=10, limit_direction='both')
+    price = int(close_prices_ts[timestamp])
+
+    # # check if we have a price at a given timestamp and if not we interpolate
+    # if timestamp in close_prices_ts.index:
+    #     price = close_prices_ts[timestamp]
+    # else:
+    #     # add our missing index, resort and then interpolate
+    #     close_prices_ts = close_prices_ts.append(pd.Series(None, index=[timestamp]))
+    #     close_prices_ts.sort_index(inplace=True)
+    #     close_prices_ts = close_prices_ts.interpolate(method='spline', order=1, limit=10, limit_direction='both')
+    #     price = int(close_prices_ts[timestamp])
 
     return price
