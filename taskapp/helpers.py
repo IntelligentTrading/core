@@ -25,7 +25,7 @@ from apps.backtesting.models.back_test import BackTest
 
 
 from settings import USDT_COINS, BTC_COINS
-from settings import SHORT, MEDIUM, LONG, HORIZONS_TIME2NAMES, RUN_ANN
+from settings import SHORT, MEDIUM, LONG, HORIZONS_TIME2NAMES, RUN_ANN, MODIFY_DB
 from apps.backtesting.models.back_test import get_distinct_trading_pairs
 from settings import PERIODS_LIST
 from settings import SOURCE_CHOICES, EXCHANGE_MARKETS
@@ -189,7 +189,7 @@ def _compute_and_save_indicators(source, resample_period):#params):
         try:
             resample_object = PriceResampl.objects.create(**indicator_params_dict)
             resample_object.compute()
-            resample_object.save()
+            if MODIFY_DB: resample_object.save()  #we set MODIFY_DB = False for debug mode, so we can debug with real DB
             logger.debug("  ... Resampled completed,  ELAPSED Time: " + str(time.time() - timestamp))
         except Exception as e:
             logger.error(" -> RESAMPLE EXCEPTION: " + str(e))
