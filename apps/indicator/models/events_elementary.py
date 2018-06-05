@@ -110,7 +110,7 @@ def _process_ai_simple(horizon, **kwargs):
                 probability_up = df.tail(1)['probability_up'][0],
                 probability_down = df.tail(1)['probability_down'][0]
             )
-            signal_ai.save()
+            if MODIFY_DB: signal_ai.save()
             logger.debug("   >>> ANN event FIRED!")
         except Exception as e:
             logger.error(" Error saving/emitting ANN Event " + e)
@@ -432,7 +432,7 @@ def get_current_elementory_events_df(timestamp, source, transaction_currency, co
 
 
 # the different with the previous one is that it returns the last row in a pile even if it was entered a month ago
-def get_last_ever_entered_elementory_events_df(timestamp, source, transaction_currency, counter_currency, resample_period):
+def get_last_ever_entered_elementory_events_df(timestamp, source, transaction_currency, counter_currency, resample_period)->pd.DataFrame:
 
     # get the most recent time
     last_time = EventsElementary.objects.filter(
