@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from apps.signal.models.signal import get_all_signals_names_now, get_signals_ts
+import pandas as pd
 
 import logging
 logger = logging.getLogger(__name__)
@@ -46,14 +47,14 @@ class AbstractStrategy(ABC):
         return self.signal_now_set
 
 
-    def get_previous_signal(self):
-        # get signals quite fa in a history
+    def get_previous_signal(self)->pd.Series:
+        # get signals quite far in a history
         tshift = 3600 * 24 * 20  # 20 days back
         previous_signal = self.get_all_signals_in_time_period(self.timestamp-tshift, self.timestamp).tail(1)
         return previous_signal
 
 
-    def get_all_signals_in_time_period(self, start_timestamp, end_timestamp):
+    def get_all_signals_in_time_period(self, start_timestamp, end_timestamp)->pd.Series:
         # get all signals in prodived timeframe
         # TODO that methon might be overriden in child class if we need more soficticated strategy rules
         all_signals_ts = get_signals_ts(start_timestamp, end_timestamp, **self.parameters)

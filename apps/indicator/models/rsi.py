@@ -18,7 +18,6 @@ class Rsi(AbstractIndicator):
         else:
             return None
 
-
     def get_rsi_bracket_value(self) -> int:
         rsi = self.rsi
         if rsi is None or rsi==0.0 or rsi ==100.0:
@@ -44,8 +43,7 @@ class Rsi(AbstractIndicator):
         return rsi_strength
 
 
-
-    def compute_rs(self):
+    def compute_rs(self)->float:
         '''
         Relative Strength calculation.
         The RSI is calculated a a property, we only save RS

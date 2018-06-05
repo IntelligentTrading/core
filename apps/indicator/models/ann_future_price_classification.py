@@ -141,7 +141,7 @@ def _compute_lstm_classification(ann_model, **kwargs):
 
 
 
-def get_n_last_ann_classif_df(n, **kwargs):
+def get_n_last_ann_classif_df(n, **kwargs)->pd.DataFrame:
 
     last_records = list(AnnPriceClassification.objects.filter(
         source=kwargs['source'],

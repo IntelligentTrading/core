@@ -82,7 +82,7 @@ class PriceResampl(AbstractIndicator):
 
 ############## get n last records from resampled table as a DataFrame
 # NOTE: no kwargs because we dont have timestamp here
-def get_n_last_resampl_df(n, source, transaction_currency, counter_currency, resample_period):
+def get_n_last_resampl_df(n, source, transaction_currency, counter_currency, resample_period)->pd.DataFrame:
 
     last_prices = list(PriceResampl.objects.filter(
         source=source,
@@ -112,7 +112,7 @@ def get_n_last_resampl_df(n, source, transaction_currency, counter_currency, res
 
 
 # get the first element ever resampled
-def get_first_resampled_time(source, transaction_currency, counter_currency, resample_period):
+def get_first_resampled_time(source, transaction_currency, counter_currency, resample_period)->float:
     first_time = PriceResampl.objects.filter(
        source=source,
        resample_period=resample_period,
@@ -127,7 +127,7 @@ def get_first_resampled_time(source, transaction_currency, counter_currency, res
 
 
 # returns an interpolated resampled price at a given arbitrary time point
-def get_resampl_price_at_timepoint(timestamp, source, transaction_currency, counter_currency, resample_period):
+def get_resampl_price_at_timepoint(timestamp, source, transaction_currency, counter_currency, resample_period)->int:
     '''
     Resampled table contains only agregated prices on 60/240min pime periods, but
     sometimes we need price in between of this points.
