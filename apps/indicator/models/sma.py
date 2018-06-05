@@ -74,7 +74,6 @@ class Sma(AbstractIndicator):
         for sma_period in SMA_LIST:
             try:
                 sma_instance = cls(**kwargs, sma_period = sma_period)
-                #sma_instance = cls.objects.create(**kwargs, sma_period = sma_period)
                 sma_instance._compute_sma()
                 if MODIFY_DB: sma_instance.save()
             except Exception as e:
@@ -87,7 +86,7 @@ class Sma(AbstractIndicator):
 
 ####################### get n last sma records as a DataFrame
 # NOTE : dont use **kwarg because we dont use time parameter here, to avoid confusion
-def get_n_last_sma_df(n, sma_period, source, transaction_currency, counter_currency, resample_period):
+def get_n_last_sma_df(n, sma_period, source, transaction_currency, counter_currency, resample_period)->pd.DataFrame:
 
     last_prices = list(Sma.objects.filter(
         timestamp__gte=datetime.now() - timedelta(minutes=(resample_period * sma_period * n)),
@@ -107,4 +106,5 @@ def get_n_last_sma_df(n, sma_period, source, transaction_currency, counter_curre
         df['sma_close_price'] = sma_close_prices
         df['sma_midpoint_price'] = sma_midpoint_prices
 
+    #TODO: remove this ugly sorting :) by changing sign of timestamp
     return df.iloc[::-1]
