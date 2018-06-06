@@ -51,7 +51,9 @@ def setup_periodic_tasks(sender, **kwargs):
     #calculate SHORT period at the start of the hour
     sender.add_periodic_task(
         crontab(minute=0),
-        tasks.compute_and_save_indicators_for_all_sources.s(resample_period=SHORT),
+        # crontab(minute=3, hour='*'),
+        # tasks.compute_and_save_indicators_for_all_sources.s(resample_period=SHORT),
+        tasks.compute_indicators_for_all_sources.s(resample_period=SHORT),
         name='at the beginning of every hour',
         )
 
@@ -65,15 +67,26 @@ def setup_periodic_tasks(sender, **kwargs):
     # calculate MEDIUM period at the start of every 4 hours
     sender.add_periodic_task(
         crontab(minute=0, hour='*/4'),
-        tasks.compute_and_save_indicators_for_all_sources.s(resample_period=MEDIUM),
+        # tasks.compute_and_save_indicators_for_all_sources.s(resample_period=MEDIUM),
+        tasks.compute_indicators_for_all_sources.s(resample_period=MEDIUM),
         name='at the beginning of every 4 hours',
         )
 
     # calculate LONG period daily at midnight.
     sender.add_periodic_task(
         crontab(minute=0, hour=0),
-        tasks.compute_and_save_indicators_for_all_sources.s(resample_period=LONG),
+        # tasks.compute_and_save_indicators_for_all_sources.s(resample_period=LONG),
+        tasks.compute_indicators_for_all_sources.s(resample_period=LONG),
         name='daily at midnight',
+        )
+
+    # calculate ANN for SHORT period at every hour and half OO:30, 01:30 ...
+    sender.add_periodic_task(
+        crontab(minute=30, hour='*'),
+        # crontab(minute=5, hour='*'),
+        # tasks.compute_and_save_indicators_for_all_sources.s(resample_period=SHORT),
+        tasks.compute_ann_for_all_sources.s(resample_period=SHORT),
+        name='at the beginning of every hour and half',
         )
 
     # Precache info_bot every 4 hours
