@@ -2,7 +2,7 @@ import time
 import logging
 import json
 
-from requests import get, RequestException
+from requests import get
 
 from apps.channel.models import ExchangeData
 from apps.indicator.models import Price, Volume
@@ -33,9 +33,9 @@ def _save_prices_and_volumes(data, timestamp, source):
         try:
             counter_currency_string = currency_pair.split('_')[0]
             counter_currency = get_currency_value_from_string(counter_currency_string)
-            assert counter_currency >= 0
+            # assert counter_currency >= 0
             transaction_currency_string = currency_pair.split('_')[1]
-            assert len(transaction_currency_string) > 1 and len(transaction_currency_string) <= 6
+            # assert len(transaction_currency_string) > 1 and len(transaction_currency_string) <= 6
 
             Price.objects.create(
                 source=source,

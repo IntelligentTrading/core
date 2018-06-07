@@ -3,7 +3,6 @@ import time
 
 from apps.common.utilities.sqs import send_sqs
 
-from apps.indicator.models.price import get_currency_value_from_string
 from apps.indicator.models.price_resampl import get_first_resampled_time
 from apps.indicator.models.ann_future_price_classification import AnnPriceClassification
 
@@ -22,8 +21,8 @@ from apps.user.models.user import get_horizon_value_from_string
 
 from settings import SHORT, MEDIUM, LONG, HORIZONS_TIME2NAMES, RUN_ANN, MODIFY_DB
 
-from taskapp.helpers.common import get_currency_pairs, get_exchanges, quad_formatted
-from taskapp.helpers.backtesting import _backtest_all_strategies
+from taskapp.helpers.common import get_currency_pairs, quad_formatted
+#from taskapp.helpers.backtesting import _backtest_all_strategies
 
 
 
