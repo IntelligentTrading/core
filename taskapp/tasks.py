@@ -4,7 +4,7 @@ import logging
 
 from celery import shared_task
 
-from settings import SHORT, EXCHANGE_MARKETS
+from settings import SHORT
 
 from taskapp.celery import app as celery_app
 
@@ -13,44 +13,45 @@ from taskapp.celery import app as celery_app
 logger = logging.getLogger(__name__)
 
 ## Periodic tasks
-@celery_app.task(retry=False)
-def compute_and_save_indicators_for_all_sources(resample_period):
-    from taskapp.helpers import get_exchanges
-    for exchange in get_exchanges():
-        compute_and_save_indicators.delay(source=exchange, resample_period=resample_period)
 
-
-@celery_app.task(retry=False)
-def compute_and_save_indicators(source, resample_period):
-    from taskapp.helpers import _compute_and_save_indicators
-    _compute_and_save_indicators(source=source, resample_period=resample_period)
-
-
-## New smaller periodic tasks
+# Indicators
 @celery_app.task(retry=False)
 def compute_indicators_for_all_sources(resample_period):
-    from taskapp.helpers import get_source_trading_pairs
+    from taskapp.helpers.common import get_source_trading_pairs
     #logger.info(f"Trading trios: {get_source_trading_pairs()}")
     for (source, transaction_currency, counter_currency) in get_source_trading_pairs():
         compute_indicators_for.delay(source, transaction_currency, counter_currency, resample_period)
 
 @celery_app.task(retry=False)
 def compute_indicators_for(source, transaction_currency, counter_currency, resample_period):
-    from taskapp.helpers import _compute_indicators_for
+    from taskapp.helpers.indicators import _compute_indicators_for
     _compute_indicators_for(source, transaction_currency, counter_currency, resample_period)
 
-
+# ANN
 @celery_app.task(retry=False)
 def compute_ann_for_all_sources(resample_period):
-    from taskapp.helpers import get_exchanges
+    from taskapp.helpers.common import get_exchanges
     for exchange in get_exchanges():
         compute_ann.delay(source=exchange, resample_period=resample_period)
 
-
 @celery_app.task(retry=False)
 def compute_ann(source, resample_period):
-    from taskapp.helpers import _compute_and_save_ann
-    _compute_and_save_ann(source=source, resample_period=resample_period)
+    from taskapp.helpers.indicators import _compute_ann
+    _compute_ann(source=source, resample_period=resample_period)
+
+
+# Obsolete
+# @celery_app.task(retry=False)
+# def compute_and_save_indicators_for_all_sources(resample_period):
+#     from taskapp.helpers import get_exchanges
+#     for exchange in get_exchanges():
+#         compute_and_save_indicators.delay(source=exchange, resample_period=resample_period)
+
+
+# @celery_app.task(retry=False)
+# def compute_and_save_indicators(source, resample_period):
+#     from taskapp.helpers.indicators import _compute_and_save_indicators
+#     _compute_and_save_indicators(source=source, resample_period=resample_period)
 
 
 # @shared_task
