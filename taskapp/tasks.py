@@ -2,10 +2,6 @@
 from __future__ import absolute_import, unicode_literals
 import logging
 
-from celery import shared_task
-
-from settings import SHORT
-
 from taskapp.celery import app as celery_app
 
 
