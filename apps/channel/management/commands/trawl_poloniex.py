@@ -33,10 +33,10 @@ class Command(BaseCommand):
         logger.info("Getting ready to trawl Poloniex...")
         SOURCE = 0
 
-        schedule.every().minute.do(_pull_poloniex_data, SOURCE )
+        #schedule.every().minute.do(_pull_poloniex_data, SOURCE )
 
-        logger.info("Getting ready to reevaluation all strategies...")
-        schedule.every().minute.do(_backtest_all_strategies)
+        #logger.info("Getting ready to reevaluation all strategies...")
+        #schedule.every().minute.do(_backtest_all_strategies)
 
 
         # @Alex
