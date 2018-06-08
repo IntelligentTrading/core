@@ -83,22 +83,3 @@ def setup_periodic_tasks(sender, **_):
 # def at_start(sender, **kwarg):
 #     with sender.app.connection() as conn:
 #         sender.app.send_task('taskapp.tasks.precache_info_bot', args=None, connection=conn)
-
-
-## Helpers
-
-## Debug, demo tasks
-@app.task(bind=True)
-def debug_task(self):
-    print('Request: {0!r}'.format(self.request))
-
-@app.task
-def demo(x):
-    print("Hi, "+x)
-
-
-# Periodic Tasks
-# @app.task
-# def pull_poloniex_data():
-#     from taskapp.helpers import _pull_poloniex_data
-#     _pull_poloniex_data()

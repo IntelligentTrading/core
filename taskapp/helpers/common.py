@@ -10,7 +10,7 @@ def get_exchanges():
     "Return list of exchange codes for signal calculations"
     return [code for code, name in SOURCE_CHOICES if name in EXCHANGE_MARKETS]
 
-def get_currency_pairs(source, period_in_seconds, blacklisted_coins=None):
+def get_currency_pairs(source, period_in_seconds=2*60*60, blacklisted_coins=None):
     """
     Return: [('BTC', 0), ('PINK', 0), ('ETH', 0),....]
     """

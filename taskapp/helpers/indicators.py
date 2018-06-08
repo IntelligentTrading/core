@@ -62,7 +62,7 @@ def _compute_ann(source, resample_period=SHORT):
 
         # calculate ANN indicator(s)
         # TODO: now run only for a short period, since it is not really tuned for other periods
-        if (RUN_ANN) and (resample_period==SHORT):
+        if (RUN_ANN) and (resample_period == SHORT):
             # TODO: just form X_predicted here and then run prediction outside the loop !
             try:
                 if ann_model_object:
