@@ -10,6 +10,11 @@ logger = logging.getLogger(__name__)
 class Rsi(AbstractIndicator):
     relative_strength = models.FloatField(null=True)  # relative strength
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['transaction_currency', 'counter_currency', 'source', 'resample_period']),
+        ]
+
     @property
     # rsi = 100 - 100 / (1 + rUp / rDown)
     def rsi(self):  # relative strength index

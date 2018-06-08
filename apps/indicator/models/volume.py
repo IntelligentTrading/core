@@ -12,12 +12,16 @@ import pandas as pd
 class Volume(models.Model):
     source = models.SmallIntegerField(choices=SOURCE_CHOICES, null=False)
     transaction_currency = models.CharField(max_length=6, null=False, blank=False)
-    counter_currency = models.SmallIntegerField(choices=COUNTER_CURRENCY_CHOICES,
-                                         null=False, default=BTC)
+    counter_currency = models.SmallIntegerField(choices=COUNTER_CURRENCY_CHOICES, null=False, default=BTC)
 
     volume = models.FloatField(null=False)
     timestamp = UnixTimeStampField(null=False)
 
+    # INDEX
+    class Meta:
+        indexes = [
+            models.Index(fields=['transaction_currency', 'counter_currency', 'source', 'timestamp']),
+        ]
 
     # MODEL PROPERTIES
 

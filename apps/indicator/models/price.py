@@ -26,6 +26,7 @@ class Price(models.Model):
     timestamp = UnixTimeStampField(null=False)
 
 
+    # INDEX
     class Meta:
         indexes = [
             models.Index(fields=['timestamp', 'source', 'transaction_currency', 'counter_currency']),

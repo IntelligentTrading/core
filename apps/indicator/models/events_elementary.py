@@ -229,6 +229,14 @@ class EventsElementary(AbstractIndicator):
     event_value = models.IntegerField(null=True)
     event_second_value = models.FloatField(null=True)
 
+
+    # INDEX
+    class Meta:
+        indexes = [
+            models.Index(fields=['transaction_currency', 'source', 'counter_currency', 'resample_period', 'event_name', 'timestamp']),
+        ]
+
+
     @staticmethod
     def check_events(cls, **kwargs):
         horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[kwargs['resample_period']])
