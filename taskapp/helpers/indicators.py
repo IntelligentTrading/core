@@ -185,17 +185,19 @@ def _compute_indicators_for(source, transaction_currency, counter_currency, resa
         try:
             s = strategy(**indicator_params_dict)
             now_signals_set = s.check_signals_now()
-            logger.debug("  NOW: found Signal belongs to strategy : " + str(strategy) + " : " + str(now_signals_set))
+            if now_signals_set:
+                logger.debug("  NOW: found Signal belongs to strategy : " + str(strategy) + " : " + str(now_signals_set))
 
-            # Emit to a signal from a strategy to sqs without saving it in the Signal table
-            # combine a dictionary with all data
-            dict_to_emit = {
-                **indicator_params_dict,
-                "horizon"  : horizon,
-                "strategy" : str(s),
-                "signal_name" : str(now_signals_set)
-            }
-            send_sqs(dict_to_emit)
-            logger.debug("   ... Checking for strategy signals completed.")
+                # Emit to a signal from a strategy to sqs without saving it in the Signal table
+                # combine a dictionary with all data
+                dict_to_emit = {
+                    **indicator_params_dict,
+                    "horizon"  : horizon,
+                    "strategy" : str(s),
+                    "signal_name" : str(now_signals_set)
+                }
+                send_sqs(dict_to_emit)
+            else:
+                logger.debug("   ... No STRATEGY signals has been found NOW.")
         except Exception as e:
             logger.error(f" Error Strategy checking:  {e}")
