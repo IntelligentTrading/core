@@ -45,7 +45,7 @@ def process_message_from_queue(message_body):
     processed = []
 
     for item in exchange:
-        #logger.debug("Save {category} for {symbol} from {source}".format(**item))
+        logger.debug("Save {category} for {symbol} from {source}".format(**item))
     
         source_code = next((code for code, source_text in SOURCE_CHOICES if source_text==item['source']), None)
 
@@ -68,8 +68,8 @@ def process_message_from_queue(message_body):
                 processed.append("{}/{}".format(transaction_currency, counter_currency_code))
                 #logger.debug(">>> Price saved: source={}, transaction_currency={}, counter_currency={}, price={}, timestamp={}".format(
                 #            source_code, transaction_currency, counter_currency_code, price, item['timestamp']))
-            except Exception as e:
-                logger.debug(">>>> Error saving Price for {}: {}".format(item['symbol'], e))
+            except Exception:
+                logger.debug(f">>>> Error saving Price for {item['symbol']}")
 
 
         elif 'volume' == item['category']:
@@ -84,8 +84,8 @@ def process_message_from_queue(message_body):
                 )
                 #logger.debug(">>> Volume saved: source={}, transaction_currency={}, counter_currency={}, volume={}, timestamp={}".format(
                 #            source_code, transaction_currency, counter_currency_code, volume, item['timestamp']))
-            except Exception as e:
-                logger.debug(">>>> Error saving Volume for {}: {}".format(item['symbol'], e))
+            except Exception:
+                logger.debug(f">>>> Error saving Volume for {item['symbol']}")
     
     #logger.debug("Message for {} saved to db. Coins: {}".format(get_source_name(source_code), ",".join(processed)))
-    logger.info("Message for {} ({}) saved to db".format(get_source_name(source_code), len(processed)))
+    logger.info(f"Message for {get_source_name(source_code)} ({len(processed)}) saved to db")

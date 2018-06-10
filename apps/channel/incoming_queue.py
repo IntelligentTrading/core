@@ -25,6 +25,7 @@ class SqsListener:
         self._region_name = kwargs.get('region_name', 'us-east-1')
         self._poll_interval = kwargs.get('interval', 10) # by default poll messages every 10 sec
         self._wait_time = kwargs.get('wait_time', 0) #in seconds, wait_time=0 mean short polling
+        self.handler = lambda *args: None # empty lambda function
 
         self._client = self._init_sqs_client()
     
@@ -42,22 +43,25 @@ class SqsListener:
         while True:
             # short polling if WaitTimeSecconds=0 or not specified
             # better use long polling
-            messages = self._client.receive_message(
-                QueueUrl=self._queue_url,
-                WaitTimeSeconds=self._wait_time,
-            )
-            if 'Messages' in messages:
-                logger.info('SQS messages received: ' + str(len(messages['Messages'])))
+            try:
+                messages = self._client.receive_message(
+                    QueueUrl=self._queue_url,
+                    WaitTimeSeconds=self._wait_time,
+                )
+                if 'Messages' in messages:
+                    logger.info(f"SQS messages received: {len(messages['Messages'])}")
 
-                for message in messages['Messages']:
-                    receipt_handle = message['ReceiptHandle']
+                    for message in messages['Messages']:
+                        receipt_handle = message['ReceiptHandle']
 
-                    self.handler(message['Body'])
-                    
-                    self._client.delete_message(
-                        QueueUrl=self._queue_url,
-                        ReceiptHandle=receipt_handle
-                    )
-            else:
-                time.sleep(self._poll_interval)
+                        self.handler(message['Body'])
+
+                        self._client.delete_message(
+                            QueueUrl=self._queue_url,
+                            ReceiptHandle=receipt_handle
+                        )
+                else:
+                    time.sleep(self._poll_interval)
+            except Exception:
+                logger.error("Error processing SQS message")
 

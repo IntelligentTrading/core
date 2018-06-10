@@ -10,7 +10,7 @@ def get_exchanges():
     "Return list of exchange codes for signal calculations"
     return [code for code, name in SOURCE_CHOICES if name in EXCHANGE_MARKETS]
 
-def get_currency_pairs(source, period_in_seconds=2*60*60, blacklisted_coins=None):
+def get_currency_pairs(source, period_in_seconds=4*60*60, blacklisted_coins=None):
     """
     Return: [('BTC', 0), ('PINK', 0), ('ETH', 0),....]
     """
@@ -24,7 +24,7 @@ def get_source_name(source_code):
     "return poloniex for code=0"
     return next((source_text for code, source_text in SOURCE_CHOICES if code == source_code), None)
 
-def get_source_trading_pairs(back_in_time_seconds=2*60*60, blacklisted_coins=None):
+def get_source_trading_pairs(back_in_time_seconds=4*60*60, blacklisted_coins=None):
     """
     Return[(source, transaction_currency, counter_currency), (source1, transaction_currency, counter_currency) ...]
     Return: [(0, 'BTC', 0), (1, 'BTC', 0), (2, 'BTC', 0),....]
