@@ -4,7 +4,7 @@ import time
 
 from django.core.management.base import BaseCommand
 
-from settings import POLONIEX, SHORT, BTC, USDT
+from settings import POLONIEX, SHORT, USDT
 from settings import time_speed  # 1 / 10
 
 from taskapp.helpers.poloniex import _pull_poloniex_data

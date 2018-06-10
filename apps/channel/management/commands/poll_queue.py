@@ -5,10 +5,10 @@ import time
 from django.core.management.base import BaseCommand
 
 #from apps.channel.models.exchange_data import SOURCE_CHOICES
-from apps.indicator.models import Price, Volume
-from taskapp.helpers import get_source_name
-
 from apps.channel.incoming_queue import SqsListener
+from apps.indicator.models import Price, Volume
+
+from taskapp.helpers.common import get_source_name
 
 from settings import INCOMING_SQS_QUEUE, SOURCE_CHOICES, COUNTER_CURRENCY_CHOICES
 
@@ -39,25 +39,26 @@ class Command(BaseCommand):
 
 def process_message_from_queue(message_body):
     "Save SQS message to DB: Price and Volume"
-    
+
     body_dict = json.loads(message_body)
     exchange = json.loads(body_dict['Message'])
     processed = []
 
     for item in exchange:
-        logger.debug("Save {category} for {symbol} from {source}".format(**item))
-    
-        source_code = next((code for code, source_text in SOURCE_CHOICES if source_text==item['source']), None)
+        # logger.debug(f"Save {item['category']} for {item['symbol']} from {item['source']}")
+
+        source_code = next((code for code, source_text in SOURCE_CHOICES if source_text == item['source']), None)
 
         (transaction_currency, counter_curency_text) = item['symbol'].split('/')
 
-        counter_currency_code = next((code for code, counter_currency in COUNTER_CURRENCY_CHOICES if counter_currency==counter_curency_text), None)
+        counter_currency_code = next((code for code, counter_currency in COUNTER_CURRENCY_CHOICES if counter_currency == counter_curency_text), None)
         if None in (source_code, counter_currency_code):
             continue # skip this source or counter_currency
 
-        if 'price' == item['category']:
-            price = int(float(item['value']) * 10 ** 8) # convert to satoshi
+        if item['category'] == 'price':
             try:
+                price = int(float(item['value']) * 10 ** 8) # convert to satoshi
+
                 Price.objects.create(
                     source=source_code,
                     transaction_currency=transaction_currency,
@@ -72,9 +73,10 @@ def process_message_from_queue(message_body):
                 logger.debug(f">>>> Error saving Price for {item['symbol']}")
 
 
-        elif 'volume' == item['category']:
-            volume = float(item['value'])
+        elif item['category'] == 'volume':
             try:
+                volume = float(item['value'])
+
                 Volume.objects.create(
                     source=source_code,
                     transaction_currency=transaction_currency,
@@ -86,6 +88,6 @@ def process_message_from_queue(message_body):
                 #            source_code, transaction_currency, counter_currency_code, volume, item['timestamp']))
             except Exception:
                 logger.debug(f">>>> Error saving Volume for {item['symbol']}")
-    
+
     #logger.debug("Message for {} saved to db. Coins: {}".format(get_source_name(source_code), ",".join(processed)))
     logger.info(f"Message for {get_source_name(source_code)} ({len(processed)}) saved to db")

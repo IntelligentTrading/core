@@ -25,10 +25,10 @@ class SqsListener:
         self._region_name = kwargs.get('region_name', 'us-east-1')
         self._poll_interval = kwargs.get('interval', 10) # by default poll messages every 10 sec
         self._wait_time = kwargs.get('wait_time', 0) #in seconds, wait_time=0 mean short polling
-        self.handler = lambda *args: None # empty lambda function
+        self.handler = lambda *args: None # empty handler
 
         self._client = self._init_sqs_client()
-    
+
     def _init_sqs_client(self):
         self._session = boto3.Session(
             aws_access_key_id=AWS_OPTIONS['AWS_ACCESS_KEY_ID'],
@@ -43,25 +43,26 @@ class SqsListener:
         while True:
             # short polling if WaitTimeSecconds=0 or not specified
             # better use long polling
-            try:
-                messages = self._client.receive_message(
-                    QueueUrl=self._queue_url,
-                    WaitTimeSeconds=self._wait_time,
-                )
-                if 'Messages' in messages:
-                    logger.info(f"SQS messages received: {len(messages['Messages'])}")
+            messages = self._client.receive_message(
+                QueueUrl=self._queue_url,
+                WaitTimeSeconds=self._wait_time,
+            )
+            if 'Messages' in messages:
+                logger.info(f"SQS messages received: {len(messages['Messages'])}")
 
-                    for message in messages['Messages']:
-                        receipt_handle = message['ReceiptHandle']
+                for message in messages['Messages']:
+                    receipt_handle = message['ReceiptHandle']
 
+                    self._client.delete_message(
+                        QueueUrl=self._queue_url,
+                        ReceiptHandle=receipt_handle
+                    )
+
+                    try:
                         self.handler(message['Body'])
+                    except Exception:
+                        logger.error(f"Error handling SQS message -> ReceiptHandle: {receipt_handle}")
+                        logger.debug(f"MessageBody: {message['Body']}")
 
-                        self._client.delete_message(
-                            QueueUrl=self._queue_url,
-                            ReceiptHandle=receipt_handle
-                        )
-                else:
-                    time.sleep(self._poll_interval)
-            except Exception:
-                logger.error("Error processing SQS message")
-
+            else:
+                time.sleep(self._poll_interval)
