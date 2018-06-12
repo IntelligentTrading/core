@@ -50,9 +50,14 @@ help - list of available commands
     dp.add_handler(CommandHandler('getme', special_commands.getme))
 
     dp.add_handler(CommandHandler('itf', itf.itf, pass_args=True))
+
     dp.add_handler(CommandHandler('price', price.price, pass_args=True))
     dp.add_handler(CommandHandler('info', info.info))
 
+    dp.add_handler(CommandHandler('ta', itf.ta, pass_args=True))
+
+    dp.add_handler(CommandHandler('i', itf.i, pass_args=True))
+    dp.add_handler(CommandHandler('s', itf.sentiment, pass_args=True))
 
     if LOCAL:
         dp.add_handler(CommandHandler('r', special_commands.restart, \

@@ -38,7 +38,7 @@ def diff_symbol(diff): # ↑ increase, ↓ decrease
         d_sym = ""
     return d_sym
 
-@cache_memoize(8*60*60) # 8 hours
+@cache_memoize(4*60*60) # 4 hours
 def sentiment_from_cryptopanic(currency):
     INFO_BOT_CRYPTOPANIC_API_URL = "https://cryptopanic.com/api/posts/?auth_token={}&filter=trending&currencies={}".format(
         INFO_BOT_CRYPTOPANIC_API_TOKEN, currency)
@@ -100,7 +100,6 @@ def get_kumo_template(signal):
 def itf_view(trading_pair):
     view = ''
 
-    currency_symbol = trading_pair['counter_currency']
     counter_currency = COUNTER_CURRENCIES.index(trading_pair['counter_currency'])
     currency = trading_pair['transaction_currency']
 
@@ -110,7 +109,7 @@ def itf_view(trading_pair):
         ).order_by('-timestamp').first()
 
     source = price_new_object.source
-    view += f"*{currency}*\_{trading_pair['counter_currency']} *{format_currency(price_new_object.price, currency_symbol)}*"
+    view += f"*{currency}*\_{trading_pair['counter_currency']} *{format_currency(price_new_object.price, trading_pair['counter_currency'])}*"
 
     price_24h_old_object = Price.objects.filter(
         source=source, transaction_currency=currency, counter_currency=counter_currency,
@@ -171,6 +170,91 @@ def itf_view(trading_pair):
 
     return view
 
+@cache_memoize(INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS) # 1 hours
+def i_view(trading_pair):
+    counter_currency = COUNTER_CURRENCIES.index(trading_pair['counter_currency'])
+    currency = trading_pair['transaction_currency']
+
+    # Price
+    price_new_object = Price.objects.filter(
+        transaction_currency=currency, counter_currency=counter_currency
+        ).order_by('-timestamp').first()
+
+    source = price_new_object.source
+    view = f"*{currency}*\_{trading_pair['counter_currency']} *{format_currency(price_new_object.price, trading_pair['counter_currency'])}*"
+
+    price_24h_old_object = Price.objects.filter(
+        source=source, transaction_currency=currency, counter_currency=counter_currency,
+        timestamp__lte=price_new_object.timestamp - timedelta(minutes=1440)
+        ).order_by('-timestamp').first()
+    try:
+        percents_price_diff_24h = percents(price_new_object.price, price_24h_old_object.price)
+        view += f" *{diff_symbol(percents_price_diff_24h)}*\n24hr Change: {'{:+.2f}%'.format(percents_price_diff_24h)}"
+    except:
+        view += "\n"
+
+    # Volume
+    volume_object = Volume.objects.filter(
+        source=source, transaction_currency=currency, counter_currency=counter_currency,
+        ).order_by('-timestamp').first()
+    view += f"\nVolume: {format_currency(amount=volume_object.volume, currency_symbol=currency, in_satoshi=False)}"
+
+    # Source (maybe show time in user local time not in UTC) and last update
+    view += f"\n\nSource: {get_source_name(source).capitalize()}"
+    view += f"\nLast update: {price_new_object.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
+    return view
+
+
+def ta_view(trading_pair):
+    counter_currency = COUNTER_CURRENCIES.index(trading_pair['counter_currency'])
+    currency = trading_pair['transaction_currency']
+
+    price_new_object = Price.objects.filter(
+        transaction_currency=currency, counter_currency=counter_currency
+        ).order_by('-timestamp').first()
+
+    source = price_new_object.source
+
+    # Signals
+    latest_signals = list()
+    for signal in ['RSI', 'RSI_Cumulative', 'kumo_breakout']:
+        signal_object = Signal.objects.filter(
+            source=source, transaction_currency=currency, counter_currency=counter_currency,
+            signal=signal
+            ).order_by('-timestamp').first()
+        if signal_object:
+            latest_signals.append(signal_object)
+
+    if latest_signals:
+        view = f"\n\n*Latest signals* for *{currency}*\_{trading_pair['counter_currency']}\n"
+
+        for signal in sorted(latest_signals, key=lambda s: s.timestamp, reverse=True):
+            if signal.signal == 'RSI':
+                rsi = get_rsi_template(signal)
+                view += f"\n *•* {format_timestamp(signal.timestamp)} {rsi['rsi_header_emoji']} {rsi['rsi_text']}\nITF Bias: {rsi['rsi_itt_bias']} ({signal.get_horizon_display().capitalize()} horizon)\n"
+            elif signal.signal == 'RSI_Cumulative':
+                rsi = get_rsi_template(signal)
+                view += f"\n *•* {format_timestamp(signal.timestamp)} {rsi['rsi_header_emoji_pro']} ITF Proprietary Alert\nITF Bias: *{rsi['rsi_general_trend']}* - {rsi['rsi_itt_bias']} ({signal.get_horizon_display().capitalize()} horizon)\n"
+            elif signal.signal == 'kumo_breakout':
+                kumo = get_kumo_template(signal)
+                view += f"\n *•* {format_timestamp(signal.timestamp)} {kumo['ichimoku_header_emoji']} {kumo['ichimoku_text']} ({signal.get_horizon_display().capitalize()} horizon)\n"
+    else:
+        view = "Sorry, I don't have any signals for *{currency}*\_{trading_pair['counter_currency']}"
+    return view
+
+def sentiment_view(trading_pair):
+    # Sentiments from cryptopanic
+    (title, url) = sentiment_from_cryptopanic(trading_pair['transaction_currency'])
+    view = f"Sentiment for *{trading_pair['transaction_currency']}*"
+
+    if '' not in (title, url):
+        view += f"\n\n\"{title}\"\n[Read on CryptoPanic]({url})"
+    else:
+        view += f"\n\n\Sorry, I don't have any sentiments for {trading_pair['transaction_currency']}"
+
+    return view
+
+
 
 ## user commands
 @restore_db_connection
@@ -179,5 +263,31 @@ def itf(bot, update, args):
     trading_pair = parse_telegram_cryptocurrency_args(args=args, update=update, command='itf')
     if trading_pair:
         view = itf_view(trading_pair)
+        update.message.reply_text(view, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+    return
+
+def i(bot, update, args):
+    save_history(update)
+    trading_pair = parse_telegram_cryptocurrency_args(args=args, update=update, command='itf')
+    if trading_pair:
+        view = i_view(trading_pair)
+        update.message.reply_text(view, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+    return
+
+@restore_db_connection
+def ta(bot, update, args):
+    save_history(update)
+    trading_pair = parse_telegram_cryptocurrency_args(args=args, update=update, command='ta')
+    if trading_pair:
+        view = ta_view(trading_pair)
+        update.message.reply_text(view, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+    return
+
+@restore_db_connection
+def sentiment(bot, update, args):
+    save_history(update)
+    trading_pair = parse_telegram_cryptocurrency_args(args=args, update=update, command='s')
+    if trading_pair:
+        view = sentiment_view(trading_pair)
         update.message.reply_text(view, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
     return
