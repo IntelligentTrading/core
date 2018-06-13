@@ -98,8 +98,6 @@ def get_kumo_template(signal):
 ## New helpers
 @cache_memoize(INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS) # 1 hours
 def itf_view(trading_pair):
-    view = ''
-
     counter_currency = COUNTER_CURRENCIES.index(trading_pair['counter_currency'])
     currency = trading_pair['transaction_currency']
 
@@ -109,7 +107,7 @@ def itf_view(trading_pair):
         ).order_by('-timestamp').first()
 
     source = price_new_object.source
-    view += f"*{currency}*\_{trading_pair['counter_currency']} *{format_currency(price_new_object.price, trading_pair['counter_currency'])}*"
+    view = f"*{currency}*\_{trading_pair['counter_currency']} *{format_currency(price_new_object.price, trading_pair['counter_currency'])}*"
 
     price_24h_old_object = Price.objects.filter(
         source=source, transaction_currency=currency, counter_currency=counter_currency,
