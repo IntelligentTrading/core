@@ -38,7 +38,6 @@ price - show price for trading pair on different exchanges. For example: `/price
 info - list of supported coins, trading pairs and exchanges
 help - list of available commands
 
-
     About:
     Description:
     Botpic:
