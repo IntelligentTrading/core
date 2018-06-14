@@ -28,7 +28,6 @@ class PriceResampl(AbstractIndicator):
             models.Index(fields=['transaction_currency', 'counter_currency', 'source', 'resample_period']),
         ]
 
-
     # MODEL PROPERTIES
     @property
     def price_change_24h(self):
