@@ -131,7 +131,8 @@ def parse_telegram_cryptocurrency_args(args, update, command):
         trading_pair['counter_currency'] = default_counter_currency_for(trading_pair['transaction_currency'], trading_pairs_available)
         if trading_pair['counter_currency'] is None:
             coins = set(coin for coin, _ in trading_pairs_available)
-            update.message.reply_text(f"Sorry, I don't support `{trading_pair['transaction_currency']}`\n\nPlease use one of these coins:\n\n{', '.join(coins)}.\n\nOr just enter `/{command} BTC` or `/{command} ETH_USDT`", ParseMode.MARKDOWN)
+            #update.message.reply_text(f"Sorry, I don't support `{trading_pair['transaction_currency']}`\n\nPlease use one of these coins:\n\n{', '.join(coins)}.\n\nOr just enter `/{command} BTC` or `/{command} ETH_USDT`", ParseMode.MARKDOWN)
+            update.message.reply_text(f"Sorry, I can't find `{trading_pair['transaction_currency']}`. Try `BTC`, `ETH`, `XRP`, `BCH` or other `{len(coins)}` coins we support.", ParseMode.MARKDOWN)
             return None
         else:
             return trading_pair
