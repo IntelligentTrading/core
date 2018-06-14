@@ -264,6 +264,7 @@ def itf(bot, update, args):
         update.message.reply_text(view, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
     return
 
+@restore_db_connection
 def i(bot, update, args):
     save_history(update)
     trading_pair = parse_telegram_cryptocurrency_args(args=args, update=update, command='itf')
