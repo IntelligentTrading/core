@@ -35,6 +35,12 @@ def compute_ann(source, resample_period):
     from taskapp.helpers.indicators import _compute_ann
     _compute_ann(source=source, resample_period=resample_period)
 
+# Backtesting
+@celery_app.task(retry=False)
+def backtest_all_strategies():
+    from taskapp.helpers.backtesting import _backtest_all_strategies
+    _backtest_all_strategies()
+
 
 # Obsolete
 # @celery_app.task(retry=False)
