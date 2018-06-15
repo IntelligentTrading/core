@@ -21,14 +21,14 @@ def _backtest_all_strategies():
 
     # TODO: decide which period we're going to use
     time_end = time.time()
-    time_start = time_end - 3600 * 24 * 60  # a month back
+    time_start = time_end - 3600 * 24 * 30  # a month back
 
     # get all triplets (source, transaction_currency, counter_currency)
     trading_pairs = get_distinct_trading_pairs(time_start, time_end)
 
     # run reavaluation
     for strategy_class in strategies_class_list:
-        # begin = time.time()
+        begin = time.time()
         strategy_class_name = strategy_class.__name__
 
         # iterate over all currencies and exchangers (POLONIEX etc) with run_backtest_on_one_curency_pair
@@ -47,5 +47,5 @@ def _backtest_all_strategies():
                     back_test_run.save()
 
         logger.info("Ended backtesting {} on all currency.".format(strategy_class_name))
-        # end = time.time()
-        # logger.info("Time to test strategy {}: {} minutes".format(strategy_class_name, (end-begin)/60))
+        end = time.time()
+        logger.info("Time to test strategy {}: {} minutes".format(strategy_class_name, (end-begin)/60))
