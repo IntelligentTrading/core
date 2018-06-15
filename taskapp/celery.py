@@ -71,6 +71,13 @@ def setup_periodic_tasks(sender, **_):
         name='at the beginning of every hour and half',
         )
 
+    # run backtesting daily
+    sender.add_periodic_task(
+        crontab(minute=40, hour=12),
+        tasks.backtest_all_strategies.s(),
+        name='at the beginning of every hour and half',
+        )
+
     # Precache info_bot every 4 hours
     # from settings import INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS
     #sender.add_periodic_task(INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS, tasks.precache_info_bot.s(), name='every %is' % INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS)
