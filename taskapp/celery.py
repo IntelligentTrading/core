@@ -73,9 +73,9 @@ def setup_periodic_tasks(sender, **_):
 
     # run backtesting daily
     sender.add_periodic_task(
-        crontab(minute=40, hour=12),
+        crontab(minute=40, hour=13),
         tasks.backtest_all_strategies.s(),
-        name='at the beginning of every hour and half',
+        name='daily at 13:40',
         )
 
     # Precache info_bot every 4 hours

@@ -25,7 +25,7 @@ class PriceResampl(AbstractIndicator):
 
     class Meta:
         indexes = [
-            models.Index(fields=['transaction_currency', 'counter_currency', 'source', 'resample_period']),
+            models.Index(fields=['transaction_currency', 'counter_currency', 'source', 'resample_period', 'timestamp']),
         ]
 
     # MODEL PROPERTIES
