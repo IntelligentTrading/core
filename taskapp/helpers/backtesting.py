@@ -37,6 +37,12 @@ def _backtest_all_strategies():
         for resample_period in PERIODS_LIST:
             for trading_pair in trading_pairs:
                 back_test_run = BackTest(strategy_class, now_timestamp, time_start, time_end)
+                logger.info("Processing {}, resample_period={}, source={}, transaction_currency={}, counter_currency={}"
+                            .format(strategy_class_name,
+                                    resample_period,
+                                    trading_pair["source"],
+                                    trading_pair["transaction_currency"],
+                                    trading_pair["counter_currency"]))
 
                 if back_test_run.run_backtest_on_one_curency_pair(trading_pair["source"],
                                                                   trading_pair["transaction_currency"],
