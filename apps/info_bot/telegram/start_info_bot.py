@@ -30,11 +30,13 @@ List of commands:
 command1 - Description
 command2 - Another description
 
-itf - short info about coin or trading pair. For example: `/itf BTC` or `/itf XRP_ETH`
+itf - info about coin or trading pair. For example: `/itf BTC` or `/itf XRP_ETH`
+i - latest info about price and volume. For example: `/i BTC`
+ta - latest TA signals. For example: `/s BTC`
+s - latest crowd sentiment. For example: `/s BTC`
 price - show price for trading pair on different exchanges. For example: `/price BTC_USDT`
 info - list of supported coins, trading pairs and exchanges
 help - list of available commands
-
 
     About:
     Description:
@@ -50,9 +52,13 @@ help - list of available commands
     dp.add_handler(CommandHandler('getme', special_commands.getme))
 
     dp.add_handler(CommandHandler('itf', itf.itf, pass_args=True))
+
     dp.add_handler(CommandHandler('price', price.price, pass_args=True))
     dp.add_handler(CommandHandler('info', info.info))
 
+    dp.add_handler(CommandHandler('ta', itf.ta, pass_args=True))
+    dp.add_handler(CommandHandler('i', itf.i, pass_args=True))
+    dp.add_handler(CommandHandler('s', itf.sentiment, pass_args=True))
 
     if LOCAL:
         dp.add_handler(CommandHandler('r', special_commands.restart, \

@@ -1,7 +1,7 @@
 from django.db import models
 from apps.indicator.models.abstract_indicator import AbstractIndicator
 from apps.indicator.models import price_resampl
-from settings import time_speed
+from settings import time_speed, MODIFY_DB
 import numpy as np
 import pandas as pd
 from datetime import timedelta, datetime
@@ -73,9 +73,9 @@ class Sma(AbstractIndicator):
         # todo - avoid creation empty record if no sma was computed..it also mith be fine
         for sma_period in SMA_LIST:
             try:
-                sma_instance = cls.objects.create(**kwargs, sma_period = sma_period)
+                sma_instance = cls(**kwargs, sma_period = sma_period)
                 sma_instance._compute_sma()
-                sma_instance.save()
+                if MODIFY_DB: sma_instance.save()
             except Exception as e:
                 logger.error(" SMA " + str(sma_period) + " Compute Exception: " + str(e))
         logger.info("   ...All SMA calculations have been done and saved.")
@@ -86,7 +86,7 @@ class Sma(AbstractIndicator):
 
 ####################### get n last sma records as a DataFrame
 # NOTE : dont use **kwarg because we dont use time parameter here, to avoid confusion
-def get_n_last_sma_df(n, sma_period, source, transaction_currency, counter_currency, resample_period):
+def get_n_last_sma_df(n, sma_period, source, transaction_currency, counter_currency, resample_period)->pd.DataFrame:
 
     last_prices = list(Sma.objects.filter(
         timestamp__gte=datetime.now() - timedelta(minutes=(resample_period * sma_period * n)),
@@ -106,4 +106,5 @@ def get_n_last_sma_df(n, sma_period, source, transaction_currency, counter_curre
         df['sma_close_price'] = sma_close_prices
         df['sma_midpoint_price'] = sma_midpoint_prices
 
+    #TODO: remove this ugly sorting :) by changing sign of timestamp
     return df.iloc[::-1]

@@ -26,6 +26,7 @@ class Price(models.Model):
     timestamp = UnixTimeStampField(null=False)
 
 
+    # INDEX
     class Meta:
         indexes = [
             models.Index(fields=['timestamp', 'source', 'transaction_currency', 'counter_currency']),
@@ -74,7 +75,7 @@ def int_price2float(int_price):
     float_price = float(int_price * 10**-8)
 
 
-def get_price_at_timepoint(timestamp, source, transaction_currency, counter_currency, resample_period):
+def get_price_at_timepoint(timestamp, source, transaction_currency, counter_currency, resample_period)->int:
 
     prices_range = list(Price.objects.filter(
         source=source,

@@ -12,7 +12,7 @@ from apps.signal.models.signal import Signal
 from apps.indicator.models.ann_future_price_classification import AnnPriceClassification, get_n_last_ann_classif_df
 
 from apps.user.models.user import get_horizon_value_from_string
-from settings import HORIZONS_TIME2NAMES, EMIT_RSI, EMIT_SMA, RUN_ANN
+from settings import HORIZONS_TIME2NAMES, EMIT_RSI, EMIT_SMA, RUN_ANN, MODIFY_DB
 
 
 logger = logging.getLogger(__name__)
@@ -91,11 +91,12 @@ def _process_ai_simple(horizon, **kwargs):
         # emit signal
         try:
             # TODO: change to emitting two signals UP and DOWN according to how others events are generated (for ML)
-            new_instance = EventsElementary.objects.create(
+            new_instance = EventsElementary(
                 **kwargs,
                 event_name="ann_price_2class_simple",
                 event_value= -int(df.iloc[-1]['class_change']),
             )
+            if MODIFY_DB: new_instance.save()
             logger.debug("   >>> ANN event detected and saved")
 
             signal_ai = Signal(
@@ -109,7 +110,7 @@ def _process_ai_simple(horizon, **kwargs):
                 probability_up = df.tail(1)['probability_up'][0],
                 probability_down = df.tail(1)['probability_down'][0]
             )
-            signal_ai.save()
+            if MODIFY_DB: signal_ai.save()
             logger.debug("   >>> ANN event FIRED!")
         except Exception as e:
             logger.error(" Error saving/emitting ANN Event " + e)
@@ -118,7 +119,11 @@ def _process_ai_simple(horizon, **kwargs):
 
 
 
-def _process_rsi(horizon, **kwargs):
+def _process_rsi(horizon, **kwargs)->int:
+    '''
+    at every time point get the last fresh RSI value, check the brackets of RSI
+    and if we are less 25 or more 75 save this as an event in events and emit an RSI signal
+    '''
     rs_obj = Rsi.objects.filter(**kwargs).last()
 
     if (rs_obj is not None):
@@ -126,13 +131,15 @@ def _process_rsi(horizon, **kwargs):
         if rsi_bracket != 0:
             # save the event
             try:
-                new_instance = EventsElementary.objects.create(
+                new_instance = EventsElementary(
                     **kwargs,
                     event_name = "rsi_bracket",
                     event_value = rsi_bracket,
                     event_second_value = rs_obj.rsi,
                 )
+                if MODIFY_DB: new_instance.save()  # save if not in DEBUG mode
                 logger.debug("   >>> RSI bracket event detected and saved")
+
                 if EMIT_RSI:
                     signal_rsi = Signal(
                         **kwargs,
@@ -143,7 +150,7 @@ def _process_rsi(horizon, **kwargs):
                         strength_value=np.abs(rsi_bracket),
                         strength_max=int(3),
                     )
-                    signal_rsi.save()
+                    if MODIFY_DB: signal_rsi.save()
                     logger.debug("   >>> RSI bracket event FIRED!")
                 else:
                     logger.debug("   .. RSI emitting disabled by settings")
@@ -156,6 +163,10 @@ def _process_rsi(horizon, **kwargs):
 
 
 def _process_sma_crossovers(horizon, prices_df, **kwargs):
+    '''
+    check if at given moment of time there is an SMA crossover event
+    if so, emit a signal
+    '''
 
     # NOTE - correct df names if change sma_low!
     time_current = pd.to_datetime(time.time(), unit='s')
@@ -183,12 +194,12 @@ def _process_sma_crossovers(horizon, prices_df, **kwargs):
 
             # save all elem events
             try:
-                sma_event = EventsElementary.objects.create(
+                sma_event = EventsElementary(
                     **kwargs,
                     event_name=event_name,
                     event_value=int(1),
                 )
-                sma_event.save()
+                if MODIFY_DB: sma_event.save()
             except Exception as e:
                 logger.error(" #Error saving SMA signal ")
 
@@ -205,7 +216,7 @@ def _process_sma_crossovers(horizon, prices_df, **kwargs):
                         strength_value=np.abs(trend),  # 1,2,3
                         strength_max=int(3)
                     )
-                    signal_sma_cross.save()
+                    if MODIFY_DB: signal_sma_cross.save()
                     logger.debug("   >>> FIRED - Event " + event_name)
                 except Exception as e:
                     logger.error(" #Error firing SMA signal ")
@@ -217,6 +228,14 @@ class EventsElementary(AbstractIndicator):
     event_name = models.CharField(max_length=32, null=False, blank=False, default="none")
     event_value = models.IntegerField(null=True)
     event_second_value = models.FloatField(null=True)
+
+
+    # INDEX
+    class Meta:
+        indexes = [
+            models.Index(fields=['transaction_currency', 'source', 'counter_currency', 'resample_period', 'event_name', 'timestamp']),
+        ]
+
 
     @staticmethod
     def check_events(cls, **kwargs):
@@ -370,12 +389,12 @@ class EventsElementary(AbstractIndicator):
             if event_value:
                 logger.debug('   >>> Ichi elem event was FIRED : ' + str(event_name))
                 try:
-                    ichi_event = cls.objects.create(
+                    ichi_event = cls(
                         **kwargs,
                         event_name=event_name,
                         event_value=int(1),
                     )
-                    ichi_event.save()
+                    if MODIFY_DB: ichi_event.save()
                 except Exception as e:
                     logger.error(" Error saving  " + event_name + " elementary event ")
 
@@ -391,7 +410,7 @@ class EventsElementary(AbstractIndicator):
 
 
 ###################
-def get_current_elementory_events_df(timestamp, source, transaction_currency, counter_currency, resample_period):
+def get_current_elementory_events_df(timestamp, source, transaction_currency, counter_currency, resample_period)->pd.DataFrame:
     '''
     get all elementary events happened in the one timestamp
     NOTE - DB request returns several records for one timestamp!
@@ -421,7 +440,7 @@ def get_current_elementory_events_df(timestamp, source, transaction_currency, co
 
 
 # the different with the previous one is that it returns the last row in a pile even if it was entered a month ago
-def get_last_ever_entered_elementory_events_df(timestamp, source, transaction_currency, counter_currency, resample_period):
+def get_last_ever_entered_elementory_events_df(timestamp, source, transaction_currency, counter_currency, resample_period)->pd.DataFrame:
 
     # get the most recent time
     last_time = EventsElementary.objects.filter(

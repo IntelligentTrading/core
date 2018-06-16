@@ -57,8 +57,11 @@ def help(bot, update):
     update.message.reply_text(dedent("""
         *Available commands:*
 
-        *•* `/itf <cryptocurrency>` - Short info about currency. Example: `/itf BTC` ot `/itf XRP_ETH`
-        *•* `/price <cryptocurrency>` - Prices from all exchanges. Example: `/price ETH_USDT`
+        *•* `/itf <cryptocurrency>` - Info about currency. For example: `/itf BTC` or `/itf XRP_ETH`
+        *•* `/i <cryptocurrency>` - Latest info about price and volume.
+        *•* `/ta <cryptocurrency>` - Latest TA alerts for currency.
+        *•* `/s <cryptocurrency>` - Latest crowd sentiment alert for currency.
+        *•* `/price <cryptocurrency>` - Prices from all exchanges.
         *•* `/info` - List of supported coins and exchanges
         *•* `/help` - List of all commands
 

@@ -28,4 +28,3 @@ class Command(BaseCommand):
             csvfile.write(f"{field_names}")
             for instance in model.objects.all()[:10]:
                 csvfile.write([getattr(instance, f) for f in field_names])
-

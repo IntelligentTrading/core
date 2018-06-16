@@ -284,13 +284,13 @@ def _get_signal_idname(signal):
 def get_all_signals_names_now(**kwargs):
     # get all signals happened just now (in current temestamp from **kwargs)
 
-    '''
+
     # for PRODUCTION
-    signals_quaryset = Signal.objects.filter(
+    signals_queryset = Signal.objects.filter(
         **kwargs
     ).values('id', 'signal', 'trend', 'strength_value').order_by('timestamp')
-    '''
 
+    '''
     # for TESTING
     # this is for debug purposes!!! remove and uncomment in production!!!
     signals_queryset = Signal.objects.filter(
@@ -300,6 +300,7 @@ def get_all_signals_names_now(**kwargs):
         counter_currency = kwargs['counter_currency'],
         resample_period = kwargs['resample_period']
     ).values('id', 'signal', 'trend', 'strength_value').order_by('timestamp')
+    '''
 
     # lookup for signals names in ALL_SIGNALS
     signals_set = set()

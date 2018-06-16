@@ -1,12 +1,13 @@
 import logging
 from unixtimestampfield.fields import UnixTimeStampField
 from django.db import models
-from apps.indicator.models.price_resampl import get_resampl_price_at_timepoint
+from apps.indicator.models.price_resampl import PriceResampl
 from apps.signal.models import Signal
 from apps.signal.models.signal import ALL_SIGNALS
 from datetime import datetime
 from enum import Enum
 from settings import COUNTER_CURRENCY_CHOICES
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -415,3 +416,62 @@ def get_currency_name(currency_id):
     for id, name in COUNTER_CURRENCY_CHOICES:
         if id == currency_id:
             return name
+
+
+
+# temporary fix to contain backtesting in this file until Pandas interpolation bug is fixed
+# using old version of get_price_at_timepoint
+def get_resampl_price_at_timepoint(timestamp, source, transaction_currency, counter_currency, resample_period):
+    price_at_timepoint = PriceResampl.objects.filter(
+        transaction_currency=transaction_currency,
+        counter_currency=counter_currency,
+        source=source,
+        resample_period=resample_period,
+        timestamp=timestamp
+    ).values('mean_price').order_by('timestamp').first()
+
+    if price_at_timepoint is not None and price_at_timepoint['mean_price'] is not None:
+        return price_at_timepoint['mean_price']
+
+    # we don't have exact price data
+    # extract first earlier price that is not null
+    last_price_before = PriceResampl.objects.filter(
+        transaction_currency=transaction_currency,
+        counter_currency=counter_currency,
+        source=source,
+        resample_period=resample_period,
+        timestamp__lte=timestamp,
+        mean_price__isnull=False
+    ).values('timestamp', 'mean_price').order_by('-timestamp').first()  # largest timestamp smaller than timestamp
+
+    # extract first later price that is not null
+    first_price_after = PriceResampl.objects.filter(
+        transaction_currency=transaction_currency,
+        counter_currency=counter_currency,
+        source=source,
+        resample_period=resample_period,
+        timestamp__gte=timestamp,
+        mean_price__isnull=False
+    ).values('timestamp', 'mean_price').order_by('timestamp').first()  # smallest timestamp larger than timestamp
+
+    # three cases: (1) we have only left price point, (2) we have only right price point and (3) we have both
+    if first_price_after is None:           # (1) if we don't have data for the price after timestamp
+        if last_price_before is not None:   # if there's data for the price before, we return that
+            return last_price_before['mean_price']
+        else:
+            logger.error("Unable to interpolate price data.")   # otherwise, we can't estimate price
+            return None
+    elif last_price_before is None:             # (2) if we don't have data for the price before timestamp
+        return first_price_after['mean_price']  # we checked before that first_price_after is not None, so return that
+
+    else:  # (3) we have two price points, before and after timestamp, interpolation can be done
+        timestamp_before = last_price_before['timestamp']
+        price_before = last_price_before['mean_price']
+        timestamp_after = first_price_after['timestamp']
+        price_after = first_price_after['mean_price']
+
+        interpolated_price = np.interp(x=timestamp.timestamp(),
+                                       xp=[timestamp_before.timestamp(), timestamp_after.timestamp()],
+                                       fp=[price_before, price_after])
+        return interpolated_price
+
