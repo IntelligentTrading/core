@@ -11,6 +11,8 @@ class AbstractIndicator(models.Model):
     counter_currency = models.SmallIntegerField(choices=COUNTER_CURRENCY_CHOICES, null=False, default=BTC)
     transaction_currency = models.CharField(max_length=6, null=False, blank=False)
     timestamp = UnixTimeStampField(null=False)
+    new_timestamp = models.DateTimeField(null=True)
+
     resample_period = models.PositiveSmallIntegerField(null=False, default=PERIODS_LIST[0])  # minutes (eg. 15)
 
     # MODEL PROPERTIES

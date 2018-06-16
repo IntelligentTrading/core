@@ -81,6 +81,8 @@ class Signal(Timestampable, models.Model):
     text = models.TextField(default="")
 
     timestamp = UnixTimeStampField(null=False)
+    new_timestamp = models.DateTimeField(null=True)
+
     source = models.SmallIntegerField(choices=SOURCE_CHOICES, null=False, default=POLONIEX)
     transaction_currency = models.CharField(max_length=6, null=False, blank=False)
     counter_currency = models.SmallIntegerField(choices=COUNTER_CURRENCY_CHOICES, null=False, default=BTC)

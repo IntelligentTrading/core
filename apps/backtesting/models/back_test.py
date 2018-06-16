@@ -26,6 +26,7 @@ class BackTest(models.Model):
 
     # starting time of backtesting
     timestamp = UnixTimeStampField(null=False)
+    new_timestamp = models.DateTimeField(null=True)
 
     # strategy name
     strategy_class_name = models.CharField(max_length=64, null=False)

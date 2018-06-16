@@ -16,6 +16,7 @@ class Volume(models.Model):
 
     volume = models.FloatField(null=False)
     timestamp = UnixTimeStampField(null=False)
+    new_timestamp = models.DateTimeField(null=True)
 
     # INDEX
     class Meta:

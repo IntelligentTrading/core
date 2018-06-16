@@ -16,6 +16,7 @@ class ExchangeData(models.Model):
     source = models.SmallIntegerField(choices=SOURCE_CHOICES, null=False)
     data = models.TextField(default="")
     timestamp = UnixTimeStampField(null=False)
+    new_timestamp = models.DateTimeField(null=True)
 
 
     # MODEL PROPERTIES
