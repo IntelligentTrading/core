@@ -72,14 +72,11 @@
         <div class="col-12">
 
           {% for signal in signals %}
-
-            {{ signal }}
-
+            {% include 'inclusions/signal.html' with signal=signal %}
           {% endfor %}
 
         </div>
       </div>
-
 
     </div>
 

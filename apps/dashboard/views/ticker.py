@@ -35,7 +35,7 @@ class Ticker(View):
 
         signals = Signal.objects.filter(transaction_currency=transaction_currency,
                                         counter_currency=counter_currency_int
-                                        ).order_by("-sent_at")[:5]
+                                        ).order_by("-sent_at")[:10]
 
         context = {
             "ticker_symbol": ticker_symbol,

@@ -73,7 +73,6 @@ ALL_SIGNALS = {
 #################
 
 
-
 class Signal(Timestampable, models.Model):
 
     UI = models.SmallIntegerField(choices=UI_CHOICES, null=False, default=TELEGRAM)
