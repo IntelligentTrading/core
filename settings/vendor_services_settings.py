@@ -40,14 +40,14 @@ if not LOCAL:
 
     DATABASES = {
         'default': {
-            # 'ENGINE': 'django.db.backends.mysql',
+            #   'ENGINE': 'django.db.backends.mysql',
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
             'NAME': os.environ['RDS_DB_NAME'],
             'USER': os.environ['RDS_USERNAME'],
             'PASSWORD': os.environ['RDS_PASSWORD'],
             'HOST': os.environ['RDS_HOSTNAME'],
             'PORT': os.environ['RDS_PORT'],
-            # 'CONN_MAX_AGE': 20000 # we need it for bots because mysql drop connection after 28800 secs of idling
+            #   'CONN_MAX_AGE': 20000 # we need it for bots because mysql drop connection after 28800 secs of idling
         }
     }
 
