@@ -164,7 +164,7 @@ def get_resampl_price_at_timepoint(timestamp, source, transaction_currency, coun
     # do interpolation and get price
     # we do interpolation because sometimes we have missing data because of bad data collection
     try:
-        close_prices_ts = close_prices_ts.interpolate(method='spline', order=1, limit=10, limit_direction='both')
+        close_prices_ts = close_prices_ts.interpolate(method='linear', limit=10, limit_direction='both')
         price = int(close_prices_ts[timestamp])
     except Exception as e:
         logger.error(" BAd quality price data, interpolation not possible::  " + str(e))
