@@ -40,8 +40,8 @@ if not LOCAL:
 
     DATABASES = {
         'default': {
-            #   'ENGINE': 'django.db.backends.mysql',
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'ENGINE': 'django.db.backends.mysql',
+            # 'ENGINE': 'django.db.backends.postgresql_psycopg2',
             'NAME': os.environ['RDS_DB_NAME'],
             'USER': os.environ['RDS_USERNAME'],
             'PASSWORD': os.environ['RDS_PASSWORD'],
