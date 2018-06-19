@@ -39,7 +39,7 @@ def getSignalStats():
 
 
     # ADD FOR EACH SIGNAL TYPE
-    for signal_name in ["total", "RSI_Cumulative", "RSI", "SMA", "ANN_Simple",]:
+    for signal_name in ["total", "ANN_Simple", "RSI_Cumulative", "kumo_breakout", "RSI", "SMA",]:
 
         if signal_name is "total":
             subset_signals_24_hrs = signals_24_hrs

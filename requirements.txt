@@ -26,6 +26,7 @@ numpy==1.14.4
 pandas==0.20.3
 python-binary-memcached==0.26.1
 python-dateutil==2.6.0
+python-memcached==1.59
 python-telegram-bot==10.0.2
 psycopg2==2.7.3
 pytz==2016.10
