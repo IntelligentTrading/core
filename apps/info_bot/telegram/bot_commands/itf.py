@@ -38,7 +38,7 @@ def diff_symbol(diff): # ↑ increase, ↓ decrease
         d_sym = ""
     return d_sym
 
-@cache_memoize(4*60*60) # 4 hours
+@cache_memoize(2*60*60) # 2 hours
 def sentiment_from_cryptopanic(currency):
     INFO_BOT_CRYPTOPANIC_API_URL = "https://cryptopanic.com/api/posts/?auth_token={}&filter=trending&currencies={}".format(
         INFO_BOT_CRYPTOPANIC_API_TOKEN, currency)
@@ -154,7 +154,7 @@ def itf_view(trading_pair):
                 view += f"\n *•* {format_timestamp(signal.timestamp)} {kumo['ichimoku_header_emoji']} {kumo['ichimoku_text']} ({signal.get_horizon_display().capitalize()} horizon)\n"
             else:
                 continue
-            view += f"{format_currency(price_new_object.price, trading_pair['counter_currency'])}\n"
+            view += f"{format_currency(signal.price, trading_pair['counter_currency'])}\n"
 
     # More info
     itf_more_info_url = 'http://intelligenttrading.org/features/'
@@ -205,7 +205,7 @@ def i_view(trading_pair):
     view += f"\nLast update: {price_new_object.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
     return view
 
-
+@cache_memoize(INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS) # 1 hours
 def ta_view(trading_pair):
     counter_currency = COUNTER_CURRENCIES.index(trading_pair['counter_currency'])
     currency = trading_pair['transaction_currency']
@@ -241,7 +241,7 @@ def ta_view(trading_pair):
                 view += f"\n *•* {format_timestamp(signal.timestamp)} {kumo['ichimoku_header_emoji']} {kumo['ichimoku_text']} ({signal.get_horizon_display().capitalize()} horizon)\n"
             else:
                 continue
-            view += f"{format_currency(price_new_object.price, trading_pair['counter_currency'])}\n"
+            view += f"{format_currency(signal.price, trading_pair['counter_currency'])}\n"
     else:
         view = "Sorry, I don't have any signals for *{currency}*\_{trading_pair['counter_currency']}"
     return view
