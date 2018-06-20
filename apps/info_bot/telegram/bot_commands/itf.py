@@ -152,6 +152,9 @@ def itf_view(trading_pair):
             elif signal.signal == 'kumo_breakout':
                 kumo = get_kumo_template(signal)
                 view += f"\n *•* {format_timestamp(signal.timestamp)} {kumo['ichimoku_header_emoji']} {kumo['ichimoku_text']} ({signal.get_horizon_display().capitalize()} horizon)\n"
+            else:
+                continue
+            view += f"{format_currency(price_new_object.price, trading_pair['counter_currency'])}\n"
 
     # More info
     itf_more_info_url = 'http://intelligenttrading.org/features/'
@@ -236,6 +239,9 @@ def ta_view(trading_pair):
             elif signal.signal == 'kumo_breakout':
                 kumo = get_kumo_template(signal)
                 view += f"\n *•* {format_timestamp(signal.timestamp)} {kumo['ichimoku_header_emoji']} {kumo['ichimoku_text']} ({signal.get_horizon_display().capitalize()} horizon)\n"
+            else:
+                continue
+            view += f"{format_currency(price_new_object.price, trading_pair['counter_currency'])}\n"
     else:
         view = "Sorry, I don't have any signals for *{currency}*\_{trading_pair['counter_currency']}"
     return view
@@ -251,8 +257,6 @@ def sentiment_view(trading_pair):
         view += f"\n\n\Sorry, I don't have any sentiments for {trading_pair['transaction_currency']}"
 
     return view
-
-
 
 ## user commands
 @restore_db_connection
