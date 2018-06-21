@@ -65,7 +65,7 @@ def help(bot, update):
         *•* `/info` - List of supported coins and exchanges.
         *•* `/help` - List of all commands.
 
-        To use this commands in telegram channel, invite @Intelligent\_Trading\_Info\_Bot into your channel.
+        To use these commands in your Telegram channel, invite @Intelligent\_Trading\_Info\_Bot to your channel.
     """), ParseMode.MARKDOWN)
 @restore_db_connection
 def getme(bot, update):
