@@ -57,13 +57,13 @@ def help(bot, update):
     update.message.reply_text(dedent("""
         *Available commands:*
 
-        *•* `/itf <cryptocurrency>` - Info about currency. For example: `/itf BTC` or `/itf XRP_ETH`
+        *•* `/itf <cryptocurrency>` - Info about currency. For example: `/itf BTC` or `/itf XRP_ETH`.
         *•* `/i <cryptocurrency>` - Latest info about price and volume.
         *•* `/ta <cryptocurrency>` - Latest TA alerts for currency.
         *•* `/s <cryptocurrency>` - Latest crowd sentiment alert for currency.
         *•* `/price <cryptocurrency>` - Prices from all exchanges.
-        *•* `/info` - List of supported coins and exchanges
-        *•* `/help` - List of all commands
+        *•* `/info` - List of supported coins and exchanges.
+        *•* `/help` - List of all commands.
 
         To use this commands in telegram channel, invite @Intelligent\_Trading\_Info\_Bot into your channel.
     """), ParseMode.MARKDOWN)

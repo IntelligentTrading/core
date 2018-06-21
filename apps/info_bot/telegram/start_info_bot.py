@@ -32,7 +32,7 @@ command2 - Another description
 
 itf - info about coin or trading pair. For example: `/itf BTC` or `/itf XRP_ETH`
 i - latest info about price and volume. For example: `/i BTC`
-ta - latest TA signals. For example: `/s BTC`
+ta - latest TA signals. For example: `/ta BTC`
 s - latest crowd sentiment. For example: `/s BTC`
 price - show price for trading pair on different exchanges. For example: `/price BTC_USDT`
 info - list of supported coins, trading pairs and exchanges
