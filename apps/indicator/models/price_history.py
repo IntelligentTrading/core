@@ -22,6 +22,7 @@ class PriceHistory(models.Model):
     high = models.BigIntegerField(null=True)
     low = models.BigIntegerField(null=True)
     close = models.BigIntegerField(null=True) # please use this as price
+    volume = models.FloatField(null=True) # base volume
 
     timestamp = models.DateTimeField(null=False) # store UTC, timestamp=datetime.datetime.utcfromtimestamp(float(timestamp)/1000.0)
 

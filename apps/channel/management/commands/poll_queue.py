@@ -70,8 +70,8 @@ def process_message_from_queue(message_body):
                 #processed.append("{}/{}".format(transaction_currency, counter_currency_code))
                 # logger.debug(">>> Price saved: source={}, transaction_currency={}, counter_currency={}, price={}, timestamp={}".format(
                 #            source_code, transaction_currency, counter_currency_code, price, item['timestamp']))
-            except Exception:
-                logger.debug(f">>>> Error saving Price for {item['symbol']} from: {item['source']}")
+            except Exception as e:
+                logger.debug(f">>>> Error saving Price for {item['symbol']} from: {item['source']}. {e}")
 
         elif subject == 'prices_volumes' and item['category'] == 'volume':
             try:
@@ -86,8 +86,8 @@ def process_message_from_queue(message_body):
                 )
                 # logger.debug(">>> Volume saved: source={}, transaction_currency={}, counter_currency={}, volume={}, timestamp={}".format(
                 #            source_code, transaction_currency, counter_currency_code, volume, item['timestamp']))
-            except Exception:
-                logger.debug(f">>>> Error saving Volume for {item['symbol']} from: {item['source']}")
+            except Exception as e:
+                logger.debug(f">>>> Error saving Volume for {item['symbol']} from: {item['source']}. {e}")
 
         elif subject == 'ohlc_prices':
             try:
@@ -100,16 +100,25 @@ def process_message_from_queue(message_body):
                     low=to_satoshi(item['low']),
                     close=to_satoshi(item['close']),
                     timestamp=datetime.datetime.utcfromtimestamp(item['timestamp']),
+                    volume=get_volume(item['bvolume'])
                 )
-            except Exception:
-                logger.debug(f">>>> Error saving PriceHistory for {item['symbol']} from: {item['source']}")
+            except Exception as e:
+                logger.debug(f">>>> Error saving PriceHistory for {item['symbol']} from: {item['source']}. {e}")
             #logger.debug(f">>> OHLC history price saved. Source:{source_code}, {transaction_currency}_{counter_currency_code}")
 
     #logger.debug("Message for {} saved to db. Coins: {}".format(get_source_name(source_code), ",".join(processed)))
     logger.info(f"Message for {get_source_name(source_code)} ({subject}) saved to db")
 
 
+# Little helpers
 def to_satoshi(value):
-    if value is None:
+    try:
+        return int(float(value) * 10 ** 8)
+    except:
         return None
-    return int(float(value) * 10 ** 8)
+
+def get_volume(value):
+    try:
+        return float(value)
+    except:
+        return None
