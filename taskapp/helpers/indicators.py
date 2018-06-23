@@ -12,7 +12,7 @@ from apps.indicator.models.events_logical import EventsLogical
 from apps.indicator.models.price_resampl import PriceResampl
 from apps.indicator.models.sma import Sma
 from apps.indicator.models.rsi import Rsi
-
+from apps.indicator.models.ben_volume import BenVolume
 
 from apps.ai.models.nn_model import get_ann_model_object
 from apps.strategy.models.strategy_ref import get_all_strategy_classes
@@ -23,10 +23,8 @@ from settings import SHORT, MEDIUM, LONG, HORIZONS_TIME2NAMES, RUN_ANN, MODIFY_D
 
 from taskapp.helpers.common import get_currency_pairs, quad_formatted
 #from taskapp.helpers.backtesting import _backtest_all_strategies
-
-
-
 logger = logging.getLogger(__name__)
+
 
 
 def _compute_ann(source, resample_period=SHORT):
@@ -151,7 +149,7 @@ def _compute_indicators_for(source, transaction_currency, counter_currency, resa
 
     # 2 ###########################
     # calculate and save simple indicators
-    indicators_list = [Sma, Rsi]
+    indicators_list = [Sma, Rsi, BenVolume]
     for ind in indicators_list:
         try:
             ind.compute_all(ind, **indicator_params_dict)

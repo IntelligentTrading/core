@@ -99,7 +99,7 @@ class Rsi(AbstractIndicator):
             new_instance.save()
             logger.info("   ...RS calculation completed and saved.")
         else:
-            logger.info("       RSI was not saved (either no value or debug model")
+            logger.info("       RSI was not saved (either no value or debug mode")
 
 
 
