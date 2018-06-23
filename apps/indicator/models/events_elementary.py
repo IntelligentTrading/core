@@ -48,8 +48,12 @@ AI_ELEMENTARY_EVENTS = [
     'ann_price_2class_simple'
 ]
 
+BEN_VOLUME_ELEMENTARY_EVENTS = [
+    'ben_volume_event'
+]
+
 # list of all events to return by get_last_elementory_events_df
-ALL_POSSIBLE_ELEMENTARY_EVENTS = SMA_ELEMENTARY_EVENTS + ICHI_ELEMENTARY_EVENTS + AI_ELEMENTARY_EVENTS
+ALL_POSSIBLE_ELEMENTARY_EVENTS = SMA_ELEMENTARY_EVENTS + ICHI_ELEMENTARY_EVENTS + AI_ELEMENTARY_EVENTS + BEN_VOLUME_ELEMENTARY_EVENTS
 
 # dictionary to convert name of sma event to one-number trend
 _col2trend = {
@@ -66,6 +70,7 @@ ichi_param_1_9 = 20
 ichi_param_2_26 = 60
 ichi_param_3_52 = 120
 ichi_displacement = 30
+
 
 def _process_ai_simple(horizon, **kwargs):
     '''
@@ -116,7 +121,6 @@ def _process_ai_simple(horizon, **kwargs):
             logger.error(" Error saving/emitting ANN Event " + e)
     else:
         logger.debug("   ... no AI event generated (predicts no changes in price")
-
 
 
 def _process_rsi(horizon, **kwargs)->int:
@@ -189,6 +193,7 @@ def _process_sma_crossovers(horizon, prices_df, **kwargs):
     assert(abs( (time_current-time_of_last_row).seconds)  < 3000),'current time too far away'  # check if difference with now now > 30min
 
     # for each event in last row of all recents events
+    # note: we need this loop because at one moment there might be several events (in contract to RSI)
     for event_name, event_value in last_event_row.iteritems():
         if event_value:    # if one of SMA events is TRUE, save and emit
 
@@ -222,6 +227,45 @@ def _process_sma_crossovers(horizon, prices_df, **kwargs):
                     logger.error(" #Error firing SMA signal ")
 
 
+# todo Karla
+def _process_ben_volume_events(horizon, **kwargs):
+    # here you have to analyze your ben indicator and check rules whether you have to emit a signal
+    # may be based on brackets (like RSI) or crossing with some other indicators (like sma cross over)
+
+    # ad your logic on desiding wheter you have to emit an event
+    ben_event = None
+
+    if (ben_event is not None):
+        # save the event
+        try:
+            new_instance = EventsElementary(
+                **kwargs,
+                event_name = "ben_volume_event",
+                event_value = "",  # please fill in
+                event_second_value = "", # pleease fill in or delete
+            )
+            if MODIFY_DB: new_instance.save()  # save if not in DEBUG mode
+            logger.debug("   >>> Ben Volume event detected and saved")
+
+            # emit signal
+            signal_ben = Signal(
+                **kwargs,
+                signal='BenVolume',
+                rsi_value="", # fill in if nessesary
+                trend="",  # fill in if nessesary
+                horizon=horizon,
+                strength_value="", # fill in if nessesary
+                strength_max=int(3), # fill in if nessesary
+            )
+            if MODIFY_DB: signal_ben.save()
+            logger.debug("   >>> BEN Volume event FIRED!")
+
+        except Exception as e:
+            logger.error(" Error saving/emitting Ben Event ")
+        return True  # or a value if your indicator has it
+    else:
+        logger.debug(" ... No Ben Volume Events found ")
+        return False
 
 
 class EventsElementary(AbstractIndicator):
@@ -241,7 +285,7 @@ class EventsElementary(AbstractIndicator):
     def check_events(cls, **kwargs):
         horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[kwargs['resample_period']])
 
-        # create a param dict to pass inside get_n_last_resampl_df
+        # create a param dict to pass inside get_n_last_resampl_df ( we dont need timestamp here )
         no_time_params = {
             'source' : kwargs['source'],
             'transaction_currency' : kwargs['transaction_currency'],
@@ -257,7 +301,7 @@ class EventsElementary(AbstractIndicator):
 
         logger.info('   ::::  Start analysing ELEMENTARY events ::::')
 
-        ###### check for rsi events, save and emit signal
+        ############## check RSI brackets events, save and emit signal
         logger.info("   ... Check RSI Events: ")
         _process_rsi(horizon, **kwargs)
 
@@ -280,6 +324,11 @@ class EventsElementary(AbstractIndicator):
 
         # todo - add return value, and say if any crossovers have happend
         _process_sma_crossovers(horizon, small_prices_df, **kwargs)
+
+
+        # ############# Check Ben Volumebased event
+        logger.info("   ... Check Ben Volume Events: ")
+        _process_ben_volume_events(horizon, **kwargs)
 
 
         ############## calculate and save ICHIMOKU elementary events
