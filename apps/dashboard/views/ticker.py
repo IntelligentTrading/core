@@ -42,6 +42,8 @@ class Ticker(View):
             "transaction_currency": transaction_currency,
             "counter_currency": counter_currency,
             "price": price,
+            "price_display": '{:.2f}'.format(price.price) if price.counter_currency == USDT else '{:.4g}'.format(price.price),
+            "volume_display": '{:.2f}'.format(volume.volume) if price.counter_currency == USDT else '{:.4g}'.format(volume.volume),
             "volume": volume,
             "tv_ticker_symbol": ticker_symbol.replace("_", ""),
             "signals": signals,

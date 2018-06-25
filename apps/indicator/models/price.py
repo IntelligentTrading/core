@@ -2,7 +2,7 @@ from datetime import timedelta
 from django.db import models
 from unixtimestampfield.fields import UnixTimeStampField
 #from apps.channel.models.exchange_data import SOURCE_CHOICES
-from settings import SOURCE_CHOICES, COUNTER_CURRENCY_CHOICES, BTC
+from settings import SOURCE_CHOICES, COUNTER_CURRENCY_CHOICES, BTC, USDT
 from datetime import timedelta, datetime
 import pandas as pd
 import logging
@@ -34,7 +34,6 @@ class Price(models.Model):
 
 
     # MODEL PROPERTIES
-
     @property
     def price_change(self):
         current_price = self.price or self.get_price()

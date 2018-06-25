@@ -4,7 +4,7 @@ from unixtimestampfield.fields import UnixTimeStampField
 #from apps.channel.models.exchange_data import SOURCE_CHOICES
 from apps.indicator.models.price import Price
 
-from settings import SOURCE_CHOICES, COUNTER_CURRENCY_CHOICES, BTC
+from settings import SOURCE_CHOICES, COUNTER_CURRENCY_CHOICES, BTC, USDT
 
 from datetime import timedelta, datetime
 import pandas as pd
@@ -24,6 +24,7 @@ class Volume(models.Model):
         ]
 
     # MODEL PROPERTIES
+
 
     # MODEL FUNCTIONS
 
