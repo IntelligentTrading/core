@@ -48,8 +48,14 @@ AI_ELEMENTARY_EVENTS = [
     'ann_price_2class_simple'
 ]
 
+BEN_VOLUME_EVENTS = [
+    'price_crosses_the_mean_up',
+    'volume_greater_then_mean',
+    # add mode here
+]
+
 # list of all events to return by get_last_elementory_events_df
-ALL_POSSIBLE_ELEMENTARY_EVENTS = SMA_ELEMENTARY_EVENTS + ICHI_ELEMENTARY_EVENTS + AI_ELEMENTARY_EVENTS
+ALL_POSSIBLE_ELEMENTARY_EVENTS = SMA_ELEMENTARY_EVENTS + ICHI_ELEMENTARY_EVENTS + AI_ELEMENTARY_EVENTS + BEN_VOLUME_EVENTS
 
 # dictionary to convert name of sma event to one-number trend
 _col2trend = {
@@ -201,7 +207,7 @@ def _process_sma_crossovers(horizon, prices_df, **kwargs):
                 )
                 if MODIFY_DB: sma_event.save()
             except Exception as e:
-                logger.error(" #Error saving SMA signal ")
+                logger.error(" #Error saving SMA elementary event ")
 
             # Fire all sinals, except two which we dont need and imitting is allowed
             if EMIT_SMA & (event_name not in ['sma50_above_sma200', 'sma50_below_sma200']):
@@ -220,6 +226,49 @@ def _process_sma_crossovers(horizon, prices_df, **kwargs):
                     logger.debug("   >>> FIRED - Event " + event_name)
                 except Exception as e:
                     logger.error(" #Error firing SMA signal ")
+
+
+# TODO: Karla
+def _process_ben_volume_based(horizon, prices_df, volumes_df, **kwargs):
+    # to understand check _process_sma_crossovers, here is a similar logic
+
+    # DESCRIPTION of indicator:
+    # price crosses the mean by some percent AND volume is already greater than mean by some other percent)
+    # OR (volume crosses the mean by some percent AND price is already greater than mean by some other
+    # percent) we emit buy
+
+    # IDEA
+    # we here we emplement elementary events like something crosses something
+    # then in events_logical we will implement logical behaviour with OR / AND and emit signals there
+
+    # NOTE: prices_df already containf price, mean etc, check the implementation
+
+    events_df = pd.DataFrame()
+    events_df['price_crosses_the_mean_up'] = None
+    events_df['volume_greater_then_mean'] = None
+    # ..... contivue here if nessesary
+    # see _process_sma_crossovers implementation
+
+
+    # get the last events row and account for a small timestamp rounding error
+    last_event_row = events_df.iloc[-1]      # you can you events_df.tail(1) here
+    time_of_last_row = events_df.index[-1]
+
+    # for each event in last row of all recents events
+    # note: we need this loop because at one moment there might be several events (in contract to RSI)
+    for event_name, event_value in last_event_row.iteritems():
+        if event_value:    # if one of SMA events is TRUE, save and emit
+            # save all elem events
+            try:
+                ben_event = EventsElementary(
+                    **kwargs,
+                    event_name=event_name,
+                    event_value=int(1),
+                )
+                if MODIFY_DB: ben_event.save()
+            except Exception as e:
+                logger.error(" #Error saving Ben elementary event ")
+    # Now we have elementary events in events_elementary table and can get them in event_logical to combune by OR/AND
 
 
 
@@ -280,6 +329,13 @@ class EventsElementary(AbstractIndicator):
 
         # todo - add return value, and say if any crossovers have happend
         _process_sma_crossovers(horizon, small_prices_df, **kwargs)
+
+
+        #TODO:Karla
+        ############### check Ben Volume Based events ###############
+        # TODO: create a volume_df in the same way as price_df is created and pass it inside too
+        volimes_df = None
+        _process_ben_volume_based(horizon, prices_df, volumes_df, **kwargs)
 
 
         ############## calculate and save ICHIMOKU elementary events
