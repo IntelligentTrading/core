@@ -10,6 +10,7 @@ from apps.indicator.models.sma import get_n_last_sma_df
 from apps.indicator.models.rsi import Rsi
 from apps.signal.models.signal import Signal
 from apps.indicator.models.ann_future_price_classification import AnnPriceClassification, get_n_last_ann_classif_df
+from apps.indicator.models.volume import get_n_last_volumes_ts
 
 from apps.user.models.user import get_horizon_value_from_string
 from settings import HORIZONS_TIME2NAMES, EMIT_RSI, EMIT_SMA, RUN_ANN, MODIFY_DB
@@ -49,8 +50,12 @@ AI_ELEMENTARY_EVENTS = [
 ]
 
 BEN_VOLUME_EVENTS = [
-    'price_crosses_the_mean_up',
-    'volume_greater_then_mean',
+    'ben_price_crosses_the_mean_from_below',
+    'ben_price_greater_than_mean_by_percent',
+    'ben_volume_crosses_the_mean_from_below',
+    'ben_volume_greater_than_mean_by_percent',
+    # 'price_crosses_the_mean_up',
+    # 'volume_greater_then_mean',
     # add mode here
 ]
 
@@ -244,8 +249,32 @@ def _process_ben_volume_based(horizon, prices_df, volumes_df, **kwargs):
     # NOTE: prices_df already containf price, mean etc, check the implementation
 
     events_df = pd.DataFrame()
-    events_df['price_crosses_the_mean_up'] = None
-    events_df['volume_greater_then_mean'] = None
+    price_cross_percent = 0.10
+    volume_cross_percent = 0.10
+    events_df['ben_price_crosses_the_mean_from_below'] = \
+        np.sign((1+price_cross_percent)*prices_df.mean_price - prices_df.close_price).diff().lt(0)
+    events_df['mean_price'] = prices_df.mean_price
+    events_df['close_price'] = prices_df.close_price
+    events_df['sign'] = np.sign(prices_df.mean_price - prices_df.close_price)
+
+    
+
+    events_df['ben_price_greater_than_mean_by_percent'] = \
+        np.sign((1+price_cross_percent)*prices_df.mean_price - prices_df.close_price).lt(0)
+
+    volumes_df = volumes_df.reindex(prices_df.index, method='nearest') # TODO find a better way
+    joined_price_and_volume = prices_df.join(volumes_df,how='inner')
+
+    events_df['ben_volume_crosses_the_mean_from_below'] = \
+        np.sign((1 + volume_cross_percent) * joined_price_and_volume.mean_volume - joined_price_and_volume.volume).diff().lt(0)
+    events_df['ben_volume_greater_than_mean_by_percent'] = \
+        np.sign((1 + volume_cross_percent) * joined_price_and_volume.mean_volume - joined_price_and_volume.volume).lt(0)
+
+
+
+    # Alex's suggestions, commented out:
+    # events_df['price_crosses_the_mean_up'] = None
+    # events_df['ben_volume_greater_than_mean_by_percent'] = None
     # ..... contivue here if nessesary
     # see _process_sma_crossovers implementation
 
@@ -334,7 +363,17 @@ class EventsElementary(AbstractIndicator):
         #TODO:Karla
         ############### check Ben Volume Based events ###############
         # TODO: create a volume_df in the same way as price_df is created and pass it inside too
-        volimes_df = None
+
+        volumes_ts = get_n_last_volumes_ts(last_records*kwargs['resample_period'],
+                                           kwargs['source'],
+                                           kwargs['transaction_currency'],
+                                           kwargs['counter_currency'])
+        import talib
+        prices_avg = talib.SMA(np.array(prices_df.close_price, dtype=float), timeperiod=SMA_LOW)
+        volumes_avg = talib.SMA(np.array(volumes_ts.values, dtype=float), timeperiod=SMA_LOW)
+        volumes_df = volumes_ts.to_frame('volume')
+        volumes_df['mean_volume'] = pd.Series(volumes_avg, index=volumes_df.index)
+        prices_df['mean_price'] = pd.Series(prices_avg, index=prices_df.index)
         _process_ben_volume_based(horizon, prices_df, volumes_df, **kwargs)
 
 
