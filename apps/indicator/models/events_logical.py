@@ -210,12 +210,21 @@ class EventsLogical(AbstractIndicator):
             # to logically combine elementrary events
             # TODO HERE:
             last_events_df['ben_volume_based_buy'] = np.where(
-                (last_events_df.close_cloud_breakout_down_ext &
-                 last_events_df.lagging_below_cloud &
-                 last_events_df.lagging_below_cloud &
-                 last_events_df.conversion_below_base
+                ((last_events_df.ben_price_greater_than_mean_by_percent &
+                  last_events_df.ben_volume_crosses_the_mean_from_below) |
+                 (last_events_df.ben_volume_greater_than_mean_by_percent &
+                  last_events_df.ben_price_crosses_the_mean_from_below)
                  ) == True,
                 1, 0)
+
+
+            #last_events_df['ben_volume_based_buy'] = np.where(
+            #    (last_events_df.close_cloud_breakout_down_ext &
+            #     last_events_df.lagging_below_cloud &
+            #     last_events_df.lagging_below_cloud &
+            #     last_events_df.conversion_below_base
+            #     ) == True,
+            #    1, 0)
 
             # save logical event and emit signal
             if all(last_events_df['ben_volume_based_buy']):
@@ -231,7 +240,7 @@ class EventsLogical(AbstractIndicator):
                     signal_ben_buy = Signal(
                         **kwargs,
                         signal='ben_volume_based_buy',
-                        trend=int(-1),  # negative is bearish TODO here
+                        trend=int(1),  # negative is bearish TODO here
                         strength_value=int(3), # todo here
                         horizon=horizon,
                     )
