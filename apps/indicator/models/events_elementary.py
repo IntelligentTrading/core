@@ -2,6 +2,7 @@ import time
 import logging
 import pandas as pd
 import numpy as np
+import talib
 
 from django.db import models
 from apps.indicator.models.abstract_indicator import AbstractIndicator
@@ -248,28 +249,29 @@ def _process_ben_volume_based(horizon, prices_df, volumes_df, **kwargs):
 
     # NOTE: prices_df already containf price, mean etc, check the implementation
 
+    price_cross_percent = 0.02 # TODO just for the time being it is here, will be changed later
+    volume_cross_percent = 0.02
+
     events_df = pd.DataFrame()
-    price_cross_percent = 0.10
-    volume_cross_percent = 0.10
+
     events_df['ben_price_crosses_the_mean_from_below'] = \
         np.sign((1+price_cross_percent)*prices_df.mean_price - prices_df.close_price).diff().lt(0)
-    events_df['mean_price'] = prices_df.mean_price
-    events_df['close_price'] = prices_df.close_price
-    events_df['sign'] = np.sign(prices_df.mean_price - prices_df.close_price)
-
-    
-
     events_df['ben_price_greater_than_mean_by_percent'] = \
         np.sign((1+price_cross_percent)*prices_df.mean_price - prices_df.close_price).lt(0)
 
-    volumes_df = volumes_df.reindex(prices_df.index, method='nearest') # TODO find a better way
-    joined_price_and_volume = prices_df.join(volumes_df,how='inner')
+    # For debugging
+    # events_df['mean_price'] = prices_df.mean_price
+    # events_df['close_price'] = prices_df.close_price
+    # events_df['sign_price'] = np.sign(prices_df.mean_price - prices_df.close_price)
+
+    # volumes_df contains ALL volume data, not resampled, so we need to find the volumes closest to the resampled prices
+    volumes_reindexed = volumes_df.reindex(prices_df.index, method='nearest') # TODO find a better way
+    joined_price_and_volume = prices_df.join(volumes_reindexed, how='inner') # to make sure timestamps match
 
     events_df['ben_volume_crosses_the_mean_from_below'] = \
-        np.sign((1 + volume_cross_percent) * joined_price_and_volume.mean_volume - joined_price_and_volume.volume).diff().lt(0)
+        np.sign((1 + volume_cross_percent)*joined_price_and_volume.mean_volume - joined_price_and_volume.volume).diff().lt(0)
     events_df['ben_volume_greater_than_mean_by_percent'] = \
         np.sign((1 + volume_cross_percent) * joined_price_and_volume.mean_volume - joined_price_and_volume.volume).lt(0)
-
 
 
     # Alex's suggestions, commented out:
@@ -368,7 +370,7 @@ class EventsElementary(AbstractIndicator):
                                            kwargs['source'],
                                            kwargs['transaction_currency'],
                                            kwargs['counter_currency'])
-        import talib
+
         prices_avg = talib.SMA(np.array(prices_df.close_price, dtype=float), timeperiod=SMA_LOW)
         volumes_avg = talib.SMA(np.array(volumes_ts.values, dtype=float), timeperiod=SMA_LOW)
         volumes_df = volumes_ts.to_frame('volume')
