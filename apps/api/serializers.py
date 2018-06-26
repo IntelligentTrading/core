@@ -3,7 +3,7 @@ import json
 from rest_framework import serializers
 
 from apps.signal.models import Signal
-from apps.indicator.models import Price, PriceResampl, Volume, Rsi, EventsElementary
+from apps.indicator.models import Price, PriceResampl, Volume, Rsi, EventsElementary, PriceHistory
 
 
 # ResampledPrice (model: PriceResampl)
@@ -62,3 +62,9 @@ class VolumeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Volume
         fields = ['source', 'transaction_currency', 'counter_currency', 'timestamp', 'volume']
+
+# PriceHistory
+class HistoryPriceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PriceHistory
+        fields = ['source', 'transaction_currency', 'counter_currency', 'timestamp', 'open_p', 'high', 'low', 'close', 'volume']

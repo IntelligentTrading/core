@@ -2,7 +2,7 @@ from django.conf.urls import url, include
 from rest_framework_swagger.views import get_swagger_view
 
 from apps.api.views import v1_price, v1_volume, v1_user, v1_csv
-from apps.api.views import price, resampled_price, volume, signal, rsi, events_elementary
+from apps.api.views import price, resampled_price, volume, signal, rsi, events_elementary, history_price
 from apps.api.views import tickers, itt
 
 
@@ -53,6 +53,8 @@ urlpatterns = [
     url(r'^v2/tickers/counter-currencies/$', tickers.CounterCurrenciesView.as_view(), name='counter-currencies'),
 
     url(r'^v2/itt/$', itt.ITTPriceView.as_view(), name='itt-price'),
+
+    url(r'^v2/history-prices/$', history_price.ListHistoryPrices.as_view(), name='history-prices'),
 
     url(r'^$', schema_view), # swagger
  ]

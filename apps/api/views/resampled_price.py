@@ -27,13 +27,16 @@ class ListPrices(ListAPIView):
         enddate -- to this date (inclusive)
 
     For pagination
+
         cursor - the pagination cursor value
         page_size -- a numeric value indicating the page size
 
     Results
+
         price_change_24h - calculated (current close_price - 24h old close_price)/current close_price
 
     Examples
+
         /api/v2/resampled-prices/?startdate=2018-01-26T10:24:37&enddate=2018-01-26T10:59:02
         /api/v2/resampled-prices/?transaction_currency=ETH&counter_currency=0&resample_period=60
     """
@@ -69,13 +72,16 @@ class ListPrice(ListAPIView):
         enddate -- until this date inclusive in same format
 
     For pagination
+
         cursor - the pagination cursor value
         page_size -- a numeric value indicating the page size
 
     Results
+
         price_change_24h - calculated (current close_price - 24h old close_price)/current close_price
 
     Examples
+
         /api/v2/resampled-prices/ETH # ETH in BTC
         /api/v2/resampled-prices/ETH?counter_currency=2 # ETH in USDT
     """

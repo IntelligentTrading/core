@@ -31,10 +31,12 @@ class ListRsis(ListAPIView):
         enddate -- to this date (inclusive)
 
     For pagination
+
         cursor - the pagination cursor value
         page_size -- a numeric value indicating the page size
 
     Examples
+
         /api/v2/rsi/?transaction_currency=BTC
         /api/v2/rsi/?startdate=2018-02-10T22:14:37&enddate=2018-01-26T11:08:30
     """
@@ -68,10 +70,12 @@ class ListRsi(ListAPIView):
         enddate -- until this date inclusive in same format
 
     For pagination
+
         cursor - the pagination cursor value
         page_size -- a numeric value indicating the page size
 
     Examples
+
         /api/v2/rsi/BTC
         /api/v2/rsi/BTC?counter_currency=2&startdate=2018-01-26T11:08:30
     """

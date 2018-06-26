@@ -55,7 +55,7 @@ def queryset_for_list_with_resample_period(self):
             transaction_currency=transaction_currency,
             counter_currency=counter_currency,
         )
-        
+
     queryset = filter_queryset_by_timestamp(self, queryset)
     return queryset
 
