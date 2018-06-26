@@ -22,16 +22,18 @@ from settings import BASE_DIR, COUNTER_CURRENCY_CHOICES, COUNTER_CURRENCIES, SOU
 
 csv.field_size_limit(sys.maxsize)
 class Command(BaseCommand):
-    help = 'Read historical data from core "channel_exchangedata" in csv format.'
+    help = 'Read historical data from core "channel_exchangedata" from Core and Data app in csv format.'
 
     # def add_arguments(self, parser):
     #     "filename like: binance-ADA-BNB.csv"
     #     parser.add_argument('filename', type=str)
 
     def handle(self, *args, **options):
+        ## import price history from Core app  channel exchange data csv
         #read_from_core_channel_exchange_data_poloniex()
-        ## import history from core csv
-        read_from_data_channel_exchange_data_all()
+
+        ## import price history from Data app  channel exchange dat csv
+        #read_from_data_channel_exchange_data_all()
 
 
 def read_from_data_channel_exchange_data_all():
@@ -57,13 +59,16 @@ def read_from_data_channel_exchange_data_all():
             except:
                 print(f"Skipped malformed coin: {key}")
                 continue # skip malformed pairs
+            if len(transaction_currency) > 6: # skip long coins
+                print(f">>> Skipped long coin: {transaction_currency}")
+                continue
             #print(f">>>> counter_cur: {counter_currency}")
             counter_currency_code = next((code for code, cc_text in COUNTER_CURRENCY_CHOICES if counter_currency == cc_text), None)
             if counter_currency_code is None:
                 print(f">>>>Skip non-supported counter_cur: {counter_currency}")
                 continue
 
-            print(f"{idx} - {key} - {value['timestamp']/1000}")
+            print(f"{idx}: {source} {key} {value['timestamp']/1000}")
 
             #import pdb; pdb.set_trace()
 
@@ -83,7 +88,7 @@ def read_from_data_channel_exchange_data_all():
             i += 1
             #break
         #break
-        #PriceHistory.objects.bulk_create(prices)
+        PriceHistory.objects.bulk_create(prices)
         print(f"Saved coins batch ({i}) from: {source} at {row_timestamp}")
 
 def get_source_code_from_exchange(exchange):
