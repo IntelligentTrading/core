@@ -365,8 +365,11 @@ class EventsElementary(AbstractIndicator):
         #TODO:Karla
         ############### check Ben Volume Based events ###############
         # TODO: create a volume_df in the same way as price_df is created and pass it inside too
+        logger.info("   ... Check Ben Elementary Events: ")
 
-        volumes_ts = get_n_last_volumes_ts(last_records*kwargs['resample_period'],
+        ben_num_records = SMA_LOW + 5 # last_records
+
+        volumes_ts = get_n_last_volumes_ts(ben_num_records*kwargs['resample_period'],  # TODO change number of records
                                            kwargs['source'],
                                            kwargs['transaction_currency'],
                                            kwargs['counter_currency'])
@@ -376,7 +379,7 @@ class EventsElementary(AbstractIndicator):
         volumes_df = volumes_ts.to_frame('volume')
         volumes_df['mean_volume'] = pd.Series(volumes_avg, index=volumes_df.index)
         prices_df['mean_price'] = pd.Series(prices_avg, index=prices_df.index)
-        _process_ben_volume_based(horizon, prices_df, volumes_df, **kwargs)
+        _process_ben_volume_based(horizon, prices_df.tail(ben_num_records), volumes_df, **kwargs)
 
 
         ############## calculate and save ICHIMOKU elementary events
