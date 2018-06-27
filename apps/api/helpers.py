@@ -23,7 +23,7 @@ def default_counter_currency(transaction_currency):
 
 # for api.views
 def filter_queryset_by_timestamp_history(self, queryset=None):
-    # to hit index and partition for history price we always need timestamp 
+    # to hit index and partition for history price we always need timestamp
     startdate = self.request.query_params.get('startdate', None)
     enddate = self.request.query_params.get('enddate', None)
 

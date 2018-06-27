@@ -1,10 +1,8 @@
 from rest_framework.generics import ListAPIView
 
-from rest_framework.views import APIView
-
 from apps.api.serializers import SmaSerializer
 from apps.api.permissions import RestAPIPermission
-from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
+from apps.api.paginations import StandardResultsSetPagination
 
 from apps.api.helpers import filter_queryset_by_timestamp
 
@@ -20,11 +18,11 @@ class ListSma(ListAPIView):
 
     For filtering
 
-        sma_period -- number 20, 30, 50, 120, 200 ... 
+        sma_period -- number 20, 30, 50, 120, 200 ...
         transaction_currency -- string BTC, ETH etc
         counter_currency -- number 0=BTC, 1=ETH, 2=USDT, 3=XMR
         source -- number 0=poloniex, 1=bittrex, 2=binance
-        resample_period -- in minutes, SHORT = 60
+        resample_period -- in minutes, 60=SHORT
         startdate -- from this date (inclusive). Example 2018-02-12T09:09:15
         enddate -- to this date (inclusive)
 
