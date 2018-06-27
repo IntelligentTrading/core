@@ -14,15 +14,17 @@ from apps.api.helpers import group_items, replace_exchange_code_with_name, get_c
 
 
 class TransactionCurrenciesView(APIView):
-    '''Return available transaction_currencies for one source or all sources.\n
+    '''Return available transaction_currencies for one source or all sources.
 
-    /api/v2/tickers/transaction-currencies\n
+    /api/v2/tickers/transaction-currencies
 
-    For filtering\n
+    For filtering
+
         exchange -- exchange market name 'poloniex', 'binance',  etc
         transaction_currency: -- string 'BTC', 'ETH' etc
 
-    Examples\n
+    Examples
+
         /api/v2/tickers/transaction-currencies # for all sources
         /api/v2/tickers/transaction-currencies?exchange=binance # only for Binance
         /api/v2/tickers/transaction-currencies?transaction_currency=LTC # sources and counter_currencies for LTC

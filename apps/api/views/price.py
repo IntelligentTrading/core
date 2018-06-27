@@ -32,8 +32,7 @@ class ListPrices(ListAPIView):
 
     Examples
 
-        /api/v2/prices/?startdate=2018-01-26T10:24:37&enddate=2018-01-26T10:59:02
-        /api/v2/prices/?transaction_currency=ETH&counter_currency=0
+        /api/v2/prices/?transaction_currency=ETH&counter_currency=0&startdate=2018-01-26T10:24:37&enddate=2018-01-26T10:59:02
     """
 
     permission_classes = (RestAPIPermission, )
@@ -50,7 +49,7 @@ class ListPrices(ListAPIView):
             if param not in self.request.query_params:
                 raise exceptions.NotFound(detail=f"Missing required parameter: {param}")
 
-        queryset = filter_queryset_by_timestamp(self, self.model.objects)
+        queryset = filter_queryset_by_timestamp(self)
         return queryset
 
 
@@ -71,10 +70,12 @@ class ListPrice(ListAPIView):
         enddate -- until this date inclusive in same format
 
     For pagination
+
         cursor - indicator that the client may use to page through the result set
         page_size -- a numeric value indicating the page size
 
     Examples
+
         /api/v2/prices/ETH # ETH in BTC
         /api/v2/prices/ETH?counter_currency=2 # ETH in USDT
     """
