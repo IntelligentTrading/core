@@ -2,7 +2,7 @@ from django.conf.urls import url, include
 from rest_framework_swagger.views import get_swagger_view
 
 from apps.api.views import v1_price, v1_volume, v1_user, v1_csv
-from apps.api.views import price, resampled_price, volume, signal, rsi, events_elementary, history_price, events_logical
+from apps.api.views import price, resampled_price, volume, signal, rsi, events_elementary, history_price, events_logical, ann_price_classification
 from apps.api.views import tickers, itt
 
 
@@ -57,6 +57,8 @@ urlpatterns = [
     url(r'^v2/history-prices/$', history_price.ListHistoryPrices.as_view(), name='history-prices'),
 
     url(r'^v2/events-logical/$', events_logical.ListEventsLogical.as_view(), name='events-logical'),
+
+    url(r'^v2/ann-price-classification/$', ann_price_classification.ListAnnPriceClassification.as_view(), name='ann-price-classification'),
 
 
     url(r'^$', schema_view), # swagger
