@@ -2,7 +2,9 @@
   "name": "python-template",
   "description": "",
   "version": "0.1.0",
-  "dependencies": {},
+  "dependencies": {
+    "serverless": "^1.27.3"
+  },
   "devDependencies": {
     "serverless-python-requirements": "^4.1.0"
   }

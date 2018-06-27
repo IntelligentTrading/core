@@ -25,7 +25,7 @@ provider:
 
   environment:
     DYNAMODB_INDICATORS_TABLE: ${self:service}-${self:provider.stage}-indicators
-
+    SNS_ARN: none
 
 
 # you can add statements to the Lambda function's IAM Role here
@@ -72,6 +72,10 @@ functions:
   #   handler: handler.hello
   #   events:
   #     - sns: arn:aws:sns:us-east-1:983584755688:itt-sns-data-core-stage
+  check_strategy_ABC:
+    handler: TradingStrategy123.check_strategy_ABC
+    events:
+      - sns: arn:aws:sns:us-east-1:983584755688:itt-sns-data-core-stage
   test_redis:
     handler: test_redis.test_redis
     events:
