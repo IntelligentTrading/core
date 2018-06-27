@@ -2,8 +2,13 @@ import logging
 import json
 import boto3
 from datetime import datetime
-from SNSEventHandler import AbstractSNSEventHandler
+from SNSEventHandler import AbstractSNSEventHandler, ContextException
 (BUY, SELL, IGNORE) = (1,-1,0)
+
+
+class StrategyException(Exception):
+    pass
+
 
 class AbstractStrategyHandler(AbstractSNSEventHandler):
     """
@@ -37,16 +42,48 @@ class AbstractStrategyHandler(AbstractSNSEventHandler):
 
     def run(self):
         if not self.sns_context:
-            raise NoContextException("sns_context is empty or missing!")
-        self.get_signal()
-        self.send_signal()
+            raise ContextException("sns_context is empty or missing!")
+        self.make_signal()
+        if "signal" not in self.results:
+            raise StrategyException("strategy is missing a signal!")
+        elif self.results["signal"] in [BUY, SELL, IGNORE]:
+            raise StrategyException("non-standard signal! use one of these" +
+                                    "BUY, SELL, IGNORE = 1,-1,0")
+        else:
+            self.emit_sns_message(self.results)
 
 
-    def get_signal(self):
+    def save(self):
+        # TODO
+        # everything run as expected?
+        # anything unexpcted to log?
+        # did results get saved or sent correctly?
+        # no silent bugs or errors?
+        if not self.sns_client_response:
+            if self.signal in [BUY, SELL]:
+                raise StrategyException("Signal data created but never sent!")
+            # if client response has error:
+                # SNSMessageException("Error when sending signal. Signal not sent!")
+        # ...
+        # ...
+
+
+    def make_signal(self):
         """
         for method overriding - insert business logic
         """
-        return IGNORE
+        self.signal = IGNORE
+        return self.signal
+
+
+    @property
+    def results(self):
+        return {
+            "signal": self.signal,
+            "transaction_currency": self.transaction_currency,
+            "counter_currency": self.counter_currency,
+            "signal_parameters": self._parameters,
+         }
 
 
     def get_indicator(indicator_name):

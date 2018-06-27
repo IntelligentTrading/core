@@ -12,15 +12,17 @@ class TradingStrategy123(AbstractStrategyHandler):
         self.indicators = ["RSI", "SMA",]
 
 
-    def get_signal(self) -> int:
-        (BUY, SELL, IGNORE) = (1,-1,0)
+    def make_signal(self) -> int:
+        from StrategyHandler import BUY, SELL, IGNORE
         rsi = self.get_indicator("RSI")
         sma = self.get_indicator("SMA")
 
         if rsi > 70:
-            return BUY
+            self.signal = BUY
         else:
-            return BUY
+            self.signal = BUY
+
+        return self.signal
 
 
 def check_strategy_ABC(event, context):

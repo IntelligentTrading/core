@@ -6,7 +6,7 @@ import os
 SNS_ARN = os.environ['SNS_ARN']
 
 
-class NoContextException(Exception):
+class ContextException(Exception):
     pass
 
 class SNSMessageException(Exception):
@@ -14,7 +14,6 @@ class SNSMessageException(Exception):
 
 class ITFSNSException(Exception):
     pass
-
 
 
 class AbstractSNSEventHandler(ABC):
@@ -28,6 +27,7 @@ class AbstractSNSEventHandler(ABC):
     sns_subscribe_arn = ""
     sns_publish_topic_prefix = ""
     sns_publish_topic = "" # automatically set, but can be overwritten manually
+    sns_client_response = None
     _parameters = None
 
 
@@ -78,11 +78,12 @@ class AbstractSNSEventHandler(ABC):
         logging.info("Publishing message to SNS ARN {}".format(sns_publishing_arn))
 
         sns_client = boto3.client('sns')
-        response = sns_client.publish(
+        self.sns_client_response = sns_client.publish(
             TargetArn=arn,
             Message=json.dumps({'default': json.dumps(message_data)}),
             MessageStructure='json'
         )
+        
 
 
 #
