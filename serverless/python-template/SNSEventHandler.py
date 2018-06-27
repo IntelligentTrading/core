@@ -1,9 +1,10 @@
 import logging
 import json
+from abc import ABC
 import boto3
 from datetime import datetime
 import os
-SNS_ARN = os.environ['SNS_ARN']
+SNS_ARN = os.environ.get('SNS_ARN', "")
 
 
 class ContextException(Exception):
@@ -83,7 +84,7 @@ class AbstractSNSEventHandler(ABC):
             Message=json.dumps({'default': json.dumps(message_data)}),
             MessageStructure='json'
         )
-        
+
 
 
 #
