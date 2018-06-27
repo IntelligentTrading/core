@@ -4,14 +4,15 @@ from apps.api.serializers import VolumeSerializer
 from apps.api.permissions import RestAPIPermission
 from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
 
-from apps.api.helpers import filter_queryset_by_timestamp, queryset_for_list_without_resample_period
-
-from apps.indicator.models import Volume
+from apps.api.helpers import filter_queryset_by_timestamp_history, queryset_for_list_without_resample_period
 
 
 
+# Volume
 class ListVolumes(ListAPIView):
     """Return list of price volumes.
+
+    When startdate is not set, API return records for the last month.
 
     /api/v2/volumes/
 
@@ -49,7 +50,7 @@ class ListVolumes(ListAPIView):
             if param not in self.request.query_params:
                 raise exceptions.NotFound(detail=f"Missing required parameter: {param}")
 
-        queryset = filter_queryset_by_timestamp(self)
+        queryset = filter_queryset_by_timestamp_history(self)
         return queryset
 
 

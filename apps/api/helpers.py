@@ -37,7 +37,7 @@ def filter_queryset_by_timestamp_history(self, queryset=None):
         enddate = parse(enddate)
         queryset = queryset.filter(timestamp__lte=enddate)
 
-    if startdate is None and enddate is None:
+    if startdate is None and enddate is None: # our index contain timestamp, so queries run faster when timestamp present
         month_ago = datetime.datetime.now() + relativedelta(months=-1)
         queryset = queryset.filter(timestamp__gte=month_ago)
     return queryset
