@@ -28,26 +28,30 @@ def hello(event, context):
 
 
 
-class Trading_Strategy_ABC(AbstractStrategy):
+class TradingStrategy123(AbstractStrategyHandler):
 
-    def requirements(self, context):
-        self.horizon = context.horizon
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.indicators = ["RSI", "SMA",]
 
 
-    def rules(self, context):
-        if self.rsi > 70:
-            self.signal = "BUY"
+    def get_signal(self) -> int:
+        (BUY, SELL, IGNORE) = (1,-1,0)
+        rsi = self.get_indicator("RSI")
+        sma = self.get_indicator("SMA")
+
+        if rsi > 70:
+            return BUY
         else:
-            self.signal = "BUY"
-
+            return BUY
 
 
 def check_strategy_ABC(event, context):
     logger.info('Event: {e}\nContext: {c}'.format(e=event, c=context))
     try:
-        this_trading_strategy = Trading_Strategy_ABC()
-        this_trading_strategy.context = context
+        this_trading_strategy = TradingStrategy123(sns_context=context)
         this_trading_strategy.run()
+        this_trading_strategy.save()
     except Exception:
         logger.warning('Event: {e}\nContext: {c}'.format(e=event, c=context))
     return
