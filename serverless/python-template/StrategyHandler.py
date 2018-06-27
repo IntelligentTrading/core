@@ -1,3 +1,4 @@
+import logging
 import json
 import boto3
 from datetime import datetime
@@ -45,7 +46,6 @@ class AbstractStrategyHandler(AbstractSNSEventHandler):
         """
         for method overriding - insert business logic
         """
-
         return IGNORE
 
 
@@ -64,7 +64,8 @@ class AbstractStrategyHandler(AbstractSNSEventHandler):
         self.indicator_now_set = self.strategy_indicators_set.intersection(current_indicators_set)
 
         if len(self.indicator_now_set) > 1 :
-            logger.error(" Ouch... several indicators for one strategy at the same time... highly unlikely, please investigate!" + str(self.indicator_now_set))
+            logging.warning(" Ouch... several indicators for one strategy at the same time... highly unlikely, please investigate!"
+                            + str(self.indicator_now_set))
 
         # check if the previos indicator is the same, return None, i.e. if you bought something, do not buy it again
         prev_indicator = self.get_previous_indicator()
