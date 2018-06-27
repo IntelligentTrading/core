@@ -19,8 +19,8 @@ class ListAnnPriceClassification(ListAPIView):
 
     For filtering:
 
-        predicted_ahead_for --
-        ann_model_id --
+        predicted_ahead_for
+        ann_model_id
 
         transaction_currency -- string BTC, ETH etc
         counter_currency -- number 0=BTC, 1=ETH, 2=USDT, 3=XMR

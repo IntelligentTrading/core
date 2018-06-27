@@ -6,14 +6,11 @@ from apps.api.serializers import RsiSerializer
 from apps.api.permissions import RestAPIPermission
 from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
 
-from apps.api.helpers import filter_queryset_by_timestamp
-
 from apps.api.helpers import filter_queryset_by_timestamp, queryset_for_list_with_resample_period
 
-from apps.indicator.models import Rsi
 
 
-
+# Mode: RSI
 class ListRsis(ListAPIView):
     """Return list of RSI.
 
