@@ -58,8 +58,8 @@ class PriceResampl(AbstractIndicator):
     # compute resampled prices
     def compute(self):
         # set the current time, it might differ from real current time if we calculate prices for old time point
-        datetime_now = datetime.utcfromtimestamp(self.timestamp) # PriceHistory use datetime for timestamp, not timestamp in seconds from epoch
 
+        datetime_now = self.timestamp
         # get all prices for one resample period
         transaction_currency_price_list = list(
             PriceHistory.objects.filter(
@@ -67,7 +67,7 @@ class PriceResampl(AbstractIndicator):
                 transaction_currency=self.transaction_currency,
                 counter_currency=self.counter_currency,
                 timestamp__lte=datetime_now,
-                timestamp__gte=datetime_now - timedelta(minutes=self.resample_period)                
+                timestamp__gte=datetime_now - timedelta(minutes=self.resample_period)
             ).values('timestamp', 'close', 'volume').order_by('-timestamp'))
 
         # skip the currency if there is no given price
