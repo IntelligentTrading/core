@@ -22,6 +22,13 @@ class PriceResampl(AbstractIndicator):
     mean_price = models.BigIntegerField(null=True)  # use counter_currency (10^8) for units
     price_variance = models.FloatField(null=True)  # for future signal smoothing
 
+    # volume field
+    open_volume = models.FloatField(null=True)
+    close_volume = models.FloatField(null=True)
+    low_volume = models.FloatField(null=True)
+    high_volume = models.FloatField(null=True)
+
+
 
     class Meta:
         indexes = [
