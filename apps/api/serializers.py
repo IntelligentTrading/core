@@ -13,7 +13,7 @@ class ResampledPriceSerializer(serializers.ModelSerializer):
         fields = [
             'source', 'resample_period', 'transaction_currency', 'counter_currency', 'timestamp',\
             'open_price', 'close_price','low_price', 'high_price', 'midpoint_price', 'mean_price',\
-            'price_variance', 'price_change_24h',
+            'price_variance', 'price_change_24h', 'open_volume', 'close_volume', 'low_volume','high_volume',
         ]
 
 # Signal
