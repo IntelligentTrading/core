@@ -4,6 +4,7 @@ import pandas as pd
 from django.db import models
 from apps.indicator.models.abstract_indicator import AbstractIndicator
 from apps.indicator.models.price import Price
+from apps.indicator.models.price_history import PriceHistory
 import time
 
 import logging
@@ -57,21 +58,21 @@ class PriceResampl(AbstractIndicator):
     # compute resampled prices
     def compute(self):
         # set the current time, it might differ from real current time if we calculate prices for old time point
-        datetime_now = self.timestamp #datetime.now()
+        datetime_now = datetime.utcfromtimestamp(self.timestamp) # PriceHistory use datetime for timestamp, not timestamp in seconds from epoch
 
-        # get all prices for one resample period (15/60/360 min)
+        # get all prices for one resample period
         transaction_currency_price_list = list(
-            Price.objects.filter(
+            PriceHistory.objects.filter(
                 source=self.source,
                 transaction_currency=self.transaction_currency,
                 counter_currency=self.counter_currency,
                 timestamp__lte=datetime_now,
-                timestamp__gte=datetime_now - timedelta(minutes=self.resample_period)
-            ).values('timestamp', 'price').order_by('-timestamp'))
+                timestamp__gte=datetime_now - timedelta(minutes=self.resample_period)                
+            ).values('timestamp', 'close', 'volume').order_by('-timestamp'))
 
         # skip the currency if there is no given price
         if transaction_currency_price_list:
-            prices = np.array([rec['price'] for rec in transaction_currency_price_list])
+            prices = np.array([rec['close'] for rec in transaction_currency_price_list])
 
             self.open_price = int(prices[0])
             self.close_price = int(prices[-1])
@@ -80,6 +81,13 @@ class PriceResampl(AbstractIndicator):
             self.midpoint_price = int((self.high_price + self.low_price) / 2)
             self.mean_price = int(prices.mean())
             self.price_variance = prices.var()
+
+            volumes = np.array([rec['volume'] for rec in transaction_currency_price_list])
+            self.open_volume = float(volumes[0])
+            self.close_volume = float(volumes[-1])
+            self.low_volume = float(volumes.min())
+            self.high_volume = float(volumes.max())
+
             return True
         else:
             #logger.debug(' ======= skipping, no price information')

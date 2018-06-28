@@ -81,12 +81,15 @@ def _compute_ann(source, resample_period=SHORT):
         K.clear_session()
 
 
-def _compute_indicators_for(source, transaction_currency, counter_currency, resample_period):
+def _compute_indicators_for(source, transaction_currency, counter_currency, resample_period, at_timepoint=None):
     logger.info(f"### Starting calcs for: {quad_formatted(source, transaction_currency, counter_currency, resample_period)}")
 
     horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[resample_period])
 
-    timestamp = time.time() // (1 * 60) * (1 * 60)   # rounded to a minute
+    if at_timepoint is None:
+        timestamp = time.time() // (1 * 60) * (1 * 60)   # current time rounded to a minute
+    else:
+        timestamp = at_timepoint
 
     # create a dictionary of parameters to improve readability
     indicator_params_dict = {
