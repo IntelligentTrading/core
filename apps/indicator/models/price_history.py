@@ -27,8 +27,8 @@ class PriceHistory(models.Model):
     timestamp = models.DateTimeField(null=False) # store UTC, timestamp=datetime.datetime.utcfromtimestamp(float(timestamp)/1000.0)
 
 
-    # INDEX FIXME enable it later after importing all data (import faster w/o index)
-    # class Meta:
-    #     indexes = [
-    #         models.Index(fields=['timestamp', 'transaction_currency', 'source', 'counter_currency']),
-    #     ]
+    # INDEX
+    class Meta:
+        indexes = [
+            models.Index(fields=['timestamp', 'transaction_currency', 'counter_currency', 'source']),
+        ]
