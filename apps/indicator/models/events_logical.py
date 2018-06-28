@@ -206,14 +206,11 @@ class EventsLogical(AbstractIndicator):
             ####################### Ben Events #####################
             logger.debug("   ... Check Ben Event ")
 
-            # use last_events_df.price_crosses_the_mean_up / last_events_df.volume_greater_then_mean
-            # to logically combine elementrary events
-            # TODO HERE:
             last_events_df['ben_volume_based_buy'] = np.where(
-                ((last_events_df.ben_price_greater_than_mean_by_percent &
-                  last_events_df.ben_volume_crosses_the_mean_from_below) |
-                 (last_events_df.ben_volume_greater_than_mean_by_percent &
-                  last_events_df.ben_price_crosses_the_mean_from_below)
+                ((last_events_df.vbi_price_gt_mean_by_percent &
+                  last_events_df.vbi_volume_cross_from_below) |
+                 (last_events_df.vbi_volume_gt_mean_by_percent &
+                  last_events_df.vbi_price_cross_from_below)
                  ) == True,
                 1, 0)
 
@@ -239,9 +236,9 @@ class EventsLogical(AbstractIndicator):
 
                     signal_ben_buy = Signal(
                         **kwargs,
-                        signal='ben_volume_based_buy',
-                        trend=int(1),  # negative is bearish TODO here
-                        strength_value=int(3), # todo here
+                        signal='VBI',
+                        trend=int(1),
+                        strength_value=int(3),
                         horizon=horizon,
                     )
                     if MODIFY_DB: signal_ben_buy.save()
