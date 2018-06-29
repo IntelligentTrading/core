@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 import numpy as np
-import time
 
 import logging
 
@@ -8,13 +7,9 @@ from django.core.management.base import BaseCommand
 
 from apps.indicator.models import PriceResampl, PriceHistory
 
-#from settings import PERIODS_LIST, SHORT, MEDIUM, LONG
-
 
 
 logger = logging.getLogger(__name__)
-
-#PERIODS_TO_CALCS = 5
 
 class Command(BaseCommand):
     help = "Fill history of volumes in PriceResampl."
@@ -37,20 +32,22 @@ def fill_volume_for_priceresample_with_empty_volume_backward(number_of_iteration
     # get price resampl with empty volume starting from last one
     for idx, price_resampl in enumerate(PriceResampl.objects.filter(close_volume__isnull=True, close_price__isnull=False).order_by('-timestamp')[:number_of_iterations].iterator()):
         iterated = True
-        fill_volumes_for_one_price_resampl(price_resampl, idx)
+        try:
+            fill_volumes_for_one_price_resampl(price_resampl, idx)
+        except Exception as e:
+            logger.error(f"Error filling prices. {e}")
 
     if not iterated:
         logger.info(">>> All Done. No more PR with empty jobs to do! <<<")
 
 
 def fill_volumes_for_one_price_resampl(price_resampl, idx=0):
-    start_time = time.time()
-
     trading_trio = (source, transaction_currency, counter_currency) = (price_resampl.source, price_resampl.transaction_currency, price_resampl.counter_currency)
     resample_period = price_resampl.resample_period
     logger.info(f"{idx}>{trading_trio} R:{resample_period}>Started PR {price_resampl.id}")
 
     timepoint = price_resampl.timestamp # datetime.utcfromtimestamp(price_resampl['timestamp'])
+
     transaction_currency_price_list = list(
         PriceHistory.objects.filter(
             source=source,
@@ -74,7 +71,7 @@ def fill_volumes_for_one_price_resampl(price_resampl, idx=0):
 
         price_resampl.save()
 
-        logger.info(f"{idx}>{trading_trio} R:{resample_period}>Saved volumes ({close_volume}) to PR: {price_resampl.id}, {int(time.time() - start_time)}s")
+        logger.info(f"{idx}>{trading_trio} R:{resample_period}>Saved volumes ({close_volume}) to PR: {price_resampl.id}")
     else:
         logger.info(f"{idx}>{trading_trio} R:{resample_period}>No prices to fill PR:{price_resampl.id}. Skipping.")
 
@@ -167,10 +164,3 @@ def fill_volumes_for_one_price_resampl(price_resampl, idx=0):
 
 #     if not iterated:
 #         logger.info(">>> All Done for resampled period {resample_period}. No more jobs to do! <<<")
-
-
-
-
-
-
-
