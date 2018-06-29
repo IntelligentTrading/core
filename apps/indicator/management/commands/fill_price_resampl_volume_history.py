@@ -1,3 +1,4 @@
+import boto3
 from datetime import datetime, timedelta
 import numpy as np
 
@@ -8,8 +9,14 @@ from django.core.management.base import BaseCommand
 from apps.indicator.models import PriceResampl, PriceHistory
 
 
+from settings import AWS_OPTIONS, BUCKET_NAME
+
+
 
 logger = logging.getLogger(__name__)
+logging.getLogger('botocore').setLevel(logging.CRITICAL)
+
+S3_KEY_FOR_STATE = 'fill_price_resampl_volume_history_state'
 
 class Command(BaseCommand):
     help = "Fill history of volumes in PriceResampl."
@@ -19,23 +26,29 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         iterations = options['iterations']
+
+        last_timestamp = read_state_from_s3() # last timestamp with error
+
         count = PriceResampl.objects.filter(close_volume__isnull=True, close_price__isnull=False).count()
         logger.info(f"Starting. There are {count} PR objects to fill")
 
-        fill_volume_for_priceresample_with_empty_volume_backward(iterations)
+        fill_volume_for_priceresample_with_empty_volume_backward(iterations, last_timestamp)
         #resample_period=SHORT
         #fill_priceresampl_volume_hist(resample_period=resample_period, periods_to_calc=PERIODS_TO_CALCS)
 
 
-def fill_volume_for_priceresample_with_empty_volume_backward(number_of_iterations):
+def fill_volume_for_priceresample_with_empty_volume_backward(number_of_iterations, last_timestamp=None):
     iterated = False
+    if last_timestamp is None:
+        last_timestamp = datetime.now()
     # get price resampl with empty volume starting from last one
-    for idx, price_resampl in enumerate(PriceResampl.objects.filter(close_volume__isnull=True, close_price__isnull=False).order_by('-timestamp')[:number_of_iterations].iterator()):
+    for idx, price_resampl in enumerate(PriceResampl.objects.filter(close_volume__isnull=True, close_price__isnull=False, timestamp__lte=last_timestamp).order_by('-timestamp')[:number_of_iterations].iterator()):
         iterated = True
         try:
             fill_volumes_for_one_price_resampl(price_resampl, idx)
         except Exception as e:
             logger.error(f"Error filling prices. {e}")
+            save_state_to_s3(price_resampl.timestamp)
 
     if not iterated:
         logger.info(">>> All Done. No more PR with empty jobs to do! <<<")
@@ -74,6 +87,30 @@ def fill_volumes_for_one_price_resampl(price_resampl, idx=0):
         logger.info(f"{idx}>{trading_trio} R:{resample_period}>Saved volumes ({close_volume}) to PR: {price_resampl.id}")
     else:
         logger.info(f"{idx}>{trading_trio} R:{resample_period}>No prices to fill PR:{price_resampl.id}. Skipping.")
+
+
+
+def aws_client(resource_type):
+    return boto3.client(
+        resource_type,
+        aws_access_key_id=AWS_OPTIONS['AWS_ACCESS_KEY_ID'],
+        aws_secret_access_key=AWS_OPTIONS['AWS_SECRET_ACCESS_KEY'],
+        region_name='us-east-1',
+    )
+
+def save_state_to_s3(value, key=S3_KEY_FOR_STATE):
+    return aws_client('s3').put_object(
+        Bucket=BUCKET_NAME,
+        Body=str(value),
+        Key=key
+    )
+
+def read_state_from_s3(key=S3_KEY_FOR_STATE):
+    try:
+        return aws_client('s3').get_object(Bucket=BUCKET_NAME, Key=key)['Body'].read().decode('ascii')
+    except Exception as e:
+        logger.info(f"Can't read from S3:{key} - {e}")
+        return None
 
 
 # def get_trios_source_trading_pair(back_in_time_seconds=4*60*60, blacklisted_coins=None):
