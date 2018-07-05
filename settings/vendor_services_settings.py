@@ -98,3 +98,18 @@ INFO_BOT_CRYPTOPANIC_API_TOKEN = os.environ.get('INFO_BOT_CRYPTOPANIC_API_TOKEN'
 
 INCOMING_SQS_QUEUE = os.environ.get('INCOMING_SQS_QUEUE')
 SNS_SIGNALS_TOPIC_ARN = os.environ.get('SNS_SIGNALS_TOPIC_ARN', None)
+
+# CORS
+CORS_ORIGIN_WHITELIST = (
+    'itf-settings-stage.herokuapp.com',
+    'intelligenttrading.org',
+    'localhost',
+    '127.0.0.1',
+    '89.177.127.27',
+)
+
+
+from corsheaders.defaults import default_methods, default_headers
+
+CORS_ALLOW_METHODS = default_methods
+CORS_ALLOW_HEADERS = default_headers
