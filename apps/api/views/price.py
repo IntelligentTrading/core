@@ -6,12 +6,14 @@ from apps.api.serializers import PriceSerializer
 from apps.api.permissions import RestAPIPermission
 from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
 
-from apps.api.helpers import filter_queryset_by_timestamp, queryset_for_list_without_resample_period
+from apps.api.helpers import filter_queryset_by_timestamp_history, queryset_for_list_without_resample_period
 
 
 
 class ListPrices(ListAPIView):
     """Return list of prices from Price model. Thise are raw, non resampled prices from exchange tickers.
+    
+    When startdate is not set, API return records for the last month.
 
     /api/v2/prices/
 
@@ -32,8 +34,7 @@ class ListPrices(ListAPIView):
 
     Examples
 
-        /api/v2/prices/?startdate=2018-01-26T10:24:37&enddate=2018-01-26T10:59:02
-        /api/v2/prices/?transaction_currency=ETH&counter_currency=0
+        /api/v2/prices/?source=0&transaction_currency=ETH&counter_currency=0&startdate=2018-01-26T10:24:37&enddate=2018-01-26T10:59:02
     """
 
     permission_classes = (RestAPIPermission, )
@@ -50,7 +51,7 @@ class ListPrices(ListAPIView):
             if param not in self.request.query_params:
                 raise exceptions.NotFound(detail=f"Missing required parameter: {param}")
 
-        queryset = filter_queryset_by_timestamp(self, self.model.objects)
+        queryset = filter_queryset_by_timestamp_history(self)
         return queryset
 
 
@@ -71,10 +72,12 @@ class ListPrice(ListAPIView):
         enddate -- until this date inclusive in same format
 
     For pagination
+
         cursor - indicator that the client may use to page through the result set
         page_size -- a numeric value indicating the page size
 
     Examples
+
         /api/v2/prices/ETH # ETH in BTC
         /api/v2/prices/ETH?counter_currency=2 # ETH in USDT
     """

@@ -2,7 +2,10 @@
 Helpers and common methods for RESTful API
 """
 import copy
+import datetime
+
 from dateutil.parser import parse
+from dateutil.relativedelta import relativedelta
 
 from taskapp.helpers import get_source_name
 
@@ -19,6 +22,26 @@ def default_counter_currency(transaction_currency):
 
 
 # for api.views
+def filter_queryset_by_timestamp_history(self, queryset=None):
+    # to hit index and partition for history price we always need timestamp
+    startdate = self.request.query_params.get('startdate', None)
+    enddate = self.request.query_params.get('enddate', None)
+
+    if queryset is None:
+        queryset = self.model.objects
+
+    if startdate is not None:
+        startdate = parse(startdate) # Because DRF has problems with dates formatted like 2018-02-12T09:09:15
+        queryset = queryset.filter(timestamp__gte=startdate)
+    if enddate is not None:
+        enddate = parse(enddate)
+        queryset = queryset.filter(timestamp__lte=enddate)
+
+    if startdate is None and enddate is None: # our index contain timestamp, so queries run faster when timestamp present
+        month_ago = datetime.datetime.now() + relativedelta(months=-1)
+        queryset = queryset.filter(timestamp__gte=month_ago)
+    return queryset
+
 
 def filter_queryset_by_timestamp(self, queryset=None):
     startdate = self.request.query_params.get('startdate', None)
@@ -55,7 +78,7 @@ def queryset_for_list_with_resample_period(self):
             transaction_currency=transaction_currency,
             counter_currency=counter_currency,
         )
-        
+
     queryset = filter_queryset_by_timestamp(self, queryset)
     return queryset
 

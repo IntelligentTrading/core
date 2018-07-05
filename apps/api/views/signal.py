@@ -33,10 +33,12 @@ class ListSignals(ListAPIView):
 
 
     For pagination
+
         cursor -- indicator that the client may use to page through the result set
         page_size -- a numeric value indicating the page size
 
     Examples
+
         /api/v2/signals/?transaction_currency=ETH&signal=RSI
         /api/v2/signals/?startdate=2018-02-10T22:14:37&enddate=2018-02-10T22:27:58
     """
@@ -77,10 +79,12 @@ class ListSignal(ListAPIView):
 
 
     For pagination
+
         cursor - indicator that the client may use to page through the result set
         page_size -- a numeric value indicating the page size
 
     Examples
+
         /api/v2/signals/ETH
         /api/v2/signals/ETH?signal=RSI
     """

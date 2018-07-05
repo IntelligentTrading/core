@@ -86,7 +86,7 @@ def _compute_indicators_for(source, transaction_currency, counter_currency, resa
 
     horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[resample_period])
 
-    timestamp = time.time() // (1 * 60) * (1 * 60)   # rounded to a minute
+    timestamp = time.time() // (1 * 60) * (1 * 60)   # current time rounded to a minute
 
     # create a dictionary of parameters to improve readability
     indicator_params_dict = {
@@ -97,42 +97,42 @@ def _compute_indicators_for(source, transaction_currency, counter_currency, resa
         'resample_period': resample_period
     }
 
-    ################# BACK CALCULATION (need only once when run first time)
-    BACK_REC = 5   # how many records to calculate back in time
-    BACK_TIME = timestamp - BACK_REC * resample_period * 60  # same in sec
+    # ################# BACK CALCULATION (need only once when run first time)
+    # BACK_REC = 5   # how many records to calculate back in time
+    # BACK_TIME = timestamp - BACK_REC * resample_period * 60  # same in sec
 
-    last_time_computed = get_first_resampled_time(source, transaction_currency, counter_currency, resample_period)
-    records_to_compute = int((last_time_computed-BACK_TIME)/(resample_period * 40))
+    # last_time_computed = get_first_resampled_time(source, transaction_currency, counter_currency, resample_period)
+    # records_to_compute = int((last_time_computed-BACK_TIME)/(resample_period * 40))
 
-    if records_to_compute >= 0:
-        logger.info(f">>>>{quad_formatted(source, transaction_currency, counter_currency, resample_period)}  ... calculate resampl back in time, needed records: {records_to_compute}")
-        # logger.info("  ... calculate resampl back in time, needed records: " + str(records_to_compute))
-        for idx in range(1, records_to_compute):
-            time_point_back = last_time_computed - idx * (resample_period * 60)
-            # round down to the closest hour
-            indicator_params_dict['timestamp'] = time_point_back // (60 * 60) * (60 * 60)
+    # if records_to_compute >= 0:
+    #     logger.info(f">>>>{quad_formatted(source, transaction_currency, counter_currency, resample_period)}  ... calculate resampl back in time, needed records: {records_to_compute}")
+    #     # logger.info("  ... calculate resampl back in time, needed records: " + str(records_to_compute))
+    #     for idx in range(1, records_to_compute):
+    #         time_point_back = last_time_computed - idx * (resample_period * 60)
+    #         # round down to the closest hour
+    #         indicator_params_dict['timestamp'] = time_point_back // (60 * 60) * (60 * 60)
 
-            try:
-                resample_object = PriceResampl.objects.create(**indicator_params_dict)
-                status = resample_object.compute()
-                if status or (idx == records_to_compute-1): # leave the last empty record
-                    resample_object.save()
-                else:
-                    resample_object.delete()  # delete record if no price was added
-            except Exception as e:
-                logger.error(f">>>>{quad_formatted(source, transaction_currency, counter_currency, resample_period)} -> Back RESAMPLE EXCEPTION: {e}")
-                # logger.error(" -> Back RESAMPLE EXCEPTION: " + str(e))
+    #         try:
+    #             resample_object = PriceResampl.objects.create(**indicator_params_dict)
+    #             status = resample_object.compute()
+    #             if status or (idx == records_to_compute-1): # leave the last empty record
+    #                 resample_object.save()
+    #             else:
+    #                 resample_object.delete()  # delete record if no price was added
+    #         except Exception as e:
+    #             logger.error(f">>>>{quad_formatted(source, transaction_currency, counter_currency, resample_period)} -> Back RESAMPLE EXCEPTION: {e}")
+    #             # logger.error(" -> Back RESAMPLE EXCEPTION: " + str(e))
 
-        # logger.debug("... resample back  - DONE.")
-        logger.debug(f">>>>{quad_formatted(source, transaction_currency, counter_currency, resample_period)}... resample back  - DONE.")
-    else:
-        # logger.debug("   ... No back calculation needed")
-        logger.debug(f">>>>{quad_formatted(source, transaction_currency, counter_currency, resample_period)}   ... No back calculation needed")
+    #     # logger.debug("... resample back  - DONE.")
+    #     logger.debug(f">>>>{quad_formatted(source, transaction_currency, counter_currency, resample_period)}... resample back  - DONE.")
+    # else:
+    #     # logger.debug("   ... No back calculation needed")
+    #     logger.debug(f">>>>{quad_formatted(source, transaction_currency, counter_currency, resample_period)}   ... No back calculation needed")
 
 
-    # set time back to a current time
-    indicator_params_dict['timestamp'] = timestamp
-    ################# Can be commented after first time run
+    # # set time back to a current time
+    # indicator_params_dict['timestamp'] = timestamp
+    # ################# Can be commented after first time run
 
 
     # 1 ############################

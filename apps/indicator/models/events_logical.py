@@ -109,7 +109,7 @@ class EventsLogical(AbstractIndicator):
                     logger.debug('    ... event: ' + name + ' = ' + str(values[0]) )
 
 
-            ########## check for ITT Cummulative RSI Signal
+            ############# check for ITT Cummulative RSI Signal
             logger.debug("   ... Check RSI Cumulative Event ")
 
             # get events for long time period (not for current)
@@ -201,6 +201,53 @@ class EventsLogical(AbstractIndicator):
 
             else:
                 logger.debug("   .. no long term data yet ... so, no RSI Cumulative.")
+
+
+            ####################### Ben Events #####################
+            logger.debug("   ... Check Ben Event ")
+
+            last_events_df['ben_volume_based_buy'] = np.where(
+                ((last_events_df.vbi_price_gt_mean_by_percent &
+                  last_events_df.vbi_volume_cross_from_below) |
+                 (last_events_df.vbi_volume_gt_mean_by_percent &
+                  last_events_df.vbi_price_cross_from_below)
+                 ) == True,
+                1, 0)
+
+
+            #last_events_df['ben_volume_based_buy'] = np.where(
+            #    (last_events_df.close_cloud_breakout_down_ext &
+            #     last_events_df.lagging_below_cloud &
+            #     last_events_df.lagging_below_cloud &
+            #     last_events_df.conversion_below_base
+            #     ) == True,
+            #    1, 0)
+
+            # save logical event and emit signal
+            if all(last_events_df['ben_volume_based_buy']):
+
+                try:
+                    ben_buy = cls(
+                        **kwargs,
+                        event_name='ben_volume_based_buy',
+                        event_value=int(1),
+                    )
+                    if MODIFY_DB: ben_buy.save()
+
+                    signal_ben_buy = Signal(
+                        **kwargs,
+                        signal='VBI',
+                        trend=int(1),
+                        strength_value=int(3),
+                        horizon=horizon,
+                    )
+                    if MODIFY_DB: signal_ben_buy.save()
+                    logger.info('   >>> Ben UP signal has been FIRED!')
+                except Exception as e:
+                    logger.error(" Error saving Ben UP signal ")
+
+            else:
+                logger.debug("   .. No ben Up  events.")
 
         else:
             logger.debug("   ... No elementary events found at all, skip processing !")
