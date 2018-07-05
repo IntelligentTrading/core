@@ -109,9 +109,11 @@ SNS_SIGNALS_TOPIC_ARN = os.environ.get('SNS_SIGNALS_TOPIC_ARN', None)
 # )
 
 
-# from corsheaders.defaults import default_methods, default_headers
+from corsheaders.defaults import default_headers #, default_methods
 
 # CORS_ALLOW_METHODS = default_methods
-# CORS_ALLOW_HEADERS = default_headers
+CORS_ALLOW_HEADERS = default_headers + (
+    'API-KEY',
+)
 
 CORS_ORIGIN_ALLOW_ALL = True
