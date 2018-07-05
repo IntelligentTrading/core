@@ -68,26 +68,29 @@ provider:
 #    - exclude-me-dir/**
 
 functions:
-  # hello:
-  #   handler: handler.hello
-  #   events:
-  #     - sns: arn:aws:sns:us-east-1:983584755688:itt-sns-data-core-stage
+
   check_strategy_ABC:
     handler: TradingStrategy123.check_strategy_ABC
     events:
       - sns: arn:aws:sns:us-east-1:983584755688:itt-sns-data-core-stage
-  test_redis:
-    handler: test_redis.test_redis
-    events:
-     - http:
-         path: test_redis
-         method: get
-  test_dynamodb:
-    handler: test_dynamodb.test_dynamodb
-    events:
-     - http:
-         path: test_dynamodb
-         method: get
+
+  # hello:
+  #   handler: handler.hello
+  #   events:
+  #     - sns: arn:aws:sns:us-east-1:983584755688:itt-sns-data-core-stage
+  # test_redis:
+  #   handler: test_redis.test_redis
+  #   events:
+  #    - http:
+  #        path: test_redis
+  #        method: get
+  # test_dynamodb:
+  #   handler: test_dynamodb.test_dynamodb
+  #   events:
+  #    - http:
+  #        path: test_dynamodb
+  #        method: get
+
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
