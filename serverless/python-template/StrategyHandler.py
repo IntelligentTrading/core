@@ -53,7 +53,7 @@ class AbstractStrategyHandler(AbstractSNSEventHandler):
         self.make_signal()
         if "signal" not in self.results:
             raise StrategyException("strategy is missing a signal!")
-        elif self.results["signal"] in [BUY, SELL, IGNORE]:
+        elif self.results["signal"] not in [BUY, SELL, IGNORE]:
             raise StrategyException("non-standard signal! use one of these" +
                                     "BUY, SELL, IGNORE = 1,-1,0")
         else:

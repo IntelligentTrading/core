@@ -1,7 +1,7 @@
 import json
 from StrategyHandler import AbstractStrategyHandler
 import logging
-logger = logging.getLogger('boto3')
+logger = logging.getLogger('TradingStrategy123')
 logger.setLevel(logging.INFO)
 
 
@@ -26,11 +26,17 @@ class TradingStrategy123(AbstractStrategyHandler):
 
 
 def check_strategy_ABC(event, context):
+    logger.info("\n-------------------\n" +
+                "Trading Strategy ABC" +
+                "\n-------------------")
     logger.info('Event: {e}\nContext: {c}'.format(e=event, c=context))
     try:
+        logger.info("initiating objects...............")
         this_trading_strategy = TradingStrategy123(sns_context=context)
+        logger.info("running..........................")
         this_trading_strategy.run()
+        logger.info("saving...........................")
         this_trading_strategy.save()
-    except Exception:
-        logger.warning('Event: {e}\nContext: {c}'.format(e=event, c=context))
+    except Exception as e:
+        logger.warning("Exception: {}".format(e))
     return
