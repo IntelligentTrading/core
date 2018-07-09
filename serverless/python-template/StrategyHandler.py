@@ -1,11 +1,17 @@
 import logging
 import json
 import boto3
+import requests
 import pandas as pd
 from datetime import datetime
 from SNSEventHandler import AbstractSNSEventHandler, ContextException
 (BUY, SELL, IGNORE) = (1,-1,0)
 
+API_URL = "https://itt-core-stage.herokuapp.com/api"
+API_ENDPOINTS = {
+    "SMA": "/v2/sma/",
+    "RSI": "/v2/rsi/",
+}
 
 class StrategyException(Exception):
     pass
@@ -23,7 +29,7 @@ class AbstractStrategyHandler(AbstractSNSEventHandler):
     transaction_currency = None
     counter_currency = None
 
-    indicators = []
+    indicators = {}
     strategy_indicators_set = None
     indicator_now_set = None
 
@@ -32,7 +38,7 @@ class AbstractStrategyHandler(AbstractSNSEventHandler):
         super().__init__(*args, **kwargs)
         self.sns_publish_topic_prefix += "strategy-"
 
-        self.indicators = []
+        self.indicators = {}
         self.timestamp = kwargs.get('timestamp', datetime.now())
         self.source = kwargs.get('source')
         self.resample_period = kwargs.get('resample_period')
@@ -87,11 +93,22 @@ class AbstractStrategyHandler(AbstractSNSEventHandler):
          }
 
 
-    def get_indicator(indicator_name):
+    def get_indicator(self, indicator_name):
         if indicator_name in self.indicators:
             return self.indicators[indicator_name]
+        # else
 
-        # logic here for query to collect indicator data
+        params = {'transaction_currency': self.transaction_currency,
+                  'counter_currency': self.counter_currency}
+        logging.info(params)
+        response = requests.get(API_URL+API_ENDPOINTS[indicator_name], params=params)
+        logging.info(response.url)
+        try:
+            self.indicators[indicator_name] = response.json()
+        except:
+            self.indicators[indicator_name] = {}
+            logging.info(response)
+        return self.indicators[indicator_name]
 
 
     def check_indicators_now(self)->set:

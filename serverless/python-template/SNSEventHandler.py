@@ -86,7 +86,6 @@ class AbstractSNSEventHandler(ABC):
         )
 
 
-
 #
 # EXAMPLE SNS MESSAGE FROM DATA APP ON HEROKU
 # {'Records': [{
