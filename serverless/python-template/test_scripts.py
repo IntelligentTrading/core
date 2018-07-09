@@ -8,6 +8,5 @@ d = abh.get_indicator("RSI")
 print(d)
 
 ts123 = TradingStrategy123(sns_context={})
-
 ts123.run()
-ts123.savf()
+ts123.save()
