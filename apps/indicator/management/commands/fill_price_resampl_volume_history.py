@@ -35,6 +35,7 @@ class Command(BaseCommand):
 
 def fill_volume_for_priceresample_with_empty_volume_backward(number_of_iterations, last_timestamp=None):
     iterated = False
+    save_state_every = 1000
     errors = 0
     if last_timestamp is None:
         last_timestamp = datetime.now()
@@ -51,6 +52,9 @@ def fill_volume_for_priceresample_with_empty_volume_backward(number_of_iteration
             if errors > 100:
                 errors = 0
                 save_state_to_s3(price_resampl.timestamp, S3_KEY_FOR_STATE)
+        if idx % save_state_every == 0:
+            logger.info(">>> Saved state")
+            save_state_to_s3(price_resampl.timestamp, S3_KEY_FOR_STATE)
 
     if not iterated:
         logger.info(">>> All Done. No more PR with empty jobs to do! <<<")
