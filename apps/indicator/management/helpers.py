@@ -27,7 +27,7 @@ class DataFiller():
         self.iterations = iterations or 1000
         self.state = read_state_from_s3(name)
         self.state_property = None
-        self.save_state_every = save_state_every or 10
+        self.save_state_every = save_state_every
         self.input_queryset = None
         self.filler_function = None
 
@@ -42,7 +42,7 @@ class DataFiller():
             except Exception as e:
                 logger.error(f"Error inside filler function {self.filler_function}: {e}")
 
-            if idx % self.save_state_every == 0:
+            if isinstance(self.save_state_every, int) and (idx % self.save_state_every == 0):
                 save_state_to_s3(getattr(item, self.state_property), self.name)
 
         if not iterated:

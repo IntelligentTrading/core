@@ -24,11 +24,14 @@ class Command(BaseCommand):
 
 
 def fill_all_price_history_missing_volumes(iterations):
-    df = DataFiller(name='fill_price_history_missing_volumes', iterations=iterations, save_state_every=1000)
-
-    to_datetime = parse(df.state) or datetime.now()
-    from_datetime = to_datetime - relativedelta(months=1) # process no more than 1 month of data for session
+    df = DataFiller(name='fill_price_history_missing_volumes', iterations=iterations, save_state_every=10000)
     df.state_property = 'timestamp'
+
+    if df.state is None:
+        to_datetime = datetime.now()
+    else:
+        to_datetime = parse(df.state)
+    from_datetime = to_datetime - relativedelta(months=3) # process last 3 months
 
     df.filler_function = fill_one_price_history_missing_volume_from_indicator_price
 
