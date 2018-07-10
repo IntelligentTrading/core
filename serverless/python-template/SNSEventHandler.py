@@ -48,7 +48,7 @@ class AbstractSNSEventHandler(ABC):
         try:
             self.sns_message = self.sns_context['Records'][0]['Sns']['Message'][0]
         except KeyError as e:
-            logger.error("SNS messages not found! Check code and configurations.")
+            logging.error("SNS messages not found! Check code and configurations.")
 
         # self.horizon = self.sns_message['horizon']
         # self._parameters = value
@@ -65,22 +65,24 @@ class AbstractSNSEventHandler(ABC):
 
         sns_subscribed_arn = self.sns_context['Records'][0]['Sns']['TopicArn']
 
-        if not self.self.sns_publish_topic.startswith("itf-sns-"):
+        if not self.sns_publish_topic.startswith("itf-sns-"):
             # use instance class name
             self.sns_publish_topic = self.sns_publish_topic_prefix
-            self.sns_publish_topic += str(c.__class__.__name__).lower()
+            self.sns_publish_topic += str(self.__class__.__name__).lower()
 
-        if not self.self.sns_publish_topic.startswith("itf-sns-"):
+        if not self.sns_publish_topic.startswith("itf-sns-"):
             raise ITFSNSException("SNS topic must start with 'itf-sns-'")
 
-        sns_publishing_arn = ":".join(arn.split(":")[0:-1].append(self.sns_publish_topic))
+        logging.debug("using " + SNS_ARN + " as ARN base")
+        sns_publishing_arn = ":".join(SNS_ARN.split(":")[0:-1].append(self.sns_publish_topic))
+        logging.info("using " + sns_publishing_arn + " as ARN for publishing")
 
         logging.info("Received message from SNS ARN {}".format(sns_subscribed_arn))
         logging.info("Publishing message to SNS ARN {}".format(sns_publishing_arn))
 
         sns_client = boto3.client('sns')
         self.sns_client_response = sns_client.publish(
-            TargetArn=arn,
+            TargetArn=sns_publishing_arn,
             Message=json.dumps({'default': json.dumps(message_data)}),
             MessageStructure='json'
         )
