@@ -30,12 +30,20 @@ class AbstractStrategy(ABC):
         self.parameters = parameters
 
 
-    def check_signals_now(self)->set:
+    def check_signals_now(self)->dict:
         # get all signals emitted now
         current_signals_set = get_all_signals_names_now(**self.parameters)
 
+
         # check if any of them belongs to our strategy
-        self.signal_now_set = self.strategy_signals_set.intersection(current_signals_set)
+
+        # self.signal_now_set = self.strategy_signals_set.intersection(current_signals_set)
+        # temporary fix -> instead of a set,we return a dictionary that has signal names as keys and signal ids as values
+        # needed for Francesco
+        # TODO @Alex review and fix
+        self.signal_now_set = dict((signal_name, signal_id)
+                                   for signal_name, signal_id in current_signals_set.items()
+                                   if signal_name in self.strategy_signals_set)
 
         if len(self.signal_now_set) > 1 :
             logger.error(" Ouch... several signals for one strategy at the same time... highly unlikely, please investigate!" + str(self.signal_now_set))
