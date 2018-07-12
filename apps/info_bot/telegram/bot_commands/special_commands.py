@@ -15,7 +15,7 @@ from textwrap import dedent
 from telegram import ParseMode
 from telegram.ext import Updater
 
-from apps.info_bot.helpers import save_history, restore_db_connection
+from apps.info_bot.helpers import save_history#, restore_db_connection
 
 from settings import INFO_BOT_TELEGRAM_BOT_API_TOKEN, LOCAL
 
@@ -51,7 +51,7 @@ def start(bot, update):
     save_history(update)
     update.message.reply_text("Welcome {}. I'm ITF info bot.".format(update.message.from_user.first_name))
 
-@restore_db_connection
+#@restore_db_connection
 def help(bot, update):
     save_history(update)
     update.message.reply_text(dedent("""
@@ -67,8 +67,9 @@ def help(bot, update):
 
         To use these commands in your Telegram channel, invite @Intelligent\_Trading\_Info\_Bot to your channel.
     """), ParseMode.MARKDOWN)
-@restore_db_connection
+
 def getme(bot, update):
+    "Show username and userid in chat"
     save_history(update)
     update.message.reply_text(f"Your username:{update.message.from_user.username} and userId {str(update.message.from_user.id)}")
 

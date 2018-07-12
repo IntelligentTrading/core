@@ -166,10 +166,12 @@ def save_history(update):
         logging.error(f">>>Error saving history:\n{update}<<<\n{e}")
 
 
-def restore_db_connection(func):
-    "Mysql drop persistent connection after 28800 secs (8h) of idling"
+# FIXME Disabled after switching to Postgres. Enable it back if after long inactivity sql server drop connection (like Mysql did).
 
-    def func_wrapper(*args, **kwargs):
-        db.close_old_connections()
-        return func(*args, **kwargs)
-    return func_wrapper
+# def restore_db_connection(func):
+#     "Mysql drop persistent connection after 28800 secs (8h) of idling"
+
+#     def func_wrapper(*args, **kwargs):
+#         db.close_old_connections()
+#         return func(*args, **kwargs)
+#     return func_wrapper
