@@ -31,8 +31,14 @@ ALL_STRATEGIES = {
         implementation_class_name='AnnSimpleStrategy',
         description='Buy if ANN predict price will grow  and sell if it predicts that price goes down',
         generated='manual'
-    )
-
+    ),
+    'vbi_combined' : SignalRefType(
+        name='VBI Combined',
+        implementation_module_name='apps.strategy.models.volume_based_strategies',
+        implementation_class_name='VolumeBasedStrategy',
+        description='Buy if VBI indicator predicts price growth and sell if RSI sell signal of strength 3 is emitted.',
+        generated='manual'
+    ),
 }
 
 

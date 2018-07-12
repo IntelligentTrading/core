@@ -304,7 +304,7 @@ def get_all_signals_names_now(**kwargs):
     '''
 
     # lookup for signals names in ALL_SIGNALS
-    signals_set = set()
+    signals_set = {}
     for signal in signals_queryset:
 
         # convert a query set to unique name of the signal
@@ -312,9 +312,13 @@ def get_all_signals_names_now(**kwargs):
 
         # if it exists, add it to returning set
         if unique_name:
-            signals_set.update([unique_name])
+            signals_set[unique_name] = signal['id']  # temporary fix, this returns a dict instead of a set
+                                                     # so we can send signal ids to Francesco
+                                                     # TODO @Alex please review and fix if needed
 
     return signals_set
+
+
 
 def get_prevous_signal_name(**kwargs):
     pass

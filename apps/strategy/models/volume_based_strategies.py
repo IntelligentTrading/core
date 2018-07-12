@@ -4,7 +4,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 ################ Pattern for other strategies  #################
-class BenVolumeBasedStrategy(AbstractStrategy):
+class VolumeBasedStrategy(AbstractStrategy):
     '''
     select a subset of already generated signals from the Signal class
     that subset shall represent a given strategy, for example for RsiSimple  as follows:
@@ -16,4 +16,4 @@ class BenVolumeBasedStrategy(AbstractStrategy):
     strategy_signals_set = set(['rsi_sell_3', 'vbi_buy'])
 
     def __str__(self):
-        return "BenVolumeBasedStrategy"
+        return "VolumeBasedStrategy"

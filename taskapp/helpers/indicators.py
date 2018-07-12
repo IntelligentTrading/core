@@ -23,7 +23,7 @@ from settings import SHORT, MEDIUM, LONG, HORIZONS_TIME2NAMES, RUN_ANN, MODIFY_D
 
 from taskapp.helpers.common import get_currency_pairs, quad_formatted
 #from taskapp.helpers.backtesting import _backtest_all_strategies
-
+import datetime
 
 
 logger = logging.getLogger(__name__)
@@ -87,6 +87,7 @@ def _compute_indicators_for(source, transaction_currency, counter_currency, resa
     horizon = get_horizon_value_from_string(display_string=HORIZONS_TIME2NAMES[resample_period])
 
     timestamp = time.time() // (1 * 60) * (1 * 60)   # current time rounded to a minute
+
 
     # create a dictionary of parameters to improve readability
     indicator_params_dict = {
@@ -185,6 +186,7 @@ def _compute_indicators_for(source, transaction_currency, counter_currency, resa
         try:
             s = strategy(**indicator_params_dict)
             now_signals_set = s.check_signals_now()
+
             if now_signals_set:
                 logger.debug("  NOW: found Signal belongs to strategy : " + str(strategy) + " : " + str(now_signals_set))
 
@@ -194,8 +196,10 @@ def _compute_indicators_for(source, transaction_currency, counter_currency, resa
                     **indicator_params_dict,
                     "horizon"  : horizon,
                     "strategy" : str(s),
-                    "signal_name" : str(now_signals_set)
+                    "signal_name" : now_signals_set # str(now_signals_set)
+                                                    # TODO @Alex check and fix if needed
                 }
+                dict_to_emit['timestamp'] = datetime.datetime.utcfromtimestamp(dict_to_emit['timestamp']).strftime('%Y-%m-%d %H:%M:%S')
                 send_sqs(dict_to_emit)
             else:
                 logger.debug("   ... No STRATEGY signals has been found NOW.")
