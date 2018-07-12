@@ -46,7 +46,7 @@ def unknown(bot, update):
         Or just type: `/itf BTC` to check info about Bitcoin.
         """).format(update.message.from_user.first_name), parse_mode=ParseMode.MARKDOWN)
 
-@restore_db_connection
+#@restore_db_connection
 def start(bot, update):
     save_history(update)
     update.message.reply_text("Welcome {}. I'm ITF info bot.".format(update.message.from_user.first_name))
