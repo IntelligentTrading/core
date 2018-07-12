@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import logging
 import math
 import re
@@ -9,29 +10,19 @@ from telegram import ParseMode
 
 from cache_memoize import cache_memoize
 
-from apps.indicator.models import Price
+from apps.indicator.models import PriceHistory
 from apps.info_bot.models import InfoBotHistory
 
 from settings import COUNTER_CURRENCY_CHOICES, COUNTER_CURRENCIES, LOCAL
-
-#from apps.info_bot.telegram.bot_commands.itf import currency_info
 
 
 
 logger = logging.getLogger(__name__)
 
-# POPULAR_COINS = ('BTC', 'DASH', 'ETH', 'LTC', 'XMR', 'XRP', 'ZEC')
-#
-# def precache_currency_info_for_info_bot():
-#     for currency in POPULAR_COINS:
-#         logger.info('Precaching: {} for telegram info_bot'.format(currency))
-#         currency_info(currency, _refresh=True) # "heat the cache up" right after we've cleared it
-
 
 def parse_trading_pair_string(trading_pair_string):
     """ Convert strings like BTC/USDT, BTC_ETH, OMG/USDT, XRP
         to the {'transaction_currency': 'BTC', 'counter_currency': 'USDT'}
-
     """
     transaction_currency, counter_currency = None, None
 
@@ -53,11 +44,12 @@ def get_currency_pairs(source='all', period_in_seconds=5*60*60, counter_currency
     Return: [('BTC', 'USDT'), ('PINK', 'ETH'), ('ETH', 'BTC'),....] for counter_currency_format="text"
     or [('BTC', 2), ('PINK', 1), ('ETH', 0),....]
     """
-    get_from_time = time.time() - period_in_seconds
+    get_from_time = datetime.now() - timedelta(seconds=period_in_seconds)
+
     if source == 'all':
-        price_objects = Price.objects.values('transaction_currency', 'counter_currency').filter(timestamp__gte=get_from_time).distinct()
+        price_objects = PriceHistory.objects.values('transaction_currency', 'counter_currency').filter(timestamp__gte=get_from_time).distinct()
     else:
-        price_objects = Price.objects.values('transaction_currency', 'counter_currency').filter(source=source).filter(timestamp__gte=get_from_time).distinct()
+        price_objects = PriceHistory.objects.values('transaction_currency', 'counter_currency').filter(source=source).filter(timestamp__gte=get_from_time).distinct()
     if counter_currency_format == "index":
         currency_pairs = [(item['transaction_currency'], item['counter_currency']) for item in price_objects]
     else:
@@ -117,7 +109,7 @@ def parse_telegram_cryptocurrency_args(args, update, command):
         update.message.reply_text(f"Please add coin abbreviation or trading pair to command. For example: `/{command} BTC` or `/{command} ETH_USDT`", ParseMode.MARKDOWN)
         return None
 
-    period_in_seconds = 2*60*60 if not LOCAL else 2000*60*60 # we search trading_pairs for this period back in time
+    period_in_seconds = 2*60*60 if not LOCAL else 2000*60*60 # we search trading_pairs for this period back in time, more history for LOCAL env
 
     trading_pairs_available = get_currency_pairs(source='all', period_in_seconds=period_in_seconds, counter_currency_format="text")
     trading_pair = parse_trading_pair_string(arg)
@@ -131,7 +123,6 @@ def parse_telegram_cryptocurrency_args(args, update, command):
         trading_pair['counter_currency'] = default_counter_currency_for(trading_pair['transaction_currency'], trading_pairs_available)
         if trading_pair['counter_currency'] is None:
             coins = set(coin for coin, _ in trading_pairs_available)
-            #update.message.reply_text(f"Sorry, I don't support `{trading_pair['transaction_currency']}`\n\nPlease use one of these coins:\n\n{', '.join(coins)}.\n\nOr just enter `/{command} BTC` or `/{command} ETH_USDT`", ParseMode.MARKDOWN)
             update.message.reply_text(f"Sorry, I can't find `{trading_pair['transaction_currency']}`. Try `BTC`, `ETH`, `XRP`, `BCH` or other `{len(coins)}` coins we support.", ParseMode.MARKDOWN)
             return None
         else:
