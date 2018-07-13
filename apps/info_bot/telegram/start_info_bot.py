@@ -25,11 +25,6 @@ logging.getLogger("bmemcached.protocol").setLevel(logging.INFO)
 
 def start_info_bot():
     """ For Telegram BotFather:
-List of commands:
-
-command1 - Description
-command2 - Another description
-
 itf - Info about coin or trading pair. For example: `/itf BTC` or `/itf XRP_ETH`.
 i - Latest info about price and volume. For example: `/i BTC`.
 ta - Latest TA signals. For example: `/ta BTC`.
@@ -37,11 +32,8 @@ s - Latest crowd sentiment. For example: `/s BTC`.
 price - Show price for trading pair on different exchanges. For example: `/price BTC_USDT`.
 info - List of supported coins, trading pairs and exchanges.
 help - List of available commands.
-
-    About:
-    Description:
-    Botpic:
     """
+
     updater = Updater(token=INFO_BOT_TELEGRAM_BOT_API_TOKEN)
 
     # Dispatcher to register handlers
