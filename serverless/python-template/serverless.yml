@@ -78,6 +78,10 @@ functions:
 
   check_strategy_ABC:
     handler: TradingStrategy123.check_strategy_ABC
+
+  check_strategy_gp:
+    handler: GeneticStrategy.check_strategy_gp
+
   # events:
   #   - sns: <ADD HERE>
 
