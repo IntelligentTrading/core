@@ -7,10 +7,16 @@ from datetime import datetime
 from SNSEventHandler import AbstractSNSEventHandler, ContextException
 (BUY, SELL, IGNORE) = (1,-1,0)
 
-API_URL = "https://itt-core-stage.herokuapp.com/api"
+# API_URL = "https://itt-core-stage.herokuapp.com/api"
+# API_ENDPOINTS = {
+#     "SMA": "/v2/sma/",
+#     "RSI": "/v2/rsi/",
+# }
+
+API_URL = "https://dfpatoqdyk.execute-api.us-east-2.amazonaws.com/dev"
 API_ENDPOINTS = {
-    "SMA": "/v2/sma/",
-    "RSI": "/v2/rsi/",
+    "SMA": "/mock_rsi",
+    "RSI": "/mock_rsi",
 }
 
 class StrategyException(Exception):
@@ -57,7 +63,7 @@ class AbstractStrategyHandler(AbstractSNSEventHandler):
             raise StrategyException("non-standard signal! use one of these" +
                                     "BUY, SELL, IGNORE = 1,-1,0")
         else:
-            self.emit_sns_message(self.results)
+            self.emit_sns_message(self.results["signal"])
 
 
     def save(self):

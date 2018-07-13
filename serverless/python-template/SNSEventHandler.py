@@ -7,6 +7,7 @@ import os
 SNS_ARN = os.environ.get('SNS_ARN', "")
 
 
+
 class ContextException(Exception):
     pass
 
@@ -63,7 +64,7 @@ class AbstractSNSEventHandler(ABC):
         except Exception as e:
             raise SNSMessageException(str(e))
 
-        sns_subscribed_arn = self.sns_context['Records'][0]['Sns']['TopicArn']
+        #sns_subscribed_arn = self.sns_context['Records'][0]['Sns']['TopicArn']
 
         if not self.sns_publish_topic.startswith("itf-sns-"):
             # use instance class name
@@ -74,10 +75,11 @@ class AbstractSNSEventHandler(ABC):
             raise ITFSNSException("SNS topic must start with 'itf-sns-'")
 
         logging.debug("using " + SNS_ARN + " as ARN base")
-        sns_publishing_arn = ":".join(SNS_ARN.split(":")[0:-1].append(self.sns_publish_topic))
+        # sns_publishing_arn = ":".join(SNS_ARN.split(":")[0:-1].append(self.sns_publish_topic))
+        sns_publishing_arn = SNS_ARN
         logging.info("using " + sns_publishing_arn + " as ARN for publishing")
 
-        logging.info("Received message from SNS ARN {}".format(sns_subscribed_arn))
+        #logging.info("Received message from SNS ARN {}".format(sns_subscribed_arn))
         logging.info("Publishing message to SNS ARN {}".format(sns_publishing_arn))
 
         sns_client = boto3.client('sns')

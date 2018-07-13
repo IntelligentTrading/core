@@ -9,7 +9,7 @@ class TradingStrategy123(AbstractStrategyHandler):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.indicators = ["RSI", "SMA",]
+        # self.indicators = ["RSI", "SMA",]  # this would shadow the indicators dict in the super class, removed
 
 
     def make_signal(self) -> int:
@@ -40,3 +40,4 @@ def check_strategy_ABC(event, context):
     except Exception as e:
         logger.warning("Exception: {}".format(e))
     return
+

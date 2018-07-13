@@ -26,5 +26,4 @@ rsa==3.4.2
 s3transfer==0.1.13
 six==1.11.0
 snowballstemmer==1.2.1
-TA-Lib==0.4.17
 yapf==0.22.0

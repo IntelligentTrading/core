@@ -21,24 +21,31 @@ provider:
   name: aws
   runtime: python3.6
   stage: dev
-  region: us-east-1
-
-  environment:
-    DYNAMODB_INDICATORS_TABLE: ${self:service}-${self:provider.stage}-indicators
-    SNS_ARN: none
-
-
-# you can add statements to the Lambda function's IAM Role here
+  region: us-east-2
   iamRoleStatements:
     - Effect: "Allow"
       Action:
-        - dynamodb:Query
-        - dynamodb:Scan
-        - dynamodb:GetItem
-        - dynamodb:PutItem
-        - dynamodb:UpdateItem
-        - dynamodb:DeleteItem
-      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_INDICATORS_TABLE}"
+        - "SNS:Publish"
+      Resource:
+        - ${self:provider.environment.SNS_ARN}
+
+  environment:
+    #DYNAMODB_INDICATORS_TABLE: ${self:service}-${self:provider.stage}-indicators
+    SNS_ARN: arn:aws:sns:us-east-2:462951922947:sns-lambda-test
+
+
+
+# you can add statements to the Lambda function's IAM Role here
+#  iamRoleStatements:
+#    - Effect: "Allow"
+#      Action:
+#        - dynamodb:Query
+#        - dynamodb:Scan
+#        - dynamodb:GetItem
+#        - dynamodb:PutItem
+#        - dynamodb:UpdateItem
+#        - dynamodb:DeleteItem
+#      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_INDICATORS_TABLE}"
 
 
 #      Action:
@@ -71,8 +78,8 @@ functions:
 
   check_strategy_ABC:
     handler: TradingStrategy123.check_strategy_ABC
-    events:
-      - sns: arn:aws:sns:us-east-1:983584755688:itt-sns-data-core-stage
+  # events:
+  #   - sns: <ADD HERE>
 
   # hello:
   #   handler: handler.hello
@@ -134,21 +141,25 @@ functions:
 #       Description: "Description for the output"
 #       Value: "Some output value"
 
-resources:
-  Resources:
-    indicatorsTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:provider.environment.DYNAMODB_INDICATORS_TABLE}
-        AttributeDefinitions:
-          - AttributeName: primary_key
-            AttributeType: S
-        KeySchema:
-          - AttributeName: primary_key
-            KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+#resources:
+#  Resources:
+#    indicatorsTable:
+#      Type: AWS::DynamoDB::Table
+#      Properties:
+#        TableName: ${self:provider.environment.DYNAMODB_INDICATORS_TABLE}
+#        AttributeDefinitions:
+#          - AttributeName: primary_key
+#            AttributeType: S
+#        KeySchema:
+#          - AttributeName: primary_key
+#            KeyType: HASH
+#        ProvisionedThroughput:
+#          ReadCapacityUnits: 1
+#          WriteCapacityUnits: 1
 
 plugins:
   - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: non-linux
