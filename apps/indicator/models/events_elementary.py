@@ -2,7 +2,7 @@ import time
 import logging
 import pandas as pd
 import numpy as np
-import talib
+#import talib
 
 from django.db import models
 from apps.indicator.models.abstract_indicator import AbstractIndicator
@@ -363,8 +363,8 @@ class EventsElementary(AbstractIndicator):
                 logger.error("BEN VBI CRITICAL: NO PRICE DATA!!!")
 
             if volumes_ts is not None and len(prices_df) != 0:
-                prices_avg = talib.SMA(np.array(prices_df.close_price, dtype=float), timeperiod=PRICE_MEAN_TIME_PERIOD)
-                prices_df['mean_price'] = pd.Series(prices_avg, index=prices_df.index)
+#                prices_avg = talib.SMA(np.array(prices_df.close_price, dtype=float), timeperiod=PRICE_MEAN_TIME_PERIOD)
+#                prices_df['mean_price'] = pd.Series(prices_avg, index=prices_df.index)
 
                 volumes_df = volumes_ts.to_frame('volume')
                 if not volumes_df.index.is_unique:
@@ -379,8 +379,8 @@ class EventsElementary(AbstractIndicator):
                 volumes_reindexed_df = volumes_reindexed_df[~volumes_reindexed_df.index.duplicated()]
 
                 joined_price_and_volume_df = prices_df.join(volumes_reindexed_df, how='inner')  # to make sure timestamps match
-                volumes_avg = talib.SMA(np.array(joined_price_and_volume_df['volume'], dtype=float),
-                                        timeperiod=VOLUME_MEAN_TIME_PERIOD)
+#                volumes_avg = talib.SMA(np.array(joined_price_and_volume_df['volume'], dtype=float),
+#                                        timeperiod=VOLUME_MEAN_TIME_PERIOD)
 
                 joined_price_and_volume_df['mean_volume'] = pd.Series(volumes_avg, index=joined_price_and_volume_df.index)
 
