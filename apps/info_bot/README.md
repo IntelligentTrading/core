@@ -7,7 +7,7 @@ Start bot with:
 
 Add `infobot: python manage.py run_info_bot` to Procfile if you use heroku.
 
-Use telegram @BotFather bot to obtain telegram bot api token, set bot name, description, list of available commands and etc.
+Use telegram [@BotFather](https://telegram.me/botfather) to obtain telegram bot api token, set bot name, description, list of available commands and etc.
 
 List of commands for @BotFather:
 
@@ -26,7 +26,7 @@ help - List of available commands.
 
 ITF Info bot uses [python-telegram-bot package](https://github.com/python-telegram-bot/python-telegram-bot)
 
-### Environment variables
+### Environment variables and settings
 
 * INFO_BOT_TELEGRAM_BOT_API_TOKEN - obtain with telegram @BotFather
 * INFO_BOT_CRYPTOPANIC_API_TOKEN - for cryptopanic sentiments 
