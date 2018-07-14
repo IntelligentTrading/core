@@ -2,6 +2,7 @@ import time
 import logging
 import pandas as pd
 import numpy as np
+import talib
 
 from django.db import models
 from apps.indicator.models.abstract_indicator import AbstractIndicator
@@ -10,9 +11,10 @@ from apps.indicator.models.sma import get_n_last_sma_df
 from apps.indicator.models.rsi import Rsi
 from apps.signal.models.signal import Signal
 from apps.indicator.models.ann_future_price_classification import AnnPriceClassification, get_n_last_ann_classif_df
+from apps.indicator.models.volume import get_n_last_volumes_ts
 
 from apps.user.models.user import get_horizon_value_from_string
-from settings import HORIZONS_TIME2NAMES, EMIT_RSI, EMIT_SMA, RUN_ANN
+from settings import HORIZONS_TIME2NAMES, EMIT_RSI, EMIT_SMA, RUN_ANN, MODIFY_DB, MEDIUM, RUN_BEN
 
 
 logger = logging.getLogger(__name__)
@@ -48,8 +50,18 @@ AI_ELEMENTARY_EVENTS = [
     'ann_price_2class_simple'
 ]
 
+BEN_VOLUME_EVENTS = [
+    'vbi_price_cross_from_below',
+    'vbi_price_gt_mean_by_percent',
+    'vbi_volume_cross_from_below',
+    'vbi_volume_gt_mean_by_percent',
+    # 'price_crosses_the_mean_up',
+    # 'volume_greater_then_mean',
+    # add mode here
+]
+
 # list of all events to return by get_last_elementory_events_df
-ALL_POSSIBLE_ELEMENTARY_EVENTS = SMA_ELEMENTARY_EVENTS + ICHI_ELEMENTARY_EVENTS + AI_ELEMENTARY_EVENTS
+ALL_POSSIBLE_ELEMENTARY_EVENTS = SMA_ELEMENTARY_EVENTS + ICHI_ELEMENTARY_EVENTS + AI_ELEMENTARY_EVENTS + BEN_VOLUME_EVENTS
 
 # dictionary to convert name of sma event to one-number trend
 _col2trend = {
@@ -84,28 +96,33 @@ def _process_ai_simple(horizon, **kwargs):
     df.loc[df['class'] == 'probability_down', 'class_num'] = int(1)
     df['class_change'] = df['class_num'].diff()   # detect change of state
 
+    # class change is a difference btw previos and current cell of class (which is Up or DOWN)
+    # so in case we have  0 0 0 0 1 1 (change prediction from up to down)
+    # it will generate    0 0 0 0 1 0
     if df.iloc[-1]['class_change'] != 0:
         # emit signal
         try:
             # TODO: change to emitting two signals UP and DOWN according to how others events are generated (for ML)
-            new_instance = EventsElementary.objects.create(
+            new_instance = EventsElementary(
                 **kwargs,
                 event_name="ann_price_2class_simple",
-                event_value=int(df.iloc[-1]['class_change']),
+                event_value= -int(df.iloc[-1]['class_change']),
             )
+            if MODIFY_DB: new_instance.save()
             logger.debug("   >>> ANN event detected and saved")
 
             signal_ai = Signal(
                 **kwargs,
                 signal='ANN_Simple',
-                trend=int(df.iloc[-1]['class_change']),
+                trend= -int(df.iloc[-1]['class_change']),
+                strength_value= int(3),
                 horizon=horizon,
                 predicted_ahead_for= ann_classif_df.tail(1)['predicted_ahead_for'][0],
                 probability_same = ann_classif_df.tail(1)['probability_same'][0],
                 probability_up = df.tail(1)['probability_up'][0],
                 probability_down = df.tail(1)['probability_down'][0]
             )
-            signal_ai.save()
+            if MODIFY_DB: signal_ai.save()
             logger.debug("   >>> ANN event FIRED!")
         except Exception as e:
             logger.error(" Error saving/emitting ANN Event " + e)
@@ -114,7 +131,11 @@ def _process_ai_simple(horizon, **kwargs):
 
 
 
-def _process_rsi(horizon, **kwargs):
+def _process_rsi(horizon, **kwargs)->int:
+    '''
+    at every time point get the last fresh RSI value, check the brackets of RSI
+    and if we are less 25 or more 75 save this as an event in events and emit an RSI signal
+    '''
     rs_obj = Rsi.objects.filter(**kwargs).last()
 
     if (rs_obj is not None):
@@ -122,13 +143,15 @@ def _process_rsi(horizon, **kwargs):
         if rsi_bracket != 0:
             # save the event
             try:
-                new_instance = EventsElementary.objects.create(
+                new_instance = EventsElementary(
                     **kwargs,
                     event_name = "rsi_bracket",
                     event_value = rsi_bracket,
                     event_second_value = rs_obj.rsi,
                 )
+                if MODIFY_DB: new_instance.save()  # save if not in DEBUG mode
                 logger.debug("   >>> RSI bracket event detected and saved")
+
                 if EMIT_RSI:
                     signal_rsi = Signal(
                         **kwargs,
@@ -139,7 +162,7 @@ def _process_rsi(horizon, **kwargs):
                         strength_value=np.abs(rsi_bracket),
                         strength_max=int(3),
                     )
-                    signal_rsi.save()
+                    if MODIFY_DB: signal_rsi.save()
                     logger.debug("   >>> RSI bracket event FIRED!")
                 else:
                     logger.debug("   .. RSI emitting disabled by settings")
@@ -152,6 +175,10 @@ def _process_rsi(horizon, **kwargs):
 
 
 def _process_sma_crossovers(horizon, prices_df, **kwargs):
+    '''
+    check if at given moment of time there is an SMA crossover event
+    if so, emit a signal
+    '''
 
     # NOTE - correct df names if change sma_low!
     time_current = pd.to_datetime(time.time(), unit='s')
@@ -179,14 +206,14 @@ def _process_sma_crossovers(horizon, prices_df, **kwargs):
 
             # save all elem events
             try:
-                sma_event = EventsElementary.objects.create(
+                sma_event = EventsElementary(
                     **kwargs,
                     event_name=event_name,
                     event_value=int(1),
                 )
-                sma_event.save()
+                if MODIFY_DB: sma_event.save()
             except Exception as e:
-                logger.error(" #Error saving SMA signal ")
+                logger.error(" #Error saving SMA elementary event ")
 
             # Fire all sinals, except two which we dont need and imitting is allowed
             if EMIT_SMA & (event_name not in ['sma50_above_sma200', 'sma50_below_sma200']):
@@ -201,10 +228,56 @@ def _process_sma_crossovers(horizon, prices_df, **kwargs):
                         strength_value=np.abs(trend),  # 1,2,3
                         strength_max=int(3)
                     )
-                    signal_sma_cross.save()
+                    if MODIFY_DB: signal_sma_cross.save()
                     logger.debug("   >>> FIRED - Event " + event_name)
                 except Exception as e:
                     logger.error(" #Error firing SMA signal ")
+
+
+def _process_ben_volume_based(horizon, joined_price_and_volume, **kwargs):
+    # DESCRIPTION of indicator:
+    # if price crosses the mean by some percent AND volume is already greater than mean by some other percent)
+    # OR (volume crosses the mean by some percent AND price is already greater than mean by some other
+    # percent) we emit buy
+
+    # IDEA
+    # we here we emplement elementary events like something crosses something
+    # then in events_logical we will implement logical behaviour with OR / AND and emit signals there
+
+    BEN_PRICE_CROSS_PERCENT = 0.02 # TODO just for the time being it is here, should move later
+    BEN_VOLUME_CROSS_PERCENT = 0.02
+
+    events_df = pd.DataFrame()
+
+    events_df['vbi_price_cross_from_below'] = \
+        np.sign((1+BEN_PRICE_CROSS_PERCENT)*joined_price_and_volume.mean_price - joined_price_and_volume.close_price).diff().lt(0)
+    events_df['vbi_price_gt_mean_by_percent'] = \
+        np.sign((1+BEN_PRICE_CROSS_PERCENT)*joined_price_and_volume.mean_price - joined_price_and_volume.close_price).lt(0)
+
+    events_df['vbi_volume_cross_from_below'] = \
+        np.sign((1 + BEN_VOLUME_CROSS_PERCENT)*joined_price_and_volume.mean_volume - joined_price_and_volume.volume).diff().lt(0)
+    events_df['vbi_volume_gt_mean_by_percent'] = \
+        np.sign((1 + BEN_VOLUME_CROSS_PERCENT) * joined_price_and_volume.mean_volume - joined_price_and_volume.volume).lt(0)
+
+    # get the last events row and account for a small timestamp rounding error
+    last_event_row = events_df.iloc[-1]      # you can you events_df.tail(1) here
+    time_of_last_row = events_df.index[-1]
+
+    # for each event in last row of all recents events
+    # note: we need this loop because at one moment there might be several events (in contract to RSI)
+    for event_name, event_value in last_event_row.iteritems():
+        if event_value:    # if one of SMA events is TRUE, save and emit
+            # save all elem events
+            try:
+                ben_event = EventsElementary(
+                    **kwargs,
+                    event_name=event_name,
+                    event_value=int(1),
+                )
+                if MODIFY_DB: ben_event.save()
+            except Exception as e:
+                logger.error(" #Error saving Ben elementary event ")
+    # Now we have elementary events in events_elementary table and can get them in event_logical to combune by OR/AND
 
 
 
@@ -213,6 +286,14 @@ class EventsElementary(AbstractIndicator):
     event_name = models.CharField(max_length=32, null=False, blank=False, default="none")
     event_value = models.IntegerField(null=True)
     event_second_value = models.FloatField(null=True)
+
+
+    # INDEX
+    class Meta:
+        indexes = [
+            models.Index(fields=['transaction_currency', 'source', 'counter_currency', 'resample_period', 'event_name', 'timestamp']),
+        ]
+
 
     @staticmethod
     def check_events(cls, **kwargs):
@@ -225,6 +306,7 @@ class EventsElementary(AbstractIndicator):
             'counter_currency' : kwargs['counter_currency'],
             'resample_period' : kwargs['resample_period']
         }
+
 
         # load nessesary resampled prices from price resampled
         # we only need last_records back in time
@@ -257,6 +339,52 @@ class EventsElementary(AbstractIndicator):
 
         # todo - add return value, and say if any crossovers have happend
         _process_sma_crossovers(horizon, small_prices_df, **kwargs)
+
+        ############### check Ben Volume Based events ###############
+        logger.info("   ... Check Ben Elementary Events: ")
+
+        if RUN_BEN and kwargs['resample_period'] <= MEDIUM: # can't handle volume data for 1440
+            ben_num_records = SMA_LOW * 4 # last_records, because of faulty data we make sure to get a bit more
+            PRICE_MEAN_TIME_PERIOD = 50#SMA_LOW
+            VOLUME_MEAN_TIME_PERIOD = 50#SMA_LOW
+
+            # the safest way to make sure that we get all the price info we need
+            # TODO: reuse existing Ichimoku prices_df if it turns out that Ichimoku always gets more records than we need
+            prices_df = get_n_last_resampl_df(ben_num_records, **no_time_params)
+            volumes_ts = get_n_last_volumes_ts(ben_num_records*kwargs['resample_period'],  # TODO change number of records
+                                               kwargs['source'],
+                                               kwargs['transaction_currency'],
+                                               kwargs['counter_currency'])
+
+            if volumes_ts is None:
+                logger.error("BEN VBI CRITICAL: NO VOLUME DATA!!!")
+
+            if len(prices_df) == 0:
+                logger.error("BEN VBI CRITICAL: NO PRICE DATA!!!")
+
+            if volumes_ts is not None and len(prices_df) != 0:
+                prices_avg = talib.SMA(np.array(prices_df.close_price, dtype=float), timeperiod=PRICE_MEAN_TIME_PERIOD)
+                prices_df['mean_price'] = pd.Series(prices_avg, index=prices_df.index)
+
+                volumes_df = volumes_ts.to_frame('volume')
+                if not volumes_df.index.is_unique:
+                    logger.warning("Duplicate index values encountered in volume data, pruning...")
+                    start_len = len(volumes_df)
+                    volumes_df = volumes_df[~volumes_df.index.duplicated(keep='first')]
+                    logger.warning(" --> reduced size of volume dataframe from {} to {} because of duplicate data.".format(
+                        start_len, len(volumes_df)
+                    ))
+
+                volumes_reindexed_df = volumes_df.reindex(prices_df.index, method='nearest')  # TODO find a better way
+                volumes_reindexed_df = volumes_reindexed_df[~volumes_reindexed_df.index.duplicated()]
+
+                joined_price_and_volume_df = prices_df.join(volumes_reindexed_df, how='inner')  # to make sure timestamps match
+                volumes_avg = talib.SMA(np.array(joined_price_and_volume_df['volume'], dtype=float),
+                                        timeperiod=VOLUME_MEAN_TIME_PERIOD)
+
+                joined_price_and_volume_df['mean_volume'] = pd.Series(volumes_avg, index=joined_price_and_volume_df.index)
+
+                _process_ben_volume_based(horizon, joined_price_and_volume_df, **kwargs)
 
 
         ############## calculate and save ICHIMOKU elementary events
@@ -366,12 +494,12 @@ class EventsElementary(AbstractIndicator):
             if event_value:
                 logger.debug('   >>> Ichi elem event was FIRED : ' + str(event_name))
                 try:
-                    ichi_event = cls.objects.create(
+                    ichi_event = cls(
                         **kwargs,
                         event_name=event_name,
                         event_value=int(1),
                     )
-                    ichi_event.save()
+                    if MODIFY_DB: ichi_event.save()
                 except Exception as e:
                     logger.error(" Error saving  " + event_name + " elementary event ")
 
@@ -387,7 +515,7 @@ class EventsElementary(AbstractIndicator):
 
 
 ###################
-def get_current_elementory_events_df(timestamp, source, transaction_currency, counter_currency, resample_period):
+def get_current_elementory_events_df(timestamp, source, transaction_currency, counter_currency, resample_period)->pd.DataFrame:
     '''
     get all elementary events happened in the one timestamp
     NOTE - DB request returns several records for one timestamp!
@@ -417,7 +545,7 @@ def get_current_elementory_events_df(timestamp, source, transaction_currency, co
 
 
 # the different with the previous one is that it returns the last row in a pile even if it was entered a month ago
-def get_last_ever_entered_elementory_events_df(timestamp, source, transaction_currency, counter_currency, resample_period):
+def get_last_ever_entered_elementory_events_df(timestamp, source, transaction_currency, counter_currency, resample_period)->pd.DataFrame:
 
     # get the most recent time
     last_time = EventsElementary.objects.filter(

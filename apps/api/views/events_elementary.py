@@ -30,10 +30,12 @@ class ListEventsElementary(ListAPIView):
         enddate -- to this date (inclusive)
 
     For pagination:
+
         cursor - the pagination cursor value
         page_size -- a numeric value indicating the page size
 
     Examples:
+
         /api/v2/events-elementary/?transaction_currency=ETH&event_name=sma200_cross_price_down
         /api/v2/events-elementary/?startdate=2018-02-10T22:14:37&enddate=2018-02-10T22:27:58
     """
@@ -65,10 +67,12 @@ class ListEventElementary(ListAPIView):
         enddate -- until this date inclusive in same format
 
     For pagination
+
         cursor - the pagination cursor value
         page_size -- a numeric value indicating the page size
 
     Examples
+
         /api/v2/events-elementary/BTC
         /api/v2/events-elementary/BTC?event_name=conversion_below_base
     """

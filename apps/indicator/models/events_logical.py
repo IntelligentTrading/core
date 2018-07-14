@@ -1,5 +1,5 @@
 from django.db import models
-from settings import HORIZONS_TIME2NAMES, LONG
+from settings import HORIZONS_TIME2NAMES, LONG, MODIFY_DB
 
 from apps.indicator.models.abstract_indicator import AbstractIndicator
 from apps.signal.models.signal import Signal
@@ -44,18 +44,21 @@ class EventsLogical(AbstractIndicator):
             if all(last_events_df['kumo_breakout_up_signal']):
 
                 try:
-                    kumo_event = cls.objects.create(
+                    kumo_event_up = cls(
                         **kwargs,
                         event_name='kumo_breakout_up_signal',
                         event_value=int(1),
                     )
+                    if MODIFY_DB: kumo_event_up.save()   # do not modify DB in debug mode
+
                     signal_kumo_up = Signal(
                         **kwargs,
                         signal='kumo_breakout',
                         trend = int(1),  # positive trend means it is UP / bullish signal
+                        strength_value=int(3),
                         horizon=horizon,
                     )
-                    signal_kumo_up.save()
+                    if MODIFY_DB: signal_kumo_up.save()
                     logger.info('  >>> YOH! Kumo breakout UP has been FIRED!')
                 except Exception as e:
                     logger.error(" Error saving kumo_breakout_up_signal ")
@@ -78,18 +81,21 @@ class EventsLogical(AbstractIndicator):
             if all(last_events_df['kumo_breakout_down_signal']):
 
                 try:
-                    kumo_event = cls.objects.create(
+                    kumo_event_down = cls(
                         **kwargs,
                         event_name='kumo_breakout_down_signal',
                         event_value=int(1),
                     )
+                    if MODIFY_DB: kumo_event_down.save()
+
                     signal_kumo_down = Signal(
                         **kwargs,
                         signal='kumo_breakout',
                         trend=int(-1),  # negative is bearish
+                        strength_value=int(3),
                         horizon=horizon,
                     )
-                    signal_kumo_down.save()
+                    if MODIFY_DB: signal_kumo_down.save()
                     logger.info('   >>> YOH! Kumo breakout DOWN has been FIRED!')
                 except Exception as e:
                     logger.error(" Error saving kumo_breakout_down_signal ")
@@ -103,7 +109,7 @@ class EventsLogical(AbstractIndicator):
                     logger.debug('    ... event: ' + name + ' = ' + str(values[0]) )
 
 
-            ########## check for ITT Cummulative RSI Signal
+            ############# check for ITT Cummulative RSI Signal
             logger.debug("   ... Check RSI Cumulative Event ")
 
             # get events for long time period (not for current)
@@ -141,23 +147,25 @@ class EventsLogical(AbstractIndicator):
                 if all(last_events_df['RSI_Cumulative_bullish']):
                     logger.info('    YOH! RSI_Cumulative_bullish has been DETECTED!')
                     try:
-                        rsi_cum = cls.objects.create(
+                        rsi_cum_up = cls(
                             **kwargs,
                             event_name='RSI_Cumulative_bullish',
                             event_value= rs_obj.rsi
                             #np.sign(last_events_df['rsi_bracket'].tail(1).values[0]),
                         )
+                        if MODIFY_DB: rsi_cum_up.save()
 
-                        signal_rsi_cum = Signal(
+                        signal_rsi_cum_up = Signal(
                             **kwargs,
                             signal='RSI_Cumulative',
                             rsi_value=rs_obj.rsi,
                             trend=np.sign(last_events_df['rsi_bracket'].tail(1).values[0]),
+                            #strength_value=int(3),
                             horizon=horizon,
                             strength_value=np.abs(last_events_df['rsi_bracket'].tail(1).values[0]),
                             strength_max=int(3),
                         )
-                        signal_rsi_cum.save()
+                        if MODIFY_DB: signal_rsi_cum_up.save()
                         logger.info('    RSI_Cumulative_bullish has been Saved!')
                     except Exception as e:
                         logger.error(" Error saving RSI_Cumulative_bullish signal ")
@@ -167,23 +175,25 @@ class EventsLogical(AbstractIndicator):
                 if all(last_events_df['RSI_Cumulative_bearish']):
                     logger.info('    YOH! RSI_Cumulative_bearish has been DETECTED!')
                     try:
-                        rsi_cum = cls.objects.create(
+                        rsi_cum_down = cls(
                             **kwargs,
                             event_name='RSI_Cumulative_bearish',
                             event_value= rs_obj.rsi
                             #np.sign(last_events_df['rsi_bracket'].tail(1).values[0]),
                         )
+                        if MODIFY_DB: rsi_cum_down.save()
 
-                        signal_rsi_cum = Signal(
+                        signal_rsi_cum_down = Signal(
                             **kwargs,
                             signal='RSI_Cumulative',
                             rsi_value=rs_obj.rsi,
                             trend=np.sign(last_events_df['rsi_bracket'].tail(1).values[0]),
+                            #strength_value=int(3),
                             horizon=horizon,
                             strength_value=np.abs(last_events_df['rsi_bracket'].tail(1).values[0]),
                             strength_max=int(3),
                         )
-                        signal_rsi_cum.save()
+                        if MODIFY_DB: signal_rsi_cum_down.save()
                         logger.info('    RSI_Cumulative_bearish has been Saved!')
                     except Exception as e:
                         logger.error(" Error saving RSI_Cumulative_bearish signal ")
@@ -191,6 +201,53 @@ class EventsLogical(AbstractIndicator):
 
             else:
                 logger.debug("   .. no long term data yet ... so, no RSI Cumulative.")
+
+
+            ####################### Ben Events #####################
+            logger.debug("   ... Check Ben Event ")
+
+            last_events_df['ben_volume_based_buy'] = np.where(
+                ((last_events_df.vbi_price_gt_mean_by_percent &
+                  last_events_df.vbi_volume_cross_from_below) |
+                 (last_events_df.vbi_volume_gt_mean_by_percent &
+                  last_events_df.vbi_price_cross_from_below)
+                 ) == True,
+                1, 0)
+
+
+            #last_events_df['ben_volume_based_buy'] = np.where(
+            #    (last_events_df.close_cloud_breakout_down_ext &
+            #     last_events_df.lagging_below_cloud &
+            #     last_events_df.lagging_below_cloud &
+            #     last_events_df.conversion_below_base
+            #     ) == True,
+            #    1, 0)
+
+            # save logical event and emit signal
+            if all(last_events_df['ben_volume_based_buy']):
+
+                try:
+                    ben_buy = cls(
+                        **kwargs,
+                        event_name='ben_volume_based_buy',
+                        event_value=int(1),
+                    )
+                    if MODIFY_DB: ben_buy.save()
+
+                    signal_ben_buy = Signal(
+                        **kwargs,
+                        signal='VBI',
+                        trend=int(1),
+                        strength_value=int(3),
+                        horizon=horizon,
+                    )
+                    if MODIFY_DB: signal_ben_buy.save()
+                    logger.info('   >>> Ben UP signal has been FIRED!')
+                except Exception as e:
+                    logger.error(" Error saving Ben UP signal ")
+
+            else:
+                logger.debug("   .. No ben Up  events.")
 
         else:
             logger.debug("   ... No elementary events found at all, skip processing !")

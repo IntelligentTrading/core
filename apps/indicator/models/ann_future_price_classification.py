@@ -15,6 +15,7 @@ from apps.indicator.models.abstract_indicator import AbstractIndicator
 from apps.ai.models.nn_model import AnnModel
 from apps.indicator.models.price import get_n_last_prices_ts
 from apps.indicator.models.volume import get_n_last_volumes_ts
+from settings import MODIFY_DB
 
 import logging
 logger = logging.getLogger(__name__)
@@ -52,7 +53,8 @@ class AnnPriceClassification(AbstractIndicator):
 
         # create a record if we have predicted values
         if trend_predicted is not None:
-            new_instance = cls.objects.create(
+
+            new_instance = cls(  #cls.objects.create(
                 **kwargs,
                 ann_model=ann_model,
                 predicted_ahead_for = ann_model.predicted_win_size * ann_model.period,  # in mins, can remove we also have it in ann model
@@ -60,7 +62,7 @@ class AnnPriceClassification(AbstractIndicator):
                 probability_up = trend_predicted[1],
                 probability_down = trend_predicted[2]
             )
-            new_instance.save()
+            if MODIFY_DB: new_instance.save()
             logger.info("   ...LSTM prediction has been calculated and saved.")
         else:
             logger.info(" ... No predicted probabilities have been returned")
@@ -139,7 +141,7 @@ def _compute_lstm_classification(ann_model, **kwargs):
 
 
 
-def get_n_last_ann_classif_df(n, **kwargs):
+def get_n_last_ann_classif_df(n, **kwargs)->pd.DataFrame:
 
     last_records = list(AnnPriceClassification.objects.filter(
         source=kwargs['source'],

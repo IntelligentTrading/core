@@ -1,33 +1,28 @@
+from datetime import datetime, timedelta
 import logging
 import math
 import re
 import time
 
+from django import db
+
 from telegram import ParseMode
 
 from cache_memoize import cache_memoize
 
-from apps.indicator.models import Price, Volume
-from settings import COUNTER_CURRENCY_CHOICES, COUNTER_CURRENCIES, LOCAL
+from apps.indicator.models import PriceHistory
+from apps.info_bot.models import InfoBotHistory
 
-#from apps.info_bot.telegram.bot_commands.itt import currency_info
+from settings import COUNTER_CURRENCY_CHOICES, COUNTER_CURRENCIES, LOCAL
 
 
 
 logger = logging.getLogger(__name__)
 
-POPULAR_COINS = ('BTC', 'DASH', 'ETH', 'LTC', 'XMR', 'XRP', 'ZEC')
-
-# def precache_currency_info_for_info_bot():
-#     for currency in POPULAR_COINS:
-#         logger.info('Precaching: {} for telegram info_bot'.format(currency))
-#         currency_info(currency, _refresh=True) # "heat the cache up" right after we've cleared it
-
 
 def parse_trading_pair_string(trading_pair_string):
     """ Convert strings like BTC/USDT, BTC_ETH, OMG/USDT, XRP
         to the {'transaction_currency': 'BTC', 'counter_currency': 'USDT'}
-
     """
     transaction_currency, counter_currency = None, None
 
@@ -42,26 +37,24 @@ def parse_trading_pair_string(trading_pair_string):
     return {'transaction_currency': transaction_currency, 'counter_currency': counter_currency}
 
 # FIXME this function is dublicate for taskapp.helpers get_currency_pairs. Combine them in the future
-# Cache for 4 hours.
-@cache_memoize(4*60*60)
-def get_currency_pairs(source='all', period_in_seconds=2*60*60, counter_currency_format="text"):
+# Cache for 6 hours.
+@cache_memoize(6*60*60)
+def get_currency_pairs(source='all', period_in_seconds=5*60*60, counter_currency_format="text"):
     """
     Return: [('BTC', 'USDT'), ('PINK', 'ETH'), ('ETH', 'BTC'),....] for counter_currency_format="text"
     or [('BTC', 2), ('PINK', 1), ('ETH', 0),....]
     """
-    get_from_time = time.time() - period_in_seconds
+    get_from_time = datetime.now() - timedelta(seconds=period_in_seconds)
+
     if source == 'all':
-        price_objects = Price.objects.values('transaction_currency', 'counter_currency').filter(timestamp__gte=get_from_time).distinct()
+        price_objects = PriceHistory.objects.values('transaction_currency', 'counter_currency').filter(timestamp__gte=get_from_time).distinct()
     else:
-        price_objects = Price.objects.values('transaction_currency', 'counter_currency').filter(source=source).filter(timestamp__gte=get_from_time).distinct()
+        price_objects = PriceHistory.objects.values('transaction_currency', 'counter_currency').filter(source=source).filter(timestamp__gte=get_from_time).distinct()
     if counter_currency_format == "index":
         currency_pairs = [(item['transaction_currency'], item['counter_currency']) for item in price_objects]
     else:
         currency_pairs = [(item['transaction_currency'], counter_currency_name(item['counter_currency'])) for item in price_objects]
     return currency_pairs
-
-# def get_coins(currency_pairs):
-#     tuple(coin for coin, _ in all)
 
 def counter_currency_name(counter_currency_index):
     "return BTC for counter_currency_index=0"
@@ -92,7 +85,7 @@ def format_timestamp(timestamp):
 
 def format_currency(amount, currency_symbol='', in_satoshi=True):
     if amount == 0:
-        return currency_symbol + '0.00'
+        return f"0.00 {currency_symbol}"
 
     if in_satoshi: # convert from satoshis
         amount = float(amount * float(10**-8))
@@ -105,17 +98,18 @@ def format_currency(amount, currency_symbol='', in_satoshi=True):
     else: # 0.123400000 -> 0.1234
         currency_norm = "{:.6f}".format(amount).rstrip('0').rstrip('.')
 
-    return currency_symbol + currency_norm
+    return f"{currency_norm} {currency_symbol}"
 
 
 def parse_telegram_cryptocurrency_args(args, update, command):
     try:
-        arg = args[0].upper()
+        arg = f"{args[0]}_{args[1]}" if len(args) > 1 else args[0]
+        arg = arg.upper()
     except:
         update.message.reply_text(f"Please add coin abbreviation or trading pair to command. For example: `/{command} BTC` or `/{command} ETH_USDT`", ParseMode.MARKDOWN)
         return None
 
-    period_in_seconds = 2*60*60 if not LOCAL else 2000*60*60 # we search trading_pairs for this period back in time
+    period_in_seconds = 2*60*60 if not LOCAL else 2000*60*60 # we search trading_pairs for this period back in time, more history for LOCAL env
 
     trading_pairs_available = get_currency_pairs(source='all', period_in_seconds=period_in_seconds, counter_currency_format="text")
     trading_pair = parse_trading_pair_string(arg)
@@ -129,18 +123,55 @@ def parse_telegram_cryptocurrency_args(args, update, command):
         trading_pair['counter_currency'] = default_counter_currency_for(trading_pair['transaction_currency'], trading_pairs_available)
         if trading_pair['counter_currency'] is None:
             coins = set(coin for coin, _ in trading_pairs_available)
-            update.message.reply_text(f"Sorry, I don't support `{trading_pair['transaction_currency']}`\n\nPlease use one of this coins:\n\n{', '.join(coins)}.\n\nOr just enter `/{command} BTC` or `/{command} ETH_USDT`", ParseMode.MARKDOWN)
+            update.message.reply_text(f"Sorry, I can't find `{trading_pair['transaction_currency']}`. Try `BTC`, `ETH`, `XRP`, `BCH` or other `{len(coins)}` coins we support.", ParseMode.MARKDOWN)
             return None
         else:
             return trading_pair
     # wrong counter currency
     elif (trading_pair['transaction_currency'], trading_pair['counter_currency']) not in trading_pairs_available:
-        good_trading_pairs = "` or `".join([f"{tc}_{cc}" for (tc, cc) in trading_pairs_for(trading_pair['transaction_currency'], trading_pairs_available)])
+        good_trading_pairs = []
+        # try flip pair
+        if (trading_pair['counter_currency'], trading_pair['transaction_currency']) in trading_pairs_available:
+            good_trading_pairs.append(f"{trading_pair['counter_currency']}_{trading_pair['transaction_currency']}")
+
+        for (tc, cc) in trading_pairs_for(trading_pair['transaction_currency'], trading_pairs_available):
+            good_trading_pairs.append(f"{tc}_{cc}")
+
+        # check other pairs for this transaction_currency
+        good_trading_pairs_text = "` or `".join(good_trading_pairs)
         view = f"Sorry, I don't support this trading pair `{trading_pair['transaction_currency']}_{trading_pair['counter_currency']}`\n\n"
         if good_trading_pairs:
-            view += f"Please use: `{good_trading_pairs}`"
+            view += f"Please try a different pair. For example: `{good_trading_pairs_text}`"
         update.message.reply_text(view, ParseMode.MARKDOWN)
         return None
     # all good and well
     else:
         return trading_pair
+
+# Helpers
+def save_history(update):
+    try:
+        InfoBotHistory.objects.create(
+            update_id=update.update_id,
+            group_chat_id=update.message.chat.id,
+            chat_title=update.message.chat.title or "",
+            user_chat_id=update.message.from_user.id,
+            username=update.message.from_user.username,
+            bot_command_text=update.message.text,
+            language_code=update.message.from_user.language_code,
+            datetime=update.message.date,
+        )
+        logger.debug(f">>> InfoBot history saved, update_id:{update.update_id}, chat_id:{update.message.chat.id}, user_id: {update.message.from_user.id}")
+    except Exception as e:
+        logging.error(f">>>Error saving history:\n{update}<<<\n{e}")
+
+
+# FIXME Disabled after switching to Postgres. Enable it back if after long inactivity sql server drop connection (like Mysql did).
+
+# def restore_db_connection(func):
+#     "Mysql drop persistent connection after 28800 secs (8h) of idling"
+
+#     def func_wrapper(*args, **kwargs):
+#         db.close_old_connections()
+#         return func(*args, **kwargs)
+#     return func_wrapper

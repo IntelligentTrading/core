@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   {% spaceless %}
     <title>
-      {% block tab_title %}Service{% endblock tab_title %} | ITT
+      {% block tab_title %}Service{% endblock tab_title %} | ITF
     </title>
   {% endspaceless %}
 
@@ -42,33 +42,34 @@
 
   {% endif %}
 
-  <link href="{{ STATIC_URL }}vendor/bootstrap-theme/dist/toolkit-light.min.css" rel="stylesheet">
-  <link href="{{ STATIC_URL }}css/base.css?v=1" rel="stylesheet">
+  <link href="{{ STATIC_URL }}vendor/bootstrap-theme/compiled/toolkit-inverse.min.css" rel="stylesheet">
+  <link href="{{ STATIC_URL }}css/base.css?v=2" rel="stylesheet">
   {% block css %}
   {% endblock css %}
 </head>
 
 <body>
 
-  <div class="container-fluid-spacious mb-5">
+  <div class="container-fluid mb-5">
     <div class="row">
 
-      <div class="col-md-3 sidebar">
-        {% block navigation %}
-          {% include 'navigation.html' %}
-        {% endblock navigation %}
-      </div>
+{#      <div class="col-md-3 sidebar">#}
+{#        {% block navigation %}#}
+{#          {% include 'navigation.html' %}#}
+{#        {% endblock navigation %}#}
+{#      </div>#}
 
-      <div class="col-md-9 content" style="padding-top: 2.1rem;">
+      <div class="col-md-12 content" style="padding-top: 2.1rem;">
 
         {% block messages %}
           {% include 'messages.html' %}
         {% endblock messages %}
 
         <div class="dashhead">
+
           <div class="dashhead-titles">
             <h6 class="dashhead-subtitle">
-              {% block content_subtitle %}&nbsp;{% endblock %}
+              {% block content_subtitle %}Intelligent Trading Foundation{% endblock %}
             </h6>
             <h3 class="dashhead-title">
               {% block content_title %}&nbsp;{% endblock %}
@@ -86,14 +87,14 @@
         <hr class="visible-xs mt-3">
 
         {% block content %}
-          <p>Welcome to ITT</p>
+          <p>Hello ITF World</p>
         {% endblock content %}
 
       </div>
     </div>
   </div>
 
-  <nav class="navbar fixed-bottom navbar-light bg-faded">
+  <nav class="navbar fixed-bottom navbar bg-faded">
     {% block footer %}
       {% include 'footer.html' %}
     {% endblock footer %}

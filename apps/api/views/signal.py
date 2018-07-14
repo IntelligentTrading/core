@@ -20,6 +20,7 @@ class ListSignals(ListAPIView):
     For filtering
 
         transaction_currency -- string BTC, ETH etc
+        transaction_currencies -- string with symbols divided by +, like: ETH+XRP+OMG
         signal -- string SMA, RSI
         trend -- 1, -1
         counter_currency -- number 0=BTC, 1=ETH, 2=USDT, 3=XMR
@@ -32,10 +33,12 @@ class ListSignals(ListAPIView):
 
 
     For pagination
+
         cursor -- indicator that the client may use to page through the result set
         page_size -- a numeric value indicating the page size
 
     Examples
+
         /api/v2/signals/?transaction_currency=ETH&signal=RSI
         /api/v2/signals/?startdate=2018-02-10T22:14:37&enddate=2018-02-10T22:27:58
     """
@@ -49,6 +52,10 @@ class ListSignals(ListAPIView):
 
     def get_queryset(self):
         queryset = filter_queryset_by_timestamp(self)
+        transaction_currencies = self.request.query_params.get('transaction_currencies', None)
+        if transaction_currencies:
+            transaction_currencies_list = [x.strip() for x in transaction_currencies.split(' ')]
+            queryset = queryset.filter(transaction_currency__in=transaction_currencies_list)
         return queryset
 
 
@@ -72,10 +79,12 @@ class ListSignal(ListAPIView):
 
 
     For pagination
+
         cursor - indicator that the client may use to page through the result set
         page_size -- a numeric value indicating the page size
 
     Examples
+
         /api/v2/signals/ETH
         /api/v2/signals/ETH?signal=RSI
     """

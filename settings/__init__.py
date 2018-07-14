@@ -78,6 +78,7 @@ ALLOWED_HOSTS = [
     '.in7el.trade',
     '.herokuapp.com',
     'localhost',
+    '127.0.0.1',
 ]
 
 # APPLICATION DEFINITION
@@ -92,6 +93,9 @@ INSTALLED_APPS = [
     'apps.api',
     'apps.info_bot',
     'taskapp',
+    'apps.backtesting',
+    'apps.strategy',
+    'apps.dashboard',
 
     # DJANGO APPS
     'django.contrib.admin',
@@ -105,15 +109,15 @@ INSTALLED_APPS = [
     'django_filters',
 
     # PLUGINS
+    'corsheaders',
     'rest_framework',
     'rest_framework_swagger',
-
 ]
 
 MIDDLEWARE = [
     'django.middleware.cache.UpdateCacheMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.cache.FetchFromCacheMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware', # for static files
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -221,6 +225,9 @@ BTC_COINS = [
     "NXC", "BELA", "XPM", "XVC", "XBC", "RADS", "SBD", "PINK", "NMC", "HUC", "BTM"
 ]
 
+# No signals for this coins
+BLACKLISTED_COINS = ['ITT', ]
+
 # list of the exchanges on which we generate signals. Make it in sync with same list in Data app settings
 #EXCHANGE_MARKETS = ('poloniex', 'binance', 'bittrex', 'bitfinex', 'kucoin')
 EXCHANGE_MARKETS = ('poloniex', 'binance', 'bittrex')
@@ -237,9 +244,11 @@ SOURCE_CHOICES = (
     (HITBTC, 'hitbtc'),
 )
 
+
 # list of supported counter currencies
 COUNTER_CURRENCIES = ('BTC', 'ETH', 'USDT')
 # Please only add new counter currencies to this settings, never remove or modify
+
 (BTC, ETH, USDT, XMR) = list(range(4))
 COUNTER_CURRENCY_CHOICES = (
     (BTC, 'BTC'),
@@ -269,7 +278,9 @@ REST_API_SECRET_KEY = os.environ.get('REST_API_SECRET_KEY', "123ABC")
 time_speed = 1  # set to 1 for production, 10 for fast debugging
 EMIT_SMA = True
 EMIT_RSI = True
-RUN_ANN = False
+RUN_ANN = True
+RUN_BEN = True
+MODIFY_DB = True
 
 EMIT_SIGNALS = os.environ.get("EMIT_SIGNALS", "true").lower() == "true" # emit if no variable set or when it set to 'true', env variables are strings
 

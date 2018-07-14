@@ -1,13 +1,10 @@
-import logging
-from unittest.mock import MagicMock
-
 from django.test import TestCase
 
 #from apps.api import helpers
-from apps.info_bot.helpers import parse_trading_pair_string, counter_currency_name, get_currency_pairs
+from apps.info_bot.helpers import parse_trading_pair_string, counter_currency_name
 from apps.info_bot.helpers import default_counter_currency_for, trading_pairs_for
 
-from settings import USDT_COINS, USDT, BTC, COUNTER_CURRENCIES
+from settings import USDT, BTC, COUNTER_CURRENCIES
 
 # logging.getLogger("ccxt").setLevel(logging.INFO)
 # logging.getLogger("urllib3").setLevel(logging.INFO)
@@ -27,7 +24,6 @@ class TestTelegramBotHelpers(TestCase):
         # others: OMG -> OMG, BTC
         # ETH_USDT -> ETH, USDT
         bad_format = {'counter_currency': None, 'transaction_currency': None}
-        binance_coins = self.binance_coins
         for coin in ("OMG", "ETH_BTC", "BTC/USDT", "XRP ETH"):
             self.assertNotEqual(parse_trading_pair_string(coin), bad_format)
 
@@ -50,31 +46,3 @@ class TestTelegramBotHelpers(TestCase):
         self.assertEqual([('ETH', 'BTC'), ('ETH', 'USDT')], trading_pairs_for('ETH', self.trading_pairs_available))
         self.assertEqual([('BTC', 'USDT')], trading_pairs_for('BTC', self.trading_pairs_available))
         self.assertEqual([('OMG', 'USDT'), ('OMG', 'BTC'), ('OMG', 'ETH')], trading_pairs_for('OMG', self.trading_pairs_available))
-
-# import settings
-# from settings import BINANCE, USDT_COINS
-# from taskapp.helpers import get_currency_pairs
-
-# from apps.indicator.models import Price, Volume
-
-# class CoreInfo():
-#     def __init__(self, source = BINANCE):
-#         self.source = source
-
-#     def usdt_coins(self):
-#         return USDT_COINS
-
-#     def trading_pairs(self):
-#         # for testing only
-#         return [('KNC', 0), ('SALT', 1), ('ICN', 1), ('ADX', 0), ('GXS', 0), ('CHAT', 0), ('VIA', 1), ('YOYOW', 0), ('ARK', 0), ('HSR', 1), ('GRS', 0), ('NULS', 1), ('AE', 0), ('RDN', 1), ('BRD', 0), ('STORJ', 1), ('TNB', 0), ('VIBE', 1), ('GAS', 0), ('EVX', 1), ('DNT', 0), ('RLC', 1), ('TNT', 0), ('MDA', 1), ('ELF', 1), ('ICX', 1), ('IOTA', 1), ('GRS', 1), ('QSP', 1), ('AMB', 0), ('REQ', 1), ('BCPT', 0), ('BCH', 1), ('SALT', 0), ('XZC', 0), ('VEN', 0), ('EDO', 0), ('ZRX', 0), ('RCN', 0), ('MTH', 0), ('SNGLS', 1), ('TNB', 1), ('ICX', 0), ('LEND', 0), ('SNM', 0), ('OST', 1), ('BCD', 0), ('WINGS', 1), ('WAVES', 0), ('LTC', 1), ('ENJ', 1), ('BCPT', 1), ('GVT', 0), ('VEN', 1), ('XRB', 0), ('SYS', 1), ('MTL', 1), ('QLC', 1), ('CMT', 1), ('OAX', 1), ('BTG', 0), ('NAV', 0), ('BTG', 1), ('BNT', 0), ('INS', 1), ('AMB', 1), ('STORM', 1), ('XMR', 1), ('STRAT', 0), ('GVT', 1), ('XZC', 1), ('AE', 1), ('DLT', 1), ('AST', 1), ('WABI', 0), ('NEO', 1), ('VIBE', 0), ('GXS', 1), ('RLC', 0), ('TRX', 1), ('NCASH', 1), ('LRC', 1), ('BQX', 1), ('LINK', 1), ('NAV', 1), ('BNT', 1), ('INS', 0), ('STRAT', 1), ('PIVX', 0), ('VIB', 1), ('ELF', 0), ('BRD', 1), ('CND', 1), ('WINGS', 0), ('OAX', 0), ('ICN', 0), ('CND', 0), ('DASH', 1), ('FUN', 1), ('XEM', 0), ('CHAT', 1), ('DGD', 0), ('MANA', 1), ('PIVX', 1), ('ARN', 1), ('SNT', 1), ('CDT', 1), ('SNM', 1), ('MCO', 1), ('BAT', 1), ('BCD', 1), ('ONT', 1), ('WPR', 1), ('ETC', 0), ('FUN', 0), ('XRB', 1), ('BQX', 0), ('BTS', 0), ('SYS', 0), ('IOTA', 0), ('ARK', 1), ('POE', 1), ('LTC', 0), ('VIA', 0), ('SUB', 1), ('LSK', 0), ('ZIL', 1), ('XEM', 1), ('WAVES', 1), ('EVX', 0), ('MDA', 0), ('BLZ', 0), ('REQ', 0), ('TRX', 0), ('CMT', 0), ('DGD', 1), ('MTH', 1), ('ZIL', 0), ('RPX', 0), ('EOS', 0), ('LEND', 1), ('TNT', 1), ('ZRX', 1), ('ETH', 2), ('RDN', 0), ('STORJ', 0), ('BNB', 2), ('KNC', 1), ('ETC', 1), ('IOST', 0), ('NEBL', 1), ('OMG', 0), ('POA', 1), ('MOD', 1), ('KMD', 1), ('BCH', 2), ('LUN', 1), ('BTS', 1), ('OST', 0), ('DASH', 0), ('NEBL', 0), ('XMR', 0), ('OMG', 1), ('ENG', 1), ('QSP', 0), ('PPT', 1), ('LUN', 0), ('XLM', 1), ('FUEL', 0), ('STORM', 0), ('ADA', 2), ('QTUM', 1), ('APPC', 1), ('WABI', 1), ('BAT', 0), ('TRIG', 1), ('BNB', 1), ('ENJ', 0), ('LRC', 0), ('ADA', 1), ('MANA', 0), ('ADA', 0), ('HSR', 0), ('STEEM', 0), ('DLT', 0), ('GTO', 1), ('MTL', 0), ('APPC', 0), ('POWR', 0), ('AION', 0), ('XRP', 0), ('AION', 1), ('SUB', 0), ('AST', 0), ('STEEM', 1), ('NCASH', 0), ('WTC', 0), ('WAN', 0), ('YOYOW', 1), ('LSK', 1), ('WPR', 0), ('ARN', 0), ('LTC', 2), ('XLM', 0), ('BNB', 0), ('NEO', 2), ('EDO', 1), ('PPT', 0), ('ZEC', 1), ('KMD', 0), ('SNGLS', 0), ('DNT', 1), ('QTUM', 0), ('FUEL', 1), ('WTC', 1), ('IOST', 1), ('MOD', 0), ('POA', 0), ('RCN', 1), ('POWR', 1), ('RPX', 1), ('MCO', 0), ('XVG', 1), ('SNT', 0), ('POE', 0), ('BLZ', 1), ('BTC', 2), ('QTUM', 2), ('XRP', 1), ('ADX', 1), ('WAN', 1), ('VIB', 0), ('EOS', 1), ('TRIG', 0), ('NEO', 0), ('ETH', 0), ('ENG', 0), ('CDT', 0), ('ONT', 0), ('LINK', 0), ('ZEC', 0), ('QLC', 0), ('BCH', 0), ('XVG', 0), ('NULS', 0), ('GTO', 0), ('CLOAK', 0), ('CLOAK', 1)]
-#         # two_hours = 2*60*60 # remove 100 after testing
-#         # return get_currency_pairs(source=self.source, period_in_seconds=two_hours)
-
-
-
-# class TestCoreInfo(TestCase):
-#     def setUp(self):
-#         self.core_info = CoreInfo(BINANCE)
-
-#     def test_core_info(self):
-#         print("Testing XXX")

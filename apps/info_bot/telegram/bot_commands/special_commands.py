@@ -15,6 +15,8 @@ from textwrap import dedent
 from telegram import ParseMode
 from telegram.ext import Updater
 
+from apps.info_bot.helpers import save_history#, restore_db_connection
+
 from settings import INFO_BOT_TELEGRAM_BOT_API_TOKEN, LOCAL
 
 
@@ -27,12 +29,12 @@ if LOCAL:
     updater = Updater(token=INFO_BOT_TELEGRAM_BOT_API_TOKEN)
 
     def stop_and_restart():
-            """Gracefully stop the Updater and replace the current process with a new one"""
-            updater.stop()
-            os.execl(sys.executable, sys.executable, *sys.argv)
+        """Gracefully stop the Updater and replace the current process with a new one"""
+        updater.stop()
+        os.execl(sys.executable, sys.executable, *sys.argv)
 
     def restart(bot, update):
-        update.message.reply_text('itt bot is restarting...')
+        update.message.reply_text('itf bot is restarting...')
         Thread(target=stop_and_restart).start()
 
 
@@ -41,25 +43,34 @@ if LOCAL:
 def unknown(bot, update):
     update.message.reply_text(dedent("""
         Sorry {}, I don't understand this, please check the list of available commands with `/help`.
-        Or just type: `/itt BTC` to check info about Bitcoin.
+        Or just type: `/itf BTC` to check info about Bitcoin.
         """).format(update.message.from_user.first_name), parse_mode=ParseMode.MARKDOWN)
 
+#@restore_db_connection
 def start(bot, update):
-    update.message.reply_text("Welcome {}. I'm ITT info bot.".format(update.message.from_user.first_name))
+    save_history(update)
+    update.message.reply_text("Welcome {}. I'm ITF info bot.".format(update.message.from_user.first_name))
 
+#@restore_db_connection
 def help(bot, update):
+    save_history(update)
     update.message.reply_text(dedent("""
         *Available commands:*
 
-        *•* `/itt <cryptocurrency>` - Short info about currency. Example: `/itt BTC` ot `/itt XRP_ETH`
-        *•* `/price <cryptocurrency>` - Prices from all exchanges. Example: `/price ETH_USDT`
-        *•* `/info` - List of supported coins and exchanges
-        *•* `/help` - List of all commands
+        *•* `/itf <cryptocurrency>` - Info about currency. For example: `/itf BTC` or `/itf XRP_ETH`.
+        *•* `/i <cryptocurrency>` - Latest info about price and volume.
+        *•* `/ta <cryptocurrency>` - Latest TA alerts for currency.
+        *•* `/s <cryptocurrency>` - Latest crowd sentiment alert for currency.
+        *•* `/price <cryptocurrency>` - Prices from all exchanges.
+        *•* `/info` - List of supported coins and exchanges.
+        *•* `/help` - List of all commands.
 
-        To use this commands in telegram channel, invite @itf\_info\_bot as admin with 'Post Messages' rights into your channel.
+        To use these commands in your Telegram channel, invite @Intelligent\_Trading\_Info\_Bot to your channel.
     """), ParseMode.MARKDOWN)
 
 def getme(bot, update):
+    "Show username and userid in chat"
+    save_history(update)
     update.message.reply_text(f"Your username:{update.message.from_user.username} and userId {str(update.message.from_user.id)}")
 
 def error(bot, update, error):

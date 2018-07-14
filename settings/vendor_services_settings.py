@@ -46,33 +46,33 @@ if not LOCAL:
             'PASSWORD': os.environ['RDS_PASSWORD'],
             'HOST': os.environ['RDS_HOSTNAME'],
             'PORT': os.environ['RDS_PORT'],
+            #  'CONN_MAX_AGE': 20000 # we need it for bots because mysql drop connection after 28800 secs of idling
         }
     }
 
 # Memcached Cloud settings
 # https://devcenter.heroku.com/articles/memcachedcloud
 def get_cache():
-  import os
-  try:
-    servers = os.environ['MEMCACHEDCLOUD_SERVERS']
-    username = os.environ['MEMCACHEDCLOUD_USERNAME']
-    password = os.environ['MEMCACHEDCLOUD_PASSWORD']
-    return {
-        'default': {
-            'BACKEND': 'django_bmemcached.memcached.BMemcached',
-            'LOCATION': servers.split(','),
-            'OPTIONS': {
-                'username': username,
-                'password': password,
+    try:
+        servers = os.environ['MEMCACHEDCLOUD_SERVERS']
+        username = os.environ['MEMCACHEDCLOUD_USERNAME']
+        password = os.environ['MEMCACHEDCLOUD_PASSWORD']
+        return {
+            'default': {
+                'BACKEND': 'django_bmemcached.memcached.BMemcached',
+                'LOCATION': servers.split(','),
+                'OPTIONS': {
+                    'username': username,
+                    'password': password,
+                }
             }
         }
-    }
-  except:
-    return {
-      'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'
-      }
-    }
+    except:
+        return {
+            'default': {
+                'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'
+            }
+        }
 
 CACHES = get_cache()
 
@@ -88,15 +88,32 @@ CACHE_MIDDLEWARE_KEY_PREFIX = ''
 #     }
 # }
 
-
 # Celery settings
-#CELERY_BROKER_URL =  os.environ.get('CLOUDAMQP_URL', 'amqp://guest:guest@localhost//')
-CELERY_BROKER_URL =  os.environ.get('REDIS_URL', 'redis://localhost:6379') # if env not set use local redis server
+CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379') # if env not set use local redis server
 
 # Telegram settings for itt-info-bot
 INFO_BOT_TELEGRAM_BOT_API_TOKEN = os.environ.get('INFO_BOT_TELEGRAM_BOT_API_TOKEN', '123ABC')
-INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS = 4 * 60 * 60 # cache telegram bot reply for 4 hour
+INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS = 1 * 60 * 60 # cache telegram bot reply for 1 hour
 INFO_BOT_CRYPTOPANIC_API_TOKEN = os.environ.get('INFO_BOT_CRYPTOPANIC_API_TOKEN', '123ABC')
 
 INCOMING_SQS_QUEUE = os.environ.get('INCOMING_SQS_QUEUE')
 SNS_SIGNALS_TOPIC_ARN = os.environ.get('SNS_SIGNALS_TOPIC_ARN', None)
+
+# CORS
+# CORS_ORIGIN_WHITELIST = (
+#     'itf-settings-stage.herokuapp.com',
+#     'intelligenttrading.org',
+#     'localhost',
+#     '127.0.0.1',
+#     '89.177.127.27',
+# )
+
+
+from corsheaders.defaults import default_headers #, default_methods
+
+# CORS_ALLOW_METHODS = default_methods
+CORS_ALLOW_HEADERS = default_headers + (
+    'API-KEY',
+)
+
+CORS_ORIGIN_ALLOW_ALL = True
