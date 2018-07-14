@@ -283,7 +283,7 @@ def _get_signal_idname(signal):
 
 
 def get_all_signals_names_now(**kwargs):
-    # get all signals happened just now (in current temestamp from **kwargs)
+    # get all signals happened just now (in current timestamp from **kwargs)
 
 
     # for PRODUCTION
@@ -317,7 +317,6 @@ def get_all_signals_names_now(**kwargs):
                                                      # TODO @Alex please review and fix if needed
 
     return signals_set
-
 
 
 def get_prevous_signal_name(**kwargs):
