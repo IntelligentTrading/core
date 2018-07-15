@@ -279,8 +279,7 @@ time_speed = 1  # set to 1 for production, 10 for fast debugging
 EMIT_SMA = True
 EMIT_RSI = True
 RUN_ANN = True
-#RUN_BEN = True
-RUN_BEN = False
+RUN_BEN = True
 MODIFY_DB = True
 
 EMIT_SIGNALS = os.environ.get("EMIT_SIGNALS", "true").lower() == "true" # emit if no variable set or when it set to 'true', env variables are strings
