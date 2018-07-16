@@ -238,13 +238,9 @@ def _process_ben_volume_based(horizon, joined_price_and_volume, **kwargs):
     # DESCRIPTION of indicator:
     # if price crosses the mean by some percent AND volume is already greater than mean by some other percent)
     # OR (volume crosses the mean by some percent AND price is already greater than mean by some other
-    # percent) we emit buy
+    # percent) we emit a signal
 
-    # IDEA
-    # we here we emplement elementary events like something crosses something
-    # then in events_logical we will implement logical behaviour with OR / AND and emit signals there
-
-    BEN_PRICE_CROSS_PERCENT = 0.02 # TODO just for the time being it is here, should move later
+    BEN_PRICE_CROSS_PERCENT = 0.02  # TODO just for the time being it is here, should move later
     BEN_VOLUME_CROSS_PERCENT = 0.02
 
     events_df = pd.DataFrame()
@@ -261,9 +257,8 @@ def _process_ben_volume_based(horizon, joined_price_and_volume, **kwargs):
 
     # get the last events row and account for a small timestamp rounding error
     last_event_row = events_df.iloc[-1]      # you can you events_df.tail(1) here
-    time_of_last_row = events_df.index[-1]
 
-    # for each event in last row of all recents events
+    # for each event in last row of all recent events
     # note: we need this loop because at one moment there might be several events (in contract to RSI)
     for event_name, event_value in last_event_row.iteritems():
         if event_value:    # if one of SMA events is TRUE, save and emit
@@ -277,7 +272,7 @@ def _process_ben_volume_based(horizon, joined_price_and_volume, **kwargs):
                 if MODIFY_DB: ben_event.save()
             except Exception as e:
                 logger.error(" #Error saving Ben elementary event ")
-    # Now we have elementary events in events_elementary table and can get them in event_logical to combune by OR/AND
+
 
 
 
@@ -344,14 +339,18 @@ class EventsElementary(AbstractIndicator):
         logger.info("   ... Check Ben Elementary Events: ")
 
         if RUN_BEN and kwargs['resample_period'] <= MEDIUM: # can't handle volume data for 1440
-            ben_num_records = SMA_LOW * 4 # last_records, because of faulty data we make sure to get a bit more
-            PRICE_MEAN_TIME_PERIOD = 50#SMA_LOW
-            VOLUME_MEAN_TIME_PERIOD = 50#SMA_LOW
+            ben_num_records = SMA_LOW * 4  # last_records, because of faulty data we make sure to get a bit more
+            PRICE_MEAN_TIME_PERIOD = 50  # SMA_LOW
+            VOLUME_MEAN_TIME_PERIOD = 50  # SMA_LOW
 
             # the safest way to make sure that we get all the price info we need
             # TODO: reuse existing Ichimoku prices_df if it turns out that Ichimoku always gets more records than we need
             prices_df = get_n_last_resampl_df(ben_num_records, **no_time_params)
-            volumes_ts = get_n_last_volumes_ts(ben_num_records*kwargs['resample_period'],  # TODO change number of records
+
+            # clean NaN values, if any
+            prices_df = prices_df.dropna()
+
+            volumes_ts = get_n_last_volumes_ts(ben_num_records*kwargs['resample_period'],
                                                kwargs['source'],
                                                kwargs['transaction_currency'],
                                                kwargs['counter_currency'])
@@ -367,6 +366,9 @@ class EventsElementary(AbstractIndicator):
                 prices_df['mean_price'] = pd.Series(prices_avg, index=prices_df.index)
 
                 volumes_df = volumes_ts.to_frame('volume')
+                # clean NaN values, if any
+                volumes_df = volumes_df.dropna()
+
                 if not volumes_df.index.is_unique:
                     logger.warning("Duplicate index values encountered in volume data, pruning...")
                     start_len = len(volumes_df)
