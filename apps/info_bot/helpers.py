@@ -168,10 +168,10 @@ def save_history(update):
 
 # FIXME Disabled after switching to Postgres. Enable it back if after long inactivity sql server drop connection (like Mysql did).
 
-# def restore_db_connection(func):
-#     "Mysql drop persistent connection after 28800 secs (8h) of idling"
+def restore_db_connection(func):
+    "Mysql drop persistent connection after 28800 secs (8h) of idling"
 
-#     def func_wrapper(*args, **kwargs):
-#         db.close_old_connections()
-#         return func(*args, **kwargs)
-#     return func_wrapper
+    def func_wrapper(*args, **kwargs):
+        db.close_old_connections()
+        return func(*args, **kwargs)
+    return func_wrapper

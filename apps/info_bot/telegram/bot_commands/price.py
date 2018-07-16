@@ -45,7 +45,7 @@ def price_view(trading_pair):
 
 ## user commands
 
-#@restore_db_connection
+@restore_db_connection
 def price(bot, update, args):
     save_history(update)
     trading_pair = parse_telegram_cryptocurrency_args(args=args, update=update, command='price')

@@ -55,8 +55,3 @@ Architect choose partition by timestamp, so each query to PriceHistory should co
 Note: You should run this command after any PriceHistory migration:
 `export DJANGO_SETTINGS_MODULE=settings; architect partition --module apps.indicator.models.price_history`
 This command will update triggers for indicator_pricehistory table.
-
-
-
-
-

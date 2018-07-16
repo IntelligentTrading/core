@@ -31,7 +31,7 @@ def info_view(update):
     return view
 
 # User Commands
-#@restore_db_connection
+@restore_db_connection
 def info(bot, update):
     save_history(update)
     update.message.reply_text(info_view(update), ParseMode.MARKDOWN)

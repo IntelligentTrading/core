@@ -252,7 +252,7 @@ def sentiment_view(trading_pair):
 
 ## user commands
 
-#@restore_db_connection
+@restore_db_connection
 def itf(bot, update, args):
     save_history(update)
     trading_pair = parse_telegram_cryptocurrency_args(args=args, update=update, command='itf')
@@ -261,7 +261,7 @@ def itf(bot, update, args):
         update.message.reply_text(view, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
     return
 
-#@restore_db_connection
+@restore_db_connection
 def i(bot, update, args):
     save_history(update)
     trading_pair = parse_telegram_cryptocurrency_args(args=args, update=update, command='itf')
@@ -270,7 +270,7 @@ def i(bot, update, args):
         update.message.reply_text(view, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
     return
 
-#@restore_db_connection
+@restore_db_connection
 def ta(bot, update, args):
     save_history(update)
     trading_pair = parse_telegram_cryptocurrency_args(args=args, update=update, command='ta')
@@ -279,7 +279,7 @@ def ta(bot, update, args):
         update.message.reply_text(view, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
     return
 
-#@restore_db_connection
+@restore_db_connection
 def sentiment(bot, update, args):
     save_history(update)
     trading_pair = parse_telegram_cryptocurrency_args(args=args, update=update, command='s')
