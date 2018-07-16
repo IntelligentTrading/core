@@ -42,7 +42,8 @@ else:
 if LOCAL:
     log_level = logging.DEBUG
 elif PRODUCTION:
-    log_level = logging.INFO
+#    log_level = logging.INFO
+    log_level = logging.DEBUG
 else:
     log_level = logging.DEBUG
 
