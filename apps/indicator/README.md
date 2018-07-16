@@ -44,3 +44,19 @@ In essence the Kumo event is a logical function of a number of elementary events
 then an event is TRUE
 
 hence the name of the table.
+
+#### PriceHistory: not indicators.
+This is a new model for storing Price (open, high, low, close) and Volume information.
+It should replace both Price and History models in the future. Now they all work in parallel.
+
+DB table for PriceHistory partitioned using [Architect](http://architect.readthedocs.io/features/partition/postgresql.html)
+Architect create montly partitions, like: indicator_pricehistory_y2018m07, indicator_pricehistory_y2018m06 and etc.
+Architect choose partition by timestamp, so each query to PriceHistory should contain timestamp or else PosgreSQL will search through all partitions (slow).
+Note: You should run this command after any PriceHistory migration:
+`export DJANGO_SETTINGS_MODULE=settings; architect partition --module apps.indicator.models.price_history`
+This command will update triggers for indicator_pricehistory table.
+
+
+
+
+
