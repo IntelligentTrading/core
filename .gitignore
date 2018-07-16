@@ -113,3 +113,7 @@ ENV/
 staticfiles/
 
 .DS_Store
+
+node_modules/
+bootstrap-theme/docs/
+bootstrap-theme/scss/
