@@ -15,7 +15,7 @@ from textwrap import dedent
 from telegram import ParseMode
 from telegram.ext import Updater
 
-from apps.info_bot.helpers import save_history#, restore_db_connection
+from apps.info_bot.helpers import save_history, restore_db_connection
 
 from settings import INFO_BOT_TELEGRAM_BOT_API_TOKEN, LOCAL
 

@@ -8,7 +8,7 @@ from settings import COUNTER_CURRENCIES
 
 from apps.indicator.models import PriceHistory
 
-from apps.info_bot.helpers import (format_currency, format_timestamp, #restore_db_connection,
+from apps.info_bot.helpers import (format_currency, format_timestamp, restore_db_connection,
                                    get_currency_pairs, natural_join, parse_trading_pair_string,
                                    parse_telegram_cryptocurrency_args, trading_pairs_for, save_history)
 

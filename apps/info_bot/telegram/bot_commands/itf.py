@@ -12,7 +12,7 @@ from apps.indicator.models import PriceHistory
 from apps.signal.models import Signal
 
 from apps.info_bot.helpers import format_currency, format_timestamp, parse_telegram_cryptocurrency_args
-from apps.info_bot.helpers import save_history#, restore_db_connection
+from apps.info_bot.helpers import save_history, restore_db_connection
 
 from taskapp.helpers import get_source_name
 
