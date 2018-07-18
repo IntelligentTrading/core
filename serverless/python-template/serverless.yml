@@ -78,6 +78,8 @@ functions:
 
   check_strategy_ABC:
     handler: TradingStrategy123.check_strategy_ABC
+    events:
+        - sns: arn:aws:sns:us-east-2:462951922947:sns-lambda-invoker
 
   check_strategy_gp:
     handler: GeneticStrategy.check_strategy_gp
@@ -166,4 +168,4 @@ plugins:
 
 custom:
   pythonRequirements:
-    dockerizePip: non-linux
+    dockerizePip: non-linux   # need Docker for serverless-python-requirements to work properly on my setup

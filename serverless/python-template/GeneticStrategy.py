@@ -65,7 +65,7 @@ def check_strategy_gp(event, context):
                           'if_then_else(True, ignore, ignore), sell), if_then_else(and_(True, False), ' \
                           'if_then_else(True, sell, ignore), if_then_else(True, buy, ignore)))'
         mock_individual = 'if_then_else(gt(price(ARG0), sma50(ARG0)), buy, sell)'
-        this_trading_strategy = GeneticStrategy(sns_context=context, individual=mock_individual)
+        this_trading_strategy = GeneticStrategy(sns_event=context, individual=mock_individual)
         logger.info("running..........................")
         this_trading_strategy.run()
         logger.info("saving...........................")

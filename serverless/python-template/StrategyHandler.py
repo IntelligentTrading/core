@@ -4,7 +4,9 @@ import boto3
 import requests
 import pandas as pd
 from datetime import datetime
-from SNSEventHandler import AbstractSNSEventHandler, ContextException
+from SNSEventHandler import AbstractSNSEventHandler, SNSEventException
+from abc import abstractmethod
+
 (BUY, SELL, IGNORE) = (1,-1,0)
 
 # API_URL = "https://itt-core-stage.herokuapp.com/api"
@@ -41,21 +43,31 @@ class AbstractStrategyHandler(AbstractSNSEventHandler):
 
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)   # the super constructor will process the SNS msg that triggered the function
         self.sns_publish_topic_prefix += "strategy-"
 
-        self.indicators = {}
-        self.timestamp = kwargs.get('timestamp', datetime.now())
-        self.source = kwargs.get('source')
-        self.resample_period = kwargs.get('resample_period')
-        self.transaction_currency = kwargs.get('transaction_currency')
-        self.counter_currency = kwargs.get('counter_currency')
+        # Below: parsing the raw SNS msg and filling all the info
+        # assuming raw_sns_message exists, TODO: error handling if not
+        # TODO: fill out transaction_currency, counter_currency etc. from here or from kwargs? think about it.
+
+        json_msg = json.loads(self.raw_sns_message)
+
+        self.indicators = json_msg.get('indicators', {})
+        self.timestamp = json_msg.get('timestamp', datetime.now())
+        self.source = json_msg.get('source')
+        self.resample_period = json_msg.get('resample_period')
+        self.transaction_currency = json_msg.get('transaction_currency')
+        self.counter_currency = json_msg.get('counter_currency')
         self._parameters = kwargs
 
 
     def run(self):
-        if not self.sns_context:
-            raise ContextException("sns_context is empty or missing!")
+        if not self.incoming_indicators_are_supported():
+            raise SNSEventException("none of the incoming indicators recognized by this strategy!")
+
+        if not self.sns_event:
+            raise SNSEventException("sns_event is empty or missing!")
+
         self.make_signal()
         if "signal" not in self.results:
             raise StrategyException("strategy is missing a signal!")
@@ -63,7 +75,7 @@ class AbstractStrategyHandler(AbstractSNSEventHandler):
             raise StrategyException("non-standard signal! use one of these" +
                                     "BUY, SELL, IGNORE = 1,-1,0")
         else:
-            self.emit_sns_message(self.results["signal"])
+            self.emit_sns_message(self.results)
 
 
     def save(self):
@@ -98,12 +110,22 @@ class AbstractStrategyHandler(AbstractSNSEventHandler):
             "signal_parameters": self._parameters,
          }
 
+    @property
+    @abstractmethod
+    def used_indicators(self):
+        pass
+
+    def incoming_indicators_are_supported(self):
+        return len(set(self.used_indicators).intersection(set(self.indicators.keys()))) > 0
+
 
     def get_indicator(self, indicator_name):
+        # this happens if the indicator we need was received in the incoming msg
         if indicator_name in self.indicators:
             return self.indicators[indicator_name]
         # else
 
+        # if we're missing some of the indicators, pull them via API (e.g. a strategy invoked by one signal, dependent on several more)
         params = {'transaction_currency': self.transaction_currency,
                   'counter_currency': self.counter_currency}
         logging.info(params)
@@ -116,6 +138,10 @@ class AbstractStrategyHandler(AbstractSNSEventHandler):
             logging.info(response)
         return self.indicators[indicator_name]
 
+    #############################################################
+    ####### I don't think we need any of the functions below
+    ####### Or at least I don't see how they would be usable in an SNS-triggered architecture
+    ##############################################################
 
     def check_indicators_now(self)->set:
         # get all indicators emitted now

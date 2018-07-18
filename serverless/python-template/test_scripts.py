@@ -24,7 +24,7 @@ abh = AbstractStrategyHandler()
 d = abh.get_indicator("RSI")
 print(d)
 
-ts123 = TradingStrategy123(sns_context=test_json)
+ts123 = TradingStrategy123(sns_event=test_json)
 ts123.emit_sns_message({"hello":"world"})
 # ts123.run()
 # ts123.save()
