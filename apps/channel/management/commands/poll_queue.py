@@ -104,7 +104,8 @@ def process_message_from_queue(message_body):
                     volume=get_volume(item['bvolume'])
                 )
             except IntegrityError as e:
-                logger.debug(f">>> Dublicated record for PriceHistory.\n{e}")
+                pass
+                # logger.debug(f">>> Dublicated record for PriceHistory.\n{e}")
             except Exception as e:
                 logger.debug(f">>>> Error saving PriceHistory for {item['symbol']} from: {item['source']}. {e}")
             #logger.debug(f">>> OHLC history price saved. Source:{source_code}, {transaction_currency}_{counter_currency_code}")
