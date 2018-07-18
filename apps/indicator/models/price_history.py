@@ -34,3 +34,4 @@ class PriceHistory(models.Model):
         indexes = [
             models.Index(fields=['timestamp', 'transaction_currency', 'counter_currency', 'source']),
         ]
+        unique_together = ('timestamp', 'transaction_currency', 'counter_currency', 'source')
