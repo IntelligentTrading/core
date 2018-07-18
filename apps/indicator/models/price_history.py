@@ -12,9 +12,14 @@ from settings import SOURCE_CHOICES, COUNTER_CURRENCY_CHOICES
 
 logger = logging.getLogger(__name__)
 
-# Run:
-#   export DJANGO_SETTINGS_MODULE=settings; architect partition --module apps.indicator.models.price_history
-# after any migration in this model
+# IMPORTANT!
+#  Run (after any migration in this model):
+#  $ export DJANGO_SETTINGS_MODULE=settings; architect partition --module apps.indicator.models.price_history
+#  http://architect.readthedocs.io/features/partition/index.html
+#
+#  You should add indexes manually to existing partitions. Only new partitions (created after changes)
+#  will have new indexes.
+#  
 @architect.install('partition', type='range', subtype='date', constraint='month', column='timestamp')
 class PriceHistory(models.Model):
     source = models.SmallIntegerField(choices=SOURCE_CHOICES, null=False)

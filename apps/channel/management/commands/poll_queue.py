@@ -3,6 +3,7 @@ import logging
 import datetime
 
 from django.core.management.base import BaseCommand
+from django.db import IntegrityError
 
 from apps.channel.incoming_queue import SqsListener
 from apps.indicator.models import Price, Volume, PriceHistory
@@ -102,6 +103,8 @@ def process_message_from_queue(message_body):
                     timestamp=datetime.datetime.utcfromtimestamp(item['timestamp']),
                     volume=get_volume(item['bvolume'])
                 )
+            except IntegrityError as e:
+                logger.debug(f">>> Dublicated record for PriceHistory.\n{e}")
             except Exception as e:
                 logger.debug(f">>>> Error saving PriceHistory for {item['symbol']} from: {item['source']}. {e}")
             #logger.debug(f">>> OHLC history price saved. Source:{source_code}, {transaction_currency}_{counter_currency_code}")
