@@ -83,6 +83,8 @@ functions:
 
   check_strategy_gp:
     handler: GeneticStrategy.check_strategy_gp
+    events:
+        - sns: arn:aws:sns:us-east-2:462951922947:sns-lambda-invoker
 
   # events:
   #   - sns: <ADD HERE>

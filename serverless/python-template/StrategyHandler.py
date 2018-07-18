@@ -104,6 +104,7 @@ class AbstractStrategyHandler(AbstractSNSEventHandler):
     @property
     def results(self):
         return {
+            "strategy_name": self.__class__.__name__,
             "signal": self.signal,
             "transaction_currency": self.transaction_currency,
             "counter_currency": self.counter_currency,

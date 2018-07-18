@@ -1,4 +1,7 @@
 import logging
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
 import json
 from abc import ABC
 import boto3
@@ -35,21 +38,22 @@ class AbstractSNSEventHandler(ABC):
 
     def __init__(self, *args, **kwargs):
         if 'sns_event' in kwargs:
-            self._sns_event = kwargs['sns_event'] # SNS event that triggered the function
-            self.sns_event = self._sns_event  # trigger setter to check for messages
+            self._sns_event = kwargs['sns_event']  # SNS event that triggered the function
+            self.sns_event = self._sns_event       # trigger setter to parse incoming msgs
+                                                   # don't really like this, but left it for now
         self.sns_publish_topic_prefix = "itf-sns-sls-event-"
 
 
     @property
     def sns_event(self):
-        return self._sns_event
+        return self._sns_event  # or not the droids we're looking for?
 
     @sns_event.setter
-    def sns_event(self, sns_event):
+    def sns_event(self, sns_event):    # former "context" -> all the data is actually in event, not context
         try:
             self.raw_sns_message = sns_event['Records'][0]['Sns']['Message']
         except KeyError as e:
-            logging.error("SNS messages not found! Check code and configurations.")
+            logger.error("SNS messages not found! Check code and configurations.")
 
 
     def emit_sns_message(self, message_data={}):
@@ -63,7 +67,7 @@ class AbstractSNSEventHandler(ABC):
 
         sns_subscribed_arn = self.sns_event['Records'][0]['Sns']['TopicArn'] # TODO: perhaps not good to assume we were
                                                                              # invoked via SNS, remove in production?
-        logging.info("Received message from SNS ARN {}".format(sns_subscribed_arn))
+        logger.info("Received message from SNS ARN {}".format(sns_subscribed_arn))
 
         if not self.sns_publish_topic.startswith("itf-sns-"):
             # use instance class name
@@ -73,12 +77,12 @@ class AbstractSNSEventHandler(ABC):
         if not self.sns_publish_topic.startswith("itf-sns-"):
             raise ITFSNSException("SNS topic must start with 'itf-sns-'")
 
-        logging.debug("using " + SNS_ARN + " as ARN base")
+        logger.debug("using " + SNS_ARN + " as ARN base")
         # sns_publishing_arn = ":".join(SNS_ARN.split(":")[0:-1].append(self.sns_publish_topic))
         sns_publishing_arn = SNS_ARN  # TODO: this is set temporarily, for debug purposes
-        logging.info("using " + sns_publishing_arn + " as ARN for publishing")
+        logger.info("using " + sns_publishing_arn + " as ARN for publishing")
 
-        logging.info("Publishing message to SNS ARN {}".format(sns_publishing_arn))
+        logger.info("Publishing message to SNS ARN {}".format(sns_publishing_arn))
 
         sns_client = boto3.client('sns')
         self.sns_client_response = sns_client.publish(
