@@ -28,7 +28,7 @@ ITF Info bot uses [python-telegram-bot package](https://github.com/python-telegr
 
 ### Environment variables and settings
 
-* INFO_BOT_TELEGRAM_BOT_API_TOKEN - obtain with telegram @BotFather
+* INFO_BOT_TELEGRAM_BOT_API_TOKEN - token for bot, obtain from telegram @BotFather
 * INFO_BOT_CRYPTOPANIC_API_TOKEN - for cryptopanic sentiments 
 * INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS - for how many seconds bot output cached
 * INFO_BOT_ADMIN_USERNAME - only this admin user can use restart bot command
