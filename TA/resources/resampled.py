@@ -1,7 +1,7 @@
 from abc import ABC
 from flask_restful import Resource, Api, reqparse
-import logging
-from TA.app import db
+from TA.app import db, logger
+from TA.storages.abstract_timeseries_storage import IndicatorException
 from TA.storages.price import Price as PriceStorage
 
 
@@ -9,12 +9,11 @@ from TA.storages.price import price_indexes, volume_indexes
 # ["open_price", "close_price", "low_price", "high_price",
 # "midpoint_price", "mean_price", "price_variance",
 # "open_volume", "close_volume", "low_volume", "high_volume",]
-price_volume_indexes = price_indexes + volume_indexes
 
 
 class PriceVolumeResampledAPI(Resource):
 
-    def put(self):
+    def put(self, ticker):
         """
         This should receive a json dictionary of
         5 min resampled price and/or volume
@@ -23,24 +22,32 @@ class PriceVolumeResampledAPI(Resource):
         where timestamp is an int divisible by 300s (5 min)
         """
 
+        if not ticker.count('_') == 1:  # check format is like "ETH_BTC"
+            logger.error(f'ticker {ticker} should be in format like ETH_BTC')
+            return {'error': f'ticker {ticker} should be in format like ETH_BTC'}, 400
+
         # PARSE THE DATA
         parser = reqparse.RequestParser()
         parser.add_argument('ticker', type=str, required=True, location='json')
         parser.add_argument('exchange', type=str, required=True, location='json')
         parser.add_argument('timestamp', type=int, required=True, location='json')
-        for index in price_volume_indexes:
-            parser.add_argument(index, location='json')
+
+        for index in (price_indexes + volume_indexes):
+            parser.add_argument(index, location='json', required=False)
         args = parser.parse_args()
 
         # SAVE VALUES IN REDIS USING PriceStorage OBJECT
         pipeline = db.pipeline(transaction=False)
 
-        p = PriceStorage(ticker=args['ticker'],
-                         exchange=args['exchange'],
-                         timestamp=args['timestamp'])
+        try:
+            p = PriceStorage(ticker=ticker or args['ticker'],
+                             exchange=args['exchange'],
+                             timestamp=args['timestamp'])
+        except IndicatorException as e:
+            return {'error': str(e)}, 400
 
         for index in price_indexes:
-            if args[index]:
+            if index in args:
                 p.index = index
                 p.value = args[index]
                 pipeline = p.save(pipeline=pipeline)

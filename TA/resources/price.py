@@ -16,7 +16,7 @@ class PriceAPI(Resource):
     #         'price': int(db.get('price') or None)
     #     }
 
-    def put(self):
+    def put(self, ticker):
         """
         This should receive a resampled price
         for the upcoming or nearly past 5min period
@@ -24,8 +24,8 @@ class PriceAPI(Resource):
         and represents a resampled data point for
         :return:
         """
+        
         parser = reqparse.RequestParser()
-        parser.add_argument('ticker', type=str, required=True)
         parser.add_argument('exchange', type=str, required=True)
         parser.add_argument('timestamp', type=int, required=True)
         args = parser.parse_args()

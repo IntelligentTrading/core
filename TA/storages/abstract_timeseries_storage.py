@@ -36,7 +36,8 @@ class AbstractIndicator(ABC):
             # validate some rules here?
             pass
         return "{ticker}:{exchange}:{class_name}:{timestamp}".format(
-            ticker=self.ticker, exchange=self.exchange,
+            ticker=self.ticker,
+            exchange=self.exchange,
             class_name=str(self.__class__.__name__+self.db_key_suffix),
             timestamp=self.unix_timestamp)
 
