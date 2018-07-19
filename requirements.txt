@@ -27,7 +27,7 @@ pandas==0.20.3
 python-binary-memcached==0.26.1
 python-dateutil==2.6.0
 python-memcached==1.59
-python-telegram-bot==10.0.2
+python-telegram-bot==10.1.0
 psycopg2==2.7.3
 pytz==2016.10
 PyYAML==3.12
@@ -37,7 +37,7 @@ requests==2.18.4
 schedule==0.4.3
 simplejson==3.11.1
 six==1.11.0
-TA-lib
+TA-Lib==0.4.17
 toolz==0.8.2
 waitress==1.0.2
 whitenoise==3.3.1

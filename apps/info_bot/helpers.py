@@ -171,7 +171,13 @@ def save_history(update):
 def restore_db_connection(func):
     "Mysql drop persistent connection after 28800 secs (8h) of idling"
 
+    # disable it for postgresql, testing
     def func_wrapper(*args, **kwargs):
-        db.close_old_connections()
         return func(*args, **kwargs)
+    # def func_wrapper(*args, **kwargs):
+    #     db.close_old_connections()
+    #     return func(*args, **kwargs)
     return func_wrapper
+
+
+    
