@@ -164,20 +164,3 @@ def save_history(update):
         logger.debug(f">>> InfoBot history saved, update_id:{update.update_id}, chat_id:{update.message.chat.id}, user_id: {update.message.from_user.id}")
     except Exception as e:
         logging.error(f">>>Error saving history:\n{update}<<<\n{e}")
-
-
-# FIXME Disabled after switching to Postgres. Enable it back if after long inactivity sql server drop connection (like Mysql did).
-
-def restore_db_connection(func):
-    "Mysql drop persistent connection after 28800 secs (8h) of idling"
-
-    # disable it for postgresql, testing
-    def func_wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-    # def func_wrapper(*args, **kwargs):
-    #     db.close_old_connections()
-    #     return func(*args, **kwargs)
-    return func_wrapper
-
-
-    

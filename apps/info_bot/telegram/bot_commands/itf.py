@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 import requests
 
 from cache_memoize import cache_memoize
@@ -12,12 +12,12 @@ from apps.indicator.models import PriceHistory
 from apps.signal.models import Signal
 
 from apps.info_bot.helpers import format_currency, format_timestamp, parse_telegram_cryptocurrency_args
-from apps.info_bot.helpers import save_history, restore_db_connection
+from apps.info_bot.helpers import save_history
 
-from taskapp.helpers import get_source_name
+from taskapp.helpers import get_source_name, get_exchanges
 
 
-
+SOURCES = get_exchanges()
 ## helpers
 
 def percents(new_value, old_value):
@@ -93,17 +93,17 @@ def itf_view(trading_pair):
     counter_currency = COUNTER_CURRENCIES.index(trading_pair['counter_currency'])
     currency = trading_pair['transaction_currency']
 
-    # Price
+    # Price (look only last 6 hours)
     price_new_object = PriceHistory.objects.filter(
         transaction_currency=currency, counter_currency=counter_currency
-        ).order_by('-timestamp').first()
+        ).filter(source__in=SOURCES).order_by('-timestamp').first()
 
     source = price_new_object.source
     view = f"*{currency}*\_{trading_pair['counter_currency']} *{format_currency(price_new_object.close, trading_pair['counter_currency'])}*"
 
     price_24h_old_object = PriceHistory.objects.filter(
         source=source, transaction_currency=currency, counter_currency=counter_currency,
-        timestamp__lte=price_new_object.timestamp - timedelta(minutes=1440) # 24*60
+        timestamp__lte=price_new_object.timestamp - timedelta(hours=24)
         ).order_by('-timestamp').first()
     try:
         percents_price_diff_24h = percents(price_new_object.close, price_24h_old_object.close)
@@ -171,7 +171,7 @@ def i_view(trading_pair):
     # Price
     price_new_object = PriceHistory.objects.filter(
         transaction_currency=currency, counter_currency=counter_currency
-        ).order_by('-timestamp').first()
+        ).filter(source__in=SOURCES).order_by('-timestamp').first()
 
     source = price_new_object.source
     view = f"*{currency}*\_{trading_pair['counter_currency']} *{format_currency(price_new_object.close, trading_pair['counter_currency'])}*"
@@ -204,7 +204,7 @@ def ta_view(trading_pair):
 
     price_new_object = PriceHistory.objects.filter(
         transaction_currency=currency, counter_currency=counter_currency
-        ).order_by('-timestamp').first()
+        ).filter(source__in=SOURCES).order_by('-timestamp').first()
 
     source = price_new_object.source
 
@@ -252,7 +252,6 @@ def sentiment_view(trading_pair):
 
 ## user commands
 
-@restore_db_connection
 def itf(bot, update, args):
     save_history(update)
     trading_pair = parse_telegram_cryptocurrency_args(args=args, update=update, command='itf')
@@ -261,7 +260,6 @@ def itf(bot, update, args):
         update.message.reply_text(view, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
     return
 
-@restore_db_connection
 def i(bot, update, args):
     save_history(update)
     trading_pair = parse_telegram_cryptocurrency_args(args=args, update=update, command='itf')
@@ -270,7 +268,6 @@ def i(bot, update, args):
         update.message.reply_text(view, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
     return
 
-@restore_db_connection
 def ta(bot, update, args):
     save_history(update)
     trading_pair = parse_telegram_cryptocurrency_args(args=args, update=update, command='ta')
@@ -279,7 +276,6 @@ def ta(bot, update, args):
         update.message.reply_text(view, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
     return
 
-@restore_db_connection
 def sentiment(bot, update, args):
     save_history(update)
     trading_pair = parse_telegram_cryptocurrency_args(args=args, update=update, command='s')

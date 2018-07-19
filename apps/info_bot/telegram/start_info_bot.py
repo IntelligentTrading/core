@@ -66,5 +66,5 @@ help - List of available commands.
     logger.info("All handlers added to the telegram info_bot.")
 
     # Start the Bot
-    updater.start_polling(poll_interval = 1.0,timeout=20)
+    updater.start_polling()
     updater.idle()
