@@ -1,12 +1,12 @@
 from TA.app import logger, TAException
-from TA.storages.abstract_timeseries_storage import TimeseriesStorage, TimeseriesException
+from TA.storages.timeseries_storage import TimeseriesStorage, TimeseriesException
 
 
 class IndicatorException(TAException):
     pass
 
 
-class TimeseriesIndicatorStorage(TimeseriesStorage):
+class TimeseriesIndicator(TimeseriesStorage):
     def __init__(self, *args, **kwargs):
         super().__init__()
 

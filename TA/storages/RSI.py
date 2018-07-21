@@ -1,8 +1,8 @@
 import logging
-from TA.storages.abstract_timeseries_storage import AbstractIndicator
+from TA.storages.indicator import TimeseriesIndicator
 
 
-class RSI(AbstractIndicator):
+class RSI(TimeseriesIndicator):
 
     relative_strength = None
 
