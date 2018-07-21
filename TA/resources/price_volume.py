@@ -1,17 +1,20 @@
 from abc import ABC
 from flask_restful import Resource, Api, reqparse
-from TA.app import db, logger
-from TA.storages.abstract_timeseries_storage import IndicatorException
-from TA.storages.price import Price as PriceStorage
+from TA.app import database, logger
+from TA.storages.pv_history import price_indexes, volume_indexes
+from TA.storages.timeseries_storage import StorageException
 
 
-from TA.storages.price import price_indexes, volume_indexes
+
+from TA.storages.price import PriceStorage
+
+
 # ["open_price", "close_price", "low_price", "high_price",
 # "midpoint_price", "mean_price", "price_variance",
 # "open_volume", "close_volume", "low_volume", "high_volume",]
 
 
-class PriceVolumeResampledAPI(Resource):
+class PriceVolumeAPI(Resource):
 
     def put(self, ticker):
         """
@@ -24,7 +27,9 @@ class PriceVolumeResampledAPI(Resource):
 
         if not ticker.count('_') == 1:  # check format is like "ETH_BTC"
             logger.error(f'ticker {ticker} should be in format like ETH_BTC')
-            return {'error': f'ticker {ticker} should be in format like ETH_BTC'}, 400
+            return {
+                       'error': f'ticker {ticker} does match required format ETH_BTC'
+                   }, 400  #bad request
 
         # PARSE THE DATA
         parser = reqparse.RequestParser()
@@ -37,14 +42,14 @@ class PriceVolumeResampledAPI(Resource):
         args = parser.parse_args()
 
         # SAVE VALUES IN REDIS USING PriceStorage OBJECT
-        pipeline = db.pipeline(transaction=False)
+        pipeline = database.pipeline(transaction=False)
 
         try:
             p = PriceStorage(ticker=ticker or args['ticker'],
                              exchange=args['exchange'],
                              timestamp=args['timestamp'])
-        except IndicatorException as e:
-            return {'error': str(e)}, 400
+        except StorageException as e:
+            return {'error': str(e)}, 400  #bad request
 
         for index in price_indexes:
             if index in args:
@@ -62,9 +67,12 @@ class PriceVolumeResampledAPI(Resource):
         #         pipeline = v.save(pipeline=pipeline)
 
         try:
-            db_confirmation = pipeline.execute()
-            return {"records_created": sum(db_confirmation)}, 201
+            database_response = pipeline.execute()
+            return {
+                       'success': f'{sum(database_response)} db entries created'
+                   }, 201  #created
 
         except Exception as e:
-            return {"error": "one or more records could not be saved... " + str(e)}
-
+            return {
+                       'error': str(e)
+                   }, 501  # not implented

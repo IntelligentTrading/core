@@ -42,11 +42,11 @@ logger.info("Flask app instantiated.")
 
 
 # ROUTING
-from TA.resources.price import PriceAPI
-api.add_resource(PriceAPI, '/api/data_history')
+from TA.resources.historical_data import HistoricalDataAPI
+api.add_resource(HistoricalDataAPI, '/api/historical_data')
 
-from TA.resources.resampled import PriceVolumeResampledAPI
-api.add_resource(PriceVolumeResampledAPI, '/api/resampled/<string:ticker>')
+from TA.resources.price_volume import PriceVolumeAPI
+api.add_resource(PriceVolumeAPI, '/api/price_volume/<string:ticker>')
 
 
 logger.info("Flask resources and routes are ready.")
