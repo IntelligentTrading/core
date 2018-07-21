@@ -27,6 +27,7 @@ pool = redis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, db=0)
 # todo: change db=1,2,3 for stage/prod/test envs?
 database = redis.Redis(connection_pool=pool)
 logger.info("Redis connection established.")
+set_of_known_sets_in_redis = set()
 
 
 app = Flask(__name__)

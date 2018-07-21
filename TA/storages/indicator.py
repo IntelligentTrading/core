@@ -9,6 +9,7 @@ class IndicatorException(TAException):
 class TimeseriesIndicator(TimeseriesStorage):
     def __init__(self, *args, **kwargs):
         super().__init__()
+        self.describer_class = kwargs.get('describer_class', "indicator")
 
         # 'ticker' REQUIRED
         # 'exchange EXPECTED BUT CAN STILL SAVE WITHOUT
@@ -38,15 +39,29 @@ class TimeseriesIndicator(TimeseriesStorage):
 
 
 """
-We can scan the newest or oldest event ids with ZRANGE 4,
-maybe later pulling the events themselves for analysis.
+===== EXAMPLE USAGE =====
 
-We can get the 10 or even 100 events immediately
-before or after a timestamp with ZRANGEBYSCORE
-combined with the LIMIT argument.
+my_indicator = TimeseriesIndicator(ticker="ETH_BTC",
+                                   exchange="BITTREX",
+                                   timestamp=1483228800)
+my_indicator.value = "BUY BITCOIN"
+my_indicator.save()
 
-We can count the number of events that occurred
-in a specific time period with ZCOUNT.
+# advanced:
 
-https://www.infoq.com/articles/redis-time-series
+very_special_signal = TimeseriesIndicator(describer_class="SuperSignal",
+                                          key="SuperSignal",
+                                          key_suffix="answer_to_the_universe",
+                                          ticker="ETH_BTC",
+                                          timestamp=1483228800
+                                          )
+from TA.app import database
+pipeline = database.pipeline()
+for thing in ['towel', 42, 'babelfish', 'vogon poetry']:
+    very_special_signal.unix_timestamp += 300
+    very_special_signal.value = thing
+    pipeline = very_special_signal.save(pipeline)
+pipeline.execute()
+
+===== EXAMPLE USAGE =====
 """

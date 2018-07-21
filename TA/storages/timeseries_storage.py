@@ -1,4 +1,4 @@
-from TA.app import SIMULATED_ENV, logger, TAException, database
+from TA.app import SIMULATED_ENV, logger, TAException, database, set_of_known_sets_in_redis
 from abc import ABC
 
 class StorageException(TAException):
@@ -21,7 +21,6 @@ class RedisStorage(ABC):
     def __str__(self):
         return str(self.get_db_key())
 
-
     def get_db_key(self):
         if not self.value:
             raise StorageException("no value set, nothing to save!")
@@ -38,11 +37,11 @@ class RedisStorage(ABC):
             # + f':{SIMULATED_ENV if SIMULATED_ENV != "PRODUCTION" else ""}'
         )
 
-        def save(self, pipeline=None):
-            return database.set(self.get_db_key(), self.value)
+    def save(self, pipeline=None):
+        return database.set(self.get_db_key(), self.value)
 
-        def get_value(self, db_key=""):
-            return database.get(db_key or self.get_db_key())
+    def get_value(self, db_key=""):
+        return database.get(db_key or self.get_db_key())
 
 
 class TimeseriesStorage(RedisStorage):
@@ -55,6 +54,7 @@ class TimeseriesStorage(RedisStorage):
 
     def __init__(self, *args, **kwargs):
         super().__init__()
+        self.describer_class = kwargs.get('describer_class', "timeseries")
 
         # 'timestamp' REQUIRED, VALIDATE
         try:
@@ -72,7 +72,16 @@ class TimeseriesStorage(RedisStorage):
             raise TimeseriesException("timestamp before January 1st, 2017")
 
 
+    def save_own_existance(self, describer_key=""):
+        self.describer_key = describer_key or f'{self.describer_class}:{self.get_db_key()}'
+
+        if self.describer_key not in set_of_known_sets_in_redis:
+            database.sadd("sorted_sets", self.describer_key)
+            set_of_known_sets_in_redis.add(self.describer_key)
+
+
     def save(self, pipeline=None):
+        self.save_own_existance()
         # example >>> redis.zadd('my-key', 'name1', 1.1)
         zadd_args = (self.get_db_key(), # set key name
                           f'{self.value}:{str(self.unix_timestamp)}', # item unique value
@@ -88,4 +97,16 @@ class TimeseriesStorage(RedisStorage):
         TimeseriesException("function not yet implemented! ¯\_(ツ)_/¯ ")
         pass
 
+"""
+We can scan the newest or oldest event ids with ZRANGE 4,
+maybe later pulling the events themselves for analysis.
 
+We can get the 10 or even 100 events immediately
+before or after a timestamp with ZRANGEBYSCORE
+combined with the LIMIT argument.
+
+We can count the number of events that occurred
+in a specific time period with ZCOUNT.
+
+https://www.infoq.com/articles/redis-time-series
+"""
