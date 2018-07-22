@@ -20,7 +20,7 @@ class SuchWowException(TAException):
         logger.debug(f'\n\n{such_wow}\n\n{message}\n\n{such_wow}')
 
 
-SIMULATED_ENV = os.get("env", "TEMP")
+# SIMULATED_ENV = os.get("env", "TEMP")
 # todo: use this to mark keys in redis db, so they can be separated and deleted
 REDIS_HOST, REDIS_PORT = "127.0.0.1:6379".split(":")
 pool = redis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, db=0)
@@ -43,7 +43,7 @@ logger.info("Flask app instantiated.")
 
 # ROUTING
 from TA.resources.historical_data import HistoricalDataAPI
-api.add_resource(HistoricalDataAPI, '/api/historical_data')
+api.add_resource(HistoricalDataAPI, '/api/historical_data/<string:ticker>')
 
 from TA.resources.price_volume import PriceVolumeAPI
 api.add_resource(PriceVolumeAPI, '/api/price_volume/<string:ticker>')
