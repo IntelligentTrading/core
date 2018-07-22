@@ -42,7 +42,7 @@ class PriceVolumeHistoryStorage(TickerStorage):
         return results_dict
 
 
-    def save(self):  # todo: add pipeline
+    def save(self, pipeline=None):
 
         # meets basic requirements for saving
         if not all([self.ticker, self.exchange,
@@ -58,7 +58,7 @@ class PriceVolumeHistoryStorage(TickerStorage):
 
         self.db_key_suffix = f':{self.index}'
         logger.debug("ready to save, db_key will be " + self.get_db_key())
-        return super().save()  # todo: add pipeline=pipeline
+        return super().save(pipeline=pipeline)
 
 
 class BlockchainStatsHistory(TimeseriesStorage):

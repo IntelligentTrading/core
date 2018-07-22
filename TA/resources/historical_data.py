@@ -1,5 +1,5 @@
 from flask_restful import Resource, reqparse
-from TA.app import logger
+from TA.app import logger, database
 from TA.storages.data.pv_history import PriceVolumeHistoryStorage, price_indexes, volume_indexes
 
 
@@ -42,8 +42,7 @@ class HistoricalDataAPI(Resource):
             parser.add_argument(index, required=False, location='json')
         args = parser.parse_args()
 
-        # todo: use a pipeline
-        # pipeline = database.pipeline()
+        pipeline = database.pipeline()
 
         # CREATE OBJECT FOR STORAGE
         data_history = PriceVolumeHistoryStorage(
@@ -52,24 +51,26 @@ class HistoricalDataAPI(Resource):
             timestamp=args['timestamp']
         )
 
-        save_results = []
+        data_history_objects = {}
 
         for index in price_indexes + volume_indexes:
             if args.get(index):
                 data_history.index = index
                 data_history.value = args[index]
-
-                # todo: replace results list with pipeline
-                save_results.append(data_history.save())
+                # ensure the object stays separate in memory
+                # while saving is pipelined
+                data_history_objects[index] = data_history
+                # add the saving of this object to the pipeline
+                pipeline = data_history_objects[index].save(pipeline=pipeline)
 
         try:
-            # database_response = pipeline.execute()
+            database_response = pipeline.execute()
             return {
-                       'success': f'{sum(save_results)} db entries created'
+                       'success': f'{sum(database_response)} db entries created'
                    }, 201  # created
 
         except Exception as e:
             logger.error(str(e))
             return {
                        'error': str(e)
-                   }, 501  # not implented
+                   }, 501  # not implemented

@@ -38,7 +38,6 @@ logger.info("Flask app instantiated.")
 #     run scheduler for cleanup of
 
 
-
 # ROUTING
 from TA.resources.historical_data import HistoricalDataAPI
 api.add_resource(HistoricalDataAPI, '/api/historical_data/<string:ticker>')

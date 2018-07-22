@@ -96,13 +96,13 @@ class TimeseriesStorage(KeyValueStorage):
                       int(self.unix_timestamp) # timestamp as score (int or float)
                      )
         logger.debug("saving data with args " + str(zadd_args))
-        if pipeline:
-            pipeline.zadd(*zadd_args)
+        if pipeline is not None:
             logger.debug("added command to redis pipeline")
-            return pipeline
+            return pipeline.zadd(*zadd_args)
         else:
             logger.debug("no pipeline, executing zadd command immediately.")
             return database.zadd(*zadd_args)
+
 
     def get_value(self):
         TimeseriesException("function not yet implemented! ¯\_(ツ)_/¯ ")
