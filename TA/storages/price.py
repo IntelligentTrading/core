@@ -33,7 +33,7 @@ class PriceStorage(TimeseriesIndicator):
                 raise PriceException("unknown index")
 
         self.db_key_suffix = ":{index}".format(self.index)
-        super().save(pipeline=pipeline)
+        return super().save(pipeline=pipeline)
 
 
 class BlockchainStatsHistory(TimeseriesIndicator):

@@ -84,11 +84,12 @@ class TimeseriesStorage(RedisStorage):
         self.save_own_existance()
         # example >>> redis.zadd('my-key', 'name1', 1.1)
         zadd_args = (self.get_db_key(), # set key name
-                          f'{self.value}:{str(self.unix_timestamp)}', # item unique value
-                          int(self.unix_timestamp) # timestamp as score (int or float)
+                      f'{self.value}:{str(self.unix_timestamp)}', # item unique value
+                      int(self.unix_timestamp) # timestamp as score (int or float)
                      )
         if pipeline:
             pipeline.zadd(*zadd_args)
+            logger.debug("added command to redis pipeline")
             return pipeline
         else:
             return database.zadd(*zadd_args)

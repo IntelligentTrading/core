@@ -1,7 +1,5 @@
-from abc import ABC
-import logging
-
-from TA.app import TAException
+from TA.app import TAException, logger
+from TA.storages.indicator import TimeseriesTicker
 from TA.storages.timeseries_storage import TimeseriesStorage
 
 price_indexes = [
@@ -18,7 +16,7 @@ class PriceVolumeHistoryException(TAException):
     pass
 
 
-class PriceVolumeHistoryStorage(TimeseriesStorage):
+class PriceVolumeHistoryStorage(TimeseriesTicker):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -29,19 +27,19 @@ class PriceVolumeHistoryStorage(TimeseriesStorage):
     def save(self, pipeline):
 
         # meets basic requirements for saving
-        if not all(self.ticker, self.exchange,
+        if not all([self.ticker, self.exchange,
                    self.index, self.value,
-                   self.unix_timestamp):
-            logging.error("incomplete information, cannot save \n" + str(self.__dict__))
+                   self.unix_timestamp]):
+            logger.error("incomplete information, cannot save \n" + str(self.__dict__))
             raise PriceVolumeHistoryException("save error, missing data")
 
         if not self.force_save:
-            if not self.index in price_indexes:
-                logging.error("price index not in approved list, raising exception...")
-                raise PriceVolumeHistoryException("unknown index")
+            if not self.index in price_indexes + volume_indexes:
+                logger.error("price index not in approved list, raising exception...")
+                raise PriceVolumeHistoryException("unknown index: " + str(self.index))
 
-        self.db_key_suffix = ":{index}".format(self.index)
-        super().save(pipeline=pipeline)
+        self.db_key_suffix = f':{self.index}'
+        return super().save(pipeline=pipeline)
 
 
 class BlockchainStatsHistory(TimeseriesStorage):
