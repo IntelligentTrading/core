@@ -2,7 +2,7 @@ from abc import ABC
 import logging
 
 from TA.app import TAException
-from TA.storages.indicator import TimeseriesIndicator
+from TA.storages.indicator import IndicatorStorage
 from TA.storages.pv_history import price_indexes
 
 
@@ -10,7 +10,7 @@ class PriceException(TAException):
     pass
 
 
-class PriceStorage(TimeseriesIndicator):
+class PriceStorage(IndicatorStorage):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -36,6 +36,6 @@ class PriceStorage(TimeseriesIndicator):
         return super().save(pipeline=pipeline)
 
 
-class BlockchainStatsHistory(TimeseriesIndicator):
+class BlockchainStatsHistory(IndicatorStorage):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
