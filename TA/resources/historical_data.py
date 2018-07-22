@@ -1,7 +1,6 @@
-from abc import ABC
 from flask_restful import Resource, reqparse
-from TA.app import logger, database
-from TA.storages.pv_history import PriceVolumeHistoryStorage, price_indexes, volume_indexes
+from TA.app import logger
+from TA.storages.data.pv_history import PriceVolumeHistoryStorage, price_indexes, volume_indexes
 
 
 class HistoricalDataAPI(Resource):

@@ -1,9 +1,8 @@
-from abc import ABC
 import logging
 
 from TA.app import TAException
-from TA.storages.indicator import IndicatorStorage
-from TA.storages.pv_history import price_indexes
+from TA.storages.abstract.indicator import IndicatorStorage
+from TA.storages.data.pv_history import price_indexes
 
 
 class PriceException(TAException):

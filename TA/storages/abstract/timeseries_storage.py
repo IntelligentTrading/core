@@ -1,5 +1,5 @@
 from TA.app import logger, TAException, database, set_of_known_sets_in_redis
-from TA.storages.key_value import KeyValueStorage
+from TA.storages.abstract.key_value import KeyValueStorage
 
 
 class StorageException(TAException):
@@ -58,6 +58,7 @@ class TimeseriesStorage(KeyValueStorage):
             if database.sismember("sorted_sets", describer_key):
                 database.sadd("sorted_sets", describer_key)
             else:
+                logger.warning("query made for unknown class type: " + str(describer_key))
                 return {'error': "class type is unknown to database"}
 
         # if no timestamp, assume query to find the most recent, the last one

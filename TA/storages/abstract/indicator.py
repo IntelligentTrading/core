@@ -1,6 +1,6 @@
-from TA.app import logger, TAException
-from TA.storages.ticker import TimeseriesTicker
-from TA.storages.timeseries_storage import TimeseriesStorage, TimeseriesException
+from TA.app import TAException
+from TA.storages.abstract.ticker import TickerStorage
+from TA.storages.abstract.timeseries_storage import TimeseriesException
 
 
 class IndicatorException(TAException):
@@ -8,7 +8,7 @@ class IndicatorException(TAException):
 
 
 
-class IndicatorStorage(TimeseriesTicker):
+class IndicatorStorage(TickerStorage):
     """
     stores indicators in a sorted set unique to each ticker and exchange
     requires data to be a resampling to represent the most recent 5min block of time

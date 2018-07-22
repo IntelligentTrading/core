@@ -1,6 +1,6 @@
 from TA.app import TAException, logger
-from TA.storages.indicator import TimeseriesTicker
-from TA.storages.timeseries_storage import TimeseriesStorage
+from TA.storages.abstract.indicator import TickerStorage
+from TA.storages.abstract.timeseries_storage import TimeseriesStorage
 
 price_indexes = [
     "open_price", "close_price", "low_price", "high_price",
@@ -16,7 +16,7 @@ class PriceVolumeHistoryException(TAException):
     pass
 
 
-class PriceVolumeHistoryStorage(TimeseriesTicker):
+class PriceVolumeHistoryStorage(TickerStorage):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

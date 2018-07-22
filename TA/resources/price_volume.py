@@ -1,12 +1,11 @@
-from abc import ABC
-from flask_restful import Resource, Api, reqparse
+from flask_restful import Resource, reqparse
 from TA.app import database, logger
-from TA.storages.pv_history import price_indexes, volume_indexes
-from TA.storages.timeseries_storage import StorageException
+from TA.storages.data.pv_history import price_indexes, volume_indexes
+from TA.storages.abstract.timeseries_storage import StorageException
 
 
 
-from TA.storages.price import PriceStorage
+from TA.storages.data.price import PriceStorage
 
 
 # ["open_price", "close_price", "low_price", "high_price",

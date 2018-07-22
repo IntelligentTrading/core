@@ -1,12 +1,12 @@
 from TA.app import logger, TAException
-from TA.storages.timeseries_storage import TimeseriesStorage, TimeseriesException
+from TA.storages.abstract.timeseries_storage import TimeseriesStorage
 
 
 class IndicatorException(TAException):
     pass
 
 
-class TimeseriesTicker(TimeseriesStorage):
+class TickerStorage(TimeseriesStorage):
     """
     stores timeseries data on tickers in a sorted set unique to each ticker and exchange
     todo: split the db by each exchange source

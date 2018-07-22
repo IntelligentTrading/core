@@ -1,5 +1,5 @@
 import logging
-from TA.storages.indicator import IndicatorStorage
+from TA.storages.abstract.indicator import IndicatorStorage
 
 
 class RSI(IndicatorStorage):
