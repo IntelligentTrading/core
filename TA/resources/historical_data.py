@@ -11,7 +11,21 @@ class HistoricalDataAPI(Resource):
         parser.add_argument('ticker', type=str, required=(False if ticker else True))
         parser.add_argument('exchange', type=str, required=False)
         parser.add_argument('timestamp', type=int, required=False)
+        parser.add_argument('index', type=str, required=False)
         args = parser.parse_args()
+
+        results_dict = PriceVolumeHistoryStorage.query(
+            ticker=ticker or args.get('ticker'),
+            exchange=args.get('exchange'),
+            index=args.get('index'),
+            timestamp=args.get('timestamp'))
+
+        if len(results_dict) and not 'error' in results_dict:
+            return results_dict, 200  # ok
+        else:
+            return results_dict, 404  # not found
+
+
 
         # # start query for ticker
         # if args.get('exchange'):
