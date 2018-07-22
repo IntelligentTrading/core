@@ -6,10 +6,10 @@ class IndicatorException(TAException):
     pass
 
 
-class TimeseriesIndicator(TimeseriesStorage):
+class TimeseriesTicker(TimeseriesStorage):
     def __init__(self, *args, **kwargs):
-        super().__init__()
-        self.describer_class = kwargs.get('describer_class', "indicator")
+        super().__init__(*args, **kwargs)
+        self.describer_class = kwargs.get('describer_class', "ticker")
 
         # 'ticker' REQUIRED
         # 'exchange EXPECTED BUT CAN STILL SAVE WITHOUT
@@ -26,16 +26,22 @@ class TimeseriesIndicator(TimeseriesStorage):
             if not self.exchange:
                 logger.debug("----- NO 'exchange' VALUE! ARE YOU SURE? -----")
 
-        # ALL INDICATORS ARE ASSUMED 5-MIN PERIOD RESAMPLED
-        if self.unix_timestamp % 300 != 0:
-            raise TimeseriesException("indicator timestamp should be % 300")
-        # self.resample_period = 300  # 5 min
-
 
     def get_db_key(self):
         self.db_key_prefix = f'{self.ticker}:{self.exchange}:'
         # by default will return "{ticker}:{exchange}:{class_name}"
         return super().get_db_key()
+
+
+class TimeseriesIndicator(TimeseriesTicker):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.describer_class = kwargs.get('describer_class', "indicator")
+
+        # ALL INDICATORS ARE ASSUMED 5-MIN PERIOD RESAMPLED
+        if self.unix_timestamp % 300 != 0:
+            raise TimeseriesException("indicator timestamp should be % 300")
+        # self.resample_period = 300  # 5 min
 
 
 """
