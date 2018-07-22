@@ -7,6 +7,12 @@ class IndicatorException(TAException):
 
 
 class TimeseriesTicker(TimeseriesStorage):
+    """
+    stores timeseries data on tickers in a sorted set unique to each ticker and exchange
+    todo: split the db by each exchange source
+    """
+    describer_class = "ticker"
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.describer_class = kwargs.get('describer_class', "ticker")
@@ -32,8 +38,24 @@ class TimeseriesTicker(TimeseriesStorage):
         # by default will return "{ticker}:{exchange}:{class_name}"
         return super().get_db_key()
 
+    @classmethod
+    def query(cls, ticker, exchange="", timestamp=None, key="", key_suffix=""):
+
+        if not exchange:
+            exchange = 'poloniex'
+
+        key_prefix = f'{ticker}:{exchange}'
+
+        return super().query(key=key, key_prefix=key_prefix, key_suffix=key_suffix, timestamp=timestamp)
+
 
 class TimeseriesIndicator(TimeseriesTicker):
+    """
+    stores indicators in a sorted set unique to each ticker and exchange
+    requires data to be a resampling to represent the most recent 5min block of time
+    timestamp value must be evenly divisible by 5 minutes (300 seconds)
+    todo: refactor to add short, medium, long (see resample_period in abstract_indicator)
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.describer_class = kwargs.get('describer_class', "indicator")

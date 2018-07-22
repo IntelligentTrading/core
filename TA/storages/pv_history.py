@@ -24,6 +24,14 @@ class PriceVolumeHistoryStorage(TimeseriesTicker):
         self.value = kwargs.get('value')
 
 
+    @classmethod
+    def query(cls, ticker, exchange=None, index="close", timestamp=None):
+        # "ETH_BTC:poloniex:PriceVolumeHistoryStorage:close_price"
+        # f'{ticker}:{exchange}:{cls.__name__}:{index}'
+        key_suffix = f':{index}'
+        return super().query(ticker=ticker, exchange=None, timestamp=timestamp, key_suffix=key_suffix)
+
+
     def save(self):  # todo: add pipeline
 
         # meets basic requirements for saving
