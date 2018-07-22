@@ -26,20 +26,6 @@ class HistoricalDataAPI(Resource):
             return results_dict, 404  # not found
 
 
-
-        # # start query for ticker
-        # if args.get('exchange'):
-        #     # add 'exchange' to query for key
-        # if args.get('timestamp'):
-        #     # add 'timestamp' to query for key
-        # else:
-        #     # get the last one, largest timestamp value
-
-        # db.get()
-
-        return {'price': 123, 'volume': 456}, 200
-
-
     def put(self, ticker):
         """
         This should receive a resampled price
