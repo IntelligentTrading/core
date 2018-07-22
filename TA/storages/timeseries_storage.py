@@ -1,4 +1,4 @@
-from TA.app import SIMULATED_ENV, logger, TAException, database, set_of_known_sets_in_redis
+from TA.app import logger, TAException, database, set_of_known_sets_in_redis
 from abc import ABC
 
 class StorageException(TAException):
@@ -53,7 +53,7 @@ class TimeseriesStorage(RedisStorage):
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__()
+        super().__init__(*args, **kwargs)
         self.describer_class = kwargs.get('describer_class', "timeseries")
 
         # 'timestamp' REQUIRED, VALIDATE

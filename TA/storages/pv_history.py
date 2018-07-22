@@ -21,7 +21,7 @@ class PriceVolumeHistoryException(TAException):
 class PriceVolumeHistoryStorage(TimeseriesStorage):
 
     def __init__(self, *args, **kwargs):
-        super().__init__()
+        super().__init__(*args, **kwargs)
         self.index = kwargs.get('index', "close")
         self.value = kwargs.get('value')
 
@@ -46,4 +46,4 @@ class PriceVolumeHistoryStorage(TimeseriesStorage):
 
 class BlockchainStatsHistory(TimeseriesStorage):
     def __init__(self, *args, **kwargs):
-        super().__init__()
+        super().__init__(*args, **kwargs)
