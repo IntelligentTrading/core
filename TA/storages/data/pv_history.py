@@ -20,16 +20,26 @@ class PriceVolumeHistoryStorage(TickerStorage):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.index = kwargs.get('index', "close")
+        self.index = kwargs.get('index', "close_price")
         self.value = kwargs.get('value')
 
 
     @classmethod
-    def query(cls, ticker, exchange=None, index="close", timestamp=None):
+    def query(cls, ticker, exchange=None, index="", timestamp=None):
         # "ETH_BTC:poloniex:PriceVolumeHistoryStorage:close_price"
         # f'{ticker}:{exchange}:{cls.__name__}:{index}'
+        if not index:
+            logger.debug("assuming to use `close_price` index in price query")
+            index = "close_price"
+
         key_suffix = f':{index}'
-        return super().query(ticker=ticker, exchange=None, timestamp=timestamp, key_suffix=key_suffix)
+
+        results_dict = super().query(ticker=ticker, exchange=None,
+                                     key_suffix=key_suffix,
+                                     timestamp=timestamp)
+
+        results_dict['index'] = index
+        return results_dict
 
 
     def save(self):  # todo: add pipeline

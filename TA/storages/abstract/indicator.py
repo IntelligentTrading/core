@@ -7,7 +7,6 @@ class IndicatorException(TAException):
     pass
 
 
-
 class IndicatorStorage(TickerStorage):
     """
     stores indicators in a sorted set unique to each ticker and exchange
@@ -15,14 +14,25 @@ class IndicatorStorage(TickerStorage):
     timestamp value must be evenly divisible by 5 minutes (300 seconds)
     todo: refactor to add short, medium, long (see resample_period in abstract_indicator)
     """
+    describer_class = "indicator"
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.describer_class = kwargs.get('describer_class', "indicator")
+        self.describer_class = kwargs.get('describer_class', self.__class__.describer_class)
 
         # ALL INDICATORS ARE ASSUMED 5-MIN PERIOD RESAMPLED
         if self.unix_timestamp % 300 != 0:
             raise TimeseriesException("indicator timestamp should be % 300")
         # self.resample_period = 300  # 5 min
+
+
+    @classmethod
+    def query(cls, ticker, exchange="", timestamp=None, key="", key_suffix=""):
+
+        results_dict = super().query(ticker, exchange=exchange,
+                                     key=key, key_suffix=key_suffix,
+                                     timestamp=timestamp)
+        return results_dict
 
 
 """

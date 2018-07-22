@@ -13,7 +13,7 @@ class PriceStorage(IndicatorStorage):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.index = kwargs.get('index', "close")
+        self.index = kwargs.get('index', "close_price")
         self.value = kwargs.get('value')
 
 

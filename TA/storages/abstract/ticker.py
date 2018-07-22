@@ -15,7 +15,7 @@ class TickerStorage(TimeseriesStorage):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.describer_class = kwargs.get('describer_class', "ticker")
+        self.describer_class = kwargs.get('describer_class', self.__class__.describer_class)
 
         # 'ticker' REQUIRED
         # 'exchange EXPECTED BUT CAN STILL SAVE WITHOUT
@@ -39,12 +39,16 @@ class TickerStorage(TimeseriesStorage):
         return super().get_db_key()
 
     @classmethod
-    def query(cls, ticker, exchange="", timestamp=None, key="", key_suffix=""):
+    def query(cls, ticker, exchange="", key="", key_suffix="", timestamp=None):
 
         if not exchange:
             exchange = 'poloniex'
 
         key_prefix = f'{ticker}:{exchange}'
 
-        return super().query(key=key, key_prefix=key_prefix, key_suffix=key_suffix, timestamp=timestamp)
+        results_dict = super().query(key=key, key_prefix=key_prefix, key_suffix=key_suffix,
+                                     timestamp=timestamp)
 
+        results_dict['exchange'] = exchange
+        results_dict['ticker'] = ticker
+        return results_dict
