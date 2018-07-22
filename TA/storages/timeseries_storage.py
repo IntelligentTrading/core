@@ -87,11 +87,13 @@ class TimeseriesStorage(RedisStorage):
                       f'{self.value}:{str(self.unix_timestamp)}', # item unique value
                       int(self.unix_timestamp) # timestamp as score (int or float)
                      )
+        logger.debug("saving data with args " + str(zadd_args))
         if pipeline:
             pipeline.zadd(*zadd_args)
             logger.debug("added command to redis pipeline")
             return pipeline
         else:
+            logger.debug("no pipeline, executing zadd command immediately.")
             return database.zadd(*zadd_args)
 
     def get_value(self):

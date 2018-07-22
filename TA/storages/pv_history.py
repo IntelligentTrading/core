@@ -24,7 +24,7 @@ class PriceVolumeHistoryStorage(TimeseriesTicker):
         self.value = kwargs.get('value')
 
 
-    def save(self, pipeline):
+    def save(self):  # todo: add pipeline
 
         # meets basic requirements for saving
         if not all([self.ticker, self.exchange,
@@ -39,7 +39,8 @@ class PriceVolumeHistoryStorage(TimeseriesTicker):
                 raise PriceVolumeHistoryException("unknown index: " + str(self.index))
 
         self.db_key_suffix = f':{self.index}'
-        return super().save(pipeline=pipeline)
+        logger.debug("ready to save, db_key will be " + self.get_db_key())
+        return super().save()  # todo: add pipeline=pipeline
 
 
 class BlockchainStatsHistory(TimeseriesStorage):
