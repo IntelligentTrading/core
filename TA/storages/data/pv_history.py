@@ -34,7 +34,7 @@ class PriceVolumeHistoryStorage(TickerStorage):
 
         key_suffix = f':{index}'
 
-        results_dict = super().query(ticker=ticker, exchange=None,
+        results_dict = super().query(ticker=ticker, exchange=exchange,
                                      key_suffix=key_suffix,
                                      timestamp=timestamp)
 
