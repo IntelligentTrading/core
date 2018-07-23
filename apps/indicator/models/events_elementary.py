@@ -245,15 +245,19 @@ def _process_ben_volume_based(horizon, joined_price_and_volume, **kwargs):
 
     events_df = pd.DataFrame()
 
-    events_df['vbi_price_cross_from_below'] = \
-        np.sign((1+BEN_PRICE_CROSS_PERCENT)*joined_price_and_volume.mean_price - joined_price_and_volume.close_price).diff().lt(0)
-    events_df['vbi_price_gt_mean_by_percent'] = \
-        np.sign((1+BEN_PRICE_CROSS_PERCENT)*joined_price_and_volume.mean_price - joined_price_and_volume.close_price).lt(0)
+    events_df['vbi_price_cross_from_below'] = np.sign(
+        (1+BEN_PRICE_CROSS_PERCENT)*joined_price_and_volume.mean_price - joined_price_and_volume.close_price
+                                                    ).diff().lt(0)
+    events_df['vbi_price_gt_mean_by_percent'] = np.sign(
+        (1+BEN_PRICE_CROSS_PERCENT)*joined_price_and_volume.mean_price - joined_price_and_volume.close_price
+                                                    ).lt(0)
 
-    events_df['vbi_volume_cross_from_below'] = \
-        np.sign((1 + BEN_VOLUME_CROSS_PERCENT)*joined_price_and_volume.mean_volume - joined_price_and_volume.volume).diff().lt(0)
-    events_df['vbi_volume_gt_mean_by_percent'] = \
-        np.sign((1 + BEN_VOLUME_CROSS_PERCENT) * joined_price_and_volume.mean_volume - joined_price_and_volume.volume).lt(0)
+    events_df['vbi_volume_cross_from_below'] = np.sign(
+        (1 + BEN_VOLUME_CROSS_PERCENT)*joined_price_and_volume.mean_volume - joined_price_and_volume.volume
+                                                    ).diff().lt(0)
+    events_df['vbi_volume_gt_mean_by_percent'] = np.sign(
+        (1 + BEN_VOLUME_CROSS_PERCENT) * joined_price_and_volume.mean_volume - joined_price_and_volume.volume
+                                                    ).lt(0)
 
     # get the last events row and account for a small timestamp rounding error
     last_event_row = events_df.iloc[-1]      # you can you events_df.tail(1) here
@@ -350,11 +354,16 @@ class EventsElementary(AbstractIndicator):
             # clean NaN values, if any
             prices_df = prices_df.dropna()
 
+            #TODO: @Karla,
+            # - we can use a no_time_params dictionary to pass paarmeters quickly
+            # - we have to use volume_resampled here... since we dont have it, we have to
+            # migrate to PriceHistory asap
             volumes_ts = get_n_last_volumes_ts(ben_num_records*kwargs['resample_period'],
                                                kwargs['source'],
                                                kwargs['transaction_currency'],
                                                kwargs['counter_currency'])
 
+            # TODO: it seems like we duplicate if volumes_ts is not None and len(prices_df) != 0 ....
             if volumes_ts is None:
                 logger.error("BEN VBI CRITICAL: NO VOLUME DATA!!!")
 
@@ -362,6 +371,8 @@ class EventsElementary(AbstractIndicator):
                 logger.error("BEN VBI CRITICAL: NO PRICE DATA!!!")
 
             if volumes_ts is not None and len(prices_df) != 0:
+                # TODO @Karla: - hm... why not to use our get_n_last_sma_df or re-use price_df ?
+                # no need to calculate it again... unless we make a decision not to use our SMA table
                 prices_avg = talib.SMA(np.array(prices_df.close_price, dtype=float), timeperiod=PRICE_MEAN_TIME_PERIOD)
                 prices_df['mean_price'] = pd.Series(prices_avg, index=prices_df.index)
 

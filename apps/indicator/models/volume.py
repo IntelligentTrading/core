@@ -27,6 +27,7 @@ class Volume(models.Model):
 
     # MODEL FUNCTIONS
 
+#TODO: @Karla, we need to use Volume resampled here.. and switch to PriceHistory
 def get_n_last_volumes_ts(n, source, transaction_currency, counter_currency):
     back_in_time_records = list(Volume.objects.filter(
         source=source,
