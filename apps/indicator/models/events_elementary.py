@@ -315,7 +315,7 @@ class EventsElementary(AbstractIndicator):
 
         logger.info('   ::::  Start analysing ELEMENTARY events ::::')
 
-        ###### check for rsi events, save and emit signal
+        ############## check for RSI events, save and emit signal
         logger.info("   ... Check RSI Events: ")
         _process_rsi(horizon, **kwargs)
 

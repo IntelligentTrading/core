@@ -1,3 +1,8 @@
+#######################################################################################
+# DELETE THIS CLASS AFTER SEPTEMBER 2018 - after make sure PriceHistory works fine!!  #
+#######################################################################################
+# volume now is in price_history table
+
 from django.db import models
 from unixtimestampfield.fields import UnixTimeStampField
 

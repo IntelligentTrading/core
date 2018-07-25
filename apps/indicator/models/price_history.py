@@ -49,11 +49,11 @@ def get_n_last_prices_ts(n, source, transaction_currency, counter_currency ):
         transaction_currency=transaction_currency,
         counter_currency=counter_currency,
         timestamp__gte=datetime.now() - timedelta(minutes=n)
-    ).values('timestamp', 'price').order_by('timestamp'))
+    ).values('timestamp', 'close', 'volume').order_by('timestamp'))
 
     if back_in_time_records:
         return pd.Series(
-            data= [rec['price'] for rec in back_in_time_records],
+            data= [rec['close'] for rec in back_in_time_records],
             index = [rec['timestamp'] for rec in back_in_time_records]
         )
 
@@ -74,12 +74,12 @@ def get_price_at_timepoint(timestamp, source, transaction_currency, counter_curr
         counter_currency=counter_currency,
         timestamp__gte = timestamp - timedelta(minutes=10),  # 10 min ahead in time
         timestamp__lte=timestamp + timedelta(minutes=10),  # 10 min back in time
-    ).values('timestamp',  'price').order_by('timestamp'))
+    ).values('timestamp',  'close').order_by('timestamp'))
 
     #convert to a timeseries
     if prices_range:
         ts = [rec['timestamp'] for rec in prices_range]
-        close_prices_ts = pd.Series(data=[rec['price'] for rec in prices_range], index=ts)
+        close_prices_ts = pd.Series(data=[rec['close'] for rec in prices_range], index=ts)
     else:
         logger.error(' we dont have any price in 10 min proximity of the date you provided:  ' + str(timestamp) + ' :backtesting is not possible')
         return None

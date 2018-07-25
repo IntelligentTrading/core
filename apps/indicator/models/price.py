@@ -7,6 +7,10 @@ from datetime import timedelta, datetime
 import pandas as pd
 import logging
 
+#######################################################################################
+# DELETE THIS CLASS AFTER SEPTEMBER 2018 - after make sure PriceHistory works fine!!  #
+#######################################################################################
+
 logger = logging.getLogger(__name__)
 
 class Price(models.Model):
