@@ -1,6 +1,7 @@
-from TA.app import TAException, logger
+from TA.app import TAException, logger, database
 from TA.storages.abstract.indicator import TickerStorage
 from TA.storages.abstract.timeseries_storage import TimeseriesStorage
+
 
 price_indexes = [
     "open_price", "close_price", "low_price", "high_price",
@@ -64,3 +65,4 @@ class PriceVolumeHistoryStorage(TickerStorage):
 class BlockchainStatsHistory(TimeseriesStorage):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+

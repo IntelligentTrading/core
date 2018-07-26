@@ -62,9 +62,15 @@ class HistoricalDataAPI(Resource):
                 data_history_objects[index] = data_history
                 # add the saving of this object to the pipeline
                 pipeline = data_history_objects[index].save(pipeline=pipeline)
-
         try:
             database_response = pipeline.execute()
+
+            # publish an update of this object type to pubsub
+            database.publish(
+                data_history.describer_class,
+                f'{data_history.ticker}:{data_history.exchange}:{data_history.timestamp}'
+            )
+
             return {
                        'success': f'{sum(database_response)} db entries created'
                    }, 201  # created

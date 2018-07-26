@@ -119,6 +119,7 @@ class TimeseriesStorage(KeyValueStorage):
                       int(self.unix_timestamp) # timestamp as score (int or float)
                      )
         logger.debug("saving data with args " + str(zadd_args))
+
         if pipeline is not None:
             logger.debug("added command to redis pipeline")
             return pipeline.zadd(*zadd_args)
