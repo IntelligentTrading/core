@@ -27,10 +27,11 @@ class Command(BaseCommand):
         arg = options['arg']
 
         if arg == 'pull_data':
-            logger.info("Getting ready to trawl Poloniex...\n>>> Break it when you'll get enough samples <<<")
-            while True:
-                _pull_poloniex_data()
-                time.sleep(60/time_speed)
+            logger.info("This command was disabled. Please don't use it")
+            # logger.info("Getting ready to trawl Poloniex...\n>>> Break it when you'll get enough samples <<<")
+            # while True:
+            #     _pull_poloniex_data()
+            #     time.sleep(60/time_speed)
 
         elif arg == 'compute_pair':
             _compute_indicators_for(transaction_currency='BTC', counter_currency=USDT,

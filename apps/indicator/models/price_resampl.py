@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from django.db import models
 from apps.indicator.models.abstract_indicator import AbstractIndicator
-from apps.indicator.models.price import Price
+#from apps.indicator.models.price import Price
 from apps.indicator.models.price_history import PriceHistory
 import time
 
@@ -65,7 +65,7 @@ class PriceResampl(AbstractIndicator):
                 source=self.source,
                 transaction_currency=self.transaction_currency,
                 counter_currency=self.counter_currency,
-                timestamp__lte=datetime_now,
+                timestamp__lte=datetime_now,   # TODO: PriceHistory.timestamp is of DateTime type... not timestamp
                 timestamp__gte=datetime_now - timedelta(minutes=self.resample_period)
             ).values('timestamp', 'close', 'volume').order_by('-timestamp'))
 

@@ -6,7 +6,7 @@ from requests import get
 
 from apps.channel.models import ExchangeData
 from apps.indicator.models import Price, Volume
-from apps.indicator.models.price import get_currency_value_from_string
+from apps.indicator.models.price_history import get_currency_value_from_string
 
 from settings import POLONIEX
 
