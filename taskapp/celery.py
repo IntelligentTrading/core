@@ -65,10 +65,12 @@ def setup_periodic_tasks(sender, **_):
         )
 
     # calculate ANN for SHORT period at every hour and half OO:30, 01:30 ...
+    # @Alex: I put it back to 00:00 because the time stamp is a key and should match hours
+    # move it back if server performance sufferrs, but make sure to pass a right timestamp
     sender.add_periodic_task(
-        crontab(minute=30, hour='*'),
+        crontab(minute=0),                        #crontab(minute=30, hour='*'),
         tasks.compute_ann_for_all_sources.s(resample_period=SHORT),
-        name='at the beginning of every hour and half',
+        name='at the beginning of every hour', #name='at the beginning of every hour and half',
         )
 
     # run backtesting daily

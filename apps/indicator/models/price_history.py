@@ -1,11 +1,10 @@
 #from datetime import timedelta, datetime
 import logging
 import pandas as pd
-
+from datetime import timedelta, datetime
 import architect
 
 from django.db import models
-
 from settings import SOURCE_CHOICES, COUNTER_CURRENCY_CHOICES
 
 
@@ -49,13 +48,29 @@ def get_n_last_prices_ts(n, source, transaction_currency, counter_currency ):
         transaction_currency=transaction_currency,
         counter_currency=counter_currency,
         timestamp__gte=datetime.now() - timedelta(minutes=n)
-    ).values('timestamp', 'close', 'volume').order_by('timestamp'))
+    ).values('timestamp', 'close').order_by('timestamp'))
 
     if back_in_time_records:
         return pd.Series(
             data= [rec['close'] for rec in back_in_time_records],
             index = [rec['timestamp'] for rec in back_in_time_records]
         )
+
+
+def get_n_last_volumes_ts(n, source, transaction_currency, counter_currency ):
+    back_in_time_records = list(PriceHistory.objects.filter(
+        source=source,
+        transaction_currency=transaction_currency,
+        counter_currency=counter_currency,
+        timestamp__gte=datetime.now() - timedelta(minutes=n)
+    ).values('timestamp', 'volume').order_by('timestamp'))
+
+    if back_in_time_records:
+        return pd.Series(
+            data= [rec['volume'] for rec in back_in_time_records],
+            index = [rec['timestamp'] for rec in back_in_time_records]
+        )
+
 
 
 def get_currency_value_from_string(currency_string):

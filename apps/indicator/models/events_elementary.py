@@ -11,7 +11,8 @@ from apps.indicator.models.sma import get_n_last_sma_df
 from apps.indicator.models.rsi import Rsi
 from apps.signal.models.signal import Signal
 from apps.indicator.models.ann_future_price_classification import AnnPriceClassification, get_n_last_ann_classif_df
-from apps.indicator.models.volume import get_n_last_volumes_ts
+#from apps.indicator.models.volume import get_n_last_volumes_ts
+from apps.indicator.models.price_history import get_n_last_volumes_ts
 
 from apps.user.models.user import get_horizon_value_from_string
 from settings import HORIZONS_TIME2NAMES, EMIT_RSI, EMIT_SMA, RUN_ANN, MODIFY_DB, MEDIUM, RUN_BEN
