@@ -165,7 +165,7 @@ def get_n_last_ann_classif_df(n, **kwargs)->pd.DataFrame:
         df['probability_down'] = probability_down
         df['predicted_ahead_for'] = predicted_ahead_for
     else:
-        debug.error("   !!!!! No recently generated AI events found!")
+        logger.error("   !!!!! No recently generated AI events found!")
 
         # TODO: make sure the last data is at the bottom pf the dataset!
 

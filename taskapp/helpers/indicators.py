@@ -27,9 +27,13 @@ import datetime
 
 
 logger = logging.getLogger(__name__)
-''' Compute ANN price prediction at each time point in the same way as regular indicators do'''
+
 
 def _compute_ann(source, resample_period=SHORT):
+    '''
+    Compute ANN price prediction at each time point in the same way as regular indicators do
+    i.e. every short/mediun/long
+    '''
     if RUN_ANN:
         # choose the pre-trained ANN model depending on period, here are the same
         period2model = {
