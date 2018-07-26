@@ -102,6 +102,7 @@ def _process_ai_simple(horizon, **kwargs):
     if df.iloc[-1]['class_change'] != 0:
         # emit signal
         try:
+            logger.debug("******************** AI event is detected *****************")
             # TODO: change to emitting two signals UP and DOWN according to how others events are generated (for ML)
             new_instance = EventsElementary(
                 **kwargs,
