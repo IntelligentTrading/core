@@ -1,4 +1,4 @@
-from TA.app import TAException
+from TA.api import TAException
 from TA.storages.abstract.ticker import TickerStorage
 from TA.storages.abstract.timeseries_storage import TimeseriesException
 

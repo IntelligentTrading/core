@@ -1,7 +1,7 @@
 import logging
 from abc import ABC
 
-from TA.app import TAException, database
+from TA.api import TAException, database
 from TA.storages.abstract.indicator import IndicatorStorage
 from TA.storages.data.pv_history import price_indexes
 
@@ -13,7 +13,7 @@ class PriceException(TAException):
 class DataSubscriber(ABC):
 
     def __init__(self):
-        from TA.app import database
+        from TA.api import database
         self.pubsub = database.pubsub()
 
         from TA.storages.data.pv_history import PriceVolumeHistoryStorage

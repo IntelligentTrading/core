@@ -1,4 +1,4 @@
-from TA.app import logger, TAException
+from TA.api import logger, TAException
 from TA.storages.abstract.timeseries_storage import TimeseriesStorage
 
 

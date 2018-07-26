@@ -1,4 +1,4 @@
-from TA.app import logger, TAException, database
+from TA.api import logger, TAException, database
 from abc import ABC
 
 

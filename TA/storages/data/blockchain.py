@@ -1,4 +1,4 @@
-from TA.app import TAException, logger
+from TA.api import TAException, logger
 from TA.storages.abstract.indicator import IndicatorStorage
 
 
