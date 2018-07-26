@@ -13,7 +13,7 @@ import numpy as np
 from django.db import models
 from apps.indicator.models.abstract_indicator import AbstractIndicator
 from apps.ai.models.nn_model import AnnModel
-from apps.indicator.models.price_history import get_n_last_prices_tsб get_n_last_volumes_ts
+from apps.indicator.models.price_history import get_n_last_prices_ts, get_n_last_volumes_ts
 #from apps.indicator.models.volume import get_n_last_volumes_ts
 from settings import MODIFY_DB
 

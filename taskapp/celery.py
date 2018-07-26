@@ -77,7 +77,7 @@ def setup_periodic_tasks(sender, **_):
 
 
 
-    # run backtesting daily
+    # LAST - run backtesting daily
     sender.add_periodic_task(
         crontab(minute=40, hour=13),
         tasks.backtest_all_strategies.s(),
