@@ -72,7 +72,7 @@ class TimeseriesStorage(KeyValueStorage):
                     [value, timestamp] = query_response[0].decode("utf-8").split(":")
                 except:
                     # force no results, which raises IndexError exception later
-                    timestamp = 1483228800
+                    timestamp = 1483228800  # Jan 1, 2017
 
             timestamp = int(timestamp)
             max_timestamp = timestamp

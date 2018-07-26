@@ -1,6 +1,6 @@
 from flask_restful import Resource, reqparse
 from TA.api import database, logger
-from TA.storages.data.pv_history import price_indexes, volume_indexes
+from TA.storages.data.pv_history import defualt_price_indexes, default_volume_indexes
 from TA.storages.abstract.timeseries_storage import StorageException
 
 
@@ -36,7 +36,7 @@ class PriceVolumeAPI(Resource):
         parser.add_argument('exchange', type=str, required=True, location='json')
         parser.add_argument('timestamp', type=int, required=True, location='json')
 
-        for index in (price_indexes + volume_indexes):
+        for index in (defualt_price_indexes + default_volume_indexes):
             parser.add_argument(index, location='json', required=False)
         args = parser.parse_args()
 
@@ -50,7 +50,7 @@ class PriceVolumeAPI(Resource):
         except StorageException as e:
             return {'error': str(e)}, 400  #bad request
 
-        for index in price_indexes:
+        for index in defualt_price_indexes:
             if index in args:
                 p.index = index
                 p.value = args[index]

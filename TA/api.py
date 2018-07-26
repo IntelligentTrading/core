@@ -13,7 +13,7 @@ class TAException(Exception):
         self.message = message
         logger.error(message)
 
-class SuchWowException(TAException):
+class SuchWowException(Exception):
     def __init__(self, message):
         self.message = message
         such_wow = "==============SUCH=====WOW==============="
@@ -50,6 +50,5 @@ api.add_resource(HistoricalDataAPI, '/api/historical_data/<string:ticker>')
 
 from TA.resources.price_volume import PriceVolumeAPI
 api.add_resource(PriceVolumeAPI, '/api/price_volume/<string:ticker>')
-
 
 logger.info("Flask resources and routes are ready.")

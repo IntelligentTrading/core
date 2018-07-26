@@ -1,6 +1,6 @@
 from flask_restful import Resource, reqparse
 from TA.api import logger, database
-from TA.storages.data.pv_history import PriceVolumeHistoryStorage, price_indexes, volume_indexes
+from TA.storages.data.pv_history import PriceVolumeHistoryStorage, defualt_price_indexes, default_volume_indexes
 
 
 class HistoricalDataAPI(Resource):
@@ -38,7 +38,7 @@ class HistoricalDataAPI(Resource):
         parser.add_argument('exchange', type=str, required=True, location='json')
         parser.add_argument('timestamp', type=int, required=True, location='json')
         parser.add_argument('ticker', required=(False if ticker else True), location='json')
-        for index in price_indexes + volume_indexes:
+        for index in defualt_price_indexes + default_volume_indexes:
             parser.add_argument(index, required=False, location='json')
         args = parser.parse_args()
 
@@ -53,7 +53,7 @@ class HistoricalDataAPI(Resource):
 
         data_history_objects = {}
 
-        for index in price_indexes + volume_indexes:
+        for index in defualt_price_indexes + default_volume_indexes:
             if args.get(index):
                 data_history.index = index
                 data_history.value = args[index]
