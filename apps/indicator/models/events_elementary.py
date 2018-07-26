@@ -87,7 +87,11 @@ def _process_ai_simple(horizon, **kwargs):
 
     # NOTE: here I hardcoded two class classification ignoring SAME - should be don ona  model level!!
 
-    ann_classif_df = get_n_last_ann_classif_df(4, **kwargs)
+    ann_classif_df = get_n_last_ann_classif_df(5, **kwargs)
+    if ann_classif_df.empty:
+        logger.error('  something wrong with AI indicators... we dont have it ...')
+        return False
+
     # choose only two class classification (ignore SAME), then add a new column with the best class
     df = ann_classif_df[['probability_up','probability_down']]
     df['class'] = df.idxmax(axis=1)
