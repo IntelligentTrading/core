@@ -60,9 +60,3 @@ class PriceVolumeHistoryStorage(TickerStorage):
         self.db_key_suffix = f':{self.index}'
         logger.debug("ready to save, db_key will be " + self.get_db_key())
         return super().save(pipeline=pipeline)
-
-
-class BlockchainStatsHistory(TimeseriesStorage):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
