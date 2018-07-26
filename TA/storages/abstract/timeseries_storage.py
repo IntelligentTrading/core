@@ -47,7 +47,8 @@ class TimeseriesStorage(KeyValueStorage):
 
 
     @classmethod
-    def query(cls, key="", key_suffix="", key_prefix="", timestamp=None):
+    def query(cls, key="", key_suffix="", key_prefix="",
+              timestamp=None, periods=0):
 
         sorted_set_key = cls.compile_db_key(key=key, key_prefix=key_prefix, key_suffix=key_suffix)
         # example key f'{key_prefix}:{cls.__name__}:{key_suffix}'
@@ -64,17 +65,39 @@ class TimeseriesStorage(KeyValueStorage):
         # if no timestamp, assume query to find the most recent, the last one
         if not timestamp:
             query_response = database.zrange(sorted_set_key, -1, -1)
-        else:
-            query_response = database.zrangebyscore(sorted_set_key, timestamp - 1800, timestamp, 0, 1)
+
+        if timestamp or periods:
+            if not timestamp:
+                try:
+                    [value, timestamp] = query_response[0].decode("utf-8").split(":")
+                except:
+                    # force no results, which raises IndexError exception later
+                    timestamp = 1483228800
+
+            timestamp = int(timestamp)
+            max_timestamp = timestamp
+            min_timestamp = timestamp - (periods*300) - 1800
+            query_response = database.zrangebyscore(sorted_set_key, min_timestamp, max_timestamp, 0, periods)
+
+        periods = periods or 1
 
         # example query_response = [b'0.06288:1532163247']
         # which came from f'{self.value}:{str(self.unix_timestamp)}'
         try:
-            [value, timestamp] = query_response[0].decode("utf-8").split(":")
+            if timestamp == 1483228800:
+                values = []
+            else: # we are returning a list
+                values = [vt.decode("utf-8").split(":")[0] for vt in query_response ]
+                last_timestamp = query_response[-1].decode("utf-8").split(":")[1]
+                #  todo: double check that [-1] in list is most recent timestamp
+
             return {
-                'value': value,
-                'timestamp': timestamp
+                'values': values,
+                'timestamp': timestamp or last_timestamp,
+                'periods': periods,
+                'period_size': None
             }
+
         except IndexError:
             return None  # no problem, query just returned no results
         except Exception as e:

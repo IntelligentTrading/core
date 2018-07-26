@@ -39,7 +39,9 @@ class TickerStorage(TimeseriesStorage):
         return super().get_db_key()
 
     @classmethod
-    def query(cls, ticker, exchange="", key="", key_suffix="", timestamp=None):
+    def query(cls, ticker, exchange="",
+              key="", key_suffix="",
+              timestamp=None, periods=0):
 
         if not exchange:
             exchange = 'poloniex'
@@ -47,7 +49,7 @@ class TickerStorage(TimeseriesStorage):
         key_prefix = f'{ticker}:{exchange}'
 
         results_dict = super().query(key=key, key_prefix=key_prefix, key_suffix=key_suffix,
-                                     timestamp=timestamp)
+                                     timestamp=timestamp, periods=periods)
 
         results_dict['exchange'] = exchange
         results_dict['ticker'] = ticker
