@@ -1,11 +1,21 @@
 import os
 import logging
+import time
+
 from flask import Flask
 from flask_restful import reqparse, abort, Api, Resource
 import redis
 
+from TA.storages.data.price import DataSubscriber
+
 logger = logging.getLogger('flask_worker')
 logger.setLevel(logging.DEBUG)
+
+
+class WorkerException(Exception):
+    def __init__(self, message):
+        self.message = message
+        logger.error(message)
 
 
 # SIMULATED_ENV = os.get("env", "TEMP")
@@ -19,34 +29,17 @@ pool = redis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, db=0)
 redis_client = redis.Redis(connection_pool=pool)
 logger.info("Redis connection established.")
 
-subscribers = [("function", "channel_name"), ("function", "channel_name")]
 
-pubsub_clients = []
+def main():
+    subscribers = set()
+    subscriber_classes = [DataSubscriber]
 
-for function, channels in subscribers:
+    for subscriber_class in subscriber_classes:
+        subscribers.add(subscriber_class())
 
-    pubsub_clients[function] = redis_client.pubsub()
-    for channel in channels:
-        pubsub_clients[function].subscribe(channel)
+    logger.info("Pubsub clients are ready.")
 
-logger.info("Pubsub clients are ready.")
-
-while True:
-    for function, channels in subscribers:
-        message = pubsub_clients[function].get_message()
-        if not message:
-            continue
-
-        # example:
-        # {
-        #   'type': 'message',
-        #   'pattern': None,
-        #   'channel': b'channel',
-        #   'data': b"dude, what's up?"
-        # }
-        try:
-            if message['type'] == 'message':
-                message['data']
-
-        except KeyError: #message not in expected format. just ignore
-            pass
+    while True:
+        for subscriber in subscribers:
+            subscriber()
+            time.sleep(0.001)  # be nice to the system :)
