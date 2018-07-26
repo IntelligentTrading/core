@@ -149,11 +149,11 @@ def itf_view(trading_pair):
             view += f"{format_currency(signal.price, trading_pair['counter_currency'])}\n"
 
     # More info
-    itf_more_info_url = 'http://intelligenttrading.org/features/'
+    itf_more_info_url = 'https://intelligenttrading.org/?utm_source=TelegramInfoBotAlert'
     if latest_signals:
-        view += f"\n[Get more signals on ITF website]({itf_more_info_url})"
+        view += f"\n[Get more signals with the Intelligent Trading Bot]({itf_more_info_url})"
     else:
-        view += f"\n[Get signals on ITF website]({itf_more_info_url})"
+        view += f"\n[Get signals with the Intelligent Trading Bot]({itf_more_info_url})"
     #view += f" or [Ask our representative](tg://user?id=12345678)"
 
     # Sentiments from cryptopanic
