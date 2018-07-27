@@ -46,6 +46,6 @@ tensorflow
 keras
 h5py
 
-Flask
-flask-restful
-click
+Flask==1.0.2
+flask-restful==0.3.6
+APScheduler==3.0.0

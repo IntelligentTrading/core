@@ -1,13 +1,13 @@
 import os
 import logging
 import time
-
-from flask import Flask
 import redis
 
 
+deployment_type = os.environ.get('DEPLOYMENT_TYPE', 'LOCAL')
+if deployment_type == 'LOCAL':
+    logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger('flask_worker')
-logger.setLevel(logging.DEBUG)
 
 
 class WorkerException(Exception):

@@ -3,11 +3,11 @@ import logging
 from flask import Flask
 from flask_restful import reqparse, abort, Api, Resource
 import redis
-import click
 
-
-logger = logging.getLogger('flask_api')
-logger.setLevel(logging.DEBUG)
+deployment_type = os.environ.get('DEPLOYMENT_TYPE', 'LOCAL')
+if deployment_type == 'LOCAL':
+    logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger('flask_app')
 
 
 class TAException(Exception):
@@ -41,6 +41,10 @@ set_of_known_sets_in_redis = set()
 app = Flask(__name__)
 api = Api(app)
 logger.info("Flask app instantiated.")
+logger.debug("Flask app debug.")
+logger.warning("Flask app warning.")
+logger.error("Flask app error.")
+logger.critical("Flask app critical.")
 
 # if env == "PRODUCTION":
 #     run scheduler for cleanup of
