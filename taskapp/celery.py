@@ -50,9 +50,9 @@ def setup_periodic_tasks(sender, **_):
     # move it back if server performance sufferrs, but make sure to pass a right timestamp
     logger.info("   .... adding a AI task to queue: compute_ann_for_all_sources")
     sender.add_periodic_task(
-        crontab(minute=0),                        #crontab(minute=30, hour='*'),
+        crontab(minute=30, hour='*'),
         tasks.compute_ann_for_all_sources.s(resample_period=SHORT),
-        name='at the beginning of every hour', #name='at the beginning of every hour and half',
+        name='at the beginning of every hour and half',
         )
 
 
