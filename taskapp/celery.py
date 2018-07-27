@@ -1,12 +1,13 @@
 from __future__ import absolute_import, unicode_literals
 import os
+import logging
 
 from celery import Celery
 from celery.schedules import crontab
 
 from settings import SHORT, MEDIUM, LONG
 
-
+logger = logging.getLogger(__name__)
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'settings')
@@ -47,6 +48,7 @@ def setup_periodic_tasks(sender, **_):
     # FIRST - calculate ANN for SHORT period at every hour and half OO:30, 01:30 ...
     # @Alex: I put it back to 00:00 because the time stamp is a key and should match hours
     # move it back if server performance sufferrs, but make sure to pass a right timestamp
+    logger.info("   .... adding a AI task to queue: compute_ann_for_all_sources")
     sender.add_periodic_task(
         crontab(minute=0),                        #crontab(minute=30, hour='*'),
         tasks.compute_ann_for_all_sources.s(resample_period=SHORT),
