@@ -1,8 +1,6 @@
-import logging
-from abc import ABC
-
-from TA.app import database
+from TA.app import database, logger
 from TA.storages.abstract.indicator import IndicatorStorage
+from TA.storages.abstract.subscriber import TASubscriber
 from TA.storages.data.pv_history import PriceVolumeHistoryStorage, defualt_price_indexes, derived_price_indexes
 from TA.worker import WorkerException
 
@@ -11,38 +9,37 @@ class PriceException(WorkerException):
     pass
 
 
-class TASubscriber(ABC):
+class PriceStorage(IndicatorStorage):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.index = kwargs.get('index', "close_price")
+        self.value = kwargs.get('value')
 
-    def __init__(self):
-        from TA.worker import redis_client
-        self.pubsub = redis_client.pubsub()
-        self.pubsub.subscribe(PriceVolumeHistoryStorage.describer_class)
+    def save(self, pipeline=None):
 
-    def __call__(self):
-        data_event = self.pubsub.get_message()
-        if not data_event:
-            return
-        if not data_event.get('type') == 'message':
-            return
+        # meets basic requirements for saving
+        if not all(self.ticker, self.exchange,
+                   self.index, self.value,
+                   self.unix_timestamp):
+            logger.error("incomplete information, cannot save \n" + str(self.__dict__))
+            raise PriceException("save error, missing data")
 
-        # data_event = {
-        #   'type': 'message',
-        #   'pattern': None,
-        #   'channel': b'channel',
-        #   'data': b"dude, what's up?"
-        # }
+        if not self.force_save:
+            if not self.index in defualt_price_indexes:
+                logger.error("price index not in approved list, raising exception...")
+                raise PriceException("unknown index")
 
-        try:
-            self.handle(data_event['channel'], data_event['data'])
-        except KeyError:
-            pass  # message not in expected format. just ignore
-        except Exception as e:
-            raise WorkerException(str(e))
+        self.db_key_suffix = ":{index}".format(self.index)
+        return super().save(pipeline=pipeline)
 
 
-    def handle(self, channel, data):
-        if not channel == PriceVolumeHistoryStorage.describer_class:
-            return
+class PriceSubscriber(TASubscriber):
+
+    classes_subscribing_to = [
+        PriceVolumeHistoryStorage
+    ]
+
+    def handle(self, channel, data, *args, **kwargs):
 
         # parse timestamp from data
         # f'{data_history.ticker}:{data_history.exchange}:{data_history.timestamp}'
@@ -51,7 +48,8 @@ class TASubscriber(ABC):
         # close to a five minute period mark? (+ or - 45 seconds)
         seconds_from_five_min = int(timestamp) + 45 % 300
         if seconds_from_five_min < 90:
-            # we are close to a 5 min marker
+            logger.debug("near to a 5 min time marker")
+            # near to a 5 min time marker
             # resample history to save prices for last 5 min
 
             price = PriceStorage(ticker=ticker, exchange=exchange, timestamp=timestamp)
@@ -65,7 +63,7 @@ class TASubscriber(ABC):
                 index_values[index] = [
                     float(db_value.decode("utf-8").split(":")[0])
                     for db_value
-                    in database.zrangebyscore(sorted_set_key, timestamp-300, timestamp)
+                    in database.zrangebyscore(sorted_set_key, timestamp - 300, timestamp)
                 ]
 
                 try:
@@ -89,6 +87,7 @@ class TASubscriber(ABC):
                     if price.value:
                         price.index = index
                         price.save()
+                        logger.info("saved new thing: " + price.get_db_key())
 
             all_values_set = (
                     set(index_values["open_price"]) |
@@ -120,29 +119,3 @@ class TASubscriber(ABC):
                 if price.value:
                     price.index = index
                     price.save()
-
-
-class PriceStorage(IndicatorStorage):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.index = kwargs.get('index', "close_price")
-        self.value = kwargs.get('value')
-
-
-    def save(self, pipeline=None):
-
-        # meets basic requirements for saving
-        if not all(self.ticker, self.exchange,
-                   self.index, self.value,
-                   self.unix_timestamp):
-            logging.error("incomplete information, cannot save \n" + str(self.__dict__))
-            raise PriceException("save error, missing data")
-
-        if not self.force_save:
-            if not self.index in defualt_price_indexes:
-                logging.error("price index not in approved list, raising exception...")
-                raise PriceException("unknown index")
-
-        self.db_key_suffix = ":{index}".format(self.index)
-        return super().save(pipeline=pipeline)
