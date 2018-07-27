@@ -1,5 +1,5 @@
 from flask_restful import Resource, reqparse
-from TA.api import database, logger
+from TA.app import database, logger
 from TA.storages.data.pv_history import defualt_price_indexes, default_volume_indexes
 from TA.storages.abstract.timeseries_storage import StorageException
 

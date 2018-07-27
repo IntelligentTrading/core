@@ -3,6 +3,8 @@ import logging
 from flask import Flask
 from flask_restful import reqparse, abort, Api, Resource
 import redis
+import click
+
 
 logger = logging.getLogger('flask_api')
 logger.setLevel(logging.DEBUG)
@@ -52,3 +54,10 @@ from TA.resources.price_volume import PriceVolumeAPI
 api.add_resource(PriceVolumeAPI, '/api/price_volume/<string:ticker>')
 
 logger.info("Flask resources and routes are ready.")
+
+
+# REGISTER WORKERS
+@app.cli.command()
+def worker():
+    from TA.worker import work
+    work()
