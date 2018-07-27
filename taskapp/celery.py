@@ -48,7 +48,7 @@ def setup_periodic_tasks(sender, **_):
     # @Alex: I put it back to 00:00 because the time stamp is a key and should match hours
     # move it back if server performance sufferrs, but make sure to pass a right timestamp
     sender.add_periodic_task(
-        crontab(minute=0),                        #crontab(minute=30, hour='*'),
+        crontab(minute=20),                        #crontab(minute=30, hour='*'),
         tasks.compute_ann_for_all_sources.s(resample_period=SHORT),
         name='at the beginning of every hour', #name='at the beginning of every hour and half',
         )

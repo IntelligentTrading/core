@@ -90,7 +90,7 @@ def _process_ai_simple(horizon, **kwargs):
 
     ann_classif_df = get_n_last_ann_classif_df(5, **kwargs)
     if ann_classif_df.empty:
-        logger.error('  something wrong with AI indicators... we dont have it ...')
+        logger.error('  get_n_last_ann: something wrong with AI indicators... we dont have it ...')
         return False
 
     # choose only two class classification (ignore SAME), then add a new column with the best class

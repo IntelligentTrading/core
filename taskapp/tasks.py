@@ -20,18 +20,21 @@ def compute_indicators_for_all_sources(resample_period):
 
 @celery_app.task(retry=False)
 def compute_indicators_for(source, transaction_currency, counter_currency, resample_period):
+    logger.info("@@@@@@ Start _compute_indicators_for job @@@@@@")
     from taskapp.helpers.indicators import _compute_indicators_for
     _compute_indicators_for(source, transaction_currency, counter_currency, resample_period)
 
 # ANN
 @celery_app.task(retry=False)
 def compute_ann_for_all_sources(resample_period):
+
     from taskapp.helpers.common import get_exchanges
     for exchange in get_exchanges():
         compute_ann.delay(source=exchange, resample_period=resample_period)
 
 @celery_app.task(retry=False)
 def compute_ann(source, resample_period):
+    logger.info("@@@@@@ Start compute_ann indicators job @@@@@@")
     from taskapp.helpers.indicators import _compute_ann
     _compute_ann(source=source, resample_period=resample_period)
 
