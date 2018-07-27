@@ -14,11 +14,11 @@ class IndicatorStorage(TickerStorage):
     timestamp value must be evenly divisible by 5 minutes (300 seconds)
     todo: refactor to add short, medium, long (see resample_period in abstract_indicator)
     """
-    describer_class = "indicator"
+    class_describer = "indicator"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.describer_class = kwargs.get('describer_class', self.__class__.describer_class)
+        self.class_describer = kwargs.get('class_describer', self.__class__.class_describer)
 
         # ALL INDICATORS ARE ASSUMED 5-MIN PERIOD RESAMPLED
         if self.unix_timestamp % 300 != 0:
@@ -46,7 +46,7 @@ my_indicator.save()
 
 # advanced:
 
-very_special_signal = TimeseriesIndicator(describer_class="SuperSignal",
+very_special_signal = TimeseriesIndicator(class_describer="SuperSignal",
                                           key="SuperSignal",
                                           key_suffix="answer_to_the_universe",
                                           ticker="ETH_BTC",

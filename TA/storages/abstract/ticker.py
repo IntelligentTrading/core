@@ -11,11 +11,11 @@ class TickerStorage(TimeseriesStorage):
     stores timeseries data on tickers in a sorted set unique to each ticker and exchange
     todo: split the db by each exchange source
     """
-    describer_class = "ticker"
+    class_describer = "ticker"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.describer_class = kwargs.get('describer_class', self.__class__.describer_class)
+        self.class_describer = kwargs.get('class_describer', self.__class__.class_describer)
 
         # 'ticker' REQUIRED
         # 'exchange EXPECTED BUT CAN STILL SAVE WITHOUT

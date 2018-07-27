@@ -16,4 +16,4 @@ class VolumeseriesStorage(KeyValueStorage):
     todo: split the db by each exchange source
     todo: refactor to add short, medium, long (see resample_period in abstract_indicator)
     """
-    describer_class = "volumeseries"
+    class_describer = "volumeseries"

@@ -16,11 +16,11 @@ class TimeseriesStorage(KeyValueStorage):
     todo: split the db by each exchange source
     todo: refactor to add short, medium, long (see resample_period in abstract_indicator)
     """
-    describer_class = "timeseries"
+    class_describer = "timeseries"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.describer_class = kwargs.get('describer_class', self.__class__.describer_class)
+        self.class_describer = kwargs.get('class_describer', self.__class__.class_describer)
 
         # 'timestamp' REQUIRED, VALIDATE
         try:
@@ -39,7 +39,7 @@ class TimeseriesStorage(KeyValueStorage):
 
 
     def save_own_existance(self, describer_key=""):
-        self.describer_key = describer_key or f'{self.__class__.describer_class}:{self.get_db_key()}'
+        self.describer_key = describer_key or f'{self.__class__.class_describer}:{self.get_db_key()}'
 
         if self.describer_key not in set_of_known_sets_in_redis:
             database.sadd("sorted_sets", self.describer_key)
@@ -54,7 +54,7 @@ class TimeseriesStorage(KeyValueStorage):
         # example key f'{key_prefix}:{cls.__name__}:{key_suffix}'
 
         # do a quick check to make sure this is a class of things we know is in existence
-        describer_key = f'{cls.describer_class}:{sorted_set_key}'
+        describer_key = f'{cls.class_describer}:{sorted_set_key}'
         if describer_key not in set_of_known_sets_in_redis:
             if database.sismember("sorted_sets", describer_key):
                 database.sadd("sorted_sets", describer_key)

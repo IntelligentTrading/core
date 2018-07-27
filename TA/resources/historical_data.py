@@ -67,8 +67,8 @@ class HistoricalDataAPI(Resource):
 
             # publish an update of this object type to pubsub
             database.publish(
-                data_history.describer_class,
-                f'{data_history.ticker}:{data_history.exchange}:{data_history.timestamp}'
+                data_history.class_describer,
+                f'{data_history.ticker}:{data_history.exchange}:{data_history.unix_timestamp}'
             )
 
             return {
