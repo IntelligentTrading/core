@@ -66,6 +66,7 @@ class HistoricalDataAPI(Resource):
             database_response = pipeline.execute()
 
             # publish an update of this object type to pubsub
+            logger.debug(f'publishing update to {data_history.class_describer}')
             database.publish(
                 data_history.class_describer,
                 f'{data_history.ticker}:{data_history.exchange}:{data_history.unix_timestamp}'

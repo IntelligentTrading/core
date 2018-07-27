@@ -19,7 +19,7 @@ class SuchWowException(Exception):
     def __init__(self, message):
         self.message = message
         such_wow = "==============SUCH=====WOW==============="
-        logger.debug(f'\n\n{such_wow}\n\n{message}\n\n{such_wow}')
+        logger.error(f'\n\n{such_wow}\n\n{message}\n\n{such_wow}')
 
 
 # SIMULATED_ENV = os.get("env", "TEMP")
@@ -39,25 +39,23 @@ set_of_known_sets_in_redis = set()
 
 
 app = Flask(__name__)
-api = Api(app)
-logger.info("Flask app instantiated.")
-logger.debug("Flask app debug.")
-logger.warning("Flask app warning.")
-logger.error("Flask app error.")
-logger.critical("Flask app critical.")
 
-# if env == "PRODUCTION":
-#     run scheduler for cleanup of
+if __name__ == '__main__':
+    api = Api(app)
+    logger.info("Flask app instantiated.")
+
+    # if env == "PRODUCTION":
+    #     run scheduler for cleanup of
 
 
-# ROUTING
-from TA.resources.historical_data import HistoricalDataAPI
-api.add_resource(HistoricalDataAPI, '/api/historical_data/<string:ticker>')
+    # ROUTING
+    from TA.resources.historical_data import HistoricalDataAPI
+    api.add_resource(HistoricalDataAPI, '/api/historical_data/<string:ticker>')
 
-from TA.resources.price_volume import PriceVolumeAPI
-api.add_resource(PriceVolumeAPI, '/api/price_volume/<string:ticker>')
+    from TA.resources.price_volume import PriceVolumeAPI
+    api.add_resource(PriceVolumeAPI, '/api/price_volume/<string:ticker>')
 
-logger.info("Flask resources and routes are ready.")
+    logger.info("Flask resources and routes are ready.")
 
 
 # REGISTER WORKERS

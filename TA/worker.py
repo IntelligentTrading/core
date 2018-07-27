@@ -28,9 +28,9 @@ logger.info("Redis connection established.")
 
 def work():
 
-    from TA.storages.data.price import TASubscriber
+    from TA.storages.data.price import PriceSubscriber
     subscriber_classes = [
-        TASubscriber,
+        PriceSubscriber,
     ]
 
     subscribers = set()
@@ -38,7 +38,6 @@ def work():
         subscribers.add(subscriber_class())
 
     logger.info("Pubsub clients are ready.")
-    print("Pubsub clients are ready.")
 
     while True:
         for subscriber in subscribers:
