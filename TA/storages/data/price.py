@@ -1,5 +1,4 @@
 from TA import logger, TAException
-from TA.redis_db import database
 from TA.storages.abstract.indicator import IndicatorStorage
 from TA.storages.abstract.subscriber import TASubscriber
 from TA.storages.data.pv_history import PriceVolumeHistoryStorage, defualt_price_indexes, derived_price_indexes
@@ -63,7 +62,7 @@ class PriceSubscriber(TASubscriber):
                 index_values[index] = [
                     float(db_value.decode("utf-8").split(":")[0])
                     for db_value
-                    in database.zrangebyscore(sorted_set_key, timestamp - 300, timestamp)
+                    in self.database.zrangebyscore(sorted_set_key, timestamp - 300, timestamp)
                 ]
 
                 try:

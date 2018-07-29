@@ -36,10 +36,12 @@ def work():
     subscribers = {}
     for subscriber_class in subscriber_classes:
         subscribers[subscriber_class.__name__] = subscriber_class()
+        logger.debug(f'added subscriber {subscriber_class}')
+        logger.debug(f'new subscriber is {subscribers[subscriber_class.__name__]}')
 
     logger.info("Pubsub clients are ready.")
 
     while True:
-        for subscriber in subscribers:
-            subscriber()
+        for subscriber_name, subscriber_object in subscribers.items():
+            subscriber_object()
             time.sleep(0.001)  # be nice to the system :)
