@@ -1,5 +1,5 @@
 from abc import ABC
-from TA.app import database, logger, TAException
+from TA import logger, TAException
 
 
 class SubscriberException(TAException):
@@ -12,11 +12,11 @@ class TASubscriber(ABC):
     def __init__(self):
         from TA.worker import redis_client
         self.pubsub = redis_client.pubsub()
-        logger.debug(f'New pubsub for {self.__class__.__name__}')
+        logger.info(f'New pubsub for {self.__class__.__name__}')
         for s_class in self.classes_subscribing_to:
-            self.pubsub.subscribe(s_class.class_describer)
-            logger.debug(f'{self.__class__.__name__} subscribed to '
-                         f'{s_class.class_describer} channel')
+            self.pubsub.subscribe(s_class.__class__.__name__)
+            logger.info(f'{self.__class__.__name__} subscribed to '
+                         f'{s_class.__class__.__name__} channel')
 
 
     def __call__(self):
@@ -34,7 +34,7 @@ class TASubscriber(ABC):
         # }
 
         try:
-            logger.debug(f'handling message in {channel} channel')
+            logger.debug(f'handling event in {channel} subscription')
             self.handle(data_event['channel'], data_event['data'])
         except KeyError:
             pass  # message not in expected format. just ignore
@@ -47,4 +47,9 @@ class TASubscriber(ABC):
         overwrite me with some logic
         :return: None
         """
+        logger.warning(f'NEW MESSAGE for '
+                       f'{self.__class__.__name__} subscribed to '
+                       f'{channel} channel '
+                       f'BUT HANDLER NOT DEFINED! '
+                       f'... message/event discarded')
         pass
