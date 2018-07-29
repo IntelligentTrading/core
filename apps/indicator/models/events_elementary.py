@@ -5,6 +5,7 @@ import numpy as np
 import talib
 
 from django.db import models
+from django.db import connection
 from apps.indicator.models.abstract_indicator import AbstractIndicator
 from apps.indicator.models.price_resampl import get_n_last_resampl_df
 from apps.indicator.models.sma import get_n_last_sma_df
@@ -528,6 +529,8 @@ class EventsElementary(AbstractIndicator):
         if RUN_ANN:
             logger.info("   ... Check AI Elementary Events: ")
             _process_ai_simple(horizon, **kwargs)
+
+        logger.debug("|| SQL Track: events_elementary.check_events():: " + str(connection.queries))
 
 
 

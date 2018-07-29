@@ -11,6 +11,7 @@ import pandas as pd
 import numpy as np
 
 from django.db import models
+from django.db import connection
 from apps.indicator.models.abstract_indicator import AbstractIndicator
 from apps.ai.models.nn_model import AnnModel
 from apps.indicator.models.price_history import get_n_last_prices_ts, get_n_last_volumes_ts
@@ -68,6 +69,7 @@ class AnnPriceClassification(AbstractIndicator):
             logger.info(" ... No predicted probabilities have been returned")
 
         end = time.time()
+        logger.debug("||| SQL::AnnPriceClassification.compute_all(): " + str(connection.queries))
         logger.debug("   @@@@@@   End of running AI.  ELAPSED Time: " + str(end - start))
 
 

@@ -1,5 +1,6 @@
 import logging
 import time
+from django.db import connection
 
 from apps.common.utilities.sqs import send_sqs
 
@@ -50,10 +51,12 @@ def _compute_ann(source, resample_period=SHORT):
     pairs_to_iterate = get_currency_pairs(source=source, period_in_seconds=resample_period*60*2)
     #logger.debug("## Pairs to iterate: " + str(pairs_to_iterate))
 
-    for transaction_currency, counter_currency in pairs_to_iterate:
-        logger.info('   ======== EXCHANGE: ' + str(source) + '| period: ' + str(resample_period)+ '| checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
+    timestamp = time.time() // (1 * 60) * (1 * 60)  # rounded to a minute
 
-        timestamp = time.time() // (1 * 60) * (1 * 60)   # rounded to a minute
+    for transaction_currency, counter_currency in pairs_to_iterate:
+        logger.info('   ======== ANN:: EXCHANGE: ' + str(source) + '| period: ' + str(resample_period)+ '| checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
+
+        start = time.time();
 
         # create a dictionary of parameters to improve readability
         indicator_params_dict = {
@@ -77,12 +80,17 @@ def _compute_ann(source, resample_period=SHORT):
             except Exception as e:
                 logger.error(f"ANN Indicator Exception (ANN has not been calculated): {e}")
 
+        end = time.time()
+        logger.debug(" AI indicator ELAPSED Time: " + str(end - start))
+        logger.debug("|| SQL for AN: helpers.indicators._compute_ann || " + str(connection.queries))
+
     # clean session to prevent memory leak
     if RUN_ANN:
         # clean session to prevent memory leak
         logger.debug("   ... Cleaning Keras session...")
         from keras import backend as K
         K.clear_session()
+
 
 
 def _compute_indicators_for(source, transaction_currency, counter_currency, resample_period):
@@ -179,6 +187,7 @@ def _compute_indicators_for(source, transaction_currency, counter_currency, resa
             # logger.error(" Event Exception: " + str(e))
             logger.error(f">>>>{quad_formatted(source, transaction_currency, counter_currency, resample_period)} Event Exception: {e}")
 
+        logger.debug("|| SQL for Events: helpers.indicators._compute_indicators, events || " + str(connection.queries))
 
     # 5 ############################
     # TODO: Uncomment when strategies are ready, it will emit strategy signals
