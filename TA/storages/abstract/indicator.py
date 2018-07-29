@@ -1,4 +1,4 @@
-from TA.app import TAException
+from TA import logger, TAException
 from TA.storages.abstract.ticker import TickerStorage
 from TA.storages.abstract.timeseries_storage import TimeseriesException
 
@@ -52,7 +52,7 @@ very_special_signal = TimeseriesIndicator(class_describer="SuperSignal",
                                           ticker="ETH_BTC",
                                           timestamp=1483228800
                                           )
-from TA.app import database
+from TA.redis_db import database
 pipeline = database.pipeline()
 for thing in ['towel', 42, 'babelfish', 'vogon poetry']:
     very_special_signal.unix_timestamp += 300

@@ -1,4 +1,5 @@
-from TA.app import logger, TAException, database
+from TA import logger, TAException
+from TA.redis_db import database
 from abc import ABC
 
 
@@ -59,6 +60,7 @@ class KeyValueStorage(ABC):
         if not self.force_save:
             # validate some rules here?
             pass
+        logger.debug(f'saving key, value: {self.get_db_key()}, {self.value}')
         return database.set(self.get_db_key(), self.value)
 
     def get_value(self, db_key=""):

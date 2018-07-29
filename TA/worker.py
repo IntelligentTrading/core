@@ -23,7 +23,7 @@ REDIS_HOST, REDIS_PORT = "127.0.0.1:6379".split(":")
 pool = redis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, db=0)
 # todo: change db=1,2,3 for stage/prod/test envs?
 redis_client = redis.Redis(connection_pool=pool)
-logger.info("Redis connection established.")
+logger.info("Redis connection established for worker redis_client.")
 
 
 def work():
@@ -33,9 +33,9 @@ def work():
         PriceSubscriber,
     ]
 
-    subscribers = set()
+    subscribers = {}
     for subscriber_class in subscriber_classes:
-        subscribers.add(subscriber_class())
+        subscribers[subscriber_class.__name__] = subscriber_class()
 
     logger.info("Pubsub clients are ready.")
 

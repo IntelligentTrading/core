@@ -1,4 +1,5 @@
-from TA.app import logger, TAException, database, set_of_known_sets_in_redis
+from TA import logger, TAException
+from TA.redis_db import database, set_of_known_sets_in_redis
 from TA.storages.abstract.key_value import KeyValueStorage
 
 

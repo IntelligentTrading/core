@@ -1,4 +1,5 @@
-from TA.app import TAException, logger, database
+from TA import logger, TAException
+from TA.redis_db import database
 from TA.storages.abstract.indicator import TickerStorage
 from TA.storages.abstract.timeseries_storage import TimeseriesStorage
 

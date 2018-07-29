@@ -1,11 +1,11 @@
-from TA.app import database, logger
+from TA import logger, TAException
+from TA.redis_db import database
 from TA.storages.abstract.indicator import IndicatorStorage
 from TA.storages.abstract.subscriber import TASubscriber
 from TA.storages.data.pv_history import PriceVolumeHistoryStorage, defualt_price_indexes, derived_price_indexes
-from TA.worker import WorkerException
 
 
-class PriceException(WorkerException):
+class PriceException(TAException):
     pass
 
 
@@ -118,4 +118,4 @@ class PriceSubscriber(TASubscriber):
 
                 if price.value:
                     price.index = index
-                    price.save()
+                    price.save(publish=True)
