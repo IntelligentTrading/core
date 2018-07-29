@@ -43,7 +43,6 @@ class TimeseriesStorage(KeyValueStorage):
 
         if self.describer_key not in set_of_known_sets_in_redis:
             database.sadd("sorted_sets", self.describer_key)
-            set_of_known_sets_in_redis.add(self.describer_key)
 
 
     @classmethod
@@ -105,7 +104,7 @@ class TimeseriesStorage(KeyValueStorage):
             raise TimeseriesException(str(e))  # wtf happened?
 
 
-    def save(self, pipeline=None):
+    def save(self, publish=False, pipeline=None, *args, **kwargs):
         if not self.value:
             raise StorageException("no value set, nothing to save!")
         if not self.force_save:
@@ -122,10 +121,16 @@ class TimeseriesStorage(KeyValueStorage):
 
         if pipeline is not None:
             logger.debug("added command to redis pipeline")
+            if publish:
+                pipeline = pipeline.publish(self.__class__.__name__, self.get_db_key())
             return pipeline.zadd(*zadd_args)
+
         else:
             logger.debug("no pipeline, executing zadd command immediately.")
-            return database.zadd(*zadd_args)
+            response = database.zadd(*zadd_args)
+            if publish:
+                database.publish(self.__class__.__name__, self.get_db_key())
+            return response
 
 
     def get_value(self):

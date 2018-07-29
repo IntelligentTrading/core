@@ -41,7 +41,7 @@ class PriceVolumeHistoryStorage(TickerStorage):
         return results_dict
 
 
-    def save(self, pipeline=None):
+    def save(self, *args, **kwargs):
 
         # meets basic requirements for saving
         if not all([self.ticker, self.exchange,
@@ -57,4 +57,4 @@ class PriceVolumeHistoryStorage(TickerStorage):
 
         self.db_key_suffix = f':{self.index}'
         logger.debug("ready to save, db_key will be " + self.get_db_key())
-        return super().save(pipeline=pipeline)
+        return super().save(*args, **kwargs)

@@ -15,7 +15,7 @@ class PriceStorage(IndicatorStorage):
         self.index = kwargs.get('index', "close_price")
         self.value = kwargs.get('value')
 
-    def save(self, pipeline=None):
+    def save(self, *args, **kwargs):
 
         # meets basic requirements for saving
         if not all(self.ticker, self.exchange,
@@ -30,7 +30,7 @@ class PriceStorage(IndicatorStorage):
                 raise PriceException("unknown index")
 
         self.db_key_suffix = ":{index}".format(self.index)
-        return super().save(pipeline=pipeline)
+        return super().save(*args, **kwargs)
 
 
 class PriceSubscriber(TASubscriber):

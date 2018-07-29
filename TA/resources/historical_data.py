@@ -61,14 +61,14 @@ class HistoricalDataAPI(Resource):
                 # while saving is pipelined
                 data_history_objects[index] = data_history
                 # add the saving of this object to the pipeline
-                pipeline = data_history_objects[index].save(pipeline=pipeline)
+                pipeline = data_history_objects[index].save(publish=False, pipeline=pipeline)
         try:
             database_response = pipeline.execute()
 
             # publish an update of this object type to pubsub
-            logger.debug(f'publishing update to {data_history.class_describer}')
+            logger.debug(f'publishing update to {data_history.__class__.__name__}')
             database.publish(
-                data_history.class_describer,
+                data_history.__class__.__name__,
                 f'{data_history.ticker}:{data_history.exchange}:{data_history.unix_timestamp}'
             )
 
