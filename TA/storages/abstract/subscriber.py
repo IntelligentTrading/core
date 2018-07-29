@@ -10,10 +10,9 @@ class TASubscriber(ABC):
     classes_subscribing_to = []
 
     def __init__(self):
-        from TA.worker import redis_client
         from TA.redis_db import database
         self.database = database
-        self.pubsub = redis_client.pubsub()
+        self.pubsub = database.pubsub()
         logger.info(f'New pubsub for {self.__class__.__name__}')
         for s_class in self.classes_subscribing_to:
             self.pubsub.subscribe(s_class.__class__.__name__)
