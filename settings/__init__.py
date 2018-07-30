@@ -304,3 +304,9 @@ if LOCAL:
     except:
         logger.error("Could not successfully import local_settings.py. This is necessary if you are running locally. This file should be in version control.")
         raise
+
+if STAGE:
+    logger.info(" STAGE environment detected.")
+
+if PRODUCTION:
+    logger.info(" PRODUCTION environment detected.")

@@ -80,9 +80,9 @@ def _compute_ann(source, resample_period=SHORT):
             except Exception as e:
                 logger.error(f"ANN Indicator Exception (ANN has not been calculated): {e}")
 
-        end = time.time()
-        logger.debug(" AI indicator ELAPSED Time: " + str(end - start))
-        logger.debug("|| SQL for AN: helpers.indicators._compute_ann || " + str(connection.queries))
+    end = time.time()
+    logger.info(" ALL AI indicators completed:  ELAPSED Time: " + str(end - start))
+    #logger.debug("|| SQL for AN: helpers.indicators._compute_ann || " + str(connection.queries))
 
     # clean session to prevent memory leak
     if RUN_ANN:
