@@ -15,13 +15,14 @@ class TASubscriber(ABC):
         self.pubsub = database.pubsub()
         logger.info(f'New pubsub for {self.__class__.__name__}')
         for s_class in self.classes_subscribing_to:
-            self.pubsub.subscribe(s_class.__class__.__name__)
+            self.pubsub.subscribe(s_class.__name__)
             logger.info(f'{self.__class__.__name__} subscribed to '
-                         f'{s_class.__class__.__name__} channel')
+                         f'{s_class.__name__} channel')
 
 
     def __call__(self):
         data_event = self.pubsub.get_message()
+        logger.debug(f'got message: {data_event}')
         if not data_event:
             return
         if not data_event.get('type') == 'message':
@@ -35,9 +36,12 @@ class TASubscriber(ABC):
         # }
 
         try:
-            logger.debug(f'handling event in {channel} subscription')
-            self.handle(data_event['channel'], data_event['data'])
+            channel_name = data_event['channel'].decode("utf-8")
+            event_data = data_event['data'].decode("utf-8")
+            logger.debug(f'handling event in {channel_name} subscription')
+            self.handle(channel_name, event_data)
         except KeyError:
+            logger.debug(f'unexpected format: {data_event}')
             pass  # message not in expected format. just ignore
         except Exception as e:
             raise SubscriberException(str(e))
