@@ -69,7 +69,7 @@ class AnnPriceClassification(AbstractIndicator):
             logger.info(" ... No predicted probabilities have been returned")
 
         end = time.time()
-        logger.debug("||| SQL::AnnPriceClassification.compute_all(): " + str(connection.queries))
+        logger.info("||| SQL::AnnPriceClassification.compute_all(): " + str(connection.queries))
         logger.info("   @@@@@@   End of running AI.  ELAPSED Time: " + str(end - start))
 
 

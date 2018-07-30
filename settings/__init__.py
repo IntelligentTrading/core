@@ -306,7 +306,8 @@ if LOCAL:
         raise
 
 if STAGE:
-    logger.info(" STAGE environment detected.")
+    logger.info(" test INFO log.")
+    logger.debug(" test DEBUG log.")
 
 if PRODUCTION:
     logger.info(" PRODUCTION environment detected.")
