@@ -9,12 +9,13 @@ SIMULATED_ENV = deployment_type == "LOCAL"
 
 logger = logging.getLogger('redis_db')
 
-REDIS_HOST, REDIS_PORT = "127.0.0.1:6379".split(":")
+if deployment_type == "LOCAL":
+    REDIS_HOST, REDIS_PORT = "127.0.0.1:6379".split(":")
+    pool = redis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, db=0)
+    database = redis.Redis(connection_pool=pool)
+else:
+    database = redis.from_url(os.environ.get("REDIS_URL"))
 
-pool = redis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, db=0)
-# todo: change db=1,2,3 for stage/prod/test envs?
-
-database = redis.Redis(connection_pool=pool)
 logger.info("Redis connection established for app database.")
 
 # hold this in python memory for fast access
