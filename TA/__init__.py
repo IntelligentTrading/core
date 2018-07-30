@@ -1,6 +1,7 @@
 import os
 import logging
 
+
 deployment_type = os.environ.get('DEPLOYMENT_TYPE', 'LOCAL')
 if deployment_type == 'LOCAL':
     logging.basicConfig(level=logging.DEBUG)

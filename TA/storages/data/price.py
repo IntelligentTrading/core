@@ -46,7 +46,10 @@ class PriceSubscriber(TASubscriber):
 
         # close to a five minute period mark? (+ or - 45 seconds)
         seconds_from_five_min = int(timestamp) + 45 % 300
-        if seconds_from_five_min < 90:
+
+        if not seconds_from_five_min < 90:
+            logger.debug("not near to a 5 min time marker, sorry")
+        else:
             logger.debug("near to a 5 min time marker")
             # near to a 5 min time marker
             # resample history to save prices for last 5 min

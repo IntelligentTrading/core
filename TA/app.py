@@ -29,7 +29,9 @@ logger.info("Flask resources and routes are ready.")
 
 
 # REGISTER WORKERS
-@app.cli.command()
+@app.cli.command('worker')
 def worker():
     from TA.worker import work
     work()
+
+logger.info("Flask workers registered.")

@@ -1,9 +1,10 @@
 import os
 import logging
 import redis
+from TA import deployment_type
 
 
-# SIMULATED_ENV = os.get("env", "TEMP")
+SIMULATED_ENV = deployment_type == "LOCAL"
 # todo: use this to mark keys in redis db, so they can be separated and deleted
 
 logger = logging.getLogger('redis_db')
