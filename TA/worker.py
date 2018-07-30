@@ -26,7 +26,7 @@ def work():
 
     while True:
         for class_name in subscribers:
-            logger.debug(f'checking subscription {class_name}: {subscribers[class_name]}')
+            # logger.debug(f'checking subscription {class_name}: {subscribers[class_name]}')
             subscribers[class_name]()
             # print(subscribers[class_name].pubsub.get_message())
             # print(subscribers[class_name].database.pubsub_channels())

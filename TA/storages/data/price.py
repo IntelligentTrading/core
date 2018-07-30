@@ -17,18 +17,18 @@ class PriceStorage(IndicatorStorage):
     def save(self, *args, **kwargs):
 
         # meets basic requirements for saving
-        if not all(self.ticker, self.exchange,
+        if not all([self.ticker, self.exchange,
                    self.index, self.value,
-                   self.unix_timestamp):
+                   self.unix_timestamp]):
             logger.error("incomplete information, cannot save \n" + str(self.__dict__))
             raise PriceException("save error, missing data")
 
         if not self.force_save:
-            if not self.index in defualt_price_indexes:
+            if not self.index in defualt_price_indexes + derived_price_indexes:
                 logger.error("price index not in approved list, raising exception...")
                 raise PriceException("unknown index")
 
-        self.db_key_suffix = ":{index}".format(self.index)
+        self.db_key_suffix = f':{self.index}'
         return super().save(*args, **kwargs)
 
 
@@ -44,20 +44,22 @@ class PriceSubscriber(TASubscriber):
         # f'{data_history.ticker}:{data_history.exchange}:{data_history.timestamp}'
         [ticker, exchange, timestamp] = data.split(":")
 
-        # close to a five minute period mark? (+ or - 45 seconds)
-        seconds_from_five_min = int(timestamp) + 45 % 300
 
-        if not seconds_from_five_min < 90:
-            logger.debug("not near to a 5 min time marker, sorry")
-        else:
+        # close to a five minute period mark? (+ or - 45 seconds)
+        seconds_from_five_min = (int(timestamp) + 45) % 300
+
+        if seconds_from_five_min < 90:
+
             logger.debug("near to a 5 min time marker")
             # near to a 5 min time marker
             # resample history to save prices for last 5 min
+            timestamp = (int(timestamp) // 300) * 300
 
             price = PriceStorage(ticker=ticker, exchange=exchange, timestamp=timestamp)
             index_values = {}
 
             for index in defualt_price_indexes:
+                logger.debug("process price for ticker: {ticker}")
 
                 # example key = "XPM_BTC:poloniex:PriceVolumeHistoryStorage:close_price"
                 sorted_set_key = f'{ticker}:{exchange}:PriceVolumeHistoryStorage:{index}'
@@ -106,9 +108,9 @@ class PriceSubscriber(TASubscriber):
                 values_set = all_values_set.copy()
 
                 if index == "midpoint_price":
-                    while len(all_values_set) > 2:
-                        all_values_set.remove(max(values_set))
-                        all_values_set.remove(min(values_set))
+                    while len(values_set) > 2:
+                        values_set.remove(max(values_set))
+                        values_set.remove(min(values_set))
                     price.value = values_set.pop()
 
                 elif index == "mean_price":

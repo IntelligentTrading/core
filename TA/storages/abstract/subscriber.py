@@ -22,11 +22,12 @@ class TASubscriber(ABC):
 
     def __call__(self):
         data_event = self.pubsub.get_message()
-        logger.debug(f'got message: {data_event}')
         if not data_event:
             return
         if not data_event.get('type') == 'message':
             return
+        else:
+            logger.debug(f'got message: {data_event}')
 
         # data_event = {
         #   'type': 'message',
