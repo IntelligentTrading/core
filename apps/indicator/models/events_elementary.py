@@ -531,8 +531,10 @@ class EventsElementary(AbstractIndicator):
         if RUN_ANN and (kwargs['resample_period']==SHORT):
             logger.info("   ... Check SHORT AI Elementary Events: ")
             _process_ai_simple(horizon, **kwargs)
+        else:
+            logger.info(   ... ANN elementary event calculation has been skipped)
 
-        logger.debug("|| SQL Track: events_elementary.check_events():: " + str(connection.queries))
+        logger.info("|| SQL Track: events_elementary.check_events():: " + str(connection.queries))
 
 
 

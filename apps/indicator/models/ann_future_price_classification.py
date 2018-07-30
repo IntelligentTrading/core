@@ -64,7 +64,7 @@ class AnnPriceClassification(AbstractIndicator):
                 probability_down = trend_predicted[2]
             )
             if MODIFY_DB: new_instance.save()
-            logger.info("   ...LSTM prediction has been calculated and saved.")
+            logger.info("   ...LSTM prediction indicator has been calculated and saved.")
         else:
             logger.info(" ... No predicted probabilities have been returned")
 
