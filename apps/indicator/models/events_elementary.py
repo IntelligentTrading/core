@@ -351,6 +351,11 @@ class EventsElementary(AbstractIndicator):
         logger.info("   ... Check Ben Elementary Events: ")
 
         if RUN_BEN and kwargs['resample_period'] <= MEDIUM: # can't handle volume data for 1440
+
+            # @Karla, I added a close_volume to price_resampled.get_n_last_resampl_df
+            # so now you can find both price/volume resampled in prices_df from above (lines 321/322)
+            # now you can simply skip all commented lines below and re-use prices_df calculated above
+            '''
             ben_num_records = SMA_LOW * 4  # last_records, because of faulty data we make sure to get a bit more
             PRICE_MEAN_TIME_PERIOD = 50  # SMA_LOW
             VOLUME_MEAN_TIME_PERIOD = 50  # SMA_LOW
@@ -377,10 +382,17 @@ class EventsElementary(AbstractIndicator):
 
             if len(prices_df) == 0:
                 logger.error("BEN VBI CRITICAL: NO PRICE DATA!!!")
+            '''
 
             if volumes_ts is not None and len(prices_df) != 0:
-                # TODO @Karla: - hm... why not to use our get_n_last_sma_df or re-use price_df ?
-                # no need to calculate it again... unless we make a decision not to use our SMA table
+                # TODO @Karla: we already calculated price SMA for almost all possible periods
+                # see sma.py, SMA_LIST = [9, 20, 26, 30, 50, 52, 60, 120, 200]
+                # to get SMA of period 50 (resampled) simply call
+                # get_n_last_sma_df(last_records, 50, **no_time_params) ( see examples on line 335, no need to call talib
+
+                # if you do this you can simplify all below in 3-4 lines of code just get price/volume indicators
+                # and then check for their crosses
+
                 prices_avg = talib.SMA(np.array(prices_df.close_price, dtype=float), timeperiod=PRICE_MEAN_TIME_PERIOD)
                 prices_df['mean_price'] = pd.Series(prices_avg, index=prices_df.index)
 
