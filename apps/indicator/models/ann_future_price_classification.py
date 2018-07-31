@@ -46,7 +46,7 @@ class AnnPriceClassification(AbstractIndicator):
 
     @staticmethod
     def compute_all(cls, ann_model, **kwargs):
-        logger.info('   @@@@@@    Run AI prediction    @@@@@@@@@')
+        logger.info('   @@@@@@    Run AI indicator calculation    @@@@@@@@@')
 
         start = time.time()
 
@@ -69,8 +69,8 @@ class AnnPriceClassification(AbstractIndicator):
             logger.info(" ... No predicted probabilities have been returned")
 
         end = time.time()
-        logger.info("||| SQL::AnnPriceClassification.compute_all(): " + str(connection.queries))
-        logger.info("   @@@@@@   End of running AI.  ELAPSED Time: " + str(end - start))
+        #logger.info("||| SQL::AnnPriceClassification.compute_all(): " + str(connection.queries))
+        logger.info("   @@@@@@   End of running AI indicator.  ELAPSED Time: " + str(end - start))
 
 
 
