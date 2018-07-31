@@ -533,7 +533,7 @@ class EventsElementary(AbstractIndicator):
             logger.info("   ... Check SHORT AI Elementary Events: ")
             _process_ai_simple(horizon, **kwargs)
         else:
-            logger.info(   ... ANN elementary event calculation has been skipped)
+            logger.info("   ... ANN elementary event calculation has been skipped")
 
         logger.info("|| SQL Track: events_elementary.check_events():: " + str(connection.queries))
 
