@@ -410,7 +410,7 @@ class EventsElementary(AbstractIndicator):
 
         ############## calculate and save ICHIMOKU elementary events
         logger.info("   ... Check Ichimoku Elementary Events: ")
-        ichi_start_time = time.time();
+        ichi_start_time = time.time()
 
         # correct shift in 10 min , so resumple again
         # shall be removed as soon as we have time by exact hours
@@ -524,7 +524,7 @@ class EventsElementary(AbstractIndicator):
                     if MODIFY_DB: ichi_event.save()
                 except Exception as e:
                     logger.error(" Error saving  " + event_name + " elementary event ")
-        logger.info(" Ichi calculation completed, " + horizon + " in time " + str(time.time()-ichi_start_time))
+        logger.info(" || Ichi calculation completed, " + str(horizon) + " in time " + str(time.time() - ichi_start_time))
 
 
 
