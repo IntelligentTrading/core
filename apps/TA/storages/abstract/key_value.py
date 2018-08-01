@@ -1,6 +1,9 @@
-from TA import logger, TAException
-from TA.redis_db import database
+import logging
+from apps.TA import TAException
+from settings.redis_db import database
 from abc import ABC
+
+logger = logging.getLogger(__name__)
 
 
 class StorageException(TAException):

@@ -1,7 +1,9 @@
+import logging
 from flask_restful import Resource, reqparse
-from TA import logger, TAException
-from TA.redis_db import database
-from TA.storages.data.pv_history import PriceVolumeHistoryStorage, defualt_price_indexes, default_volume_indexes
+from settings.redis_db import database
+from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, defualt_price_indexes, default_volume_indexes
+
+logger = logging.getLogger(__name__)
 
 
 class HistoricalDataAPI(Resource):

@@ -5,8 +5,8 @@ import talib
 import numpy as np
 
 # note that all ndarrays must be the same length!
-from TA.storages.abstract.ticker import TickerStorage
-from TA.storages.data.pv_history import PriceVolumeHistoryStorage
+from apps.TA.storages.abstract.ticker import TickerStorage
+from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage
 
 
 class SMA(ABC):

@@ -1,6 +1,9 @@
 from abc import ABC
-from TA import logger, TAException
+import logging
+from apps.TA import TAException
 
+
+logger = logging.getLogger(__name__)
 
 class SubscriberException(TAException):
     pass
@@ -10,7 +13,7 @@ class TASubscriber(ABC):
     classes_subscribing_to = []
 
     def __init__(self):
-        from TA.redis_db import database
+        from settings.redis_db import database
         self.database = database
         self.pubsub = database.pubsub()
         logger.info(f'New pubsub for {self.__class__.__name__}')

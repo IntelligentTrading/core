@@ -1,5 +1,8 @@
-from TA import logger, TAException
-from TA.storages.abstract.timeseries_storage import TimeseriesStorage
+import logging
+from apps.TA import TAException
+from apps.TA.storages.abstract.timeseries_storage import TimeseriesStorage
+
+logger = logging.getLogger(__name__)
 
 
 class IndicatorException(TAException):

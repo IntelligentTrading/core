@@ -1,7 +1,11 @@
-from TA import logger, TAException
-from TA.redis_db import database
-from TA.storages.abstract.indicator import TickerStorage
-from TA.storages.abstract.timeseries_storage import TimeseriesStorage
+import logging
+from apps.TA import TAException
+from settings.redis_db import database
+from apps.TA.storages.abstract.indicator import TickerStorage
+from apps.TA.storages.abstract.timeseries_storage import TimeseriesStorage
+
+
+logger = logging.getLogger(__name__)
 
 
 defualt_price_indexes = ["open_price", "close_price", "low_price", "high_price",]

@@ -1,10 +1,9 @@
 import os
 from flask import Flask
 from flask_restful import reqparse, abort, Api, Resource
-from TA import logger
+import logging
 
-
-deployment_type = os.environ.get('DEPLOYMENT_TYPE', 'LOCAL')
+logger = logging.getLogger(__name__)
 
 
 app = Flask(__name__)
@@ -17,21 +16,13 @@ logger.info("Flask app instantiated.")
 
 
 # ROUTING
-from TA.resources.historical_data import HistoricalDataAPI
+from apps.TA.resources.historical_data import HistoricalDataAPI
 api.add_resource(HistoricalDataAPI, '/api/historical_data/<string:ticker>')
 logger.info("Flask API resource added: /api/historical_data/<string:ticker>")
 
-from TA.resources.price_volume import PriceVolumeAPI
+from apps.TA.resources.price_volume import PriceVolumeAPI
 api.add_resource(PriceVolumeAPI, '/api/price_volume/<string:ticker>')
 logger.info("Flask API resource added: /api/price_volume/<string:ticker>")
 
 logger.info("Flask resources and routes are ready.")
 
-
-# REGISTER WORKERS
-@app.cli.command('worker')
-def worker():
-    from TA.worker import work
-    work()
-
-logger.info("Flask workers registered.")

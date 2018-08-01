@@ -1,7 +1,10 @@
-from TA import logger, TAException
-from TA.storages.abstract.indicator import IndicatorStorage
-from TA.storages.abstract.subscriber import TASubscriber
-from TA.storages.data.pv_history import PriceVolumeHistoryStorage, defualt_price_indexes, derived_price_indexes
+import logging
+from apps.TA import TAException
+from apps.TA.storages.abstract.indicator import IndicatorStorage
+from apps.TA.storages.abstract.subscriber import TASubscriber
+from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, defualt_price_indexes, derived_price_indexes
+
+logger = logging.getLogger(__name__)
 
 
 class PriceException(TAException):

@@ -1,7 +1,7 @@
 import os
 import logging
 import redis
-from TA import deployment_type
+from apps.TA import deployment_type
 
 
 SIMULATED_ENV = deployment_type == "LOCAL"
