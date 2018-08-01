@@ -1,4 +1,3 @@
-import json
 from StrategyHandler import AbstractStrategyHandler
 import logging
 logger = logging.getLogger('TradingStrategy123')

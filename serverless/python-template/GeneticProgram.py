@@ -1,5 +1,4 @@
 import operator
-import random
 import types
 from abc import ABC, abstractmethod
 from deap import gp

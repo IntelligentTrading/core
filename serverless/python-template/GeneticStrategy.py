@@ -1,8 +1,6 @@
-import json
 from StrategyHandler import AbstractStrategyHandler
 import logging
-import deap
-from deap import base, creator, gp
+from deap import gp
 
 from GeneticProgram import GeneticProgram
 logger = logging.getLogger('TradingStrategy123')
@@ -45,17 +43,18 @@ class GeneticStrategy(AbstractStrategyHandler, GeneticProgram):
     def sma50(self, input):
         return self.get_indicator("SMA")
 
+    def price(self, input):
+        return self.get_indicator("price")
+
+    # TODO: implement the methods below once the API supports them
     def ema50(self, input):
-        return self.get_indicator("RSI")
+        pass
 
     def sma200(self, input):
-        return self.get_indicator("RSI")
+        pass
 
     def ema200(self, input):
-        return self.get_indicator("RSI")
-
-    def price(self, input):
-        return 50
+        pass
 
 
 def check_strategy_gp(event, context):

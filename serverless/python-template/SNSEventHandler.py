@@ -5,7 +5,6 @@ logger.setLevel(logging.INFO)
 import json
 from abc import ABC
 import boto3
-from datetime import datetime
 import os
 SNS_ARN = os.environ.get('SNS_ARN', "")
 
