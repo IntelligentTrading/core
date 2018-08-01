@@ -103,7 +103,7 @@ def get_n_last_resampl_df(n, source, transaction_currency, counter_currency, res
         transaction_currency=transaction_currency,
         counter_currency=counter_currency,
         timestamp__gte = datetime.now() - timedelta(minutes=resample_period * n)
-    ).values('timestamp', 'low_price', 'high_price', 'close_price', 'midpoint_price','mean_price').order_by('-timestamp'))
+    ).values('timestamp', 'low_price', 'high_price', 'close_price', 'midpoint_price','mean_price','close_volume').order_by('-timestamp'))
 
     df = pd.DataFrame()
     if last_prices:
@@ -115,11 +115,14 @@ def get_n_last_resampl_df(n, source, transaction_currency, counter_currency, res
         midpoint_prices = pd.Series([rec['midpoint_price'] for rec in last_prices], index=ts)
         mean_prices = pd.Series([rec['mean_price'] for rec in last_prices], index=ts)
 
+        close_volume = pd.Series([rec['close_volume'] for rec in last_prices], index=ts)
+
         df['low_price'] = low_prices
         df['high_price'] = high_prices
         df['close_price'] = close_prices
         df['midpoint_price'] = midpoint_prices
         df['mean_price'] = mean_prices
+        df['close_volume'] = close_volume
         # we need df in a right order (from past to future) to make sma rolling work righ
         df = df.iloc[::-1] # df.sort_index(inplace=True)  might works too
 

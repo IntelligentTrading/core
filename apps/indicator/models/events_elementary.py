@@ -16,6 +16,7 @@ from apps.indicator.models.ann_future_price_classification import AnnPriceClassi
 from apps.indicator.models.price_history import get_n_last_volumes_ts
 
 from apps.user.models.user import get_horizon_value_from_string
+from settings import SHORT, MEDIUM, LONG
 from settings import HORIZONS_TIME2NAMES, EMIT_RSI, EMIT_SMA, RUN_ANN, MODIFY_DB, MEDIUM, RUN_BEN
 
 
@@ -409,6 +410,7 @@ class EventsElementary(AbstractIndicator):
 
         ############## calculate and save ICHIMOKU elementary events
         logger.info("   ... Check Ichimoku Elementary Events: ")
+        ichi_start_time = time.time()
 
         # correct shift in 10 min , so resumple again
         # shall be removed as soon as we have time by exact hours
@@ -522,15 +524,19 @@ class EventsElementary(AbstractIndicator):
                     if MODIFY_DB: ichi_event.save()
                 except Exception as e:
                     logger.error(" Error saving  " + event_name + " elementary event ")
+        logger.info(" || Ichi calculation completed, " + str(horizon) + " in time " + str(time.time() - ichi_start_time))
 
 
 
-        ############## calculate and save ANN Events   #################
-        if RUN_ANN:
-            logger.info("   ... Check AI Elementary Events: ")
+        ############## calculate and save ANN elementory Events   #################
+        # we have ANN indicators only for SHORT period for now!
+        # TODO: remove SHORT when models for 3 horizons will be added!
+        if RUN_ANN and (kwargs['resample_period']==SHORT):
+            logger.info("   ... Check SHORT AI Elementary Events: ")
             _process_ai_simple(horizon, **kwargs)
+        else:
+            logger.info("   ... ANN elementary event calculation has been skipped")
 
-        logger.debug("|| SQL Track: events_elementary.check_events():: " + str(connection.queries))
 
 
 

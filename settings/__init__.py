@@ -43,6 +43,8 @@ if LOCAL:
     log_level = logging.DEBUG
 elif PRODUCTION:
     log_level = logging.INFO
+elif STAGE:
+    log_level = logging.DEBUG
 else:
     log_level = logging.DEBUG
 
@@ -303,3 +305,10 @@ if LOCAL:
     except:
         logger.error("Could not successfully import local_settings.py. This is necessary if you are running locally. This file should be in version control.")
         raise
+
+if STAGE:
+    logger.info(" test INFO log.")
+    logger.debug(" test DEBUG log.")
+
+if PRODUCTION:
+    logger.info(" PRODUCTION environment detected.")
