@@ -85,3 +85,4 @@ class CounterCurrenciesView(APIView):
                 enabled = True
             res.append({'symbol': cc, 'index': get_counter_currency_index(cc), 'enabled':enabled})
         return Response(res)
+        # return Response([({'symbol': cc, 'index': get_counter_currency_index(cc), 'enabled': (bool(cc in temporary_disable_in_api))}) for cc in COUNTER_CURRENCIES])
