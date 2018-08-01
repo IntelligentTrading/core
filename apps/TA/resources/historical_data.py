@@ -1,34 +1,16 @@
 import logging
-from flask_restful import Resource, reqparse
 from settings.redis_db import database
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, defualt_price_indexes, default_volume_indexes
 
 logger = logging.getLogger(__name__)
 
 
-class HistoricalDataAPI(Resource):
+class HistoricalDataAPI(APIView):
 
-    def get(self, ticker):
-        parser = reqparse.RequestParser()
-        parser.add_argument('ticker', type=str, required=(False if ticker else True))
-        parser.add_argument('exchange', type=str, required=False)
-        parser.add_argument('timestamp', type=int, required=False)
-        parser.add_argument('index', type=str, required=False)
-        args = parser.parse_args()
-
-        results_dict = PriceVolumeHistoryStorage.query(
-            ticker=ticker or args.get('ticker'),
-            exchange=args.get('exchange'),
-            index=args.get('index'),
-            timestamp=args.get('timestamp'))
-
-        if len(results_dict) and not 'error' in results_dict:
-            return results_dict, 200  # ok
-        else:
-            return results_dict, 404  # not found
-
-
-    def put(self, ticker):
+    def put(self, request, ticker):
         """
         This should receive a resampled price
         for the upcoming or nearly past 5min period
@@ -37,29 +19,28 @@ class HistoricalDataAPI(Resource):
         :return:
         """
 
-        parser = reqparse.RequestParser()
-        parser.add_argument('exchange', type=str, required=True, location='json')
-        parser.add_argument('timestamp', type=int, required=True, location='json')
-        parser.add_argument('ticker', required=(False if ticker else True), location='json')
-        for index in defualt_price_indexes + default_volume_indexes:
-            parser.add_argument(index, required=False, location='json')
-        args = parser.parse_args()
 
-        pipeline = database.pipeline()
+        ticker = ticker or request.data.get('ticker')
+        exchange = request.data.get('exchange')
+        timestamp = request.data.get('timestamp')
+
+        # SAVE VALUES IN REDIS USING PriceVolumeHistoryStorage OBJECT
+        pipeline = database.pipeline() # transaction=False
 
         # CREATE OBJECT FOR STORAGE
         data_history = PriceVolumeHistoryStorage(
-            ticker=ticker or args['ticker'],
-            exchange=args['exchange'],
-            timestamp=args['timestamp']
+            ticker=ticker,
+            exchange=exchange,
+            timestamp=timestamp
         )
-
         data_history_objects = {}
 
+
         for index in defualt_price_indexes + default_volume_indexes:
-            if args.get(index):
+            index_value = request.data.get(index, None)
+            if index_value:
                 data_history.index = index
-                data_history.value = args[index]
+                data_history.value = index_value
                 # ensure the object stays separate in memory
                 # while saving is pipelined
                 data_history_objects[index] = data_history
@@ -75,12 +56,12 @@ class HistoricalDataAPI(Resource):
                 f'{data_history.ticker}:{data_history.exchange}:{data_history.unix_timestamp}'
             )
 
-            return {
+            return Response({
                        'success': f'{sum(database_response)} db entries created'
-                   }, 201  # created
+                   }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
             logger.error(str(e))
-            return {
+            return Response({
                        'error': str(e)
-                   }, 501  # not implemented
+                   }, status=status.HTTP_501_NOT_IMPLEMENTED)

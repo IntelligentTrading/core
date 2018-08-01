@@ -1,7 +1,9 @@
-from flask_restful import Resource, reqparse
 import logging
 from settings.redis_db import database
-from apps.TA.storages.data.pv_history import defualt_price_indexes, default_volume_indexes
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from apps.TA.storages.data.pv_history import defualt_price_indexes, default_volume_indexes, PriceVolumeHistoryStorage
 from apps.TA.storages.abstract.timeseries_storage import StorageException
 from apps.TA.storages.data.price import PriceStorage
 
@@ -13,9 +15,28 @@ from apps.TA.storages.data.price import PriceStorage
 logger = logging.getLogger(__name__)
 
 
-class PriceVolumeAPI(Resource):
+class PriceVolumeAPI(APIView):
 
-    def put(self, ticker):
+    def get(self, request, ticker):
+
+        ticker = ticker or request.data.get('ticker')
+        exchange = request.data.get('exchange')
+        timestamp = request.data.get('timestamp')
+        index = request.data.get('index')
+
+        results_dict = PriceVolumeHistoryStorage.query(
+            ticker=ticker,
+            exchange=exchange,
+            index=index,
+            timestamp=timestamp)
+
+        if len(results_dict) and not 'error' in results_dict:
+            return Response(results_dict, status=status.HTTP_200_OK)
+        else:
+            return Response(results_dict, status=status.HTTP_404_NOT_FOUND)
+
+
+    def put(self, request, ticker):
         """
         This should receive a json dictionary of
         5 min resampled price and/or volume
@@ -24,54 +45,46 @@ class PriceVolumeAPI(Resource):
         where timestamp is an int divisible by 300s (5 min)
         """
 
-        if not ticker.count('_') == 1:  # check format is like "ETH_BTC"
-            logger.error(f'ticker {ticker} should be in format like ETH_BTC')
-            return {
-                       'error': f'ticker {ticker} does match required format ETH_BTC'
-                   }, 400  #bad request
-
-        # PARSE THE DATA
-        parser = reqparse.RequestParser()
-        parser.add_argument('ticker', type=str, required=True, location='json')
-        parser.add_argument('exchange', type=str, required=True, location='json')
-        parser.add_argument('timestamp', type=int, required=True, location='json')
-
-        for index in (defualt_price_indexes + default_volume_indexes):
-            parser.add_argument(index, location='json', required=False)
-        args = parser.parse_args()
+        ticker = ticker or request.data.get('ticker')
+        exchange = request.data.get('exchange')
+        timestamp = request.data.get('timestamp')
 
         # SAVE VALUES IN REDIS USING PriceStorage OBJECT
         pipeline = database.pipeline(transaction=False)
 
         try:
-            p = PriceStorage(ticker=ticker or args['ticker'],
-                             exchange=args['exchange'],
-                             timestamp=args['timestamp'])
+            p = PriceStorage(ticker=ticker,
+                             exchange=exchange,
+                             timestamp=timestamp)
+            # v = VolumeStorage(ticker=args['ticker'],
+            #                  exchange=args['exchange'],
+            #                  timestamp=args['timestamp'])
+
+
         except StorageException as e:
             return {'error': str(e)}, 400  #bad request
 
         for index in defualt_price_indexes:
-            if index in args:
+            price_index_value = request.data.get(index, None)
+            if price_index_value:
                 p.index = index
-                p.value = args[index]
+                p.value = price_index_value
                 pipeline = p.save(pipeline=pipeline)
 
-        # v = VolumeStorage(ticker=args['ticker'],
-        #                  exchange=args['exchange'],
-        #                  timestamp=args['timestamp'])
-        # for index in volume_indexes:
-        #     if args[index]:
+        # for index in default_volume_indexes:
+        #     volume_index_value = request.data.get(index, None)
+        #     if volume_index_value:
         #         v.index = index
-        #         v.value = args[index]
+        #         v.value = volume_index_value
         #         pipeline = v.save(pipeline=pipeline)
 
         try:
             database_response = pipeline.execute()
-            return {
+            return Response({
                        'success': f'{sum(database_response)} db entries created'
-                   }, 201  #created
+                   }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
-            return {
+            return Response({
                        'error': str(e)
-                   }, 501  # not implented
+                   }, status=status.HTTP_501_NOT_IMPLEMENTED)
