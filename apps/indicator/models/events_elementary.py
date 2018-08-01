@@ -58,9 +58,6 @@ BEN_VOLUME_EVENTS = [
     'vbi_price_gt_mean_by_percent',
     'vbi_volume_cross_from_below',
     'vbi_volume_gt_mean_by_percent',
-    # 'price_crosses_the_mean_up',
-    # 'volume_greater_then_mean',
-    # add mode here
 ]
 
 # list of all events to return by get_last_elementory_events_df
@@ -81,6 +78,14 @@ ichi_param_1_9 = 20
 ichi_param_2_26 = 60
 ichi_param_3_52 = 120
 ichi_displacement = 30
+
+# VBI parameters
+VBI_PRICE_PERIOD = 50
+VBI_VOLUME_PERIOD = 50
+VBI_PRICE_CROSS_PERCENT = 0.02  # TODO just for the time being it is here, should move later
+VBI_VOLUME_CROSS_PERCENT = 0.02
+
+
 
 def _process_ai_simple(horizon, **kwargs):
     '''
@@ -242,29 +247,26 @@ def _process_sma_crossovers(horizon, prices_df, **kwargs):
                     logger.error(" #Error firing SMA signal ")
 
 
-def _process_ben_volume_based(horizon, joined_price_and_volume, **kwargs):
+def _process_ben_volume_based(horizon, price_volume_df, **kwargs):
     # DESCRIPTION of indicator:
     # if price crosses the mean by some percent AND volume is already greater than mean by some other percent)
     # OR (volume crosses the mean by some percent AND price is already greater than mean by some other
     # percent) we emit a signal
 
-    BEN_PRICE_CROSS_PERCENT = 0.02  # TODO just for the time being it is here, should move later
-    BEN_VOLUME_CROSS_PERCENT = 0.02
-
     events_df = pd.DataFrame()
 
     events_df['vbi_price_cross_from_below'] = np.sign(
-        (1+BEN_PRICE_CROSS_PERCENT)*joined_price_and_volume.mean_price - joined_price_and_volume.close_price
+        (1 + VBI_PRICE_CROSS_PERCENT) * price_volume_df.sma_close_price - price_volume_df.close_price
                                                     ).diff().lt(0)
     events_df['vbi_price_gt_mean_by_percent'] = np.sign(
-        (1+BEN_PRICE_CROSS_PERCENT)*joined_price_and_volume.mean_price - joined_price_and_volume.close_price
+        (1 + VBI_PRICE_CROSS_PERCENT) * price_volume_df.sma_close_price - price_volume_df.close_price
                                                     ).lt(0)
 
     events_df['vbi_volume_cross_from_below'] = np.sign(
-        (1 + BEN_VOLUME_CROSS_PERCENT)*joined_price_and_volume.mean_volume - joined_price_and_volume.volume
+        (1 + VBI_VOLUME_CROSS_PERCENT) * price_volume_df.mean_volume - price_volume_df.close_volume
                                                     ).diff().lt(0)
     events_df['vbi_volume_gt_mean_by_percent'] = np.sign(
-        (1 + BEN_VOLUME_CROSS_PERCENT) * joined_price_and_volume.mean_volume - joined_price_and_volume.volume
+        (1 + VBI_VOLUME_CROSS_PERCENT) * price_volume_df.mean_volume - price_volume_df.close_volume
                                                     ).lt(0)
 
     # get the last events row and account for a small timestamp rounding error
@@ -346,78 +348,22 @@ class EventsElementary(AbstractIndicator):
 
         # todo - add return value, and say if any crossovers have happend
         _process_sma_crossovers(horizon, small_prices_df, **kwargs)
+        
 
         ############### check Ben Volume Based events ###############
         logger.info("   ... Check Ben Elementary Events: ")
 
-        if RUN_BEN and kwargs['resample_period'] <= MEDIUM: # can't handle volume data for 1440
+        if RUN_BEN and kwargs['resample_period'] <= MEDIUM: # can't handle volume data for 1440 until we use PriceHistory
+            prices_avg = get_n_last_sma_df(last_records, VBI_PRICE_PERIOD, **no_time_params)
 
-            # @Karla, I added a close_volume to price_resampled.get_n_last_resampl_df
-            # so now you can find both price/volume resampled in prices_df from above (lines 321/322)
-            # now you can simply skip all commented lines below and re-use prices_df calculated above
-            '''
-            ben_num_records = SMA_LOW * 4  # last_records, because of faulty data we make sure to get a bit more
-            PRICE_MEAN_TIME_PERIOD = 50  # SMA_LOW
-            VOLUME_MEAN_TIME_PERIOD = 50  # SMA_LOW
+            # TODO: read resampled volumes from the DB when they're live
+            volumes_avg = talib.SMA(np.array(prices_df['close_volume'], dtype=float),
+                                    timeperiod=VBI_VOLUME_PERIOD)
+            prices_df['mean_volume'] = pd.Series(volumes_avg, index=prices_df.index)
 
-            # the safest way to make sure that we get all the price info we need
-            # TODO: reuse existing Ichimoku prices_df if it turns out that Ichimoku always gets more records than we need
-            prices_df = get_n_last_resampl_df(ben_num_records, **no_time_params)
+            prices_df = prices_df.join(prices_avg).dropna()
 
-            # clean NaN values, if any
-            prices_df = prices_df.dropna()
-
-            #TODO: @Karla,
-            # - we can use a no_time_params dictionary to pass paarmeters quickly
-            # - we have to use volume_resampled here... since we dont have it, we have to
-            # migrate to PriceHistory asap
-            volumes_ts = get_n_last_volumes_ts(ben_num_records*kwargs['resample_period'],
-                                               kwargs['source'],
-                                               kwargs['transaction_currency'],
-                                               kwargs['counter_currency'])
-
-            # TODO: it seems like we duplicate if volumes_ts is not None and len(prices_df) != 0 ....
-            if volumes_ts is None:
-                logger.error("BEN VBI CRITICAL: NO VOLUME DATA!!!")
-
-            if len(prices_df) == 0:
-                logger.error("BEN VBI CRITICAL: NO PRICE DATA!!!")
-            '''
-
-            if volumes_ts is not None and len(prices_df) != 0:
-                # TODO @Karla: we already calculated price SMA for almost all possible periods
-                # see sma.py, SMA_LIST = [9, 20, 26, 30, 50, 52, 60, 120, 200]
-                # to get SMA of period 50 (resampled) simply call
-                # get_n_last_sma_df(last_records, 50, **no_time_params) ( see examples on line 335, no need to call talib
-
-                # if you do this you can simplify all below in 3-4 lines of code just get price/volume indicators
-                # and then check for their crosses
-
-                prices_avg = talib.SMA(np.array(prices_df.close_price, dtype=float), timeperiod=PRICE_MEAN_TIME_PERIOD)
-                prices_df['mean_price'] = pd.Series(prices_avg, index=prices_df.index)
-
-                volumes_df = volumes_ts.to_frame('volume')
-                # clean NaN values, if any
-                volumes_df = volumes_df.dropna()
-
-                if not volumes_df.index.is_unique:
-                    logger.warning("Duplicate index values encountered in volume data, pruning...")
-                    start_len = len(volumes_df)
-                    volumes_df = volumes_df[~volumes_df.index.duplicated(keep='first')]
-                    logger.warning(" --> reduced size of volume dataframe from {} to {} because of duplicate data.".format(
-                        start_len, len(volumes_df)
-                    ))
-
-                volumes_reindexed_df = volumes_df.reindex(prices_df.index, method='nearest')  # TODO find a better way
-                volumes_reindexed_df = volumes_reindexed_df[~volumes_reindexed_df.index.duplicated()]
-
-                joined_price_and_volume_df = prices_df.join(volumes_reindexed_df, how='inner')  # to make sure timestamps match
-                volumes_avg = talib.SMA(np.array(joined_price_and_volume_df['volume'], dtype=float),
-                                        timeperiod=VOLUME_MEAN_TIME_PERIOD)
-
-                joined_price_and_volume_df['mean_volume'] = pd.Series(volumes_avg, index=joined_price_and_volume_df.index)
-
-                _process_ben_volume_based(horizon, joined_price_and_volume_df, **kwargs)
+            _process_ben_volume_based(horizon, prices_df, **kwargs)
 
 
         ############## calculate and save ICHIMOKU elementary events
