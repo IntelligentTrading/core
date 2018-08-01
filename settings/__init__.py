@@ -91,6 +91,7 @@ INSTALLED_APPS = [
     'apps.ai',
     'apps.signal',
     'apps.api',
+    'apps.TA',
     'apps.info_bot',
     'taskapp',
     'apps.backtesting',
