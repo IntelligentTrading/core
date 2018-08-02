@@ -1,7 +1,7 @@
 architect==0.5.6
 boto==2.45.0
 boto3==1.6.23
-celery==4.1.0
+celery==4.1.1
 celery-redbeat==0.11.1
 ccxt==1.13.38
 decorator==4.0.10
@@ -37,7 +37,7 @@ requests==2.18.4
 schedule==0.4.3
 simplejson==3.11.1
 six==1.11.0
-TA-Lib==0.4.17
+TA-Lib
 toolz==0.8.2
 waitress==1.0.2
 whitenoise==3.3.1
