@@ -51,7 +51,8 @@ class TimeseriesStorage(KeyValueStorage):
 
     @classmethod
     def query(cls, key="", key_suffix="", key_prefix="",
-              timestamp=None, periods=0):
+              timestamp=None, periods=0
+              , *args, **kwargs):
 
         sorted_set_key = cls.compile_db_key(key=key, key_prefix=key_prefix, key_suffix=key_suffix)
         # example key f'{key_prefix}:{cls.__name__}:{key_suffix}'
@@ -137,7 +138,7 @@ class TimeseriesStorage(KeyValueStorage):
             return response
 
 
-    def get_value(self):
+    def get_value(self, *args, **kwargs):
         TimeseriesException("function not yet implemented! ¯\_(ツ)_/¯ ")
         pass
 

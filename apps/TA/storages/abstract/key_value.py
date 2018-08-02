@@ -57,7 +57,7 @@ class KeyValueStorage(ABC):
         )
 
 
-    def save(self, pipeline=None):
+    def save(self, pipeline=None, *args, **kwargs):
         if not self.value:
             raise StorageException("no value set, nothing to save!")
         if not self.force_save:
@@ -66,5 +66,5 @@ class KeyValueStorage(ABC):
         logger.debug(f'saving key, value: {self.get_db_key()}, {self.value}')
         return database.set(self.get_db_key(), self.value)
 
-    def get_value(self, db_key=""):
+    def get_value(self, db_key="", *args, **kwargs):
         return database.get(db_key or self.get_db_key())

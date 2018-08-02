@@ -62,7 +62,7 @@ class PriceSubscriber(TASubscriber):
             index_values = {}
 
             for index in defualt_price_indexes:
-                logger.debug("process price for ticker: {ticker}")
+                logger.debug(f'process price for ticker: {ticker}')
 
                 # example key = "XPM_BTC:poloniex:PriceVolumeHistoryStorage:close_price"
                 sorted_set_key = f'{ticker}:{exchange}:PriceVolumeHistoryStorage:{index}'

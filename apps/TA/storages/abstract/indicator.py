@@ -30,14 +30,6 @@ class IndicatorStorage(TickerStorage):
         # self.resample_period = 300  # 5 min
 
 
-    @classmethod
-    def query(cls, ticker, exchange="", timestamp=None, key="", key_suffix=""):
-
-        results_dict = super().query(ticker, exchange=exchange,
-                                     key=key, key_suffix=key_suffix,
-                                     timestamp=timestamp)
-        return results_dict
-
 
 """
 ===== EXAMPLE USAGE =====

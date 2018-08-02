@@ -29,7 +29,10 @@ class PriceVolumeHistoryStorage(TickerStorage):
 
 
     @classmethod
-    def query(cls, ticker, exchange=None, index="", timestamp=None, periods=0):
+    def query(cls, ticker, exchange=None, index="",
+              timestamp=None, periods=0,
+              *args, **kwargs):
+
         # "ETH_BTC:poloniex:PriceVolumeHistoryStorage:close_price"
         # f'{ticker}:{exchange}:{cls.__name__}:{index}'
         if not index:
@@ -40,7 +43,8 @@ class PriceVolumeHistoryStorage(TickerStorage):
 
         results_dict = super().query(ticker=ticker, exchange=exchange,
                                      key_suffix=key_suffix,
-                                     timestamp=timestamp, periods=periods)
+                                     timestamp=timestamp, periods=periods,
+                                     *args, **kwargs)
 
         results_dict['index'] = index
         return results_dict
