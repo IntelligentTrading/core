@@ -6,6 +6,7 @@ urlpatterns = [
 
     # url(r'^$', Home.as_view(), name='home'),
 
+    url(r'^api/v3/', include('apps.TA.urls', namespace='redis_api')),
     url(r'^api/', include('apps.api.urls', namespace='api')),
     url(r'^dashboard/', include('apps.dashboard.urls', namespace='dashboard')),
 

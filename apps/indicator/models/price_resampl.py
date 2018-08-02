@@ -30,7 +30,6 @@ class PriceResampl(AbstractIndicator):
     high_volume = models.FloatField(null=True)
 
 
-
     class Meta:
         indexes = [
             models.Index(fields=['transaction_currency', 'counter_currency', 'source', 'resample_period', 'timestamp']),
