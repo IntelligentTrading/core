@@ -2,7 +2,7 @@ import time
 import logging
 import pandas as pd
 import numpy as np
-# import talib
+import talib
 
 from django.db import models
 from django.db import connection
