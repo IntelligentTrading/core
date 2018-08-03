@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class HistoricalDataAPI(APIView):
     permission_classes = (RestAPIPermission,)
 
-    def put(self, request, ticker):
+    def put(self, request, ticker, format=None):
         """
         This should receive a resampled price
         for the upcoming or nearly past 5min period
@@ -21,7 +21,6 @@ class HistoricalDataAPI(APIView):
         and represents a resampled data point for
         :return:
         """
-
 
         ticker = ticker or request.data.get('ticker')
         exchange = request.data.get('exchange')
