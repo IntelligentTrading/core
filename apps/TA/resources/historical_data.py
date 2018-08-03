@@ -1,4 +1,6 @@
 import logging
+
+from apps.api.permissions import RestAPIPermission
 from settings.redis_db import database
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -9,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class HistoricalDataAPI(APIView):
+    permission_classes = (RestAPIPermission,)
 
     def put(self, request, ticker):
         """

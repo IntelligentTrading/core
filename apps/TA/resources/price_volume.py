@@ -1,4 +1,6 @@
 import logging
+
+from apps.api.permissions import RestAPIPermission
 from settings.redis_db import database
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -16,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class PriceVolumeAPI(APIView):
+    permission_classes = (RestAPIPermission,)
 
     def get(self, request, ticker):
 
