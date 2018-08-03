@@ -22,10 +22,10 @@ class PriceVolumeAPI(APIView):
 
     def get(self, request, ticker):
 
-        ticker = ticker or request.data.get('ticker')
-        exchange = request.data.get('exchange')
-        timestamp = request.data.get('timestamp')
-        index = request.data.get('index')
+        ticker = ticker or request.query_params.get('ticker')
+        exchange = request.query_params.get('exchange')
+        timestamp = request.query_params.get('timestamp')
+        index = request.query_params.get('index')
 
         results_dict = PriceVolumeHistoryStorage.query(
             ticker=ticker,
