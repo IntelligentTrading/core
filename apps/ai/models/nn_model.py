@@ -24,6 +24,8 @@ class AnnModel(models.Model):
     '''
 
     timestamp = UnixTimeStampField(null=False)
+    new_timestamp = models.DateTimeField(null=True)
+
     source = models.SmallIntegerField(choices=SOURCE_CHOICES, null=False)
     model_name = models.CharField(max_length=32, null=False, blank=False)
     s3_model_file = models.TextField(null=False, blank=False)

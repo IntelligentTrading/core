@@ -28,6 +28,7 @@ class Price(models.Model):
     price = models.BigIntegerField(null=False)
 
     timestamp = UnixTimeStampField(null=False)
+    new_timestamp = models.DateTimeField(null=True)
 
 
     # INDEX
