@@ -2,7 +2,7 @@ import logging
 from apps.TA import TAException
 from apps.TA.storages.abstract.indicator import IndicatorStorage
 from apps.TA.storages.abstract.subscriber import TASubscriber, timestamp_is_near_5min, get_nearest_5min_timestamp
-from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, defualt_volume_indexes, derived_volume_indexes
+from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, default_volume_indexes, derived_volume_indexes
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class VolumeStorage(IndicatorStorage):
             raise VolumeException("save error, missing data")
 
         if not self.force_save:
-            if not self.index in defualt_volume_indexes + derived_volume_indexes:
+            if not self.index in default_volume_indexes + derived_volume_indexes:
                 logger.error("volume index not in approved list, raising exception...")
                 raise VolumeException("unknown index")
 
