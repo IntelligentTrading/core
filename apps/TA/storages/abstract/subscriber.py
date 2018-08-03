@@ -2,8 +2,8 @@ from abc import ABC
 import logging
 from apps.TA import TAException
 
-
 logger = logging.getLogger(__name__)
+
 
 class SubscriberException(TAException):
     pass
@@ -20,8 +20,7 @@ class TASubscriber(ABC):
         for s_class in self.classes_subscribing_to:
             self.pubsub.subscribe(s_class.__name__)
             logger.info(f'{self.__class__.__name__} subscribed to '
-                         f'{s_class.__name__} channel')
-
+                        f'{s_class.__name__} channel')
 
     def __call__(self):
         data_event = self.pubsub.get_message()
@@ -50,7 +49,6 @@ class TASubscriber(ABC):
         except Exception as e:
             raise SubscriberException(str(e))
 
-
     def handle(self, channel, data, *args, **kwargs):
         """
         overwrite me with some logic
@@ -62,3 +60,13 @@ class TASubscriber(ABC):
                        f'BUT HANDLER NOT DEFINED! '
                        f'... message/event discarded')
         pass
+
+
+def timestamp_is_near_5min(timestamp) -> bool:
+    # close to a five minute period mark? (+ or - 45 seconds)
+    seconds_from_five_min = (int(timestamp) + 45) % 300
+    return bool(seconds_from_five_min < 90)
+
+
+def get_nearest_5min_timestamp(timestamp) -> int:
+    return ((int(timestamp) + 45) // 300) * 300
