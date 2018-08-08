@@ -128,7 +128,7 @@ class TimeseriesStorage(KeyValueStorage):
             logger.debug("added command to redis pipeline")
             if publish:
                 pipeline = pipeline.publish(self.__class__.__name__, self.get_db_key())
-            return pipeline.zadd(z_add_key, z_add_score, z_add_name)  # key, score, name
+            return pipeline.zadd(z_add_key, z_add_name, z_add_score)  # key, score, name
 
         else:
             logger.debug("no pipeline, executing zadd command immediately.")
