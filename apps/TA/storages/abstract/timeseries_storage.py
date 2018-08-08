@@ -55,6 +55,7 @@ class TimeseriesStorage(KeyValueStorage):
               , *args, **kwargs):
 
         sorted_set_key = cls.compile_db_key(key=key, key_prefix=key_prefix, key_suffix=key_suffix)
+        logger.debug(f'query for sorted set key {sorted_set_key}')
         # example key f'{key_prefix}:{cls.__name__}:{key_suffix}'
 
         # do a quick check to make sure this is a class of things we know is in existence
