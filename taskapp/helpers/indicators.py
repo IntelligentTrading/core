@@ -206,6 +206,7 @@ def _compute_indicators_for(source, transaction_currency, counter_currency, resa
                 # Emit to a signal from a strategy to sqs without saving it in the Signal table
                 # combine a dictionary with all data
                 dict_to_emit = {
+                    "id": hex(int(time.time()*10000000))[2:],
                     **indicator_params_dict,
                     "horizon"  : horizon,
                     "strategy" : str(s),
