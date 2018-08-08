@@ -47,7 +47,7 @@ class TASubscriber(ABC):
             logger.debug(f'unexpected format: {data_event}')
             pass  # message not in expected format. just ignore
         except Exception as e:
-            raise SubscriberException(str(e))
+            raise SubscriberException(f'Error calling {self.__class__.__name__}: ' + str(e))
 
     def handle(self, channel, data, *args, **kwargs):
         """

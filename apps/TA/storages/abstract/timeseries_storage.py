@@ -117,22 +117,22 @@ class TimeseriesStorage(KeyValueStorage):
             pass
 
         self.save_own_existance()
-        # example >>> redis.zadd('my-key', 'name1', 1.1)
-        zadd_args = (self.get_db_key(), # set key name
-                      f'{self.value}:{str(self.unix_timestamp)}', # item unique value
-                      int(self.unix_timestamp) # timestamp as score (int or float)
-                     )
-        logger.debug("saving data with args " + str(zadd_args))
+
+        z_add_key = self.get_db_key() # set key name
+        z_add_name = f'{self.value}:{str(self.unix_timestamp)}' # item unique value
+        z_add_score = int(self.unix_timestamp) # timestamp as score (int or float)
+
+        logger.debug(f'saving data with args {z_add_key}, {z_add_name}, {z_add_score}')
 
         if pipeline is not None:
             logger.debug("added command to redis pipeline")
             if publish:
                 pipeline = pipeline.publish(self.__class__.__name__, self.get_db_key())
-            return pipeline.zadd(*zadd_args)
+            return pipeline.zadd(z_add_key, z_add_score, z_add_name)  # key, score, name
 
         else:
             logger.debug("no pipeline, executing zadd command immediately.")
-            response = database.zadd(*zadd_args)
+            response = database.zadd(z_add_key, z_add_name, z_add_score)  # key, name, score
             if publish:
                 database.publish(self.__class__.__name__, self.get_db_key())
             return response

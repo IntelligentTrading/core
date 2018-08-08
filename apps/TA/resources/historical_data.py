@@ -1,6 +1,7 @@
 import logging
 
 from apps.api.permissions import RestAPIPermission
+from settings import DEBUG
 from settings.redis_db import database
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -11,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class HistoricalDataAPI(APIView):
-    permission_classes = (RestAPIPermission,)
+    permission_classes = (RestAPIPermission,) if not DEBUG else ()
 
     def put(self, request, ticker, format=None):
         """
@@ -42,7 +43,7 @@ class HistoricalDataAPI(APIView):
             index_value = request.data.get(index, None)
             if index_value:
                 data_history.index = index
-                data_history.value = index_value
+                data_history.value = int(float(index_value) * 10**8)
                 # ensure the object stays separate in memory
                 # while saving is pipelined
                 data_history_objects[index] = data_history

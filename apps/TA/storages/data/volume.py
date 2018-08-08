@@ -57,7 +57,7 @@ class VolumeSubscriber(TASubscriber):
         volume = VolumeStorage(ticker=ticker, exchange=exchange, timestamp=timestamp)
         index_values = {}
 
-        for index in defualt_volume_indexes:
+        for index in default_volume_indexes:
             logger.debug(f'process volume for ticker: {ticker}')
 
             # example key = "XPM_BTC:poloniex:PriceVolumeHistoryStorage:close_price"
