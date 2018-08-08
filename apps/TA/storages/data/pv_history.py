@@ -83,6 +83,6 @@ class CleanerSubscriber(TASubscriber):
         # f'{data_history.ticker}:{data_history.exchange}:{data_history.timestamp}'
         [ticker, exchange, timestamp] = data.split(":")
 
-        sorted_set_key = f'{ticker}:{exchange}:PriceVolumeHistoryStorage:{index}'
-
-        database.zremrangebyscore(sorted_set_key, 0, timestamp-(60*30))  # 30 minutes or older
+        for index in all_indexes:
+            sorted_set_key = f'{ticker}:{exchange}:PriceVolumeHistoryStorage:{index}'
+            database.zremrangebyscore(sorted_set_key, 0, int(timestamp)-(60*90))  # 90 minutes or older
