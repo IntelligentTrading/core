@@ -41,10 +41,8 @@ class PriceVolumeHistoryStorage(TickerStorage):
             logger.debug("assuming to use `close_price` index in price query")
             index = "close_price"
 
-        key_suffix = f':{index}'
-
         results_dict = super().query(ticker=ticker, exchange=exchange,
-                                     key_suffix=key_suffix,
+                                     key_suffix=f':{index}',
                                      timestamp=timestamp, periods=periods,
                                      *args, **kwargs)
 

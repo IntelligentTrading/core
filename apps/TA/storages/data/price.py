@@ -16,6 +16,7 @@ class PriceStorage(IndicatorStorage):
         super().__init__(*args, **kwargs)
         self.index = kwargs.get('index', "close_price")
         self.value = kwargs.get('value')
+        self.db_key_suffix = f':{self.index}'
 
     def save(self, *args, **kwargs):
 
