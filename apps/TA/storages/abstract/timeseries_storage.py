@@ -1,5 +1,5 @@
 import logging
-from apps.TA import TAException
+from apps.TA import TAException, JAN_1_2017_TIMESTAMP
 from settings.redis_db import database, set_of_known_sets_in_redis
 from apps.TA.storages.abstract.key_value import KeyValueStorage
 
@@ -18,7 +18,7 @@ class TimeseriesStorage(KeyValueStorage):
     """
     stores things in a sorted set unique to each ticker and exchange
     todo: split the db by each exchange source
-    todo: refactor to add short, medium, long (see resample_period in abstract_indicator)
+
     """
     class_describer = "timeseries"
 
@@ -38,7 +38,7 @@ class TimeseriesStorage(KeyValueStorage):
         except Exception as e:
             raise StorageException(str(e))
 
-        if self.unix_timestamp < 1483228800:
+        if self.unix_timestamp < JAN_1_2017_TIMESTAMP:
             raise TimeseriesException("timestamp before January 1st, 2017")
 
 
@@ -77,11 +77,10 @@ class TimeseriesStorage(KeyValueStorage):
                     [value, timestamp] = query_response[0].decode("utf-8").split(":")
                 except:
                     # force no results, which raises IndexError exception later
-                    timestamp = 1483228800  # Jan 1, 2017
+                    timestamp = JAN_1_2017_TIMESTAMP  # 1483228800
 
-            timestamp = int(timestamp)
-            max_timestamp = timestamp
-            min_timestamp = timestamp - (periods*300) - 1800
+            max_timestamp = timestamp = int(timestamp)
+            min_timestamp = max_timestamp - ((periods*300) + 299)
             query_response = database.zrangebyscore(sorted_set_key, min_timestamp, max_timestamp, 0, periods)
 
         periods = periods or 1
@@ -89,7 +88,7 @@ class TimeseriesStorage(KeyValueStorage):
         # example query_response = [b'0.06288:1532163247']
         # which came from f'{self.value}:{str(self.unix_timestamp)}'
         try:
-            if timestamp == 1483228800:
+            if timestamp == JAN_1_2017_TIMESTAMP:
                 values = []
             else: # we are returning a list
                 values = [vt.decode("utf-8").split(":")[0] for vt in query_response ]

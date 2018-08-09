@@ -1,5 +1,5 @@
 import logging
-from apps.TA import TAException
+from apps.TA import TAException, PERIODS_4HR
 from apps.TA.storages.abstract.ticker import TickerStorage
 from apps.TA.storages.abstract.timeseries_storage import TimeseriesException
 
@@ -22,6 +22,7 @@ class IndicatorStorage(TickerStorage):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.periods
         self.class_describer = kwargs.get('class_describer', self.__class__.class_describer)
 
         # ALL INDICATORS ARE ASSUMED 5-MIN PERIOD RESAMPLED
@@ -29,7 +30,17 @@ class IndicatorStorage(TickerStorage):
             raise TimeseriesException("indicator timestamp should be % 300")
         # self.resample_period = 300  # 5 min
 
+        self.horizon = int(kwargs.get('horizon', 1))
+        self.periods = int(kwargs.get('periods', 1*self.horizon))
 
+        if self.periods // self.horizon == 0:
+            raise IndicatorException(f'horizon {self.horizon} '
+                                     f'must be less than periods {self.periods} (or ==1)')
+        elif self.periods % self.horizon != 0:
+            raise IndicatorException(f'horizon {self.horizon} '
+                                     f'must be a factor of periods {self.periods}')
+
+        self.db_key_suffix = f':{self.periods}'
 
 """
 ===== EXAMPLE USAGE =====
