@@ -36,6 +36,23 @@ class PriceStorage(IndicatorStorage):
         return super().save(*args, **kwargs)
 
 
+    @classmethod
+    def query(cls, ticker, exchange="", key="", key_suffix="",
+              timestamp=None, periods=0, index="",
+              *args, **kwargs):
+
+        if index:
+            key_suffix = f'{index}:' + key_suffix
+
+        results_dict = super().query(key=key, key_prefix="", key_suffix=key_suffix,
+                                     timestamp=timestamp, periods=periods,
+                                     *args, **kwargs)
+
+        results_dict['index'] = index
+        return results_dict
+
+
+
 class PriceSubscriber(TASubscriber):
 
     classes_subscribing_to = [

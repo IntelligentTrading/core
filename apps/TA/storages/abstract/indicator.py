@@ -16,7 +16,7 @@ class IndicatorStorage(TickerStorage):
     stores indicators in a sorted set unique to each ticker and exchange
     requires data to be a resampling to represent the most recent 5min block of time
     timestamp value must be evenly divisible by 5 minutes (300 seconds)
-    todo: refactor to add short, medium, long (see resample_period in abstract_indicator)
+    add short, medium, long as 1hr, 4hr, 24hr time horizons
     """
     class_describer = "indicator"
 
@@ -41,6 +41,23 @@ class IndicatorStorage(TickerStorage):
                                      f'must be a factor of periods {self.periods}')
 
         self.db_key_suffix = f':{self.periods}'
+
+
+    @classmethod
+    def query(cls, ticker, exchange="", key="", key_suffix="",
+              timestamp=None, periods=0,
+              *args, **kwargs):
+
+        if periods:
+            key_suffix = f'{periods}:' + key_suffix
+
+        results_dict = super().query(key=key, key_prefix="", key_suffix=key_suffix,
+                                     timestamp=timestamp, periods=periods,
+                                     *args, **kwargs)
+
+        results_dict['periods'] = periods
+        return results_dict
+
 
 """
 ===== EXAMPLE USAGE =====
