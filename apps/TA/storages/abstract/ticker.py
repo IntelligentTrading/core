@@ -45,7 +45,9 @@ class TickerStorage(TimeseriesStorage):
     def query(cls, *args, **kwargs):
 
         ticker = kwargs.get("ticker", None)
-        exchange = kwargs.get("exchange", "poloniex")
+        exchange = kwargs.get("exchange", None)
+        if not ticker or not exchange:
+            raise IndicatorException("ticker and exchange both requried for ticker query")
         kwargs["key_prefix"] = f'{ticker}:{exchange}'
 
         results_dict = super().query(*args, **kwargs)

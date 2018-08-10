@@ -46,12 +46,12 @@ class TickerSubscriber(ABC):
         # }
 
         try:
-            channel_name = data_event['channel'].decode("utf-8")
-            event_data = json.loads(data_event['data'].decode("utf-8"))
-            logger.debug(f'handling event in {channel_name} subscription')
+            channel_name = data_event.get('channel').decode("utf-8")
+            event_data = json.loads(data_event.get('data').decode("utf-8"))
+            logger.debug(f'handling event in {self.__class__.__name__}')
             self.handle(channel_name, event_data)
-        except KeyError:
-            logger.warning(f'unexpected format: {data_event}')
+        except KeyError as  e:
+            logger.warning(f'unexpected format: {data_event} ' + str(e))
             pass  # message not in expected format, just ignore
         except JSONDecodeError:
             logger.warning(f'unexpected data format: {data_event["data"]}')

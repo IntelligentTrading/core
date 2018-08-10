@@ -56,7 +56,6 @@ class PriceHistoryTestCase(TestCase):
         self.assertLess(len(query_results['values']), 7)
 
 
-
     def tearDown(self):
         from settings.redis_db import database
         database.delete(self.price_history.get_db_key())

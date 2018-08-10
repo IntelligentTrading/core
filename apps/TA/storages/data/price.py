@@ -89,36 +89,35 @@ class PriceSubscriber(TickerSubscriber):
         timestamp = get_nearest_5min_timestamp(timestamp)
 
         price = PriceStorage(ticker=ticker, exchange=exchange, timestamp=timestamp)
-        index_values = {}
 
         logger.debug(f'process price for ticker: {ticker} and index: {index}')
 
         # key_format = f'{ticker}:{exchange}:PriceVolumeHistoryStorage:{index}'
         sorted_set_key = data["key"]
 
-        query_results = PriceVolumeHistoryStorage.query(ticker=ticker, exchange=exchange,
-                                                        index=index, timestamp=timestamp,
-                                                        periods_range=1, timestamp_tolerance=29)
+        query_results = PriceVolumeHistoryStorage.query(
+            ticker=ticker, exchange=exchange,
+            index=index, timestamp=timestamp,
+            periods_range=1, timestamp_tolerance=29
+        )
 
+        logger.debug("results from PriceVolumeHistoryStorage query... ")
+        logger.debug(query_results)
 
-        index_values[index] = [
-            float(db_value.decode("utf-8").split(":")[0])
-            for db_value
-            in self.database.zrangebyscore(sorted_set_key, timestamp - 300, timestamp + 45)
-        ]
+        index_values = [int(v) for v in query_results['values']]
+        # timestamps = [int(v) for v in query_results['timestamps']]
 
         try:
-
-            if not len(index_values[index]):
+            if not len(index_values):
                 price.value = None
             elif index == "open_price":
-                price.value = index_values["open_price"][0]
+                price.value = index_values[0]
             elif index == "close_price":
-                price.value = index_values["close_price"][-1]
+                price.value = index_values[-1]
             elif index == "low_price":
-                price.value = min(index_values["low_price"])
+                price.value = min(index_values)
             elif index == "high_price":
-                price.value = max(index_values["high_price"])
+                price.value = max(index_values)
 
         except IndexError:
             pass  # couldn't find a useful value
@@ -130,33 +129,42 @@ class PriceSubscriber(TickerSubscriber):
                 price.save()
                 logger.info("saved new thing: " + price.get_db_key())
 
-        all_values_set = (
-                set(index_values["open_price"]) |
-                set(index_values["close_price"]) |
-                set(index_values["low_price"]) |
-                set(index_values["high_price"])
-        )
+        if index == "close_price":
+            all_values_set = set(index_values)
+            for other_index in ["open_price", "low_price", "high_price"]:
+                query_results = PriceVolumeHistoryStorage.query(
+                    ticker=ticker, exchange=exchange,
+                    index=other_index, timestamp=timestamp,
+                    periods_range=1, timestamp_tolerance=29
+                )
 
-        if not len(all_values_set):
-            return
+                index_values = [int(v) for v in query_results['values']]
 
-        for index in derived_price_indexes:
-            price.value = None
-            values_set = all_values_set.copy()
+            all_values_set = all_values_set | set(index_values)
 
-            if index == "midpoint_price":
-                while len(values_set) > 2:
-                    values_set.remove(max(values_set))
-                    values_set.remove(min(values_set))
-                price.value = values_set.pop()
+            if not len(all_values_set):
+                return
 
-            elif index == "mean_price":
-                price.value = sum(values_set) / (len(values_set) or 1)
-
-            elif index == "price_variance":
-                # this is too small of a period size to measure variance
-                pass
-
-            if price.value:
+            for index in derived_price_indexes:
                 price.index = index
-                price.save(publish=True)
+                price.value = None
+
+                values_set = all_values_set.copy()
+
+                if index == "midpoint_price":
+                    while len(values_set) > 2:
+                        values_set.remove(max(values_set))
+                        values_set.remove(min(values_set))
+                    price.value = values_set.pop()
+
+                elif index == "mean_price":
+                    price.value = sum(values_set) / (len(values_set) or 1)
+
+                elif index == "price_variance":
+                    # this is too small of a period size to measure variance
+                    pass
+
+                if price.value:
+                    price.value = int(price.value)
+                    price.index = str(index)
+                    price.save(publish=True)

@@ -10,9 +10,9 @@ logger = logging.getLogger(__name__)
 class StorageException(TAException):
     pass
 
+
 class TimeseriesException(TAException):
     pass
-
 
 
 class TimeseriesStorage(KeyValueStorage):
@@ -42,13 +42,11 @@ class TimeseriesStorage(KeyValueStorage):
         if self.unix_timestamp < JAN_1_2017_TIMESTAMP:
             raise TimeseriesException("timestamp before January 1st, 2017")
 
-
     def save_own_existance(self, describer_key=""):
         self.describer_key = describer_key or f'{self.__class__.class_describer}:{self.get_db_key()}'
 
         if self.describer_key not in set_of_known_sets_in_redis:
             database.sadd("sorted_sets", self.describer_key)
-
 
     @classmethod
     def query(cls, key: str = "", key_suffix: str = "", key_prefix: str = "",
@@ -82,25 +80,23 @@ class TimeseriesStorage(KeyValueStorage):
                     timestamp = JAN_1_2017_TIMESTAMP  # 1483228800
 
             max_timestamp = timestamp = int(timestamp) + timestamp_tolerance
-            min_timestamp = max_timestamp - ((periods_range*300) + timestamp_tolerance)
+            min_timestamp = max_timestamp - ((periods_range * 300) + timestamp_tolerance)
             query_response = database.zrangebyscore(sorted_set_key, min_timestamp, max_timestamp)
-
-        periods_range = periods_range or 1
 
         # example query_response = [b'0.06288:1532163247']
         # which came from f'{self.value}:{str(self.unix_timestamp)}'
         try:
             if timestamp == JAN_1_2017_TIMESTAMP:
                 values = []
-            else: # we are returning a list
-                values = [vt.decode("utf-8").split(":")[0] for vt in query_response ]
-                timestamps = [vt.decode("utf-8").split(":")[1] for vt in query_response ]
+            else:  # we are returning a list
+                values = [vt.decode("utf-8").split(":")[0] for vt in query_response]
+                timestamps = [vt.decode("utf-8").split(":")[1] for vt in query_response]
                 #  todo: double check that [-1] in list is most recent timestamp
 
-            if periods_range:
-                if len(values) < periods_range:
-                    "Sorry we couldn't find enough values for you :("
-
+            if periods_range > 1 and len(values) < periods_range:
+                "Sorry we couldn't find enough values for you :("
+                # todo: add buffer values? no, let the receiver solve their own problem
+                # todo: but perhaps publish an alert to create missing values around this timestamp
 
             return {
                 'values': values,
@@ -108,16 +104,23 @@ class TimeseriesStorage(KeyValueStorage):
                 'timestamp': timestamp,
                 'earliest_timestamp': timestamps[0],
                 'latest_timest': timestamps[-1],
-                'periods_range': periods_range,
+                'periods_range': periods_range or 1,
                 'period_size': "300" if periods_range else None,
             }
 
         except IndexError:
-            return None  # no problem, query just returned no results
+            return {
+                'values': [],
+                'values_count': 0,
+                'timestamp': timestamp,
+                'earliest_timestamp': timestamp,
+                'latest_timest': timestamp,
+                'periods_range': periods_range or 1,
+                'period_size': "300" if periods_range else None,
+            }
         except Exception as e:
             logger.error("redis query problem: " + str(e))
             raise TimeseriesException(str(e))  # wtf happened?
-
 
     def save(self, publish=False, pipeline=None, *args, **kwargs):
         if not self.value:
@@ -128,10 +131,10 @@ class TimeseriesStorage(KeyValueStorage):
 
         self.save_own_existance()
 
-        z_add_key = self.get_db_key() # set key name
-        z_add_name = f'{self.value}:{str(self.unix_timestamp)}' # item unique value
-        z_add_score = int(self.unix_timestamp) # timestamp as score (int or float)
-        z_add_data = {"key":z_add_key, "name":z_add_name, "score":z_add_score}  # key, score, name
+        z_add_key = self.get_db_key()  # set key name
+        z_add_name = f'{self.value}:{str(self.unix_timestamp)}'  # item unique value
+        z_add_score = int(self.unix_timestamp)  # timestamp as score (int or float)
+        z_add_data = {"key": z_add_key, "name": z_add_name, "score": z_add_score}  # key, score, name
         logger.debug(f'saving data with args {z_add_data}')
 
         if pipeline is not None:
@@ -147,10 +150,10 @@ class TimeseriesStorage(KeyValueStorage):
                 database.publish(self.__class__.__name__, json.dumps(z_add_data))
             return response
 
-
     def get_value(self, *args, **kwargs):
         TimeseriesException("function not yet implemented! ¯\_(ツ)_/¯ ")
         pass
+
 
 """
 We can scan the newest or oldest event ids with ZRANGE 4,
