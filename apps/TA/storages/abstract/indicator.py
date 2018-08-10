@@ -51,8 +51,8 @@ class IndicatorStorage(TickerStorage):
         if periods:
             key_suffix = f'{periods}:' + key_suffix
 
-        results_dict = super().query(key=key, key_prefix="", key_suffix=key_suffix,
-                                     timestamp=timestamp, periods=periods,
+        results_dict = super().query(ticker=ticker, exchange="", key="", key_suffix=key_suffix,
+                                     timestamp=None, periods=0,
                                      *args, **kwargs)
 
         results_dict['periods'] = periods

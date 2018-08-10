@@ -42,15 +42,14 @@ class PriceStorage(IndicatorStorage):
               *args, **kwargs):
 
         if index:
-            key_suffix = f'{index}:' + key_suffix
+            key_suffix = f'{index}' + (f':{key_suffix}' if key_suffix else "")
 
-        results_dict = super().query(key=key, key_prefix="", key_suffix=key_suffix,
-                                     timestamp=timestamp, periods=periods,
+        results_dict = super().query(ticker, exchange="", key="", key_suffix=key_suffix,
+                                     timestamp=None, periods=0,
                                      *args, **kwargs)
 
         results_dict['index'] = index
         return results_dict
-
 
 
 class PriceSubscriber(TASubscriber):
