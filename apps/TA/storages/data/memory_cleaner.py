@@ -8,6 +8,12 @@ logger = logging.getLogger(__name__)
 
 def redisCleanup():
 
+    try:
+        do_not_disturb = bool(int(database.get("working on old stuff").decode("utf-8")))
+    except:
+        database.set("working on old stuff", 0)
+
+
     logger.info("I'M CLEANING REDIS !!!")
 
     do_not_disturb = bool(int(database.get("working on old stuff").decode("utf-8")))
