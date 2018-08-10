@@ -32,7 +32,7 @@ class PriceVolumeAPI(APIView):
             ticker=ticker,
             exchange=exchange,
             index=index,
-            timestamp=timestamp)
+            timestamp=timestamp, periods_range=12, timestamp_tolerance=29)
 
         if len(results_dict) and not 'error' in results_dict:
             return Response(results_dict, status=status.HTTP_200_OK)
@@ -48,47 +48,47 @@ class PriceVolumeAPI(APIView):
         closing at the provided unix timestamp
         where timestamp is an int divisible by 300s (5 min)
         """
-
-        ticker = ticker or request.data.get('ticker')
-        exchange = request.data.get('exchange')
-        timestamp = request.data.get('timestamp')
-
-        # SAVE VALUES IN REDIS USING PriceStorage OBJECT
-        pipeline = database.pipeline(transaction=False)
-
-        try:
-            p = PriceStorage(ticker=ticker,
-                             exchange=exchange,
-                             timestamp=timestamp)
-            # v = VolumeStorage(ticker=args['ticker'],
-            #                  exchange=args['exchange'],
-            #                  timestamp=args['timestamp'])
-
-
-        except StorageException as e:
-            return {'error': str(e)}, 400  #bad request
-
-        for index in defualt_price_indexes:
-            price_index_value = request.data.get(index, None)
-            if price_index_value:
-                p.index = index
-                p.value = price_index_value
-                pipeline = p.save(pipeline=pipeline)
-
-        # for index in default_volume_indexes:
-        #     volume_index_value = request.data.get(index, None)
-        #     if volume_index_value:
-        #         v.index = index
-        #         v.value = volume_index_value
-        #         pipeline = v.save(pipeline=pipeline)
-
-        try:
-            database_response = pipeline.execute()
-            return Response({
-                       'success': f'{sum(database_response)} db entries created'
-                   }, status=status.HTTP_201_CREATED)
-
-        except Exception as e:
-            return Response({
-                       'error': str(e)
-                   }, status=status.HTTP_501_NOT_IMPLEMENTED)
+        #
+        # ticker = ticker or request.data.get('ticker')
+        # exchange = request.data.get('exchange')
+        # timestamp = request.data.get('timestamp')
+        #
+        # # SAVE VALUES IN REDIS USING PriceStorage OBJECT
+        # pipeline = database.pipeline(transaction=False)
+        #
+        # try:
+        #     p = PriceStorage(ticker=ticker,
+        #                      exchange=exchange,
+        #                      timestamp=timestamp)
+        #     # v = VolumeStorage(ticker=args['ticker'],
+        #     #                  exchange=args['exchange'],
+        #     #                  timestamp=args['timestamp'])
+        #
+        #
+        # except StorageException as e:
+        #     return {'error': str(e)}, 400  #bad request
+        #
+        # for index in defualt_price_indexes:
+        #     price_index_value = request.data.get(index, None)
+        #     if price_index_value:
+        #         p.index = index
+        #         p.value = price_index_value
+        #         pipeline = p.save(pipeline=pipeline)
+        #
+        # # for index in default_volume_indexes:
+        # #     volume_index_value = request.data.get(index, None)
+        # #     if volume_index_value:
+        # #         v.index = index
+        # #         v.value = volume_index_value
+        # #         pipeline = v.save(pipeline=pipeline)
+        #
+        # try:
+        #     database_response = pipeline.execute()
+        #     return Response({
+        #                'success': f'{sum(database_response)} db entries created'
+        #            }, status=status.HTTP_201_CREATED)
+        #
+        # except Exception as e:
+        #     return Response({
+        #                'error': str(e)
+        #            }, status=status.HTTP_501_NOT_IMPLEMENTED)

@@ -48,19 +48,13 @@ class HistoricalDataAPI(APIView):
                 # while saving is pipelined
                 data_history_objects[index] = data_history
                 # add the saving of this object to the pipeline
-                pipeline = data_history_objects[index].save(publish=False, pipeline=pipeline)
+                pipeline = data_history_objects[index].save(publish=True, pipeline=pipeline)
         try:
             database_response = pipeline.execute()
 
-            # publish an update of this object type to pubsub
-            logger.debug(f'publishing update to {data_history.__class__.__name__}')
-            database.publish(
-                data_history.__class__.__name__,
-                f'{data_history.ticker}:{data_history.exchange}:{data_history.unix_timestamp}'
-            )
-
             return Response({
-                       'success': f'{sum(database_response)} db entries created'
+                       'success': f'{sum(database_response)} '
+                                  f'db entries created and TA subscribers received'
                    }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
