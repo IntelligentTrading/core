@@ -49,5 +49,5 @@ class Command(BaseCommand):
                 # time.sleep(5)  # be nice to the system :)
                 time.sleep(0.001)  # be nice to the system :)
 
-                if bool(random.randrange(10**8) % (10*6) == 0):
+                if bool(random.randrange(10**8) % (10**6) == 0):
                     redisCleanup()
