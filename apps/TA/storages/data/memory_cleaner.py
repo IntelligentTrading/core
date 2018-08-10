@@ -1,7 +1,7 @@
 import logging
 
 from apps.TA import TAException
-from apps.TA.storages.abstract.subscriber import TASubscriber
+from apps.TA.storages.abstract.subscriber import TickerSubscriber
 from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, all_indexes
 from settings.redis_db import database
 
@@ -12,7 +12,7 @@ class CleanerException(TAException):
     pass
 
 
-class CleanerSubscriber(TASubscriber):
+class CleanerSubscriber(TickerSubscriber):
 
     classes_subscribing_to = [
         PriceVolumeHistoryStorage
