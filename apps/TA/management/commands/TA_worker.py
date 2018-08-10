@@ -1,9 +1,11 @@
 import time
 import logging
+import random
 from django.core.management.base import BaseCommand
 
-from apps.TA.storages.data.pv_history import CleanerSubscriber
+from apps.TA.storages.data.memory_cleaner import redisCleanup
 from apps.TA.storages.data.volume import VolumeSubscriber
+from apps.TA.storages.indicators.sma import SmaSubscriber
 
 logger = logging.getLogger(__name__)
 
@@ -17,8 +19,9 @@ class Command(BaseCommand):
         from apps.TA.storages.data.price import PriceSubscriber
         subscriber_classes = [
             PriceSubscriber,
-            VolumeSubscriber,
-            CleanerSubscriber,
+            # VolumeSubscriber,
+            # CleanerSubscriber,
+            SmaSubscriber
         ]
 
         subscribers = {}
@@ -36,9 +39,15 @@ class Command(BaseCommand):
         while True:
             for class_name in subscribers:
                 # logger.debug(f'checking subscription {class_name}: {subscribers[class_name]}')
-                subscribers[class_name]()
+                try:
+                    subscribers[class_name]()
+                except Exception as e:
+                    logger.error(str(e))
                 # print(subscribers[class_name].pubsub.get_message())
                 # print(subscribers[class_name].database.pubsub_channels())
                 # print(subscribers[class_name].database)
                 # time.sleep(5)  # be nice to the system :)
                 time.sleep(0.001)  # be nice to the system :)
+
+                if bool(random.randrange(10**8) % (10**6) == 0):
+                    redisCleanup()

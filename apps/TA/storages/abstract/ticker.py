@@ -41,19 +41,17 @@ class TickerStorage(TimeseriesStorage):
         # by default will return "{ticker}:{exchange}:{class_name}"
         return super().get_db_key()
 
+
     @classmethod
-    def query(cls, ticker, exchange="", key="", key_suffix="",
-              timestamp=None, periods=0,
-              *args, **kwargs):
+    def query(cls, *args, **kwargs):
 
-        if not exchange:
-            exchange = 'poloniex'
+        ticker = kwargs.get("ticker", None)
+        exchange = kwargs.get("exchange", None)
+        if not ticker or not exchange:
+            raise IndicatorException("ticker and exchange both requried for ticker query")
+        kwargs["key_prefix"] = f'{ticker}:{exchange}'
 
-        key_prefix = f'{ticker}:{exchange}'
-
-        results_dict = super().query(key=key, key_prefix=key_prefix, key_suffix=key_suffix,
-                                     timestamp=timestamp, periods=periods,
-                                     *args, **kwargs)
+        results_dict = super().query(*args, **kwargs)
 
         results_dict['exchange'] = exchange
         results_dict['ticker'] = ticker

@@ -17,9 +17,9 @@ class KeyValueStorage(ABC):
     """
     stores things in redis database given a key and value
     by default uses the instance class name as the key
-    recommend to uniqely identify the instance with a key prefix or suffix
-    prefixes are for more specific categories of objects (eg. woman:human:mammal:_class_ )
-    suffixes are for specific attributes (eg. _class_:eye_color, _class_:age, etc)
+    recommend to uniquely identify the instance with a key prefix or suffix
+    prefixes are for more specific categories of objects (eg. mammal:human:woman:object )
+    suffixes are for specific attributes (eg. object:eye_color, object:age, etc)
     """
     def __init__(self, *args, **kwargs):
         self.force_save = kwargs.get('force_save', False)
@@ -34,13 +34,13 @@ class KeyValueStorage(ABC):
 
 
     @classmethod
-    def compile_db_key(cls, key="", key_prefix="", key_suffix=""):
+    def compile_db_key(cls, key: str, key_prefix: str, key_suffix: str) -> str:
         key = key or cls.__name__
         return str(
             f'{key_prefix.strip(":")}:' +
             f'{key.strip(":")}' +
             f':{key_suffix.strip(":")}'
-        )
+        ).replace("::", ":").strip(":")
 
 
     def get_db_key(self):

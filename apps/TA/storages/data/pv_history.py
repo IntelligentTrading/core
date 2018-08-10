@@ -1,11 +1,7 @@
 import logging
-from apps.TA import TAException
-from apps.TA.storages.abstract.subscriber import TASubscriber
-from apps.common.utilities.multithreading import start_new_thread
-from settings.redis_db import database
-from apps.TA.storages.abstract.indicator import TickerStorage
-from apps.TA.storages.abstract.timeseries_storage import TimeseriesStorage
 
+from apps.TA import TAException
+from apps.TA.storages.abstract.indicator import TickerStorage
 
 logger = logging.getLogger(__name__)
 
@@ -31,22 +27,24 @@ class PriceVolumeHistoryStorage(TickerStorage):
 
 
     @classmethod
-    def query(cls, ticker, exchange=None, index="",
-              timestamp=None, periods=0,
-              *args, **kwargs):
+    def query(cls, *args, **kwargs):
 
         # "ETH_BTC:poloniex:PriceVolumeHistoryStorage:close_price"
         # f'{ticker}:{exchange}:{cls.__name__}:{index}'
-        if not index:
+
+        if not "index" in kwargs:
             logger.debug("assuming to use `close_price` index in price query")
-            index = "close_price"
+        index = kwargs["index"] = kwargs.get("index", "close_price")
 
-        key_suffix = f':{index}'
+        if kwargs.get("key_suffix", None):
+            logger.warning("`key_suffix` has been removed from your query. "
+                           "it cannot be used in query for PriceVolumeHistoryStorage. "
+                           "Only an `index` can be specified and if not provided, "
+                           "it defaults to 'close_price'")
 
-        results_dict = super().query(ticker=ticker, exchange=exchange,
-                                     key_suffix=key_suffix,
-                                     timestamp=timestamp, periods=periods,
-                                     *args, **kwargs)
+        kwargs["key_suffix"] = f':{index}'
+
+        results_dict = super().query(*args, **kwargs)
 
         results_dict['index'] = index
         return results_dict
@@ -69,20 +67,3 @@ class PriceVolumeHistoryStorage(TickerStorage):
         self.db_key_suffix = f':{self.index}'
         logger.debug("ready to save, db_key will be " + self.get_db_key())
         return super().save(*args, **kwargs)
-
-
-class CleanerSubscriber(TASubscriber):
-
-    classes_subscribing_to = [
-        PriceVolumeHistoryStorage
-    ]
-
-    def handle(self, channel, data, *args, **kwargs):
-
-        # parse timestamp from data
-        # f'{data_history.ticker}:{data_history.exchange}:{data_history.timestamp}'
-        [ticker, exchange, timestamp] = data.split(":")
-
-        for index in all_indexes:
-            sorted_set_key = f'{ticker}:{exchange}:PriceVolumeHistoryStorage:{index}'
-            database.zremrangebyscore(sorted_set_key, 0, int(timestamp)-(60*90))  # 90 minutes or older
