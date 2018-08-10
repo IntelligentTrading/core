@@ -1,6 +1,6 @@
 import logging
 from apps.TA import TAException
-from apps.TA.storages.abstract.indicator import IndicatorStorage
+from apps.TA.storages.abstract.ticker import TickerStorage
 from apps.TA.storages.abstract.subscriber import TickerSubscriber, timestamp_is_near_5min, get_nearest_5min_timestamp
 from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, defualt_price_indexes, derived_price_indexes
 
@@ -11,7 +11,7 @@ class PriceException(TAException):
     pass
 
 
-class PriceStorage(IndicatorStorage):
+class PriceStorage(TickerStorage):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.index = kwargs.get('index', "close_price")
@@ -31,6 +31,9 @@ class PriceStorage(IndicatorStorage):
             if not self.index in defualt_price_indexes + derived_price_indexes:
                 logger.error("price index not in approved list, raising exception...")
                 raise PriceException("unknown index")
+
+        if self.unix_timestamp % 300 != 0:
+            raise PriceException("price timestamp should be % 300")
 
         self.db_key_suffix = f':{self.index}'
         return super().save(*args, **kwargs)

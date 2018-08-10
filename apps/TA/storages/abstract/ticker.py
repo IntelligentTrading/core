@@ -41,6 +41,7 @@ class TickerStorage(TimeseriesStorage):
         # by default will return "{ticker}:{exchange}:{class_name}"
         return super().get_db_key()
 
+
     @classmethod
     def query(cls, *args, **kwargs):
 

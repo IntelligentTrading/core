@@ -23,12 +23,9 @@ class IndicatorStorage(TickerStorage):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.class_describer = kwargs.get('class_describer', self.__class__.class_describer)
-
         # ALL INDICATORS ARE ASSUMED 5-MIN PERIOD RESAMPLED
         if self.unix_timestamp % 300 != 0:
             raise TimeseriesException("indicator timestamp should be % 300")
-        # self.resample_period = 300  # 5 min
 
         self.horizon = int(kwargs.get('horizon', 1))
         self.periods = int(kwargs.get('periods', 1*self.horizon))
@@ -58,12 +55,28 @@ class IndicatorStorage(TickerStorage):
         return results_dict
 
 
+    def save(self, *args, **kwargs):
+
+        # meets basic requirements for saving
+        if not all([self.ticker, self.exchange,
+                   self.periods, self.value,
+                   self.unix_timestamp]):
+            logger.error("incomplete information, cannot save \n" + str(self.__dict__))
+            raise IndicatorException("save error, missing data")
+
+        self.db_key_suffix = f'{str(self.periods)}'
+        logger.debug("ready to save, db_key will be " + self.get_db_key())
+        return super().save(*args, **kwargs)
+
+
+
 """
 ===== EXAMPLE USAGE =====
 
 my_indicator = TimeseriesIndicator(ticker="ETH_BTC",
-                                   exchange="BITTREX",
-                                   timestamp=1483228800)
+                                   exchange="bittrex",
+                                   timestamp=1483228800,
+                                   periods=12*20)
 my_indicator.value = "BUY BITCOIN"
 my_indicator.save()
 
