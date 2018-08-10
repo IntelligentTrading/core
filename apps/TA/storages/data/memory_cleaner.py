@@ -12,14 +12,12 @@ def redisCleanup():
         do_not_disturb = bool(int(database.get("working on old stuff").decode("utf-8")))
     except:
         database.set("working on old stuff", 0)
+        do_not_disturb = False
 
-
-    logger.info("I'M CLEANING REDIS !!!")
-
-    do_not_disturb = bool(int(database.get("working on old stuff").decode("utf-8")))
     if do_not_disturb:
         return
 
+    logger.info("I'M CLEANING REDIS !!!")
 
     now_timestamp = int(time.time())
 
