@@ -1,11 +1,7 @@
 import logging
-from apps.TA import TAException
-from apps.TA.storages.abstract.subscriber import TASubscriber
-from apps.common.utilities.multithreading import start_new_thread
-from settings.redis_db import database
-from apps.TA.storages.abstract.indicator import TickerStorage
-from apps.TA.storages.abstract.timeseries_storage import TimeseriesStorage
 
+from apps.TA import TAException
+from apps.TA.storages.abstract.indicator import TickerStorage
 
 logger = logging.getLogger(__name__)
 
@@ -71,20 +67,3 @@ class PriceVolumeHistoryStorage(TickerStorage):
         self.db_key_suffix = f':{self.index}'
         logger.debug("ready to save, db_key will be " + self.get_db_key())
         return super().save(*args, **kwargs)
-
-
-class CleanerSubscriber(TASubscriber):
-
-    classes_subscribing_to = [
-        PriceVolumeHistoryStorage
-    ]
-
-    def handle(self, channel, data, *args, **kwargs):
-
-        # parse timestamp from data
-        # f'{data_history.ticker}:{data_history.exchange}:{data_history.timestamp}'
-        [ticker, exchange, timestamp] = data.split(":")
-
-        for index in all_indexes:
-            sorted_set_key = f'{ticker}:{exchange}:PriceVolumeHistoryStorage:{index}'
-            database.zremrangebyscore(sorted_set_key, 0, int(timestamp)-(60*90))  # 90 minutes or older
