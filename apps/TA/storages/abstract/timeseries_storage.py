@@ -1,3 +1,4 @@
+import json
 import logging
 from apps.TA import TAException, JAN_1_2017_TIMESTAMP
 from settings.redis_db import database, set_of_known_sets_in_redis
@@ -51,7 +52,7 @@ class TimeseriesStorage(KeyValueStorage):
 
     @classmethod
     def query(cls, key="", key_suffix="", key_prefix="",
-              timestamp=None, periods=0
+              timestamp=None, periods_range=0
               , *args, **kwargs):
 
         sorted_set_key = cls.compile_db_key(key=key, key_prefix=key_prefix, key_suffix=key_suffix)
@@ -71,7 +72,7 @@ class TimeseriesStorage(KeyValueStorage):
         if not timestamp:
             query_response = database.zrange(sorted_set_key, -1, -1)
 
-        if timestamp or periods:
+        if timestamp or periods_range:
             if not timestamp:
                 try:
                     [value, timestamp] = query_response[0].decode("utf-8").split(":")
@@ -80,10 +81,10 @@ class TimeseriesStorage(KeyValueStorage):
                     timestamp = JAN_1_2017_TIMESTAMP  # 1483228800
 
             max_timestamp = timestamp = int(timestamp)
-            min_timestamp = max_timestamp - ((periods*300) + 299)
-            query_response = database.zrangebyscore(sorted_set_key, min_timestamp, max_timestamp, 0, periods)
+            min_timestamp = max_timestamp - ((periods_range*300) + 299)
+            query_response = database.zrangebyscore(sorted_set_key, min_timestamp, max_timestamp, 0, periods_range)
 
-        periods = periods or 1
+        periods_range = periods_range or 1
 
         # example query_response = [b'0.06288:1532163247']
         # which came from f'{self.value}:{str(self.unix_timestamp)}'
@@ -95,11 +96,17 @@ class TimeseriesStorage(KeyValueStorage):
                 last_timestamp = query_response[-1].decode("utf-8").split(":")[1]
                 #  todo: double check that [-1] in list is most recent timestamp
 
+            if periods_range:
+                if len(values) < periods_range:
+                    "Sorry we couldn't find enough values for you :("
+
+
             return {
                 'values': values,
+                'values_count': len(values),
                 'timestamp': timestamp or last_timestamp,
-                'periods': periods,
-                'period_size': None
+                'periods_range': periods_range,
+                'period_size': "300" if periods_range else None,
             }
 
         except IndexError:
@@ -121,13 +128,16 @@ class TimeseriesStorage(KeyValueStorage):
         z_add_key = self.get_db_key() # set key name
         z_add_name = f'{self.value}:{str(self.unix_timestamp)}' # item unique value
         z_add_score = int(self.unix_timestamp) # timestamp as score (int or float)
-
-        logger.debug(f'saving data with args {z_add_key}, {z_add_name}, {z_add_score}')
+        data = {"key":z_add_key, "name":z_add_name, "score":z_add_score}
+        logger.debug(f'saving data with args {data}')
 
         if pipeline is not None:
             logger.debug("added command to redis pipeline")
             if publish:
-                pipeline = pipeline.publish(self.__class__.__name__, self.get_db_key())
+                pipeline = pipeline.publish(
+                    self.__class__.__name__,
+                    z_add_key # json.dumps(data)
+                )
             return pipeline.zadd(z_add_key, z_add_name, z_add_score)  # key, score, name
 
         else:
