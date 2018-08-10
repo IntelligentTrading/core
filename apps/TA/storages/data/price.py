@@ -1,7 +1,7 @@
 import logging
 from apps.TA import TAException
 from apps.TA.storages.abstract.indicator import IndicatorStorage
-from apps.TA.storages.abstract.subscriber import TASubscriber, timestamp_is_near_5min, get_nearest_5min_timestamp
+from apps.TA.storages.abstract.subscriber import TickerSubscriber, timestamp_is_near_5min, get_nearest_5min_timestamp
 from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, defualt_price_indexes, derived_price_indexes
 
 logger = logging.getLogger(__name__)
@@ -22,8 +22,8 @@ class PriceStorage(IndicatorStorage):
 
         # meets basic requirements for saving
         if not all([self.ticker, self.exchange,
-                   self.index, self.value,
-                   self.unix_timestamp]):
+                    self.index, self.value,
+                    self.unix_timestamp]):
             logger.error("incomplete information, cannot save \n" + str(self.__dict__))
             raise PriceException("save error, missing data")
 
@@ -34,7 +34,6 @@ class PriceStorage(IndicatorStorage):
 
         self.db_key_suffix = f':{self.index}'
         return super().save(*args, **kwargs)
-
 
     @classmethod
     def query(cls, *args, **kwargs):
@@ -54,18 +53,33 @@ class PriceStorage(IndicatorStorage):
         return results_dict
 
 
-class PriceSubscriber(TASubscriber):
-
+class PriceSubscriber(TickerSubscriber):
     classes_subscribing_to = [
         PriceVolumeHistoryStorage
     ]
 
     def handle(self, channel, data, *args, **kwargs):
 
-        # parse timestamp from data
-        # f'{data_history.ticker}:{data_history.exchange}:{data_history.timestamp}'
-        [ticker, exchange, timestamp] = data.split(":")
+        # parse data like...
+        # {
+        #     "key": "POLY_BTC:binance:PriceVolumeHistoryStorage:open_price",
+        #     "name": "3665:1533884227",
+        #     "score": "1533884227"
+        # }
 
+        [ticker, exchange, object_class, index] = data["key"].split(":")
+        if not object_class == channel == PriceVolumeHistoryStorage.__name__:
+            logger.warning(f'Unexpected that these are not the same:'
+                           f'object_class: {object_class}, '
+                           f'channel: {channel}, '
+                           f'subscribing class: {PriceVolumeHistoryStorage.__name__}')
+        [value, name_score] = data["name"].split(":")
+        score = data["score"]
+        if not score == data["score"]:
+            logger.warning(f'Unexpected that score in name {name_score} '
+                           f'is different than score {score}')
+
+        timestamp = int(float(score))
 
         if not timestamp_is_near_5min(timestamp):
             return
@@ -77,40 +91,44 @@ class PriceSubscriber(TASubscriber):
         price = PriceStorage(ticker=ticker, exchange=exchange, timestamp=timestamp)
         index_values = {}
 
-        for index in defualt_price_indexes:
-            logger.debug(f'process price for ticker: {ticker}')
+        logger.debug(f'process price for ticker: {ticker} and index: {index}')
 
-            # example key = "XPM_BTC:poloniex:PriceVolumeHistoryStorage:close_price"
-            sorted_set_key = f'{ticker}:{exchange}:PriceVolumeHistoryStorage:{index}'
+        # key_format = f'{ticker}:{exchange}:PriceVolumeHistoryStorage:{index}'
+        sorted_set_key = data["key"]
 
-            index_values[index] = [
-                float(db_value.decode("utf-8").split(":")[0])
-                for db_value
-                in self.database.zrangebyscore(sorted_set_key, timestamp - 300, timestamp + 45)
-            ]
+        query_results = PriceVolumeHistoryStorage.query(ticker=ticker, exchange=exchange,
+                                                        index=index, timestamp=timestamp,
+                                                        periods_range=1, timestamp_tolerance=29)
 
-            try:
 
-                if not len(index_values[index]):
-                    price.value = None
-                elif index == "open_price":
-                    price.value = index_values["open_price"][0]
-                elif index == "close_price":
-                    price.value = index_values["close_price"][-1]
-                elif index == "low_price":
-                    price.value = min(index_values["low_price"])
-                elif index == "high_price":
-                    price.value = max(index_values["high_price"])
+        index_values[index] = [
+            float(db_value.decode("utf-8").split(":")[0])
+            for db_value
+            in self.database.zrangebyscore(sorted_set_key, timestamp - 300, timestamp + 45)
+        ]
 
-            except IndexError:
-                pass  # couldn't find a useful value
-            except ValueError:
-                pass  # couldn't find a useful value
-            else:
-                if price.value:
-                    price.index = index
-                    price.save()
-                    logger.info("saved new thing: " + price.get_db_key())
+        try:
+
+            if not len(index_values[index]):
+                price.value = None
+            elif index == "open_price":
+                price.value = index_values["open_price"][0]
+            elif index == "close_price":
+                price.value = index_values["close_price"][-1]
+            elif index == "low_price":
+                price.value = min(index_values["low_price"])
+            elif index == "high_price":
+                price.value = max(index_values["high_price"])
+
+        except IndexError:
+            pass  # couldn't find a useful value
+        except ValueError:
+            pass  # couldn't find a useful value
+        else:
+            if price.value:
+                price.index = index
+                price.save()
+                logger.info("saved new thing: " + price.get_db_key())
 
         all_values_set = (
                 set(index_values["open_price"]) |

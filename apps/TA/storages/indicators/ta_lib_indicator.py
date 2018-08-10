@@ -3,7 +3,7 @@ import numpy as np
 
 from apps.TA import PERIODS_1HR, PERIODS_4HR, PERIODS_24HR, HORIZONS
 from apps.TA.storages.abstract.indicator import IndicatorStorage
-from apps.TA.storages.abstract.subscriber import TASubscriber
+from apps.TA.storages.abstract.subscriber import TickerSubscriber
 from apps.TA.storages.data.price import PriceStorage
 from settings import logger, PERIODS_LIST
 
@@ -18,7 +18,7 @@ class SMAStorage(IndicatorStorage):
 
 
 
-class SMASubscriber(TASubscriber):
+class SMASubscriber(TickerSubscriber):
 
     classes_subscribing_to = [
         PriceStorage

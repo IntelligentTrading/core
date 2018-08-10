@@ -51,9 +51,10 @@ class TimeseriesStorage(KeyValueStorage):
 
 
     @classmethod
-    def query(cls, key="", key_suffix="", key_prefix="",
-              timestamp=None, periods_range=0
-              , *args, **kwargs):
+    def query(cls, key: str = "", key_suffix: str = "", key_prefix: str = "",
+              timestamp: int = None, periods_range: int = 0,
+              timestamp_tolerance: int = 299,
+              *args, **kwargs) -> dict:
 
         sorted_set_key = cls.compile_db_key(key=key, key_prefix=key_prefix, key_suffix=key_suffix)
         logger.debug(f'query for sorted set key {sorted_set_key}')
@@ -65,8 +66,8 @@ class TimeseriesStorage(KeyValueStorage):
             if database.sismember("sorted_sets", describer_key):
                 database.sadd("sorted_sets", describer_key)
             else:
-                logger.warning("query made for unknown class type: " + str(describer_key))
-                return {'error': "class type is unknown to database"}
+                logger.warning("query made for unrecognized class type: " + str(describer_key))
+                return {'error': "class type is unrecognized to database"}
 
         # if no timestamp, assume query to find the most recent, the last one
         if not timestamp:
@@ -80,9 +81,9 @@ class TimeseriesStorage(KeyValueStorage):
                     # force no results, which raises IndexError exception later
                     timestamp = JAN_1_2017_TIMESTAMP  # 1483228800
 
-            max_timestamp = timestamp = int(timestamp)
-            min_timestamp = max_timestamp - ((periods_range*300) + 299)
-            query_response = database.zrangebyscore(sorted_set_key, min_timestamp, max_timestamp, 0, periods_range)
+            max_timestamp = timestamp = int(timestamp) + timestamp_tolerance
+            min_timestamp = max_timestamp - ((periods_range*300) + timestamp_tolerance)
+            query_response = database.zrangebyscore(sorted_set_key, min_timestamp, max_timestamp)
 
         periods_range = periods_range or 1
 
@@ -93,7 +94,7 @@ class TimeseriesStorage(KeyValueStorage):
                 values = []
             else: # we are returning a list
                 values = [vt.decode("utf-8").split(":")[0] for vt in query_response ]
-                last_timestamp = query_response[-1].decode("utf-8").split(":")[1]
+                timestamps = [vt.decode("utf-8").split(":")[1] for vt in query_response ]
                 #  todo: double check that [-1] in list is most recent timestamp
 
             if periods_range:
@@ -104,7 +105,9 @@ class TimeseriesStorage(KeyValueStorage):
             return {
                 'values': values,
                 'values_count': len(values),
-                'timestamp': timestamp or last_timestamp,
+                'timestamp': timestamp,
+                'earliest_timestamp': timestamps[0],
+                'latest_timest': timestamps[-1],
                 'periods_range': periods_range,
                 'period_size': "300" if periods_range else None,
             }
@@ -128,23 +131,20 @@ class TimeseriesStorage(KeyValueStorage):
         z_add_key = self.get_db_key() # set key name
         z_add_name = f'{self.value}:{str(self.unix_timestamp)}' # item unique value
         z_add_score = int(self.unix_timestamp) # timestamp as score (int or float)
-        data = {"key":z_add_key, "name":z_add_name, "score":z_add_score}
-        logger.debug(f'saving data with args {data}')
+        z_add_data = {"key":z_add_key, "name":z_add_name, "score":z_add_score}  # key, score, name
+        logger.debug(f'saving data with args {z_add_data}')
 
         if pipeline is not None:
             logger.debug("added command to redis pipeline")
             if publish:
-                pipeline = pipeline.publish(
-                    self.__class__.__name__,
-                    z_add_key # json.dumps(data)
-                )
-            return pipeline.zadd(z_add_key, z_add_name, z_add_score)  # key, score, name
+                pipeline = pipeline.publish(self.__class__.__name__, json.dumps(z_add_data))
+            return pipeline.zadd(*z_add_data.values())
 
         else:
             logger.debug("no pipeline, executing zadd command immediately.")
-            response = database.zadd(z_add_key, z_add_name, z_add_score)  # key, name, score
+            response = database.zadd(*z_add_data.values())
             if publish:
-                database.publish(self.__class__.__name__, self.get_db_key())
+                database.publish(self.__class__.__name__, json.dumps(z_add_data))
             return response
 
 
