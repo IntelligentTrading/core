@@ -34,13 +34,13 @@ class KeyValueStorage(ABC):
 
 
     @classmethod
-    def compile_db_key(cls, key="", key_prefix="", key_suffix=""):
+    def compile_db_key(cls, key: str, key_prefix: str, key_suffix: str) -> str:
         key = key or cls.__name__
         return str(
             f'{key_prefix.strip(":")}:' +
             f'{key.strip(":")}' +
             f':{key_suffix.strip(":")}'
-        )
+        ).replace("::", ":").strip(":")
 
 
     def get_db_key(self):

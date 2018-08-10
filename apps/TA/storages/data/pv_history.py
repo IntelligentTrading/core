@@ -31,20 +31,24 @@ class PriceVolumeHistoryStorage(TickerStorage):
 
 
     @classmethod
-    def query(cls, ticker, exchange=None, index="",
-              timestamp=None, periods=0,
-              *args, **kwargs):
+    def query(cls, *args, **kwargs):
 
         # "ETH_BTC:poloniex:PriceVolumeHistoryStorage:close_price"
         # f'{ticker}:{exchange}:{cls.__name__}:{index}'
-        if not index:
-            logger.debug("assuming to use `close_price` index in price query")
-            index = "close_price"
 
-        results_dict = super().query(ticker=ticker, exchange=exchange,
-                                     key_suffix=f':{index}',
-                                     timestamp=timestamp, periods=periods,
-                                     *args, **kwargs)
+        if not "index" in kwargs:
+            logger.debug("assuming to use `close_price` index in price query")
+        index = kwargs["index"] = kwargs.get("index", "close_price")
+
+        if kwargs.get("key_suffix", None):
+            logger.warning("`key_suffix` has been removed from your query. "
+                           "it cannot be used in query for PriceVolumeHistoryStorage. "
+                           "Only an `index` can be specified and if not provided, "
+                           "it defaults to 'close_price'")
+
+        kwargs["key_suffix"] = f':{index}'
+
+        results_dict = super().query(*args, **kwargs)
 
         results_dict['index'] = index
         return results_dict

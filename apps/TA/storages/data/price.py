@@ -37,16 +37,18 @@ class PriceStorage(IndicatorStorage):
 
 
     @classmethod
-    def query(cls, ticker, exchange="", key="", key_suffix="",
-              timestamp=None, periods=0, index="",
-              *args, **kwargs):
+    def query(cls, *args, **kwargs):
+
+        if kwargs.get("periods_key", None):
+            raise PriceException("periods_key is not usable in PriceStorage query")
+
+        key_suffix = kwargs.get("key_suffix", "")
+        index = kwargs.get("index", "")
 
         if index:
-            key_suffix = f'{index}' + (f':{key_suffix}' if key_suffix else "")
+            kwargs["key_suffix"] = f'{index}' + (f':{key_suffix}' if key_suffix else "")
 
-        results_dict = super().query(ticker, exchange="", key="", key_suffix=key_suffix,
-                                     timestamp=None, periods=0,
-                                     *args, **kwargs)
+        results_dict = super().query(*args, **kwargs)
 
         results_dict['index'] = index
         return results_dict

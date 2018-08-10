@@ -22,7 +22,7 @@ class IndicatorStorage(TickerStorage):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.periods
+
         self.class_describer = kwargs.get('class_describer', self.__class__.class_describer)
 
         # ALL INDICATORS ARE ASSUMED 5-MIN PERIOD RESAMPLED
@@ -44,18 +44,17 @@ class IndicatorStorage(TickerStorage):
 
 
     @classmethod
-    def query(cls, ticker, exchange="", key="", key_suffix="",
-              timestamp=None, periods=0,
-              *args, **kwargs):
+    def query(cls, *args, **kwargs):
 
-        if periods:
-            key_suffix = f'{periods}:' + key_suffix
+        periods_key = kwargs.get("periods_key", "")
+        key_suffix = kwargs.get("key_suffix", "")
 
-        results_dict = super().query(ticker=ticker, exchange="", key="", key_suffix=key_suffix,
-                                     timestamp=None, periods=0,
-                                     *args, **kwargs)
+        if periods_key:
+            kwargs["key_suffix"] = f'{periods_key}' + (f':{key_suffix}' if key_suffix else "")
 
-        results_dict['periods'] = periods
+        results_dict = super().query(*args, **kwargs)
+
+        results_dict['periods_key'] = periods_key
         return results_dict
 
 
