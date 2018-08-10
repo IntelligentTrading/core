@@ -1,7 +1,7 @@
 import logging
 from apps.TA import TAException
 from apps.TA.storages.abstract.indicator import IndicatorStorage
-from apps.TA.storages.abstract.subscriber import TickerSubscriber, timestamp_is_near_5min, get_nearest_5min_timestamp
+from apps.TA.storages.abstract.ticker_subscriber import TickerSubscriber, timestamp_is_near_5min, get_nearest_5min_timestamp
 from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, default_volume_indexes, derived_volume_indexes
 
 logger = logging.getLogger(__name__)
