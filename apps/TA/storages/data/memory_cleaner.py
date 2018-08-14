@@ -45,3 +45,4 @@ def redisCleanup():
             logger.error(str(e))
 
 
+# from apps.TA.storages.data.memory_cleaner import redisCleanup as rC

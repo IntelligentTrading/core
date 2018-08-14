@@ -58,7 +58,10 @@ class PriceTestCase(TestCase):
         self.price_history.unix_timestamp = timestamp
         self.price_history.save()
         time.sleep(2)
-        query_results = self.price_history.query(timestamp = old_timestamp)
+        query_results = self.price_history.query(timestamp = old_timestamp,
+                                                 index="close_price",
+                                                 exchange=self.price_history.exchange,
+                                                 ticker=self.price_history.ticker)
 
         self.assertEqual(query_results['values'], [])
 
