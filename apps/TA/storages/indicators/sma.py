@@ -1,4 +1,6 @@
-import talib
+from settings import LOAD_TALIB
+if LOAD_TALIB:
+    import talib
 import numpy as np
 
 from apps.TA import PERIODS_1HR, PERIODS_4HR, PERIODS_24HR, HORIZONS
