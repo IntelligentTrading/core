@@ -1,11 +1,5 @@
-import talib
-import numpy as np
-
-from apps.TA import PERIODS_1HR, PERIODS_4HR, PERIODS_24HR, HORIZONS
-from apps.TA.storages.abstract.indicator import IndicatorStorage, IndicatorException
-from apps.TA.storages.abstract.ticker_subscriber import TickerSubscriber, timestamp_is_near_5min, \
-    get_nearest_5min_timestamp
-from apps.TA.storages.data.price import PriceStorage
+from apps.TA.storages.abstract.indicator import IndicatorException
+from apps.TA.storages.abstract.ticker_subscriber import TickerSubscriber, get_nearest_5min_timestamp
 from settings import logger
 
 
@@ -53,8 +47,3 @@ class IndicatorSubscriber(TickerSubscriber):
 
     def handle(self, channel, data, *args, **kwargs):
         self.extract_params(channel, data, *args, **kwargs)
-
-
-
-
-
