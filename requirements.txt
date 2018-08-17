@@ -37,7 +37,7 @@ requests==2.18.4
 schedule==0.4.3
 simplejson==3.11.1
 six==1.11.0
-#TA-Lib
+TA-Lib
 toolz==0.8.2
 waitress==1.0.2
 whitenoise==3.3.1
