@@ -25,7 +25,7 @@ def redisCleanup():
 
     # PriceVolumeHistoryStorage
     # delete all values 2 hours old or older
-    old_for_pv_history = now_timestamp - (3600*2)
+    old_for_pv_history = now_timestamp - (3600 * 2)  # 2 hours
 
     pv_history_keys = database.keys(f'*:PriceVolumeHistoryStorage:*')
     for pv_history_key in pv_history_keys:

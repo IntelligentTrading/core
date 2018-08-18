@@ -3,14 +3,12 @@ if LOAD_TALIB:
     import talib
 import numpy as np
 
-from apps.TA import PERIODS_1HR, PERIODS_4HR, PERIODS_24HR, HORIZONS
+from apps.TA import HORIZONS
 from apps.TA.storages.abstract.indicator import IndicatorStorage
 from apps.TA.storages.abstract.indicator_subscriber import IndicatorSubscriber
-from apps.TA.storages.abstract.ticker_subscriber import TickerSubscriber
 from apps.TA.storages.data.price import PriceStorage
-from settings import logger, PERIODS_LIST
+from settings import logger
 
-# PERIODS_LIST = list([60,240,1440])
 
 SMA_LIST = [9, 20, 26, 30, 50, 52, 60, 120, 200]
 
@@ -52,27 +50,31 @@ class SmaSubscriber(IndicatorSubscriber):
                                      exchange=self.exchange,
                                      timestamp=self.timestamp)
 
-        for horizon in HORIZONS:
-            for periods in SMA_LIST:
+        periods_list = []
+        for s in SMA_LIST:
+            periods_list.extend([h * s for h in HORIZONS])
 
-                results_dict = PriceStorage.query(
-                    ticker=self.ticker,
-                    exchange=self.exchange,
-                    index=self.index,
-                    periods_range=periods*horizon
-                )
-                logger.debug(results_dict)
-                value_array = [float(v) for v in results_dict['values']]
-                if len(value_array) > periods*horizon:
-                    value_array = value_array[-periods*horizon:0]
+        for periods in set(periods_list):
 
-                value_np_array = np.array(value_array)
+            results_dict = PriceStorage.query(
+                ticker=self.ticker,
+                exchange=self.exchange,
+                index=self.index,
+                periods_range=periods
+            )
 
-                sma_value = talib.SMA(value_array, timeperiod=len(value_array))[-1]
+            logger.debug(results_dict)
+            value_array = [float(v) for v in results_dict['values']]
+            if len(value_array) > periods:
+                value_array = value_array[-periods:0]
 
-                new_sma_storage.periods = periods*horizon
-                new_sma_storage.value = sma_value
-                new_sma_storage.save()
+            value_np_array = np.array(value_array)
+
+            sma_value = talib.SMA(value_array, timeperiod=len(value_array))[-1]
+
+            new_sma_storage.periods = periods
+            new_sma_storage.value = sma_value
+            new_sma_storage.save()
 
 
 
