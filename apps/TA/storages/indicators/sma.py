@@ -27,7 +27,6 @@ class SmaSubscriber(IndicatorSubscriber):
 
     def handle(self, channel, data, *args, **kwargs):
 
-        super().handle(channel, data, *args, **kwargs)
         """
         now available:
             self.ticker as str
@@ -40,11 +39,8 @@ class SmaSubscriber(IndicatorSubscriber):
         self.index = self.key_suffix
 
         if self.index != 'close_price':
+            logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
             return
-
-        #todo: this can be refactored into only one query!!
-        #todo: after one query for all values, then cut to sizes for horizons and periods
-        #todo: also there is some overlap. h=48, p=30 is the same as h=12,p=120
 
         new_sma_storage = SmaStorage(ticker=self.ticker,
                                      exchange=self.exchange,
@@ -56,6 +52,8 @@ class SmaSubscriber(IndicatorSubscriber):
 
         for periods in set(periods_list):
 
+            # todo: this can be refactored into only one query!
+            # todo: after one query for all values, then cut to sizes for horizons and periods
             results_dict = PriceStorage.query(
                 ticker=self.ticker,
                 exchange=self.exchange,
@@ -71,9 +69,10 @@ class SmaSubscriber(IndicatorSubscriber):
             value_np_array = np.array(value_array)
 
             sma_value = talib.SMA(value_array, timeperiod=len(value_array))[-1]
+            logger.debug(f'saving SMA value {sma_value} for {ticker} on {periods} periods')
 
             new_sma_storage.periods = periods
-            new_sma_storage.value = sma_value
+            new_sma_storage.value = int(float(sma_value))
             new_sma_storage.save()
 
 

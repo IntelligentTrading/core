@@ -13,7 +13,10 @@ class SubscriberException(TAException):
 
 
 class TickerSubscriber(ABC):
-    classes_subscribing_to = []
+
+    classes_subscribing_to = [
+        # ...
+    ]
 
     def __init__(self):
         from settings.redis_db import database
@@ -49,6 +52,7 @@ class TickerSubscriber(ABC):
             channel_name = data_event.get('channel').decode("utf-8")
             event_data = json.loads(data_event.get('data').decode("utf-8"))
             logger.debug(f'handling event in {self.__class__.__name__}')
+            self.pre_handle(channel_name, event_data)
             self.handle(channel_name, event_data)
         except KeyError as  e:
             logger.warning(f'unexpected format: {data_event} ' + str(e))
@@ -58,6 +62,10 @@ class TickerSubscriber(ABC):
             pass  # message not in expected format, just ignore
         except Exception as e:
             raise SubscriberException(f'Error calling {self.__class__.__name__}: ' + str(e))
+
+
+    def pre_handle(self, channel, data, *args, **kwargs):
+        pass
 
     def handle(self, channel, data, *args, **kwargs):
         """

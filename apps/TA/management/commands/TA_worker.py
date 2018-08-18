@@ -20,8 +20,7 @@ class Command(BaseCommand):
         subscriber_classes = [
             PriceSubscriber,
             # VolumeSubscriber,
-            # CleanerSubscriber,
-            SmaSubscriber
+            SmaSubscriber,
         ]
 
         subscribers = {}
@@ -40,7 +39,7 @@ class Command(BaseCommand):
             for class_name in subscribers:
                 # logger.debug(f'checking subscription {class_name}: {subscribers[class_name]}')
                 try:
-                    subscribers[class_name]()
+                    subscribers[class_name]()  # run subscriber class
                 except Exception as e:
                     logger.error(str(e))
                 # print(subscribers[class_name].pubsub.get_message())

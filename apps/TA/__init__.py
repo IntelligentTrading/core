@@ -13,7 +13,7 @@ deployment_type = os.environ.get('DEPLOYMENT_TYPE', 'LOCAL')
 if deployment_type == 'LOCAL':
     logging.basicConfig(level=logging.DEBUG)
 
-logger = logging.getLogger('flask_app')
+logger = logging.getLogger('core.apps.TA')
 
 
 class TAException(Exception):
