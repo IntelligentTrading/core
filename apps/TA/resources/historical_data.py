@@ -39,17 +39,45 @@ class HistoricalDataAPI(APIView):
         data_history_objects = {}
 
 
-        for index in defualt_price_indexes + default_volume_indexes:
-            index_value = request.data.get(index, None)
-            if index_value:
-                data_history.index = index
-                data_history.value = int(float(index_value) * 10**8)
-                # ensure the object stays separate in memory
-                # while saving is pipelined
-                data_history_objects[index] = data_history
-                # add the saving of this object to the pipeline
-                pipeline = data_history_objects[index].save(publish=True, pipeline=pipeline)
         try:
+
+            if "_ETH" in ticker:
+                return Response({
+                    'success': f'not assessing ETH base tickers, 0 db entries created'
+                }, status=status.HTTP_202_ACCEPTED)
+
+            if "_BTC" in ticker:
+
+                close_volume = int(float(request.data["close_volume"]))
+                close_price = int(float(request.data["close_price"]))
+
+                if close_volume * close_price > 50:  # over 50 BTC volume
+                    return Response({
+                        'success': f'volume is low, 0 db entries created'
+                    }, status=status.HTTP_202_ACCEPTED)
+
+
+            for index in defualt_price_indexes + default_volume_indexes:
+                if not request.data.get(index):
+                    continue
+
+                index_value = int(float(request.data[index]))
+
+                if index in defualt_price_indexes:
+                    index_value = index_value * (10 ** 8)
+
+                if index_value > 0:
+                    data_history.index = index
+                    data_history.value = int(index_value)
+
+                    # ensure the object stays separate in memory
+                    # (because saving is pipelined)
+                    data_history_objects[index] = data_history
+
+                    # add the saving of this object to the pipeline
+                    pipeline = data_history_objects[index].save(publish=True, pipeline=pipeline)
+
+
             database_response = pipeline.execute()
 
             return Response({
