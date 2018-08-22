@@ -1,4 +1,5 @@
 from settings import LOAD_TALIB
+
 if LOAD_TALIB:
     import talib
 import numpy as np
@@ -9,18 +10,16 @@ from apps.TA.storages.abstract.indicator_subscriber import IndicatorSubscriber
 from apps.TA.storages.data.price import PriceStorage
 from settings import logger
 
-
 SMA_LIST = [9, 20, 26, 30, 50, 52, 60, 120, 200]
 
+
 class SmaStorage(IndicatorStorage):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
+    pass
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
 
 
 class SmaSubscriber(IndicatorSubscriber):
-
     classes_subscribing_to = [
         PriceStorage
     ]
@@ -75,9 +74,7 @@ class SmaSubscriber(IndicatorSubscriber):
             new_sma_storage.value = int(float(sma_value))
             new_sma_storage.save()
 
-
-
-# sorted_set_key = "BTC_USDT:poloniex:PriceVolumeHistoryStorage:close_price"
+# sorted_set_key = "BTC_USDT:poloniex:SmaStorage:20"
 
 # note that all ndarrays must be the same length!
 # inputs = {
@@ -102,4 +99,4 @@ class SmaSubscriber(IndicatorSubscriber):
 #
 # SMA(ticker="ETH_BTC", exchange="binance", periods=50)
 
-# from apps.TA.storages.indicators.ta_lib_indicator import SMA
+# from apps.TA.storages.indicators.sma import SmaStorage

@@ -46,6 +46,7 @@ class TimeseriesStorage(KeyValueStorage):
         self.describer_key = describer_key or f'{self.__class__.class_describer}:{self.get_db_key()}'
 
         if self.describer_key not in set_of_known_sets_in_redis:
+            set_of_known_sets_in_redis.add(self.describer_key)
             database.sadd("sorted_sets", self.describer_key)
 
     @classmethod
