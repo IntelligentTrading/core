@@ -57,7 +57,7 @@ class PriceTestCase(TestCase):
         # second time saves, returns 0 for duplicate, no entry added
         self.assertEqual(self.price.save(), 0)
 
-    def test_cleanup_old_values(self):
+    def test_does_not_cleanup_old_values(self):
         self.price.unix_timestamp = old_timestamp
         self.price.save()
         time.sleep(2)
