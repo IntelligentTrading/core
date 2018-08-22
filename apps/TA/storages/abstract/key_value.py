@@ -18,17 +18,17 @@ class KeyValueStorage(ABC):
     prefixes are for more specific categories of objects (eg. mammal:human:woman:object )
     suffixes are for specific attributes (eg. object:eye_color, object:age, etc)
     """
+
     def __init__(self, *args, **kwargs):
         self.force_save = kwargs.get('force_save', False)
         # key for redis storage
         self.db_key = kwargs.get('key', self.__class__.__name__)
         self.db_key_prefix = kwargs.get('key_prefix', "")
         self.db_key_suffix = kwargs.get('key_suffix', "")
-        self.value = ""
+        self.value = kwargs.get('value', "")
 
     def __str__(self):
         return str(self.get_db_key())
-
 
     @classmethod
     def compile_db_key(cls, key: str, key_prefix: str, key_suffix: str) -> str:
@@ -38,7 +38,6 @@ class KeyValueStorage(ABC):
             f'{key.strip(":")}' +
             f':{key_suffix.strip(":")}'
         ).replace("::", ":").strip(":")
-
 
     def get_db_key(self):
 
@@ -52,7 +51,6 @@ class KeyValueStorage(ABC):
             # todo: add this line for using env in key
             # + f':{SIMULATED_ENV if SIMULATED_ENV != "PRODUCTION" else ""}'
         )
-
 
     def save(self, pipeline=None, *args, **kwargs):
         if not self.value:
