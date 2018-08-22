@@ -9,9 +9,6 @@ logger = logging.getLogger(__name__)
 class StorageException(TAException):
     pass
 
-class TimeseriesException(TAException):
-    pass
-
 
 class KeyValueStorage(ABC):
     """
