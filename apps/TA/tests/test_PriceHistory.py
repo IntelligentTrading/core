@@ -3,8 +3,8 @@ import time
 from django.test import TestCase
 
 from apps.TA import JAN_1_2017_TIMESTAMP
+from apps.TA.storages.abstract.timeseries_storage import TimeseriesException
 from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, PriceVolumeHistoryException
-
 
 ticker1 = "TOM_BTC"
 ticker2 = "CWC_ETH"
@@ -16,8 +16,7 @@ value = 123456
 
 exchange = "binance"
 
-
-class PriceTestCase(TestCase):
+class PriceHistoryTestCase(TestCase):
     def setUp(self):
 
         self.price_history = PriceVolumeHistoryStorage(
@@ -26,19 +25,24 @@ class PriceTestCase(TestCase):
         )
 
     def test_must_use_standard_index(self):
-        """Animals that can speak are correctly identified"""
         self.price_history.index = "some_other_price"
 
         self.assertRaises(
             PriceVolumeHistoryException,
-            self.price_history.save()
+            self.price_history.save
         )
 
     def test_old_timestamp_raises_exception(self):
-        self.price_history.unix_timestamp = JAN_1_2017_TIMESTAMP - 1
+        def instantiate_old_price_history():
+            old_price_history = PriceVolumeHistoryStorage(
+                ticker=ticker1, exchange=exchange,
+                timestamp=JAN_1_2017_TIMESTAMP - 1,  # too old
+                index=index, value=value
+            )
+
         self.assertRaises(
-            PriceVolumeHistoryException,
-            self.price_history.save()
+            TimeseriesException,
+            instantiate_old_price_history
         )
 
     def test_dublicate_returns_0(self):
@@ -51,20 +55,16 @@ class PriceTestCase(TestCase):
         # second time saves, returns 0 for duplicate, no entry added
         self.assertEqual(self.price_history.save(), 0)
 
-    def test_cleanup_old_values(self):
-        self.price_history.unix_timestamp = old_timestamp
-        self.price_history.save()
-        time.sleep(2)
-        self.price_history.unix_timestamp = timestamp
-        self.price_history.save()
-        time.sleep(2)
-        query_results = self.price_history.query(timestamp = old_timestamp)
-
-        self.assertEqual(query_results['values'], [])
-
+    def test_query_tolerance(self):
+        query_results = PriceVolumeHistoryStorage.query(ticker=ticker1, exchange=exchange,
+                                            index=index, timestamp=timestamp,
+                                            periods_range=1, timestamp_tolerance=29)
+        self.assertLess(len(query_results['values']), 7)
 
 
     def tearDown(self):
         from settings.redis_db import database
         database.delete(self.price_history.get_db_key())
+
+
 

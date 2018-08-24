@@ -1,6 +1,8 @@
 import logging
 import time
 
+from apps.indicator.models.sma import SMA_LIST
+from settings import STAGE
 from settings.redis_db import database
 
 logger = logging.getLogger(__name__)
@@ -23,7 +25,7 @@ def redisCleanup():
 
     # PriceVolumeHistoryStorage
     # delete all values 2 hours old or older
-    old_for_pv_history = now_timestamp - (3600*2)
+    old_for_pv_history = now_timestamp - (3600 * 2)  # 2 hours
 
     pv_history_keys = database.keys(f'*:PriceVolumeHistoryStorage:*')
     for pv_history_key in pv_history_keys:
@@ -35,7 +37,10 @@ def redisCleanup():
 
     # PriceStorage
     # delete all values 200 days old or older
-    old_for_price_history = now_timestamp - (3600*24*200)
+    if STAGE:
+        old_for_price_history = now_timestamp - (5 * SMA_LIST[-1])  # 200 periods on short
+    else:
+        old_for_price_history = now_timestamp - (3600 * 24 * SMA_LIST[-1])  # 200 days
 
     price_history_keys = database.keys(f'*:PriceStorage:*')
     for price_history_key in price_history_keys:
@@ -45,3 +50,4 @@ def redisCleanup():
             logger.error(str(e))
 
 
+# from apps.TA.storages.data.memory_cleaner import redisCleanup as rC

@@ -1,6 +1,7 @@
 import logging
 from apps.TA import TAException
 from apps.TA.storages.abstract.timeseries_storage import TimeseriesStorage
+from settings import EXCHANGE_MARKETS
 
 logger = logging.getLogger(__name__)
 
@@ -23,17 +24,17 @@ class TickerStorage(TimeseriesStorage):
         # 'ticker' REQUIRED
         # 'exchange EXPECTED BUT CAN STILL SAVE WITHOUT
         try:
-            self.ticker = kwargs['ticker']  # str eg. BTC_USD
-            self.exchange = str(kwargs.get('exchange', ""))  # str or int
+            self.ticker = str(kwargs['ticker'])  # str eg. BTC_USD
+            self.exchange = str(kwargs['exchange'])  # str eg. binance
         except KeyError:
-            raise TAException("Indicator requires a ticker as initial parameter!")
+            raise TAException("Indicator requires a ticker and exchange as parameters")
         except Exception as e:
             raise TAException(str(e))
         else:
             if self.ticker.find("_") <= 0:
                 raise TAException("ticker should be like BTC_USD")
-            if not self.exchange:
-                logger.debug("----- NO 'exchange' VALUE! ARE YOU SURE? -----")
+            if self.exchange not in EXCHANGE_MARKETS:
+                logger.debug("----- UNKNOWN EXCHANGE! ARE YOU SURE? -----")
 
 
     def get_db_key(self):

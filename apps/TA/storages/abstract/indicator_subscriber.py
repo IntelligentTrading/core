@@ -29,15 +29,13 @@ class IndicatorSubscriber(TickerSubscriber):
                            f'channel: {channel}, '
                            f'subscribing classes: {self.classes_subscribing_to}')
 
-        score = str(data["score"])
         [value, timestamp] = data["name"].split(":")
-
-        if not timestamp == data["score"]:
-            logger.warning(f'Unexpected that score in name {timestamp} '
-                           f'is different than score {score}')
-
-        self.value = value
+        self.value = float(value)
         self.timestamp = int(float(timestamp))
+
+        if not self.timestamp == int(float(data["score"])):
+            logger.warning(f'Unexpected that score in name {self.timestamp} '
+                           f'is different than score {data["score"]}')
 
         if not self.timestamp == get_nearest_5min_timestamp(self.timestamp):
             raise IndicatorException("indicator timestamp should be 5min timestamp")
@@ -45,5 +43,6 @@ class IndicatorSubscriber(TickerSubscriber):
         return
 
 
-    def handle(self, channel, data, *args, **kwargs):
+    def pre_handle(self, channel, data, *args, **kwargs):
         self.extract_params(channel, data, *args, **kwargs)
+        super().pre_handle(channel, data, *args, **kwargs)

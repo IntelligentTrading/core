@@ -46,6 +46,7 @@ class TimeseriesStorage(KeyValueStorage):
         self.describer_key = describer_key or f'{self.__class__.class_describer}:{self.get_db_key()}'
 
         if self.describer_key not in set_of_known_sets_in_redis:
+            set_of_known_sets_in_redis.add(self.describer_key)
             database.sadd("sorted_sets", self.describer_key)
 
     @classmethod
@@ -62,10 +63,11 @@ class TimeseriesStorage(KeyValueStorage):
         describer_key = f'{cls.class_describer}:{sorted_set_key}'
         if describer_key not in set_of_known_sets_in_redis:
             if database.sismember("sorted_sets", describer_key):
-                database.sadd("sorted_sets", describer_key)
+                set_of_known_sets_in_redis.add(describer_key)
             else:
                 logger.warning("query made for unrecognized class type: " + str(describer_key))
-                return {'error': "class type is unrecognized to database"}
+                return {'error': "class type is unrecognized to database",
+                        'values': []}
 
         # if no timestamp, assume query to find the most recent, the last one
         if not timestamp:

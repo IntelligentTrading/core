@@ -77,12 +77,12 @@ class PriceSubscriber(TickerSubscriber):
                            f'channel: {channel}, '
                            f'subscribing class: {PriceVolumeHistoryStorage.__name__}')
         [value, name_score] = data["name"].split(":")
-        score = data["score"]
-        if not score == data["score"]:
-            logger.warning(f'Unexpected that score in name {name_score} '
-                           f'is different than score {score}')
 
-        timestamp = int(float(score))
+        timestamp = int(float(data["score"]))
+
+        if not timestamp == int(float(data["score"])):
+            logger.warning(f'Unexpected that score in name `{data["score"]}` '
+                           f'is different than score `{timestamp}`')
 
         if not timestamp_is_near_5min(timestamp):
             return
