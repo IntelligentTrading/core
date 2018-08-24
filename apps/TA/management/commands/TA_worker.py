@@ -5,6 +5,7 @@ from django.core.management.base import BaseCommand
 
 from apps.TA.storages.data.memory_cleaner import redisCleanup
 from apps.TA.storages.data.volume import VolumeSubscriber
+from apps.TA.storages.indicators.rsi import RsiSubscriber
 from apps.TA.storages.indicators.sma import SmaSubscriber
 
 logger = logging.getLogger(__name__)
@@ -21,6 +22,7 @@ class Command(BaseCommand):
             PriceSubscriber,
             # VolumeSubscriber,
             SmaSubscriber,
+            RsiSubscriber,
         ]
 
         subscribers = {}
