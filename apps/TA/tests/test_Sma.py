@@ -3,10 +3,7 @@ import time
 from django.test import TestCase
 
 from apps.TA import JAN_1_2017_TIMESTAMP
-from apps.TA.storages.abstract.timeseries_storage import TimeseriesException
-from apps.TA.storages.data.price import PriceStorage, PriceException
-from apps.TA.storages.data.pv_history import PriceVolumeHistoryException
-from apps.TA.storages.indicators.sma import SmaStorage
+from apps.TA.indicators import SmaStorage
 
 ticker1 = "TOM_BTC"
 ticker2 = "CWC_ETH"
