@@ -6,6 +6,7 @@ from django.core.management.base import BaseCommand
 from apps.TA.storages.data.memory_cleaner import redisCleanup
 from apps.TA.indicators.overlap import sma, ema, wma, dema, tema, trima, bbands, ht_trendline, kama, midprice
 from apps.TA.indicators.momentum import adx, adxr, apo, aroon, aroonosc, bop, rsi
+from settings import LOCAL
 
 logger = logging.getLogger(__name__)
 
@@ -58,5 +59,6 @@ class Command(BaseCommand):
                 # time.sleep(5)  # be nice to the system :)
                 time.sleep(0.001)  # be nice to the system :)
 
-                if bool(random.randrange(10**8) % (10**6) == 0):
-                    redisCleanup()
+                if not LOCAL:
+                    if bool(random.randrange(10**8) % (10**6) == 0):
+                        redisCleanup()
