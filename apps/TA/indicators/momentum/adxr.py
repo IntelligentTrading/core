@@ -10,13 +10,13 @@ from apps.TA.storages.data.price import PriceStorage
 from settings import logger
 
 
-class MidpriceStorage(IndicatorStorage):
+class AdxrStorage(IndicatorStorage):
 
     def produce_signal(self):
         pass
 
 
-class MidpriceSubscriber(IndicatorSubscriber):
+class AdxrSubscriber(IndicatorSubscriber):
     classes_subscribing_to = [
         PriceStorage
     ]
@@ -25,11 +25,11 @@ class MidpriceSubscriber(IndicatorSubscriber):
 
         self.index = self.key_suffix
 
-        if self.index is not 'low_price':
-            logger.debug(f'index {self.index} is not `high_price` or `low_price` ...ignoring...')
+        if self.index is not 'close_price':
+            logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
             return
 
-        new_midprice_storage = MidpriceStorage(ticker=self.ticker,
+        new_adxr_storage = AdxrStorage(ticker=self.ticker,
                                      exchange=self.exchange,
                                      timestamp=self.timestamp)
 
@@ -54,10 +54,19 @@ class MidpriceSubscriber(IndicatorSubscriber):
                 ), 
                 limit=periods)
 
-            timeperiod = min([len(high_value_np_array), len(low_value_np_array), periods])
-            midprice_value = talib.MIDPRICE(high_value_np_array, low_value_np_array, timeperiod=timeperiod)[-1]
-            logger.debug(f'saving Midprice value {midprice_value} for {ticker} on {periods} periods')
+            close_value_np_array = self.get_values_array_from_query(
+                PriceStorage.query(
+                    ticker=self.ticker,
+                    exchange=self.exchange,
+                    index='close_price',
+                    periods_range=periods
+                ),
+                limit=periods)
 
-            new_midprice_storage.periods = periods
-            new_midprice_storage.value = int(float(midprice_value))
-            new_midprice_storage.save()
+            timeperiod = min([len(high_value_np_array), len(low_value_np_array), len(close_value_np_array), periods])
+            adxr_value = talib.ADXR(high_value_np_array, low_value_np_array, close_value_np_array, timeperiod=timeperiod)[-1]
+            logger.debug(f'saving Adxr value {adxr_value} for {self.ticker} on {periods} periods')
+
+            new_adxr_storage.periods = periods
+            new_adxr_storage.value = int(float(adxr_value))
+            new_adxr_storage.save()

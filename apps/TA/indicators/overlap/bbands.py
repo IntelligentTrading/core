@@ -27,6 +27,12 @@ class BbandsSubscriber(IndicatorSubscriber):
 
     def handle(self, channel, data, *args, **kwargs):
 
+        self.index = self.key_suffix
+
+        if self.index is not 'close_price':
+            logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
+            return
+
         new_bband_storage = BbandsStorage(ticker=self.ticker,
                                      exchange=self.exchange,
                                      timestamp=self.timestamp)
@@ -47,13 +53,11 @@ class BbandsSubscriber(IndicatorSubscriber):
                 timeperiod=len(value_np_array),
                 nbdevup=2, nbdevdn=2, matype=0)
 
-            logger.debug(f'saving RSI value {rsi_value} for {ticker} on {periods} periods')
+            logger.debug(f'saving Bbands for {self.ticker} on {horizon} periods')
 
             new_bband_storage.periods = horizon
             new_bband_storage.upperband = upperband
             new_bband_storage.middleband = middleband
             new_bband_storage.lowerband = lowerband
-            new_bband_storage.value = ":".join(
-                [int(value) for value in [upperband, middleband, lowerband]]
-            )
+            new_bband_storage.value = ":".join([str(upperband), str(middleband), str(lowerband)])
             new_bband_storage.save()

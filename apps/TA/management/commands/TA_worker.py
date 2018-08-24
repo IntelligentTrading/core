@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand
 
 from apps.TA.storages.data.memory_cleaner import redisCleanup
 from apps.TA.indicators.overlap import sma, ema, wma, dema, tema, trima, bbands, ht_trendline, kama, midprice
-from apps.TA.indicators.momentum import rsi
+from apps.TA.indicators.momentum import adx, adxr, apo, aroon, aroonosc, bop, rsi
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +28,8 @@ class Command(BaseCommand):
             bbands.BbandsSubscriber, ht_trendline.HtTrendlineSubscriber,
 
             # MOMENTUM INDICATORS
+            adx.AdxSubscriber, adxr.AdxrSubscriber, apo.ApoSubscriber, aroon.AroonSubscriber, aroonosc.AroonOscSubscriber,
+            bop.BopSubscriber,
             rsi.RsiSubscriber,
         ]
 

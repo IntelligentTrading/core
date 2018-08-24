@@ -10,13 +10,13 @@ from apps.TA.storages.data.price import PriceStorage
 from settings import logger
 
 
-class MidpriceStorage(IndicatorStorage):
+class AroonStorage(IndicatorStorage):
 
     def produce_signal(self):
         pass
 
 
-class MidpriceSubscriber(IndicatorSubscriber):
+class AroonSubscriber(IndicatorSubscriber):
     classes_subscribing_to = [
         PriceStorage
     ]
@@ -26,10 +26,10 @@ class MidpriceSubscriber(IndicatorSubscriber):
         self.index = self.key_suffix
 
         if self.index is not 'low_price':
-            logger.debug(f'index {self.index} is not `high_price` or `low_price` ...ignoring...')
+            logger.debug(f'index {self.index} is not `low_price` ...ignoring...')
             return
 
-        new_midprice_storage = MidpriceStorage(ticker=self.ticker,
+        new_aroon_storage = AroonStorage(ticker=self.ticker,
                                      exchange=self.exchange,
                                      timestamp=self.timestamp)
 
@@ -55,9 +55,11 @@ class MidpriceSubscriber(IndicatorSubscriber):
                 limit=periods)
 
             timeperiod = min([len(high_value_np_array), len(low_value_np_array), periods])
-            midprice_value = talib.MIDPRICE(high_value_np_array, low_value_np_array, timeperiod=timeperiod)[-1]
-            logger.debug(f'saving Midprice value {midprice_value} for {ticker} on {periods} periods')
+            aroondown_value, aroonup_value = talib.AROON(high_value_np_array, low_value_np_array, timeperiod=timeperiod)[-1]
+            logger.debug(f'saving Aroon values {aroondown_value}, {aroonup_value} for {self.ticker} on {periods} periods')
 
-            new_midprice_storage.periods = periods
-            new_midprice_storage.value = int(float(midprice_value))
-            new_midprice_storage.save()
+            new_aroon_storage.periods = periods
+            new_aroon_storage.aroondown = aroondown_value
+            new_aroon_storage.aroonup = aroonup_value
+            new_aroon_storage.value = ":".join([str(aroondown_value), str(aroonup_value)])
+            new_aroon_storage.save()
