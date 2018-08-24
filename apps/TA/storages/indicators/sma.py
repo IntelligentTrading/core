@@ -61,13 +61,10 @@ class SmaSubscriber(IndicatorSubscriber):
             )
 
             logger.debug(results_dict)
-            value_array = [float(v) for v in results_dict['values']]
-            if len(value_array) > periods:
-                value_array = value_array[-periods:0]
 
-            value_np_array = np.array(value_array)
+            value_np_array = self.get_values_array_from_query(results_dict, limit=periods)
 
-            sma_value = talib.SMA(value_array, timeperiod=len(value_array))[-1]
+            sma_value = talib.SMA(value_np_array, timeperiod=len(value_np_array))[-1]
             logger.debug(f'saving SMA value {sma_value} for {ticker} on {periods} periods')
 
             new_sma_storage.periods = periods
