@@ -2,12 +2,18 @@ import logging
 from apps.TA import TAException, PERIODS_4HR
 from apps.TA.storages.abstract.ticker import TickerStorage
 from apps.TA.storages.abstract.timeseries_storage import TimeseriesException
-
+from apps.signal.models import Signal
 
 logger = logging.getLogger(__name__)
 
+TRENDS = (BEARISH, BULLISH, OTHER) = (-1, 2, 0)
+
 
 class IndicatorException(TAException):
+    pass
+
+
+class SignalException(TAException):
     pass
 
 
@@ -28,7 +34,7 @@ class IndicatorStorage(TickerStorage):
             raise IndicatorException("indicator timestamp should be % 300")
 
         self.horizon = int(kwargs.get('horizon', 1))
-        self.periods = int(kwargs.get('periods', 1*self.horizon))
+        self.periods = int(kwargs.get('periods', 1 * self.horizon))
 
         if self.periods // self.horizon == 0:
             raise IndicatorException(f'horizon {self.horizon} '
@@ -38,7 +44,6 @@ class IndicatorStorage(TickerStorage):
                                      f'must be a factor of periods {self.periods}')
 
         self.db_key_suffix = f':{self.periods}'
-
 
     @classmethod
     def query(cls, *args, **kwargs):
@@ -54,20 +59,34 @@ class IndicatorStorage(TickerStorage):
         results_dict['periods_key'] = periods_key
         return results_dict
 
+    def produce_signal(self):
+        if "this indicator" == "interesting":
+            self.send_signal(trend=BULLISH)  # trend is required
+
+    def send_signal(self, *args, **kwargs):
+        if not "trend" in kwargs or kwargs["trend"] not in TRENDS:
+            raise SignalException("trend is required to send a signal")
+
+        return Signal.objects.create(
+            **kwargs,
+            signal=self.__class__.__name__.replace("Storage", "").upper(),
+            horizon=self.horizon * 5,
+        )
 
     def save(self, *args, **kwargs):
 
         # meets basic requirements for saving
         if not all([self.ticker, self.exchange,
-                   self.periods, self.value,
-                   self.unix_timestamp]):
+                    self.periods, self.value,
+                    self.unix_timestamp]):
             logger.error("incomplete information, cannot save \n" + str(self.__dict__))
             raise IndicatorException("save error, missing data")
 
         self.db_key_suffix = f'{str(self.periods)}'
         logger.debug("ready to save, db_key will be " + self.get_db_key())
-        return super().save(*args, **kwargs)
-
+        save_result = super().save(*args, **kwargs)
+        self.produce_signal()
+        return save_result
 
 
 """
