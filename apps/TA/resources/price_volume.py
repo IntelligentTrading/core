@@ -6,7 +6,7 @@ from settings.redis_db import database
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from apps.TA.storages.data.pv_history import defualt_price_indexes, default_volume_indexes, PriceVolumeHistoryStorage
+from apps.TA.storages.data.pv_history import default_price_indexes, default_volume_indexes, PriceVolumeHistoryStorage
 from apps.TA.storages.abstract.timeseries_storage import StorageException
 from apps.TA.storages.data.price import PriceStorage
 
@@ -68,7 +68,7 @@ class PriceVolumeAPI(APIView):
         # except StorageException as e:
         #     return {'error': str(e)}, 400  #bad request
         #
-        # for index in defualt_price_indexes:
+        # for index in default_price_indexes:
         #     price_index_value = request.data.get(index, None)
         #     if price_index_value:
         #         p.index = index

@@ -2,7 +2,7 @@ import logging
 from apps.TA import TAException
 from apps.TA.storages.abstract.ticker import TickerStorage
 from apps.TA.storages.abstract.ticker_subscriber import TickerSubscriber, timestamp_is_near_5min, get_nearest_5min_timestamp
-from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, defualt_price_indexes, derived_price_indexes
+from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, default_price_indexes, derived_price_indexes
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class PriceStorage(TickerStorage):
             raise PriceException("save error, missing data")
 
         if not self.force_save:
-            if not self.index in defualt_price_indexes + derived_price_indexes:
+            if not self.index in default_price_indexes + derived_price_indexes:
                 logger.error("price index not in approved list, raising exception...")
                 raise PriceException("unknown index")
 

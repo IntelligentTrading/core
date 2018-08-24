@@ -6,7 +6,7 @@ from settings.redis_db import database
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, defualt_price_indexes, default_volume_indexes
+from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, default_price_indexes, default_volume_indexes
 
 logger = logging.getLogger(__name__)
 
@@ -57,13 +57,13 @@ class HistoricalDataAPI(APIView):
                     }, status=status.HTTP_202_ACCEPTED)
 
 
-            for index in defualt_price_indexes + default_volume_indexes:
+            for index in default_price_indexes + default_volume_indexes:
                 if not request.data.get(index):
                     continue
 
                 index_value = int(float(request.data[index]))
 
-                if index in defualt_price_indexes:
+                if index in default_price_indexes:
                     index_value = index_value * (10 ** 8)
 
                 if index_value > 0:
