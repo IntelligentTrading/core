@@ -1,10 +1,9 @@
 from settings import LOAD_TALIB
 if LOAD_TALIB:
     import talib
-import numpy as np
 
 from apps.TA import HORIZONS
-from apps.TA.storages.abstract.indicator import IndicatorStorage
+from apps.TA.storages.abstract.indicator import IndicatorStorage, BULLISH
 from apps.TA.storages.abstract.indicator_subscriber import IndicatorSubscriber
 from apps.TA.storages.data.price import PriceStorage
 from settings import logger
@@ -12,8 +11,12 @@ from settings import logger
 
 class BbandsStorage(IndicatorStorage):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def produce_signal(self):
+
+        squeeze = self.upperband - self.lowerband
+        if squeeze < 5:
+            self.send_signal(trend=BULLISH, squeeze=squeeze)
+
 
 
 class BbandsSubscriber(IndicatorSubscriber):
@@ -47,6 +50,9 @@ class BbandsSubscriber(IndicatorSubscriber):
             logger.debug(f'saving RSI value {rsi_value} for {ticker} on {periods} periods')
 
             new_bband_storage.periods = horizon
+            new_bband_storage.upperband = upperband
+            new_bband_storage.middleband = middleband
+            new_bband_storage.lowerband = lowerband
             new_bband_storage.value = ":".join(
                 [int(value) for value in [upperband, middleband, lowerband]]
             )

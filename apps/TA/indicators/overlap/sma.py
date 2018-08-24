@@ -2,7 +2,6 @@ from settings import LOAD_TALIB
 
 if LOAD_TALIB:
     import talib
-import numpy as np
 
 from apps.TA import HORIZONS
 from apps.TA.storages.abstract.indicator import IndicatorStorage
@@ -14,9 +13,9 @@ SMA_LIST = [9, 20, 26, 30, 50, 52, 60, 120, 200]
 
 
 class SmaStorage(IndicatorStorage):
-    pass
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
+
+    def produce_signal(self):
+        pass
 
 
 class SmaSubscriber(IndicatorSubscriber):

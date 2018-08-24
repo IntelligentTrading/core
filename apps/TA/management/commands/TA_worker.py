@@ -4,8 +4,8 @@ import random
 from django.core.management.base import BaseCommand
 
 from apps.TA.storages.data.memory_cleaner import redisCleanup
-from apps.TA.indicators import RsiSubscriber
-from apps.TA.indicators import SmaSubscriber
+from apps.TA.indicators.overlap import sma, ema, wma, dema, tema, trima, bbands, ht_trendline, kama, midprice
+from apps.TA.indicators.momentum import rsi
 
 logger = logging.getLogger(__name__)
 
@@ -20,8 +20,15 @@ class Command(BaseCommand):
         subscriber_classes = [
             PriceSubscriber,
             # VolumeSubscriber,
-            SmaSubscriber,
-            RsiSubscriber,
+
+            # OVERLAP INDICATORS
+            midprice.MidpriceSubscriber,
+            sma.SmaSubscriber, ema.EmaSubscriber, wma.WmaSubscriber,
+            dema.DemaSubscriber, tema.TemaSubscriber, trima.TrimaSubscriber, kama.KamaSubscriber,
+            bbands.BbandsSubscriber, ht_trendline.HtTrendlineSubscriber,
+
+            # MOMENTUM INDICATORS
+            rsi.RsiSubscriber,
         ]
 
         subscribers = {}
