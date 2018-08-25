@@ -60,10 +60,10 @@ class AnnModel(models.Model):
 # download model file from s3 to local then import it into keras model, then return this keras model
 def get_ann_model_object(s3_model_file):
     start = time.time()
-    ann_model = AnnModel.objects.get(s3_model_file=s3_model_file) ## get ann model metainfo from DB
+    ann_model = AnnModel.objects.get(s3_model_file=s3_model_file) ## get ann model metainfo from DB(django objects.get)
 
     try:
-        ann_model.initialize()   # download model from S3, save it onlocal disk, then upload to class
+        ann_model.initialize()   # download model from S3, save it on local disk, then upload to class
         logger.info(">> ANN model loaded, ELapsed time: " + str(time.time() - start))
         return ann_model
     except Exception as e:
