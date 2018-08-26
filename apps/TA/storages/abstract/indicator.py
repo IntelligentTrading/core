@@ -6,7 +6,7 @@ from apps.signal.models import Signal
 
 logger = logging.getLogger(__name__)
 
-TRENDS = (BEARISH, BULLISH, OTHER) = (-1, 2, 0)
+TRENDS = (BEARISH, BULLISH, OTHER) = (-1, 1, 0)
 
 
 class IndicatorException(TAException):
@@ -68,9 +68,9 @@ class IndicatorStorage(TickerStorage):
             raise SignalException("trend is required to send a signal")
 
         return Signal.objects.create(
-            **kwargs,
             signal=self.__class__.__name__.replace("Storage", "").upper(),
             horizon=self.horizon * 5,
+            **kwargs
         )
 
     def save(self, *args, **kwargs):

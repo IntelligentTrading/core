@@ -1,15 +1,12 @@
 import logging
 
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage
 from apps.api.permissions import RestAPIPermission
 from settings import DEBUG
-from settings.redis_db import database
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from apps.TA.storages.data.pv_history import default_price_indexes, default_volume_indexes, PriceVolumeHistoryStorage
-from apps.TA.storages.abstract.timeseries_storage import StorageException
-from apps.TA.storages.data.price import PriceStorage
-
 
 # ["open_price", "close_price", "low_price", "high_price",
 # "midpoint_price", "mean_price", "price_variance",

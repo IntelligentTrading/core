@@ -23,6 +23,8 @@ class SmaSubscriber(IndicatorSubscriber):
         PriceStorage
     ]
 
+    # sorted_set_key = "BTC_USDT:poloniex:SmaStorage:20"
+
     def handle(self, channel, data, *args, **kwargs):
 
         """
@@ -69,30 +71,3 @@ class SmaSubscriber(IndicatorSubscriber):
             new_sma_storage.periods = periods
             new_sma_storage.value = int(float(sma_value))
             new_sma_storage.save()
-
-# sorted_set_key = "BTC_USDT:poloniex:SmaStorage:20"
-
-# note that all ndarrays must be the same length!
-# inputs = {
-#     'open': np.random.random(100),
-#     'high': np.random.random(100),
-#     'low': np.random.random(100),
-#     'close': np.random.random(100),
-#     'volume': np.random.random(100)
-# }
-#
-#
-#
-# # uses close prices (default)
-# output = talib.SMA(inputs, timeperiod=25)
-#
-# # uses open prices
-# output = talib.SMA(inputs, timeperiod=25, price='values')
-#
-# # uses close prices (default)
-# upper, middle, lower = talib.BBANDS(inputs, 20, 2, 2)
-#
-#
-# SMA(ticker="ETH_BTC", exchange="binance", periods=50)
-
-# from apps.TA.storages.indicators.sma import SmaStorage

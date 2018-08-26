@@ -55,6 +55,16 @@ class TimeseriesStorage(KeyValueStorage):
               timestamp_tolerance: int = 299,
               *args, **kwargs) -> dict:
 
+        """
+        :param key: the exact redis sortedset key (optional)
+        :param key_suffix: suffix on the key  (optional)
+        :param key_prefix: prefix on the key (optional)
+        :param timestamp: timestamp for most recent value returned  (optional, default returns latest)
+        :param periods_range: number of periods desired in results (optional, default 0, so only return 1 value)
+        :param timestamp_tolerance: tolerance in seconds on results within timestamp and period range (optional, defualt=299)
+        :return: dict(values=[], ...)
+        """
+
         sorted_set_key = cls.compile_db_key(key=key, key_prefix=key_prefix, key_suffix=key_suffix)
         logger.debug(f'query for sorted set key {sorted_set_key}')
         # example key f'{key_prefix}:{cls.__name__}:{key_suffix}'
