@@ -129,7 +129,7 @@ class PriceSubscriber(TickerSubscriber):
         else:
             if price.value:
                 price.index = index
-                price.save()
+                price.save(publish=True)
                 logger.info("saved new thing: " + price.get_db_key())
 
         if index == "close_price":

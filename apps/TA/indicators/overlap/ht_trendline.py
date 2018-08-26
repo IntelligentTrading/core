@@ -45,7 +45,7 @@ class HtTrendlineSubscriber(IndicatorSubscriber):
         value_np_array = self.get_values_array_from_query(results_dict, limit=PERIODS_24HR*200)
 
         ht_trendline_value = talib.HT_TRENDLINE(value_np_array, timeperiod=len(value_np_array))[-1]
-        logger.debug(f'saving Ht_trendline value {ht_trendline_value} for {ticker} on {periods} periods')
+        logger.debug(f'saving Ht_trendline value {ht_trendline_value}for {self.ticker} on {periods} periods')
 
         new_ht_trendline_storage.periods = PERIODS_24HR*200
         new_ht_trendline_storage.value = int(float(ht_trendline_value))

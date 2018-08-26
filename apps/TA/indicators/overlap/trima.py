@@ -53,7 +53,7 @@ class TrimaSubscriber(IndicatorSubscriber):
             value_np_array = self.get_values_array_from_query(results_dict, limit=periods)
 
             trima_value = talib.TRIMA(value_np_array, timeperiod=len(value_np_array))[-1]
-            logger.debug(f'saving Trima value {trima_value} for {ticker} on {periods} periods')
+            logger.debug(f'saving Trima value {trima_value}for {self.ticker} on {periods} periods')
 
             new_trima_storage.periods = periods
             new_trima_storage.value = int(float(trima_value))

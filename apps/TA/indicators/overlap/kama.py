@@ -53,7 +53,7 @@ class KamaSubscriber(IndicatorSubscriber):
             value_np_array = self.get_values_array_from_query(results_dict, limit=periods)
 
             kama_value = talib.KAMA(value_np_array, timeperiod=len(value_np_array))[-1]
-            logger.debug(f'saving Kama value {kama_value} for {ticker} on {periods} periods')
+            logger.debug(f'saving Kama value {kama_value}for {self.ticker} on {periods} periods')
 
             new_kama_storage.periods = periods
             new_kama_storage.value = int(float(kama_value))

@@ -14,11 +14,7 @@ ticker = "CWC_ETH"
 exchange = "binance"
 
 
-class IndicatorTestClass(object):
-
-    storage_class = None
-    subscriber_class = None
-
+class IndicatorsTestCase(TestCase):
 
     def setUp(self):
         max_periods = PERIODS_24HR  # * 200
@@ -49,17 +45,17 @@ class IndicatorTestClass(object):
 
                 self.last_price_storage = price_storage
 
-    def test_subscriber(self):
+    def run_subscriber(self, storage_class, subscriber_class):
 
-        subscriber = self.subscriber_class()
+        subscriber = subscriber_class()
         subscriber()
-        self.last_price_storage.save()
+        self.last_price_storage.save(publish=True)
         subscriber()
         subscriber()
 
-        time.sleep(1)
+        time.sleep(0.1)
 
-        key_substring = f"{ticker}:{exchange}:{self.storage_class.__name__}"
+        key_substring = f"{ticker}:{exchange}:{storage_class.__name__}"
         logger.info("looking for keys like " + key_substring)
 
         keys = database.keys(f"*{key_substring}*")
@@ -67,28 +63,85 @@ class IndicatorTestClass(object):
 
         for key in keys:
             assert len(
-                database.zrange(key,
+                database.zrangebyscore(key,
                     self.last_price_storage.unix_timestamp,
                     self.last_price_storage.unix_timestamp)
             )
 
-            # assert len(self.storage_class.query(
+            # assert len(storage_class.query(
             #     ticker=ticker,
             #     exchange=exchange,
             #     timestamp=self.last_price_storage.unix_timestamp,
             # )['values'])
 
 
+    # OVERLAP INDICATORS
+
+    def test_sma(self):
+        from apps.TA.indicators.overlap.sma import SmaStorage, SmaSubscriber
+        self.run_subscriber(SmaStorage, SmaSubscriber)
+
+    def test_ema(self):
+        from apps.TA.indicators.overlap.ema import EmaStorage, EmaSubscriber
+        self.run_subscriber(EmaStorage, EmaSubscriber)
+
+    def test_wma(self):
+        from apps.TA.indicators.overlap.wma import WmaStorage, WmaSubscriber
+        self.run_subscriber(WmaStorage, WmaSubscriber)
+
+    def test_dema(self):
+        from apps.TA.indicators.overlap.dema import DemaStorage, DemaSubscriber
+        self.run_subscriber(DemaStorage, DemaSubscriber)
+
+    def test_tema(self):
+        from apps.TA.indicators.overlap.tema import TemaStorage, TemaSubscriber
+        self.run_subscriber(TemaStorage, TemaSubscriber)
+
+    def test_trima(self):
+        from apps.TA.indicators.overlap.trima import TrimaStorage, TrimaSubscriber
+        self.run_subscriber(TrimaStorage, TrimaSubscriber)
+
+    def test_bbands(self):
+        from apps.TA.indicators.overlap.bbands import BbandsStorage, BbandsSubscriber
+        self.run_subscriber(BbandsStorage, BbandsSubscriber)
+
+    def test_ht_trendline(self):
+        from apps.TA.indicators.overlap.ht_trendline import HtTrendlineStorage, HtTrendlineSubscriber
+        self.run_subscriber(HtTrendlineStorage, HtTrendlineSubscriber)
+
+    # MOMENTUM INDICATORS
+
+    def test_adx(self):
+        from apps.TA.indicators.momentum.adx import AdxStorage, AdxSubscriber
+        self.run_subscriber(AdxStorage, AdxSubscriber)
+
+    def test_adxr(self):
+        from apps.TA.indicators.momentum.adxr import AdxrStorage, AdxrSubscriber
+        self.run_subscriber(AdxrStorage, AdxrSubscriber)
+
+    def test_apo(self):
+        from apps.TA.indicators.momentum.apo import ApoStorage, ApoSubscriber
+        self.run_subscriber(ApoStorage, ApoSubscriber)
+
+    def test_aroon(self):
+        from apps.TA.indicators.momentum.aroon import AroonStorage, AroonSubscriber
+        self.run_subscriber(AroonStorage, AroonSubscriber)
+
+    def test_aroonosc(self):
+        from apps.TA.indicators.momentum.aroonosc import AroonOscStorage, AroonOscSubscriber
+        self.run_subscriber(AroonOscStorage, AroonOscSubscriber)
+
+    def test_bop(self):
+        from apps.TA.indicators.momentum.bop import BopStorage, BopSubscriber
+        self.run_subscriber(BopStorage, BopSubscriber)
+
+    def test_rsi(self):
+        from apps.TA.indicators.momentum.rsi import RsiStorage, RsiSubscriber
+        self.run_subscriber(RsiStorage, RsiSubscriber)
 
 
+    # END INDICATORS
 
     def tearDown(self):
         for key in database.keys(f"*:{ticker}:*"):
             database.delete(key)
-
-
-from apps.TA.indicators.overlap import sma
-
-class SmaTestCase(IndicatorTestClass, TestCase):
-    storage_class = sma.SmaStorage
-    subscriber_class = sma.SmaSubscriber
