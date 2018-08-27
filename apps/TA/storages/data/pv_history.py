@@ -6,11 +6,11 @@ from apps.TA.storages.abstract.indicator import TickerStorage
 logger = logging.getLogger(__name__)
 
 
-defualt_price_indexes = ["open_price", "close_price", "low_price", "high_price",]
+default_price_indexes = ["high_price", "low_price", "open_price", "close_price", ]
 derived_price_indexes = ["midpoint_price", "mean_price", "price_variance",]
 default_volume_indexes = ["close_volume",]
-derived_volume_indexes = ["open_volume", "low_volume", "high_volume",]
-default_indexes = defualt_price_indexes + default_volume_indexes
+derived_volume_indexes = ["open_volume", "high_volume", "low_volume",]
+default_indexes = default_price_indexes + default_volume_indexes
 derived_indexes = derived_price_indexes + derived_volume_indexes
 all_indexes = default_indexes + derived_indexes
 
@@ -60,7 +60,7 @@ class PriceVolumeHistoryStorage(TickerStorage):
             raise PriceVolumeHistoryException("save error, missing data")
 
         if not self.force_save:
-            if not self.index in defualt_price_indexes + default_volume_indexes:
+            if not self.index in default_price_indexes + default_volume_indexes:
                 logger.error("price index not in approved list, raising exception...")
                 raise PriceVolumeHistoryException("unknown index: " + str(self.index))
 

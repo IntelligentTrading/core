@@ -1,7 +1,7 @@
 from apps.TA.storages.abstract.indicator import IndicatorException
 from apps.TA.storages.abstract.ticker_subscriber import TickerSubscriber, get_nearest_5min_timestamp
 from settings import logger
-
+import numpy as np
 
 
 class IndicatorSubscriber(TickerSubscriber):
@@ -46,3 +46,18 @@ class IndicatorSubscriber(TickerSubscriber):
     def pre_handle(self, channel, data, *args, **kwargs):
         self.extract_params(channel, data, *args, **kwargs)
         super().pre_handle(channel, data, *args, **kwargs)
+
+
+    @staticmethod
+    def get_values_array_from_query(query_results, limit=0):
+
+        value_array = [float(v) for v in query_results['values']]
+
+        if limit:
+            if not isinstance(limit, int) or limit < 1:
+                raise IndicatorException(f"bad limit: {limit}")
+
+            elif len(value_array) > limit:
+                value_array = value_array[-limit:0]
+
+        return np.array(value_array)

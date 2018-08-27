@@ -2,7 +2,7 @@ import logging
 from apps.TA import TAException
 from apps.TA.storages.abstract.ticker import TickerStorage
 from apps.TA.storages.abstract.ticker_subscriber import TickerSubscriber, timestamp_is_near_5min, get_nearest_5min_timestamp
-from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, defualt_price_indexes, derived_price_indexes
+from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, default_price_indexes, derived_price_indexes
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ class PriceStorage(TickerStorage):
         super().__init__(*args, **kwargs)
         self.index = kwargs.get('index', "close_price")
         self.value = kwargs.get('value')
-        self.db_key_suffix = f':{self.index}'
+        self.db_key_suffix = f':{self.index}'  # redundant?
 
     def save(self, *args, **kwargs):
 
@@ -28,7 +28,7 @@ class PriceStorage(TickerStorage):
             raise PriceException("save error, missing data")
 
         if not self.force_save:
-            if not self.index in defualt_price_indexes + derived_price_indexes:
+            if not self.index in default_price_indexes + derived_price_indexes:
                 logger.error("price index not in approved list, raising exception...")
                 raise PriceException("unknown index")
 
@@ -129,7 +129,7 @@ class PriceSubscriber(TickerSubscriber):
         else:
             if price.value:
                 price.index = index
-                price.save()
+                price.save(publish=True)
                 logger.info("saved new thing: " + price.get_db_key())
 
         if index == "close_price":

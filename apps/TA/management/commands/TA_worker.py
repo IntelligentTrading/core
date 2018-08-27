@@ -4,8 +4,9 @@ import random
 from django.core.management.base import BaseCommand
 
 from apps.TA.storages.data.memory_cleaner import redisCleanup
-from apps.TA.storages.data.volume import VolumeSubscriber
-from apps.TA.storages.indicators.sma import SmaSubscriber
+from apps.TA.indicators.overlap import sma, ema, wma, dema, tema, trima, bbands, ht_trendline, kama, midprice
+from apps.TA.indicators.momentum import adx, adxr, apo, aroon, aroonosc, bop, rsi
+from settings import LOCAL
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,17 @@ class Command(BaseCommand):
         subscriber_classes = [
             PriceSubscriber,
             # VolumeSubscriber,
-            SmaSubscriber,
+
+            # OVERLAP INDICATORS
+            midprice.MidpriceSubscriber,
+            sma.SmaSubscriber, ema.EmaSubscriber, wma.WmaSubscriber,
+            dema.DemaSubscriber, tema.TemaSubscriber, trima.TrimaSubscriber, kama.KamaSubscriber,
+            bbands.BbandsSubscriber, ht_trendline.HtTrendlineSubscriber,
+
+            # MOMENTUM INDICATORS
+            adx.AdxSubscriber, adxr.AdxrSubscriber, apo.ApoSubscriber, aroon.AroonSubscriber, aroonosc.AroonOscSubscriber,
+            bop.BopSubscriber,
+            rsi.RsiSubscriber,
         ]
 
         subscribers = {}
@@ -48,5 +59,6 @@ class Command(BaseCommand):
                 # time.sleep(5)  # be nice to the system :)
                 time.sleep(0.001)  # be nice to the system :)
 
-                if bool(random.randrange(10**8) % (10**6) == 0):
-                    redisCleanup()
+                if not LOCAL:
+                    if bool(random.randrange(10**8) % (10**6) == 0):
+                        redisCleanup()

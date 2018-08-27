@@ -2,7 +2,6 @@ from settings import LOAD_TALIB
 
 if LOAD_TALIB:
     import talib
-import numpy as np
 
 from apps.TA import HORIZONS
 from apps.TA.storages.abstract.indicator import IndicatorStorage
@@ -14,15 +13,17 @@ SMA_LIST = [9, 20, 26, 30, 50, 52, 60, 120, 200]
 
 
 class SmaStorage(IndicatorStorage):
-    pass
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
+
+    def produce_signal(self):
+        pass
 
 
 class SmaSubscriber(IndicatorSubscriber):
     classes_subscribing_to = [
         PriceStorage
     ]
+
+    # sorted_set_key = "BTC_USDT:poloniex:SmaStorage:20"
 
     def handle(self, channel, data, *args, **kwargs):
 
@@ -61,42 +62,12 @@ class SmaSubscriber(IndicatorSubscriber):
             )
 
             logger.debug(results_dict)
-            value_array = [float(v) for v in results_dict['values']]
-            if len(value_array) > periods:
-                value_array = value_array[-periods:0]
 
-            value_np_array = np.array(value_array)
+            value_np_array = self.get_values_array_from_query(results_dict, limit=periods)
 
-            sma_value = talib.SMA(value_array, timeperiod=len(value_array))[-1]
-            logger.debug(f'saving SMA value {sma_value} for {ticker} on {periods} periods')
+            sma_value = talib.SMA(value_np_array, timeperiod=len(value_np_array))[-1]
+            logger.debug(f'saving SMA value {sma_value}for {self.ticker} on {periods} periods')
 
             new_sma_storage.periods = periods
             new_sma_storage.value = int(float(sma_value))
             new_sma_storage.save()
-
-# sorted_set_key = "BTC_USDT:poloniex:SmaStorage:20"
-
-# note that all ndarrays must be the same length!
-# inputs = {
-#     'open': np.random.random(100),
-#     'high': np.random.random(100),
-#     'low': np.random.random(100),
-#     'close': np.random.random(100),
-#     'volume': np.random.random(100)
-# }
-#
-#
-#
-# # uses close prices (default)
-# output = talib.SMA(inputs, timeperiod=25)
-#
-# # uses open prices
-# output = talib.SMA(inputs, timeperiod=25, price='values')
-#
-# # uses close prices (default)
-# upper, middle, lower = talib.BBANDS(inputs, 20, 2, 2)
-#
-#
-# SMA(ticker="ETH_BTC", exchange="binance", periods=50)
-
-# from apps.TA.storages.indicators.sma import SmaStorage
