@@ -490,9 +490,9 @@ class EventsElementary(AbstractIndicator):
 
         ############## calculate and save ANN elementory Events   #################
         # we have ANN indicators only for SHORT period for now!
-        # TODO: remove SHORT when models for 3 horizons will be added!
-        if RUN_ANN and (kwargs['resample_period']==SHORT):
-            logger.info("   ... Check SHORT AI Elementary Events: ")
+        # TODO: remove SHORT/ MEDIUM when models for 3 horizons will be added!
+        if RUN_ANN and (kwargs['resample_period'] in [SHORT,MEDIUM]):
+            logger.info("   ... Check  AI Elementary Events for PERIOD: " + str(kwargs['resample_period']))
             _process_ai_simple(horizon, **kwargs)
         else:
             logger.info("   ... ANN elementary event calculation has been skipped")
