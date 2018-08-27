@@ -13,8 +13,7 @@ if RUN_ANN:
 
 logger = logging.getLogger(__name__)
 
-# redo it as here
-# https://www.b-list.org/weblog/2006/aug/18/django-tips-using-properties-models-and-managers/
+# TODO: remove storing it in DB and keep all models in named dictionary
 
 
 class AnnModel(models.Model):
