@@ -1,7 +1,6 @@
 from settings import LOAD_TALIB
 if LOAD_TALIB:
     import talib
-import numpy as np
 
 from apps.TA import HORIZONS
 from apps.TA.storages.abstract.indicator import IndicatorStorage

@@ -42,7 +42,7 @@ class AroonSubscriber(IndicatorSubscriber):
                     exchange=self.exchange,
                     index='high_price',
                     periods_range=periods
-                ), 
+                ),
                 limit=periods)
 
             low_value_np_array = self.get_values_array_from_query(
@@ -51,7 +51,7 @@ class AroonSubscriber(IndicatorSubscriber):
                     exchange=self.exchange,
                     index='low_price',
                     periods_range=periods
-                ), 
+                ),
                 limit=periods)
 
             timeperiod = min([len(high_value_np_array), len(low_value_np_array), periods])

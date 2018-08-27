@@ -53,5 +53,5 @@ class ApoSubscriber(IndicatorSubscriber):
                 new_apo_storage.value = int(float(apo_value))
                 new_apo_storage.save()
 
-            except:
-                pass
+            except Exception as e:
+                logger.error(str(e))

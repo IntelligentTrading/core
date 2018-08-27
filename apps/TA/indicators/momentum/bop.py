@@ -3,7 +3,6 @@ from settings import LOAD_TALIB
 if LOAD_TALIB:
     import talib
 
-from apps.TA import HORIZONS
 from apps.TA.storages.abstract.indicator import IndicatorStorage
 from apps.TA.storages.abstract.indicator_subscriber import IndicatorSubscriber
 from apps.TA.storages.data.price import PriceStorage
