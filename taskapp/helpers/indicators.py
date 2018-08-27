@@ -39,7 +39,7 @@ def _compute_ann(source, resample_period=SHORT):
         # choose the pre-trained ANN model depending on period, here are the same
         period2model = {
             SHORT : 'lstm_short_60m_160_8_3class_return_0.03.h5',
-            MEDIUM: 'lstm_model_2_2.h5',
+            MEDIUM: 'lstm_medium_240m_100_20_3class_return_0.1.h5',
             LONG  : 'lstm_model_2_2.h5'
         }
 
@@ -76,7 +76,7 @@ def _compute_ann(source, resample_period=SHORT):
 
         # calculate ANN indicator(s)
         # TODO: now run only for a short period, since it is not really tuned for other periods
-        if (RUN_ANN) and (resample_period == SHORT):
+        if (RUN_ANN) and (resample_period in [SHORT,MEDIUM]):
             # TODO: just form X_predicted here and then run prediction outside the loop !
             try:
                 if ann_model_object:

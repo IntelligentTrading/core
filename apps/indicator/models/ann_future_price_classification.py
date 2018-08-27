@@ -46,7 +46,7 @@ class AnnPriceClassification(AbstractIndicator):
 
     @staticmethod
     def compute_all(cls, ann_model, **kwargs):
-        logger.info('   @@@@@@    Run AI indicator calculation    @@@@@@@@@')
+        logger.info('   @@@@@@    Run AI indicator calculation  with %s model   @@@@@@@@@' % (ann_model.s3_model_file))
 
         start = time.time()
 
