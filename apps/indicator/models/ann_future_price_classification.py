@@ -78,7 +78,7 @@ def _compute_lstm_classification(ann_model, **kwargs):
     trend_predicted = None
 
     resample_period = str(ann_model.period) + 'min'  #'10min'
-    needed_records = ann_model.slide_win_size * 11  # because of 10min
+    needed_records = ann_model.slide_win_size * ann_model.period + 10  # because of 10min/60 min + some extra
 
     # get raw prices from Price table to form a feature vector to feed up to ANN (to predict price)
     raw_price_ts = get_n_last_prices_ts(needed_records, kwargs['source'], kwargs['transaction_currency'], kwargs['counter_currency'])
@@ -100,28 +100,28 @@ def _compute_lstm_classification(ann_model, **kwargs):
 
     # combine the data into X matrix like that
     # (examples=124451, features=196, classes=4) : 4 = price/volume/price_var/volume_var
-    X_test = np.zeros([1, ann_model.slide_win_size,4])
-    X_test[0, :, 0] = data_ts['price']
-    X_test[0, :, 1] = data_ts['volume']
-    X_test[0, :, 2] = data_ts['price_var']
-    X_test[0, :, 3] = data_ts['volume_var']
+    X_predict = np.zeros([1, ann_model.slide_win_size,4])
+    X_predict[0, :, 0] = data_ts['price']
+    X_predict[0, :, 1] = data_ts['volume']
+    X_predict[0, :, 2] = data_ts['price_var']
+    X_predict[0, :, 3] = data_ts['volume_var']
 
     # check if we have Nans
     # TODO: interpolate or cancel calculation if yes (CLEANING input data)
     # TODO: download price and VOLUME tables too!
-    logger.debug("    ... Do we have NaNs in X?: " + str(np.isnan(X_test[0, :, :]).any()))
+    logger.debug("    ... Do we have NaNs in X?: " + str(np.isnan(X_predict[0, :, :]).any()))
 
-    if sum(sum(np.isnan(X_test[0, :, :]))) > 20:
+    if sum(sum(np.isnan(X_predict[0, :, :]))) > 20:
         logger.info(" >> Cancel AI prediction, because too many NaNs, prediction is not reliable!")
         return None
 
 
     # Normalize data so that it ends in curent price value and btw -1 / 1
-    for example in range(X_test.shape[0]):
-        X_test[example, :, 0] = (X_test[example, :, 0] - X_test[example, -1, 0]) / (np.max(X_test[example, :, 0]) - np.min(X_test[example, :, 0]))
-        X_test[example, :, 1] = (X_test[example, :, 1] - X_test[example, -1, 1]) / (np.max(X_test[example, :, 1]) - np.min(X_test[example, :, 1]))
-        X_test[example, :, 2] = (X_test[example, :, 2] - X_test[example, -1, 2]) / (np.max(X_test[example, :, 2]) - np.min(X_test[example, :, 2]))
-        X_test[example, :, 3] = (X_test[example, :, 3] - X_test[example, -1, 3]) / (np.max(X_test[example, :, 3]) - np.min(X_test[example, :, 3]))
+    for example in range(X_predict.shape[0]):
+        X_predict[example, :, 0] = (X_predict[example, :, 0] - X_predict[example, -1, 0]) / (np.max(X_predict[example, :, 0]) - np.min(X_predict[example, :, 0]))
+        X_predict[example, :, 1] = (X_predict[example, :, 1] - X_predict[example, -1, 1]) / (np.max(X_predict[example, :, 1]) - np.min(X_predict[example, :, 1]))
+        X_predict[example, :, 2] = (X_predict[example, :, 2] - X_predict[example, -1, 2]) / (np.max(X_predict[example, :, 2]) - np.min(X_predict[example, :, 2]))
+        X_predict[example, :, 3] = (X_predict[example, :, 3] - X_predict[example, -1, 3]) / (np.max(X_predict[example, :, 3]) - np.min(X_predict[example, :, 3]))
 
     # TODO: it looks like we cannot store Keras model as an object in class
     # check if I can load the model here or do a batch predictionat the end for all currencies
@@ -131,7 +131,7 @@ def _compute_lstm_classification(ann_model, **kwargs):
     if ann_model.keras_model :
         loaded_model = ann_model.keras_model
         #logger.info(loaded_model.summary())
-        trend_predicted = loaded_model.predict(X_test)
+        trend_predicted = loaded_model.predict(X_predict)
         logger.debug('>>> AI <<< Predicted probabilities for price for next period, (same/up/down): ' + str(trend_predicted))
     else:
         logger.debug(">> Model does not exists! ")

@@ -38,10 +38,17 @@ def _compute_ann(source, resample_period=SHORT):
     if RUN_ANN:
         # choose the pre-trained ANN model depending on period, here are the same
         period2model = {
-            SHORT : 'lstm_model_2_2.h5',
+            SHORT : 'lstm_short_60m_160_8_3class_return_0.03.h5',
             MEDIUM: 'lstm_model_2_2.h5',
             LONG  : 'lstm_model_2_2.h5'
         }
+
+        period2model_new = {
+            SHORT : 'lstm_short_60m_160_8_3class_return_0.03.h5',
+            MEDIUM: 'lstm_medium_240m_100_20_3class_return_0.1.h5',
+            LONG  : 'lstm_long_1440m_28_10_class3_return_0.1.h5'
+        }
+
         # load model from S3 and database
         ann_model_object = get_ann_model_object(period2model[resample_period])
 

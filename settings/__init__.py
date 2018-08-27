@@ -306,9 +306,3 @@ if LOCAL:
         logger.error("Could not successfully import local_settings.py. This is necessary if you are running locally. This file should be in version control.")
         raise
 
-if STAGE:
-    logger.info(" test INFO log.")
-    logger.debug(" test DEBUG log.")
-
-if PRODUCTION:
-    logger.info(" PRODUCTION environment detected.")
