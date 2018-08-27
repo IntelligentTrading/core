@@ -7,6 +7,7 @@ from apps.TA.storages.data.memory_cleaner import redisCleanup
 from apps.TA.indicators.overlap import sma, ema, wma, dema, tema, trima, bbands, ht_trendline, kama, midprice
 from apps.TA.indicators.momentum import adx, adxr, apo, aroon, aroonosc, bop, rsi
 from settings import LOCAL
+from settings.redis_db import database
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,7 @@ class Command(BaseCommand):
         logger.info("Pubsub clients are ready.")
 
         while True:
+            counter = 0
             for class_name in subscribers:
                 # logger.debug(f'checking subscription {class_name}: {subscribers[class_name]}')
                 try:
@@ -56,9 +58,14 @@ class Command(BaseCommand):
                 # print(subscribers[class_name].pubsub.get_message())
                 # print(subscribers[class_name].database.pubsub_channels())
                 # print(subscribers[class_name].database)
-                # time.sleep(5)  # be nice to the system :)
                 time.sleep(0.001)  # be nice to the system :)
 
-                if not LOCAL:
-                    if bool(random.randrange(10**8) % (10**6) == 0):
-                        redisCleanup()
+                if counter > (3600 / 0.001):
+                    counter = 0
+                    try:
+                        if int(database.info()['used_memory']) > (2 ** 30 * .9):
+                            redisCleanup()
+                    except:
+                        pass
+                else:
+                    counter += 1
