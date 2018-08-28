@@ -33,7 +33,7 @@ class BopSubscriber(IndicatorSubscriber):
                                      timestamp=self.timestamp)
 
 
-        periods = 12  # doesn't matter, just enough to grab the last one
+        periods = 2  # doesn't matter, just enough to grab the last one
 
         open_value_np_array = self.get_values_array_from_query(
             PriceStorage.query(

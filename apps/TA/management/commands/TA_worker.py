@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand
 
 from apps.TA.storages.data.memory_cleaner import redisCleanup
 from apps.TA.indicators.overlap import sma, ema, wma, dema, tema, trima, bbands, ht_trendline, kama, midprice
-from apps.TA.indicators.momentum import adx, adxr, apo, aroon, aroonosc, bop, rsi
+from apps.TA.indicators.momentum import adx, adxr, apo, aroon, aroonosc, bop, cci, cmo, dx, macd, mfi, mom, ppo, roc, rocr, rsi, stoch, stochf, stochrsi, trix, ultosc, willr
 from settings import LOCAL
 from settings.redis_db import database
 
@@ -31,8 +31,12 @@ class Command(BaseCommand):
 
             # MOMENTUM INDICATORS
             adx.AdxSubscriber, adxr.AdxrSubscriber, apo.ApoSubscriber, aroon.AroonSubscriber, aroonosc.AroonOscSubscriber,
-            bop.BopSubscriber,
-            rsi.RsiSubscriber,
+            bop.BopSubscriber, cci.CciSubscriber, cmo.CmoSubscriber, dx.DxSubscriber, macd.MacdSubscriber,
+            # mfi.MfiSubscriber,
+            mom.MomSubscriber, ppo.PpoSubscriber, roc.RocSubscriber, rocr.RocrSubscriber, rsi.RsiSubscriber,
+            stoch.StochSubscriber, stochf.StochfSubscriber, stochrsi.StochrsiSubscriber,
+            trix.TrixSubscriber, ultosc.UltoscSubscriber, willr.WillrSubscriber,
+
         ]
 
         subscribers = {}
@@ -58,9 +62,9 @@ class Command(BaseCommand):
                 # print(subscribers[class_name].pubsub.get_message())
                 # print(subscribers[class_name].database.pubsub_channels())
                 # print(subscribers[class_name].database)
-                time.sleep(0.001)  # be nice to the system :)
+                time.sleep(0.0001)  # be nice to the system :)
 
-                if counter > (3600 / 0.001):
+                if counter > (3600 / 0.0001):
                     counter = 0
                     try:
                         if int(database.info()['used_memory']) > (2 ** 30 * .9):
