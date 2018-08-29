@@ -51,9 +51,9 @@ class HistoricalDataAPI(APIView):
                 close_volume = int(float(request.data["close_volume"]))
                 close_price = int(float(request.data["close_price"]))
 
-                if close_volume * close_price < 50:  # less than 50 BTC volume
+                if close_volume and close_price and (close_volume * close_price) < 50:  # less than 50 BTC volume
                     return Response({
-                        'success': f'volume is low, 0 db entries created'
+                        'success': f'volume {close_volume} x {close_price} is low, 0 db entries created'
                     }, status=status.HTTP_202_ACCEPTED)
 
 
