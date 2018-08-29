@@ -39,7 +39,7 @@ def _compute_ann(source, resample_period=SHORT):
         # choose the pre-trained ANN model depending on period, here are the same
         period2model = {
             SHORT : 'lstm_short_60m_160_8_3class_return_0.03.h5',
-            MEDIUM: 'lstm_medium_240m_100_20_3class_return_0.1.h5',
+            MEDIUM: 'lstm_medium_240m_100_12_3class_return_0.08.h5',
             LONG  : 'lstm_model_2_2.h5'
         }
 

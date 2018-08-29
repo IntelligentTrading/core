@@ -78,13 +78,13 @@ class Command(BaseCommand):
                 timestamp=time.time(),
                 source = POLONIEX,
                 model_name = 'LSTM',
-                s3_model_file = 'lstm_medium_240m_100_20_3class_return_0.1.h5',
+                s3_model_file = 'lstm_medium_240m_100_12_3class_return_0.08.h5',
                 s3_notebook_file = 'NA',
                 period = 240,  # min
 
                 slide_win_size = 100, # so timewise it is 200 x 10min = 33,3 hours
-                predicted_win_size = 20, # 90 x 10min = 15 hours
-                delta_tolerance = 0.1, # +/- 2%
+                predicted_win_size = 12, # 90 x 10min = 15 hours
+                delta_tolerance = 0.08, # +/- 2%
 
                 train_accuracy = 0,
                 #train_f1_score = models.FloatField(null=True)
@@ -92,7 +92,7 @@ class Command(BaseCommand):
                 #validation_f1_score = models.FloatField(null=True)
 
                 train_data_description = "ETH XRP ETC DASH LTC ETH ETC OMG XRP XMR LTC BCH EOS XLM ADA TRX NEO XEM ZEC BNB VET",
-                features_description = ' '
+                features_description = ' F1: [0.573 0.218 0.257] ||  PRECISION: [0.816 0.135 0.211]  ||  RECALL: [0.441 0.569 0.329]'
                 )
             logger.info("Done.")
         else:
