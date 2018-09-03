@@ -1,7 +1,5 @@
 import os
 import logging
-from abc import ABC
-import pika
 import redis
 from apps.TA import deployment_type
 
@@ -22,35 +20,3 @@ logger.info("Redis connection established for app database.")
 # hold this in python memory for fast access
 # todo: does this even work with namespaces??
 set_of_known_sets_in_redis = set()
-
-
-class PubSub(ABC):
-
-    def __init__(self, topic: str):
-        self.topic = topic
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-        self.channel = self.connection.channel()
-        self.channel.queue_declare(queue=self.topic)
-
-    def send(self, message: str):
-        self.channel.basic_publish(exchange='',
-                                   routing_key=self.topic,
-                                   body=message)
-        print(" [x] Sent 'Hello World!'")
-
-    def callback(ch, method, properties, body):
-        print(" [x] Received %r" % body)
-
-    def receive(self):
-        self.channel.basic_consume(self.callback,
-                                   queue=self.topic,
-                                   no_ack=True)
-
-        print(' [*] Waiting for messages. To exit press CTRL+C')
-        self.channel.start_consuming()
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.connection.close()
-
-with PubSub("hello") as pubsub:
-    pubsub.send("yo")
