@@ -6,13 +6,21 @@ import pika
 
 class RabbitMQ(ABC):
 
-    def __init__(self, topic: str):
+    def __init__(self, topic: str, exchange: str = "", exchange_type: str = ""):
         self.topic = topic
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(
             host=os.environ.get("RABBITMQ_URL", "localhost"))
         )
         self.channel = self.connection.channel()
-        self.channel.queue_declare(queue=self.topic)
+
+        if exchange or exchange_type:
+            self.channel.exchange_declare(exchange=exchange,
+                                          exchange_type=exchange_type)
+            result = self.channel.queue_declare(exclusive=True)
+            self.queue_name = result.method.queue
+
+        else:
+            self.channel.queue_declare(queue=self.topic)
 
     def __enter__(self):
         return self
@@ -53,7 +61,7 @@ class PubSub(RabbitMQ):
 
 # with PubSub("hello") as pubsub:
 #     pubsub.send("yo")
-
+c
 
 class Router(RabbitMQ):
     """
@@ -70,7 +78,10 @@ class Topic(RabbitMQ):
     Receiving messages based on a pattern (topics)
     """
     # todo: write implementation using example in url
-    pass
+
+    def __init__(self, ticker, *args, **kwargs):
+        self.topic = f"*.ticker.*"
+        super().__init__(self.topic, *args, **kwargs)
 
 
 class RPC(RabbitMQ):
