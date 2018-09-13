@@ -2,7 +2,6 @@ import logging
 from apps.TA import TAException, PERIODS_4HR
 from apps.TA.storages.abstract.ticker import TickerStorage
 from apps.TA.storages.abstract.timeseries_storage import TimeseriesException
-from apps.TA.storages.data.price import PriceStorage
 from apps.signal.models import Signal
 
 logger = logging.getLogger(__name__)
@@ -74,9 +73,12 @@ class IndicatorStorage(TickerStorage):
             strength_max = 5,
         :return: signal object (Django model object)
         """
-
-        results_dict = PriceStorage.query(ticker=self.ticker, exchange=self.exchange)
-        most_recent_price = results_dict['values'][0]
+        from apps.TA.storages.data.price import PriceStorage
+        price_results_dict = PriceStorage.query(ticker=self.ticker, exchange=self.exchange)
+        most_recent_price = price_results_dict['values'][0]
+        # from apps.TA.storages.data.volume import VolumeStorage
+        # volume_results_dict = VolumeStorage.query(ticker=self.ticker, exchange=self.exchange)
+        # most_recent_volume = volume_results_dict ['values'][0]
 
         return Signal.objects.create(
             timestamp=self.unix_timestamp,
