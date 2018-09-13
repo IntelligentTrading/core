@@ -3,7 +3,7 @@ if LOAD_TALIB:
     import talib
 
 from apps.TA import HORIZONS
-from apps.TA.storages.abstract.indicator import IndicatorStorage, BULLISH
+from apps.TA.storages.abstract.indicator import IndicatorStorage, BULLISH, BEARISH
 from apps.TA.storages.abstract.indicator_subscriber import IndicatorSubscriber
 from apps.TA.storages.data.price import PriceStorage
 from settings import logger
@@ -16,6 +16,7 @@ class BbandsStorage(IndicatorStorage):
         squeeze = self.upperband - self.lowerband
         if squeeze < 5:
             self.send_signal(trend=BULLISH, squeeze=squeeze)
+
 
 
 
