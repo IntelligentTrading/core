@@ -49,5 +49,11 @@ def redisCleanup():
         except Exception as e:
             logger.error(str(e))
 
+    # remove all poloniex and bittrex data for now
+    # todo: remove this and make sure it's not necessary
+    for key in database.keys("*:poloniex:*"):
+        database.delete(key)
+    for key in database.keys("*:bittrex:*"):
+        database.delete(key)
 
 # from apps.TA.storages.data.memory_cleaner import redisCleanup as rC
