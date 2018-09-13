@@ -170,4 +170,4 @@ class PriceSubscriber(TickerSubscriber):
                 if price.value:
                     price.value = int(price.value)
                     price.index = str(index)
-                    price.save(publish=True)
+                    price.save(publish=bool(index=="close_price"))
