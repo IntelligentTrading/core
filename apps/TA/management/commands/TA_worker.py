@@ -6,7 +6,6 @@ from django.core.management.base import BaseCommand
 from apps.TA.storages.data.memory_cleaner import redisCleanup
 from apps.TA.indicators.overlap import sma, ema, wma, dema, tema, trima, bbands, ht_trendline, kama, midprice
 from apps.TA.indicators.momentum import adx, adxr, apo, aroon, aroonosc, bop, cci, cmo, dx, macd, mfi, mom, ppo, roc, rocr, rsi, stoch, stochf, stochrsi, trix, ultosc, willr
-from settings import LOCAL
 from settings.redis_db import database
 
 logger = logging.getLogger(__name__)
