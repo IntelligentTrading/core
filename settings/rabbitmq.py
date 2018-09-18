@@ -61,7 +61,7 @@ class PubSub(RabbitMQ):
 
 # with PubSub("hello") as pubsub:
 #     pubsub.send("yo")
-c
+
 
 class Router(RabbitMQ):
     """
