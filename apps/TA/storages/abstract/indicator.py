@@ -60,6 +60,10 @@ class IndicatorStorage(TickerStorage):
         return results_dict
 
     def produce_signal(self):
+        """
+        overwrite me :-)
+        :return: None
+        """
         if "this indicator" == "interesting":
             self.send_signal(trend=BULLISH)  # trend is required
 
