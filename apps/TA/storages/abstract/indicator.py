@@ -60,22 +60,47 @@ class IndicatorStorage(TickerStorage):
         return results_dict
 
     def produce_signal(self):
+        """
+        overwrite me :-)
+        :return: None
+        """
         if "this indicator" == "interesting":
             self.send_signal(trend=BULLISH)  # trend is required
 
-    def send_signal(self, *args, **kwargs):
-        if not "trend" in kwargs or kwargs["trend"] not in TRENDS:
-            raise SignalException("trend is required to send a signal")
+    def send_signal(self, trend=OTHER, *args, **kwargs):
+        """
+        :param trend: BULLISH, BEARISH, or OTHER
+        :param args:
+        :param kwargs:
+            add these optional kwargs:
+            strength_value = 1,
+            strength_max = 5,
+        :return: signal object (Django model object)
+        """
+        from apps.TA.storages.data.price import PriceStorage
+        price_results_dict = PriceStorage.query(ticker=self.ticker, exchange=self.exchange)
+        most_recent_price = price_results_dict['values'][0]
+        # from apps.TA.storages.data.volume import VolumeStorage
+        # volume_results_dict = VolumeStorage.query(ticker=self.ticker, exchange=self.exchange)
+        # most_recent_volume = volume_results_dict ['values'][0]
 
         return Signal.objects.create(
+            timestamp=self.unix_timestamp,
+            source=self.exchange,
+            transaction_currency=self.ticker.split("_")[0],
+            counter_currency=self.ticker.split("_")[1],
+            resample_period=self.horizon * 5,
+            # horizon=self.horizon * 5,
+
             signal=self.__class__.__name__.replace("Storage", "").upper(),
-            horizon=self.horizon * 5,
+            trend=trend,
+            price=most_recent_price,
             **kwargs
         )
 
     def save(self, *args, **kwargs):
 
-        # meets basic requirements for saving
+        # check meets basic requirements for saving
         if not all([self.ticker, self.exchange,
                     self.periods, self.value,
                     self.unix_timestamp]):
