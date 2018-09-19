@@ -89,18 +89,17 @@ VBI_VOLUME_CROSS_PERCENT = 0.02
 
 
 
-def _process_ai_simple(horizon, **kwargs):
+def _process_ai_simple(horizon, ann_classif_df, **kwargs):
     '''
     very simple strategy: emit signal anytime it changes state from up to down
     '''
-    # get two reacent objects as a dataframe
 
-    # NOTE: here I hardcoded two class classification ignoring SAME - should be don ona  model level!!
+    # NOTE: here I hardcoded two class classification ignoring SAME - should be done on a  model level!!
 
-    ann_classif_df = get_n_last_ann_classif_df(5, **kwargs)
-    if ann_classif_df.empty:
-        logger.error('  get_n_last_ann: something wrong with AI indicators... we dont have it ...')
-        return False
+    # ann_classif_df = get_n_last_ann_classif_df(5, **kwargs)
+    # if ann_classif_df.empty:
+    #     logger.error('  get_n_last_ann: something wrong with AI indicators... we dont have it ...')
+    #     return False
 
     # choose only two class classification (ignore SAME), then add a new column with the best class
     df = ann_classif_df[['probability_up','probability_down']]
@@ -143,6 +142,60 @@ def _process_ai_simple(horizon, **kwargs):
             logger.error(" Error saving/emitting ANN Event " + e)
     else:
         logger.debug("   ... no AI event generated (predicts no changes in price")
+
+
+def _process_ai_breakout(horizon, ann_classif_df, **kwargs):
+    '''
+    yet another strategy based on ai indicator
+    '''
+
+    # we have a multivariate (3-variate) disctribution of price predictiton, calculate mean, varuance for each
+    #TODO get ann_class without last example
+    [var_same, var_up, var_down] = ann_classif_df.iloc[0:-1].var(axis=0)[0:3]
+    [mean_same, mean_up, mean_down] = ann_classif_df[0:-1].mean(axis=0)[0:3]
+
+    #TODO: calculate Gauss() of the last example
+
+
+
+    # calculate up_threshold by a simple anomaly detector
+    UP_TRESHOLD = 0.5
+    DOWN_TRESHOLD = 0.5
+
+    current_up_probability = ann_classif_df.tail(1)['probability_up'][0]
+    current_down_probability = ann_classif_df.tail(1)['probability_down'][0]
+
+    if current_up_probability > UP_TRESHOLD:
+        # emit signal
+        try:
+            logger.debug("******************** UP_TRESHOLD AI event is detected *****************")
+            new_instance = EventsElementary(
+                **kwargs,
+                event_name="ann_price_up_threshold",
+                event_value= current_up_probability,
+            )
+            if MODIFY_DB: new_instance.save()
+            logger.debug("   >>> UP_TRESHOLD ANN event detected and saved")
+
+            signal_ai = Signal(
+                **kwargs,
+                signal='ANN_up_threshold',
+                trend= int(1),
+                strength_value= int(3),
+                horizon=horizon,
+                predicted_ahead_for= ann_classif_df.tail(1)['predicted_ahead_for'][0],
+                probability_same = ann_classif_df.tail(1)['probability_same'][0],
+                probability_up = current_up_probability,
+                probability_down = current_down_probability
+            )
+            if MODIFY_DB: signal_ai.save()
+            logger.debug("   >>> ANN event FIRED!")
+        except Exception as e:
+            logger.error(" Error saving/emitting ANN Event " + e)
+    else:
+        logger.debug("   ... no AI up treshold detected")
+
+
 
 
 
@@ -492,8 +545,14 @@ class EventsElementary(AbstractIndicator):
         # we have ANN indicators only for SHORT period for now!
         # TODO: remove SHORT/ MEDIUM when models for 3 horizons will be added!
         if RUN_ANN and (kwargs['resample_period'] in [SHORT,MEDIUM]):
-            logger.info("   ... Check  AI Elementary Events for PERIOD: " + str(kwargs['resample_period']))
-            _process_ai_simple(horizon, **kwargs)
+            # get recent ai_indicators from DB
+            ann_classif_df = get_n_last_ann_classif_df(50, **kwargs)
+            if ann_classif_df.empty:
+                logger.error('  get_n_last_ann: something wrong with AI indicators... we dont have it ...')
+            else:
+                logger.info("   ... Check  AI Elementary Events for PERIOD: " + str(kwargs['resample_period']))
+                _process_ai_simple(horizon, ann_classif_df, **kwargs)
+                _process_ai_breakout(horizon, ann_classif_df, **kwargs)
         else:
             logger.info("   ... ANN elementary event calculation has been skipped")
 

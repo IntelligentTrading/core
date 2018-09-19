@@ -30,7 +30,7 @@ import datetime
 logger = logging.getLogger(__name__)
 
 
-def _compute_ann(source, resample_period=SHORT):
+def _compute_ann(source, resample_period):
     '''
     Compute ANN price prediction at each time point in the same way as regular indicators do
     i.e. every short/mediun/long
@@ -63,7 +63,7 @@ def _compute_ann(source, resample_period=SHORT):
     for transaction_currency, counter_currency in pairs_to_iterate:
         logger.info('   ======== ANN:: EXCHANGE: ' + str(source) + '| period: ' + str(resample_period)+ '| checking COIN: ' + str(transaction_currency) + ' with BASE_COIN: ' + str(counter_currency))
 
-        start = time.time();
+        start = time.time()
 
         # create a dictionary of parameters to improve readability
         indicator_params_dict = {
