@@ -168,12 +168,12 @@ def _process_ai_anomaly(horizon, ann_classif_df, **kwargs):
     m_dist_x = np.dot((x - mu), np.linalg.inv(cov))
     m_dist_x = np.dot(m_dist_x, (x - mu).transpose())
 
-    # here p is probability of upcoming vector of price prediction (taking into account previous probabilities)
+    # here p is probability of upcoming vector of price prediction being inside normal distribution of previous probabilities
     p = 1 - stats.chi2.cdf(m_dist_x, 3)
     logger.info("  || ANOMALY DETECTION: probability of price belong to current distribution p = " + str(p))
 
-    # has to hearn that threshold
-    TRESHOLD = 0.5
+    # have to learn that threshold
+    TRESHOLD = 0.3
 
     if p < TRESHOLD:
         # emit signal
@@ -185,11 +185,11 @@ def _process_ai_anomaly(horizon, ann_classif_df, **kwargs):
                 event_value=p,
             )
             if MODIFY_DB: new_instance.save()
-            logger.debug("   >>> TRESHOLD ANN event detected and saved")
+            logger.debug("   >>> TRESHOLD ANN event detected and saved, p=" + str(p))
 
             signal_ai = Signal(
                 **kwargs,
-                signal='ANN_Anomaly',
+                signal='ANN_Price_Anomaly',
                 trend= int(0),
                 #strength_value= int(3),
                 horizon=horizon,
@@ -556,7 +556,7 @@ class EventsElementary(AbstractIndicator):
         # TODO: remove SHORT/ MEDIUM when models for 3 horizons will be added!
         if RUN_ANN and (kwargs['resample_period'] in [SHORT,MEDIUM]):
             # get recent ai_indicators from DB
-            ann_classif_df = get_n_last_ann_classif_df(300, **kwargs)
+            ann_classif_df = get_n_last_ann_classif_df(200, **kwargs)
             if ann_classif_df.empty:
                 logger.error('  get_n_last_ann: something wrong with AI indicators... we dont have it ...')
             else:
