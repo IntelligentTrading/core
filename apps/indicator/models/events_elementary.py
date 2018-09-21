@@ -55,7 +55,8 @@ ICHI_ELEMENTARY_EVENTS = [
 ]
 
 AI_ELEMENTARY_EVENTS = [
-    'ann_price_2class_simple'
+    'ann_price_2class_simple',
+    'ann_price_anomaly'
 ]
 
 BEN_VOLUME_EVENTS = [
@@ -193,10 +194,10 @@ def _process_ai_anomaly(horizon, ann_classif_df, **kwargs):
                 trend= int(0),
                 #strength_value= int(3),
                 horizon=horizon,
-                predicted_ahead_for= ann_classif_df.tail(1)['predicted_ahead_for'][0],
-                probability_same = p,
-                #probability_up = current_up_probability,
-                #probability_down = current_down_probability
+                predicted_ahead_for= ann_classif_df.tail(1)['predicted_ahead_for'],
+                probability_same = str(p),
+                #probability_up = -1,
+                #probability_down = -1
             )
             if MODIFY_DB: signal_ai.save()
             logger.debug("   >>> Anomaly ANN event FIRED!")
