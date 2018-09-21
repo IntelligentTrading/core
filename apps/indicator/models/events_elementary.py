@@ -163,39 +163,40 @@ def _process_ai_anomaly(horizon, ann_classif_df, **kwargs):
     # get the current data point
     x = np.array(ann_classif_df.tail(1)[['probability_same','probability_up','probability_down']])
 
-    # calculate pdf value
+    # calculate single pdf value, for test
     #p = multivariate_normal.pdf(x, mu, cov, allow_singular=True)
 
+    #### here we calculate an area under 3D Gaussian curve which is probability of current point belonging to this disctibution
     m_dist_x = np.dot((x - mu), np.linalg.inv(cov))
     m_dist_x = np.dot(m_dist_x, (x - mu).transpose())
 
     # here p is probability of upcoming vector of price prediction being inside normal distribution of previous probabilities
-    p = 1 - stats.chi2.cdf(m_dist_x, 3)
+    p = float(1 - stats.chi2.cdf(m_dist_x, 3))
     logger.info("  || ANOMALY DETECTION: probability of price belong to current distribution p = " + str(p))
 
     # have to learn that threshold
-    TRESHOLD = 0.3
+    TRESHOLD = 0.2
 
     if p < TRESHOLD:
         # emit signal
         try:
-            logger.debug("******************** ANOMALY TRESHOLD AI event is detected *****************")
+            logger.debug("******************** ANOMALY THRESHOLD AI event is detected *****************")
             new_instance = EventsElementary(
                 **kwargs,
                 event_name="ann_price_anomaly",
                 event_value=p,
             )
             if MODIFY_DB: new_instance.save()
-            logger.debug("   >>> TRESHOLD ANN event detected and saved, p=" + str(p))
+            logger.debug("   >>> Threshold ANN event detected and saved, p=" + str(p))
 
             signal_ai = Signal(
                 **kwargs,
                 signal='ANN_Price_Anomaly',
                 trend= int(0),
-                #strength_value= int(3),
+                strength_value= int(3),
                 horizon=horizon,
                 predicted_ahead_for= ann_classif_df.tail(1)['predicted_ahead_for'],
-                probability_same = str(p),
+                probability_same = p,
                 #probability_up = -1,
                 #probability_down = -1
             )
@@ -204,7 +205,7 @@ def _process_ai_anomaly(horizon, ann_classif_df, **kwargs):
         except Exception as e:
             logger.error(" Error saving/emitting Anomaly ANN Event " + e)
     else:
-        logger.debug("   ... no Anomaly AI  detected")
+        logger.debug("  || no Anomaly AI  detected")
 
 
 
