@@ -29,6 +29,9 @@ class AnnPriceClassification(AbstractIndicator):
     '''
     ann_model = models.ForeignKey(AnnModel, on_delete=models.CASCADE)  # a version of model which made the prediction
 
+    #TODO: add a model type: AnnSImple / ANN MAX HIY
+    # in the future remove th FK to ann_model
+
     predicted_ahead_for = models.SmallIntegerField(null=True) # in mins, price predicted for this time frame
     probability_same = models.FloatField(null=True)  # probability of price will stay the same
     probability_up = models.FloatField(null=True)
@@ -55,7 +58,7 @@ class AnnPriceClassification(AbstractIndicator):
         # create a record if we have predicted values
         if trend_predicted is not None:
 
-            new_instance = cls(  #cls.objects.create(
+            new_instance = cls(  #cls.objects.create( <- we do "save" separatelly now
                 **kwargs,
                 ann_model=ann_model,
                 predicted_ahead_for = ann_model.predicted_win_size * ann_model.period,  # in mins, can remove we also have it in ann model
@@ -93,10 +96,10 @@ def _compute_lstm_classification(ann_model, **kwargs):
     data_ts['price_var'] = raw_data_frame['price'].resample(rule=resample_period).var()
     data_ts['volume_var'] = raw_data_frame['volume'].resample(rule=resample_period).var()
     data_ts = data_ts.interpolate()
-    # get only reacent time points according to trained model
+    # get only recent time points according to trained model
     data_ts = data_ts.tail(ann_model.slide_win_size)
     logger.debug('   ... length of one feature vector to predict on is ' + str(len(data_ts)) )
-    assert len(data_ts) == ann_model.slide_win_size, ' @@@@@ :: Wrong training example lenght!'
+    assert len(data_ts) == ann_model.slide_win_size, ' @@@@@ :: Wrong training example length!'
 
     # combine the data into X matrix like that
     # (examples=124451, features=196, classes=4) : 4 = price/volume/price_var/volume_var
