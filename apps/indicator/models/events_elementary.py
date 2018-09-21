@@ -195,17 +195,17 @@ def _process_ai_anomaly(horizon, ann_classif_df, **kwargs):
                 trend= int(0),
                 strength_value= int(3),
                 horizon=horizon,
-                predicted_ahead_for= ann_classif_df.tail(1)['predicted_ahead_for'],
+                predicted_ahead_for= ann_classif_df.tail(1)['predicted_ahead_for'][0],
                 probability_same = p,
                 #probability_up = -1,
                 #probability_down = -1
             )
             if MODIFY_DB: signal_ai.save()
-            logger.debug("   >>> Anomaly ANN event FIRED!")
+            logger.debug("  || Anomaly ANN event FIRED!")
         except Exception as e:
             logger.error(" Error saving/emitting Anomaly ANN Event " + e)
     else:
-        logger.debug("  || no Anomaly AI  detected")
+        logger.debug(" || no Anomaly AI  detected")
 
 
 
