@@ -175,7 +175,7 @@ def _process_ai_anomaly(horizon, ann_classif_df, **kwargs):
     logger.info("  || ANOMALY DETECTION: probability of price belong to current distribution p = " + str(p))
 
     # have to learn that threshold
-    TRESHOLD = 0.2
+    TRESHOLD = 0.15
 
     if p < TRESHOLD:
         # emit signal
