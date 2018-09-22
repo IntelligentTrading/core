@@ -175,7 +175,7 @@ def _process_ai_anomaly(horizon, ann_classif_df, **kwargs):
     logger.info("  || ANOMALY DETECTION: probability of price belong to current distribution p = " + str(p))
 
     # have to learn that threshold
-    TRESHOLD = 0.12
+    TRESHOLD = 0.1
 
     if p < TRESHOLD:
         # emit signal
@@ -559,7 +559,7 @@ class EventsElementary(AbstractIndicator):
         # TODO: remove SHORT/ MEDIUM when models for 3 horizons will be added!
         if RUN_ANN and (kwargs['resample_period'] in [SHORT,MEDIUM]):
             # get recent ai_indicators from DB
-            ann_classif_df = get_n_last_ann_classif_df(200, **kwargs)
+            ann_classif_df = get_n_last_ann_classif_df(300, **kwargs)
             if ann_classif_df.empty:
                 logger.error('  get_n_last_ann: something wrong with AI indicators... we dont have it ...')
             else:
