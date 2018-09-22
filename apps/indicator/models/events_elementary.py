@@ -187,18 +187,17 @@ def _process_ai_anomaly(horizon, ann_classif_df, **kwargs):
                 event_value=p,
             )
             if MODIFY_DB: new_instance.save()
-            logger.debug("   >>> Threshold ANN event detected and saved, p=" + str(p))
 
             signal_ai = Signal(
                 **kwargs,
-                signal='ANN_Price_Anomaly',
+                signal='ANN_AnomalyPrc',
                 trend= int(0),
                 strength_value= int(3),
                 horizon=horizon,
                 predicted_ahead_for= ann_classif_df.tail(1)['predicted_ahead_for'][0],
                 probability_same = p,
-                probability_up = -1,
-                probability_down = -1
+                #probability_up = -1,
+                #probability_down = -1
             )
             logger.debug("------> AI Anomaly Signal to save:" + str(signal_ai))
 
