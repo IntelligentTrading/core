@@ -19,9 +19,20 @@ class BbandsStorage(IndicatorStorage):
                                      timestamp=self.timestamp, periods=180)
 
         all_widths = [((bb.upperband - bb.lowerband) / bb.middleband) for bb in bands_of_last_180_periods]
-        if self.width <= min(all_widths):
-            squeeze = True
-            self.send_signal(trend=OTHER, width=self.width)
+        if self.width <= min(all_widths): # smallest width (squeeze) in the last 180 periods
+            # squeeze = True
+
+            if self.price > self.upperband: # price breaks out above the band
+                self.trend = BULLISH
+
+            elif self.price < self.lowerband: # price breaks out below the band
+                self.trend = BEARISH
+
+            else: # price doesn't break out - but the squeeze thing is cool
+                self.trend = OTHER
+
+            self.send_signal(type="BBands", trend=self.trend, width=self.width)
+
 
 
 class BbandsSubscriber(IndicatorSubscriber):
