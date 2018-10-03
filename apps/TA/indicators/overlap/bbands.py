@@ -3,7 +3,7 @@ if LOAD_TALIB:
     import talib
 
 from apps.TA import HORIZONS
-from apps.TA.storages.abstract.indicator import IndicatorStorage, BULLISH, BEARISH
+from apps.TA.storages.abstract.indicator import IndicatorStorage, BULLISH, BEARISH, OTHER
 from apps.TA.storages.abstract.indicator_subscriber import IndicatorSubscriber
 from apps.TA.storages.data.price import PriceStorage
 from settings import logger
@@ -13,11 +13,15 @@ class BbandsStorage(IndicatorStorage):
 
     def produce_signal(self):
 
-        squeeze = self.upperband - self.lowerband
-        if squeeze < 5:
-            self.send_signal(trend=BULLISH, squeeze=squeeze)
+        self.width = (self.upperband - self.lowerband) / self.middleband
 
+        bands_of_last_180_periods = BbandsStorage.query(ticker=self.ticker, exchange=self.exchange,
+                                     timestamp=self.timestamp, periods=180)
 
+        all_widths = [((bb.upperband - bb.lowerband) / bb.middleband) for bb in bands_of_last_180_periods]
+        if self.width <= min(all_widths):
+            squeeze = True
+            self.send_signal(trend=OTHER, width=self.width)
 
 
 class BbandsSubscriber(IndicatorSubscriber):
