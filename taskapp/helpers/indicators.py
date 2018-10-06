@@ -1,30 +1,23 @@
 import logging
 import time
+import datetime
 from django.db import connection
-
 from apps.common.utilities.sqs import send_sqs
-
-from apps.indicator.models.price_resampl import get_first_resampled_time
 from apps.indicator.models.ann_future_price_classification import AnnPriceClassification
-
 from apps.indicator.models.events_elementary import EventsElementary
 from apps.indicator.models.events_logical import EventsLogical
-
 from apps.indicator.models.price_resampl import PriceResampl
 from apps.indicator.models.sma import Sma
 from apps.indicator.models.rsi import Rsi
-
-
 from apps.ai.models.nn_model import get_ann_model_object
 from apps.strategy.models.strategy_ref import get_all_strategy_classes
-
 from apps.user.models.user import get_horizon_value_from_string
 
 from settings import SHORT, MEDIUM, LONG, HORIZONS_TIME2NAMES, RUN_ANN, MODIFY_DB
 
 from taskapp.helpers.common import get_currency_pairs, quad_formatted
 #from taskapp.helpers.backtesting import _backtest_all_strategies
-import datetime
+
 
 
 logger = logging.getLogger(__name__)
@@ -35,22 +28,6 @@ def _compute_ann(source, resample_period):
     Compute ANN price prediction at each time point in the same way as regular indicators do
     i.e. every short/mediun/long
     '''
-    if RUN_ANN:
-        # choose the pre-trained ANN model depending on period, here are the same
-        period2model = {
-            SHORT : 'lstm_short_60m_160_8_3class_return_0.03.h5',
-            MEDIUM: 'lstm_medium_240m_100_12_3class_return_0.08.h5',
-            LONG  : 'lstm_model_2_2.h5'
-        }
-
-        period2model_new = {
-            SHORT : 'lstm_short_60m_160_8_3class_return_0.03.h5',
-            MEDIUM: 'lstm_medium_240m_100_20_3class_return_0.1.h5',
-            LONG  : 'lstm_long_1440m_28_10_class3_return_0.1.h5'
-        }
-
-        # load model from S3 and database
-        ann_model_object = get_ann_model_object(period2model[resample_period])
 
     #TODO: get pairs from def(SOURCE)
     #pairs_to_iterate = [(itm,Price.USDT) for itm in USDT_COINS] + [(itm,Price.BTC) for itm in BTC_COINS]
@@ -75,21 +52,15 @@ def _compute_ann(source, resample_period):
         }
 
         # calculate ANN indicator(s)
-        # TODO: now run only for a short period, since it is not really tuned for other periods
-        if (RUN_ANN) and (resample_period in [SHORT,MEDIUM]):
-            # TODO: just form X_predicted here and then run prediction outside the loop !
+        if (RUN_ANN) and (resample_period in [SHORT, MEDIUM]):
             try:
-                if ann_model_object:
-                    AnnPriceClassification.compute_all(AnnPriceClassification, ann_model_object, **indicator_params_dict)
-                    logger.info(f"  ... one ANN indicator completed,  ELAPSED Time: {time.time() - start}")
-                else:
-                    logger.error(" No ANN model, calculation does not make sence")
+                AnnPriceClassification.compute_all(AnnPriceClassification, **indicator_params_dict)
+                logger.info(f"  ... one ANN indicator completed,  ELAPSED Time: {time.time() - start}")
             except Exception as e:
                 logger.error(f"ANN Indicator Exception (ANN has not been calculated): {e}")
 
     end = time.time()
     logger.info(" ALL AI indicators completed:  ELAPSED Time: " + str(end - timestamp))
-    #logger.debug("|| SQL for AN: helpers.indicators._compute_ann || " + str(connection.queries))
 
     # clean session to prevent memory leak
     if RUN_ANN:

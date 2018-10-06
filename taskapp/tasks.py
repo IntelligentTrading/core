@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 ## Periodic tasks
 
-# Indicators
+############ Indicators
 @celery_app.task(retry=False)
 def compute_indicators_for_all_sources(resample_period):
     from taskapp.helpers.common import get_source_trading_pairs
@@ -24,7 +24,9 @@ def compute_indicators_for(source, transaction_currency, counter_currency, resam
     from taskapp.helpers.indicators import _compute_indicators_for
     _compute_indicators_for(source, transaction_currency, counter_currency, resample_period)
 
-# ANN
+
+
+############## ANN
 @celery_app.task(retry=False)
 def compute_ann_for_all_sources(resample_period):
     logger.info("@@@@@@")
@@ -38,7 +40,9 @@ def compute_ann(source, resample_period):
     from taskapp.helpers.indicators import _compute_ann
     _compute_ann(source=source, resample_period=resample_period)
 
-# Backtesting
+
+
+# ############# Backtesting
 @celery_app.task(retry=False)
 def backtest_all_strategies():
     from taskapp.helpers.backtesting import _backtest_all_strategies
