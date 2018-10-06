@@ -11,11 +11,11 @@ import pandas as pd
 import numpy as np
 
 from django.db import models
-from django.db import connection
+#from django.db import connection
 from apps.indicator.models.abstract_indicator import AbstractIndicator
 from apps.ai.models.nn_model import AnnModel
 from apps.indicator.models.price_history import get_n_last_prices_ts, get_n_last_volumes_ts
-from apps.indicator.models.ann_future_price_classification import AnnPriceClassification
+#from apps.indicator.models.ann_future_price_classification import AnnPriceClassification
 from apps.ai.models.nn_model import get_ann_model_object
 from settings import SHORT, MEDIUM, LONG, HORIZONS_TIME2NAMES, RUN_ANN, MODIFY_DB
 
@@ -94,6 +94,7 @@ class AnnPriceClassification(AbstractIndicator):
                 new_instance = cls(  #cls.objects.create( <- we do "save" separatelly now
                     **kwargs,
                     ann_model=ann_model_object, #FK
+                    ai_model=model,
                     predicted_ahead_for = ann_model_object.predicted_win_size * ann_model_object.period,  # in mins, can remove we also have it in ann model
                     probability_same = trend_predicted[0],
                     probability_up = trend_predicted[1],
@@ -178,9 +179,10 @@ def _compute_lstm_classification(ann_model, **kwargs):
 
 
 
-def get_n_last_ann_classif_df(n, **kwargs)->pd.DataFrame:
+def get_n_last_ann_classif_df(n, model_name, **kwargs) ->pd.DataFrame:
 
     last_records = list(AnnPriceClassification.objects.filter(
+        ai_model=model_name,
         source=kwargs['source'],
         resample_period=kwargs['resample_period'],
         transaction_currency=kwargs['transaction_currency'],
