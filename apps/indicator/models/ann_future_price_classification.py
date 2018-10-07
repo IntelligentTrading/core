@@ -81,7 +81,7 @@ class AnnPriceClassification(AbstractIndicator):
         start = time.time()
 
         for model in MODEL_LIST:
-            logger.info( '   @@@@@@    Run AI indicator calculation  with %s model   @@@@@@@@@' % (model))
+            logger.info('   @@@@@@    Run AI indicator calculation  with %s model   @@@@@@@@@' % (model))
 
             # load model from S3 and database
             ann_model_object = get_ann_model_object(period2model[resample_period][model])
