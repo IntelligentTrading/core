@@ -16,9 +16,8 @@ from apps.indicator.models.abstract_indicator import AbstractIndicator
 from apps.ai.models.nn_model import AnnModel
 from apps.indicator.models.price_history import get_n_last_prices_ts, get_n_last_volumes_ts
 #from apps.indicator.models.ann_future_price_classification import AnnPriceClassification
-from apps.ai.models.nn_model import get_ann_model_object
-from settings import SHORT, MEDIUM, LONG, HORIZONS_TIME2NAMES, RUN_ANN, MODIFY_DB
-from settings.ai_preload import MODEL_LIST, MODELS_PRELOADED
+from settings import MODIFY_DB
+from apps.ai.settings.ai_preload import MODEL_REF
 
 import logging
 logger = logging.getLogger(__name__)
@@ -55,39 +54,19 @@ class AnnPriceClassification(AbstractIndicator):
 
 
     @staticmethod
-    def compute_all(cls, **kwargs):
+    def compute_all(cls, models_preloaded, **kwargs):
 
         resample_period = kwargs['resample_period']
-
-        # choose the pre-trained ANN model depending on period, here are the same
-        # period2model = {
-        # SHORT:
-        #     {"PRICE_PREDICT" : 'lstm_short_60m_160_8_3class_return_0.03.h5',
-        #      "PRICE_MAXHIT"  : "*.h5"},
-        # MEDIUM:
-        #     {"PRICE_PREDICT" : 'lstm_medium_240m_100_12_3class_return_0.08.h5',
-        #      "PRICE_MAXHIT"  : "lstm_medium_240m_120_8_maxhit2cl_0.05.h5"},
-        # LONG:
-        #     {"PRICE_PREDICT" :'lstm_model_2_2.h5',
-        #      "PRICE_MAXHIT"  : "*.h5"}
-        # }
-
-        # period2model_new = {
-        #     SHORT: 'lstm_short_60m_160_8_3class_return_0.03.h5',
-        #     MEDIUM: 'lstm_medium_240m_100_20_3class_return_0.1.h5',
-        #     LONG: 'lstm_long_1440m_28_10_class3_return_0.1.h5'
-        # }
-
+        MODEL_LIST = [x[0] for x in MODEL_REF.keys() if x[1]==resample_period]  # get only models loaded to S3
 
         start = time.time()
-
         for model in MODEL_LIST:
             logger.info('   @@@@@@    Run AI indicator calculation  with %s model   @@@@@@@@@' % (model))
 
             # load model from S3 and database
             #ann_model_object = get_ann_model_object(period2model[resample_period][model])
 
-            ann_model_object = MODELS_PRELOADED[(model,resample_period)]
+            ann_model_object = models_preloaded[(model,resample_period)]
 
             # run prediction
             trend_predicted = _compute_lstm_classification(ann_model_object, **kwargs)
@@ -165,7 +144,6 @@ def _compute_lstm_classification(ann_model, **kwargs):
     # TODO: it looks like we cannot store Keras model as an object in class
     # check if I can load the model here or do a batch predictionat the end for all currencies
 
-    from keras.models import Sequential
     # run prediction
     if ann_model.keras_model :
         loaded_model = ann_model.keras_model

@@ -46,7 +46,7 @@ class AnnModel(models.Model):
 
     # download keras model from s3 into keras model
     def initialize(self):
-        logger.debug(" >> Start Loading Keras Model...")
+        logger.debug(" >> Start Loading Keras Model..." + self.s3_model_file)
         if self.keras_model:
             logger.debug(" >> KERAS model exists and returned !")
             return self.keras_model
@@ -66,7 +66,7 @@ def get_ann_model_object(s3_model_file):
     if not ann_model.keras_model:
         try:
             ann_model.initialize()   # download model from S3, save it on local disk, then upload to class
-            logger.info(">> ANN model loaded FIRST TIME, ELapsed time: " + str(time.time() - start))
+            logger.info(">> ANN model loaded FIRST TIME, ELapsed time: " + str(time.time() - start) + s3_model_file)
         except Exception as e:
             logger.error(" Cannot load ANN model: either no Model in DB or S3 file does not exist")
     else:

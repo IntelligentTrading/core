@@ -4,7 +4,7 @@ import time
 
 from django.core.management.base import BaseCommand
 
-from settings import POLONIEX, SHORT, USDT
+from settings import POLONIEX, SHORT, MEDIUM, USDT
 from settings import time_speed  # 1 / 10
 
 from taskapp.helpers.poloniex import _pull_poloniex_data
@@ -42,7 +42,10 @@ class Command(BaseCommand):
                 _compute_indicators_for(source=POLONIEX, transaction_currency=t_currency,
                                         counter_currency=c_currency, resample_period=SHORT)
         elif arg == 'ann':
-            _compute_ann(source=POLONIEX, resample_period=SHORT)
+            from taskapp.tasks import compute_ann_for_all_sources
+            #compute_ann_for_all_sources(resample_period=SHORT)
+            #_compute_ann(source=POLONIEX, resample_period=SHORT)
+            _compute_ann(source=POLONIEX, resample_period=MEDIUM)
 
         elif arg == 'backtest':
             _backtest_all_strategies()

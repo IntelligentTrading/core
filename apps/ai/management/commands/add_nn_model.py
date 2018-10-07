@@ -139,8 +139,8 @@ class Command(BaseCommand):
                 period = 240,  # min
 
                 slide_win_size = 100, # so timewise it is 200 x 10min = 33,3 hours
-                predicted_win_size = 7, # 90 x 10min = 15 hours
-                delta_tolerance = 0.1, # +/- 2%
+                predicted_win_size = 8, # 90 x 10min = 15 hours
+                delta_tolerance = 0.05, # +/- 2%
 
                 train_accuracy = 0,
                 #train_f1_score = models.FloatField(null=True)

@@ -28,6 +28,12 @@ def _compute_ann(source, resample_period):
     Compute ANN price prediction at each time point in the same way as regular indicators do
     i.e. every short/mediun/long
     '''
+    if not RUN_ANN:
+        logger.info(" ++++ Running ANN is blocked by settings for debug!  +++++ ")
+        return
+
+    # TODO: here we have to load two models for SHORT and pass them
+    from apps.ai.settings.ai_preload import MODELS_PRELOADED
 
     #TODO: get pairs from def(SOURCE)
     #pairs_to_iterate = [(itm,Price.USDT) for itm in USDT_COINS] + [(itm,Price.BTC) for itm in BTC_COINS]
@@ -52,9 +58,9 @@ def _compute_ann(source, resample_period):
         }
 
         # calculate ANN indicator(s)
-        if (RUN_ANN) and (resample_period in [SHORT, MEDIUM]):
+        if (resample_period in [SHORT, MEDIUM]):
             try:
-                AnnPriceClassification.compute_all(AnnPriceClassification, **indicator_params_dict)
+                AnnPriceClassification.compute_all(AnnPriceClassification, MODELS_PRELOADED, **indicator_params_dict)
                 logger.info(f"  ... one ANN indicator completed,  ELAPSED Time: {time.time() - start}")
             except Exception as e:
                 logger.error(f"ANN Indicator Exception (ANN has not been calculated): {e}")
@@ -63,11 +69,9 @@ def _compute_ann(source, resample_period):
     logger.info(" ALL AI indicators completed:  ELAPSED Time: " + str(end - timestamp))
 
     # clean session to prevent memory leak
-    if RUN_ANN:
-        # clean session to prevent memory leak
-        logger.debug("   ... Cleaning Keras session...")
-        from keras import backend as K
-        K.clear_session()
+    logger.debug("   ... Cleaning Keras session...")
+    from keras import backend as K
+    K.clear_session()
 
 
 

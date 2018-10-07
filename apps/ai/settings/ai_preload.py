@@ -1,3 +1,4 @@
+import time
 from settings import SHORT, MEDIUM, LONG, RUN_ANN
 from apps.ai.models.nn_model import AnnModel, get_ann_model_object
 
@@ -5,7 +6,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-MODEL_LIST = ["PRICE_PREDICT", "PRICE_MAXHIT"] # , "PRICE_MINHIT"
+#MODEL_LIST = ["PRICE_PREDICT", "PRICE_MAXHIT"] # , "PRICE_MINHIT"
 
 
 MODEL_REF = {
@@ -18,11 +19,12 @@ MODEL_REF = {
 
 
 MODELS_PRELOADED = {}
+start = time.time()
 
 logger.info("  >> Start loading AI models... ")
 for model_name in MODEL_REF:
     ann_model_object = get_ann_model_object(MODEL_REF[model_name])
     MODELS_PRELOADED[model_name] = ann_model_object
 
-logger.info("        ==== Finish loading AI models ====== ")
+logger.info("        ==== Finish loading AI models in time: " + str(time.time()-start) + " ====== ")
 
