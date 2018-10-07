@@ -21,6 +21,7 @@ class Command(BaseCommand):
         # TODO: need to remove that later... it is an ugly way to initialize DB records
         # TODO: change to dictionary of move to migration
 
+        # initial forst model trained on full price data (not price_resampled)
         if not AnnModel.objects.filter(s3_model_file = 'lstm_model_2_2.h5').exists():
             AnnModel.objects.create(
                 timestamp=time.time(),
@@ -47,6 +48,7 @@ class Command(BaseCommand):
             logger.info(" lstm_model_2_2.h5 model already exists")
 
 
+        ######## short, medium and long models for "price_out_of_range" settings, trained on price_resampled data
         if not AnnModel.objects.filter(s3_model_file = 'lstm_short_60m_160_8_3class_return_0.03.h5').exists():
             AnnModel.objects.create(
                 timestamp=time.time(),
@@ -98,6 +100,7 @@ class Command(BaseCommand):
         else:
             logger.info(" lstm_medium_240m_100_20_3class_return_0.1.h5 model already exists")
 
+
         if not AnnModel.objects.filter(s3_model_file = 'lstm_long_1440m_28_10_class3_return_0.1.h5').exists():
             AnnModel.objects.create(
                 timestamp=time.time(),
@@ -122,3 +125,31 @@ class Command(BaseCommand):
             logger.info("Done.")
         else:
             logger.info(" lstm_long_1440m_28_10_class3_return_0.1.h5 model already exists")
+
+
+        ##### short, medium  models for "price_max_hit" settings, trained on price_resampled data
+        model_name = 'medium_240m_100_7_maxhit2cl_0.1.h5'
+        if not AnnModel.objects.filter(s3_model_file = model_name).exists():
+            AnnModel.objects.create(
+                timestamp=time.time(),
+                source = POLONIEX,
+                model_name = 'LSTM',
+                s3_model_file = model_name,
+                s3_notebook_file = 'NA',
+                period = 240,  # min
+
+                slide_win_size = 100, # so timewise it is 200 x 10min = 33,3 hours
+                predicted_win_size = 7, # 90 x 10min = 15 hours
+                delta_tolerance = 0.1, # +/- 2%
+
+                train_accuracy = 0,
+                #train_f1_score = models.FloatField(null=True)
+                validation_accuracy = 0,
+                #validation_f1_score = models.FloatField(null=True)
+
+                train_data_description = "ETH XRP ETC DASH LTC ETH ETC OMG XRP XMR LTC BCH EOS XLM ADA TRX NEO XEM ZEC BNB VET",
+                features_description = ' '
+                )
+            logger.info("Done.")
+        else:
+            logger.info("Model " + str(model_name) + " already exists")
