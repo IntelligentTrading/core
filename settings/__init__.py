@@ -306,11 +306,3 @@ if LOCAL:
         logger.error("Could not successfully import local_settings.py. This is necessary if you are running locally. This file should be in version control.")
         raise
 
-
-logger.info("Importing AI models...")
-try:
-    from settings.ai_preload import *
-except:
-    logger.error(
-        "Could not successfully load AI models... AI predictions wont work")
-    raise
