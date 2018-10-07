@@ -18,11 +18,12 @@ from apps.indicator.models.price_history import get_n_last_prices_ts, get_n_last
 #from apps.indicator.models.ann_future_price_classification import AnnPriceClassification
 from apps.ai.models.nn_model import get_ann_model_object
 from settings import SHORT, MEDIUM, LONG, HORIZONS_TIME2NAMES, RUN_ANN, MODIFY_DB
+from settings.ai_preload import MODEL_LIST, MODELS_PRELOADED
 
 import logging
 logger = logging.getLogger(__name__)
 
-MODEL_LIST = ["PRICE_PREDICT", "PRICE_MAXHIT"] # , "PRICE_MINHIT"
+#MODEL_LIST = ["PRICE_PREDICT", "PRICE_MAXHIT"] # , "PRICE_MINHIT"
 
 
 class AnnPriceClassification(AbstractIndicator):
@@ -59,17 +60,17 @@ class AnnPriceClassification(AbstractIndicator):
         resample_period = kwargs['resample_period']
 
         # choose the pre-trained ANN model depending on period, here are the same
-        period2model = {
-        SHORT:
-            {"PRICE_PREDICT" : 'lstm_short_60m_160_8_3class_return_0.03.h5',
-             "PRICE_MAXHIT"  : "*.h5"},
-        MEDIUM:
-            {"PRICE_PREDICT" : 'lstm_medium_240m_100_12_3class_return_0.08.h5',
-             "PRICE_MAXHIT"  : "lstm_medium_240m_120_8_maxhit2cl_0.05.h5"},
-        LONG:
-            {"PRICE_PREDICT" :'lstm_model_2_2.h5',
-             "PRICE_MAXHIT"  : "*.h5"}
-        }
+        # period2model = {
+        # SHORT:
+        #     {"PRICE_PREDICT" : 'lstm_short_60m_160_8_3class_return_0.03.h5',
+        #      "PRICE_MAXHIT"  : "*.h5"},
+        # MEDIUM:
+        #     {"PRICE_PREDICT" : 'lstm_medium_240m_100_12_3class_return_0.08.h5',
+        #      "PRICE_MAXHIT"  : "lstm_medium_240m_120_8_maxhit2cl_0.05.h5"},
+        # LONG:
+        #     {"PRICE_PREDICT" :'lstm_model_2_2.h5',
+        #      "PRICE_MAXHIT"  : "*.h5"}
+        # }
 
         # period2model_new = {
         #     SHORT: 'lstm_short_60m_160_8_3class_return_0.03.h5',
@@ -84,7 +85,9 @@ class AnnPriceClassification(AbstractIndicator):
             logger.info('   @@@@@@    Run AI indicator calculation  with %s model   @@@@@@@@@' % (model))
 
             # load model from S3 and database
-            ann_model_object = get_ann_model_object(period2model[resample_period][model])
+            #ann_model_object = get_ann_model_object(period2model[resample_period][model])
+
+            ann_model_object = MODELS_PRELOADED[(model,resample_period)]
 
             # run prediction
             trend_predicted = _compute_lstm_classification(ann_model_object, **kwargs)

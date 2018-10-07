@@ -281,7 +281,7 @@ LOAD_TALIB = True  # always True unless doing some temporary server update
 time_speed = 1  # set to 1 for production, 10 for fast debugging
 EMIT_SMA = True
 EMIT_RSI = True
-RUN_ANN = False  # temporarily, while I am thinking :)
+RUN_ANN = True  # temporarily, while I am thinking :)
 RUN_BEN = True
 MODIFY_DB = True
 
@@ -306,3 +306,11 @@ if LOCAL:
         logger.error("Could not successfully import local_settings.py. This is necessary if you are running locally. This file should be in version control.")
         raise
 
+
+logger.info("Importing AI models...")
+try:
+    from settings.ai_preload import *
+except:
+    logger.error(
+        "Could not successfully load AI models... AI predictions wont work")
+    raise
