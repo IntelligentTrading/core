@@ -65,7 +65,7 @@ class AnnPriceClassification(AbstractIndicator):
              "PRICE_MAXHIT"  : "*.h5"},
         MEDIUM:
             {"PRICE_PREDICT" : 'lstm_medium_240m_100_12_3class_return_0.08.h5',
-             "PRICE_MAXHIT"  : "*.h5"},
+             "PRICE_MAXHIT"  : "lstm_medium_240m_120_8_maxhit2cl_0.05.h5"},
         LONG:
             {"PRICE_PREDICT" :'lstm_model_2_2.h5',
              "PRICE_MAXHIT"  : "*.h5"}

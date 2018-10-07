@@ -128,7 +128,7 @@ class Command(BaseCommand):
 
 
         ##### short, medium  models for "price_max_hit" settings, trained on price_resampled data
-        model_name = 'medium_240m_100_7_maxhit2cl_0.1.h5'
+        model_name = 'lstm_medium_240m_120_8_maxhit2cl_0.05.h5'
         if not AnnModel.objects.filter(s3_model_file = model_name).exists():
             AnnModel.objects.create(
                 timestamp=time.time(),

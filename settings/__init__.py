@@ -281,7 +281,7 @@ LOAD_TALIB = True  # always True unless doing some temporary server update
 time_speed = 1  # set to 1 for production, 10 for fast debugging
 EMIT_SMA = True
 EMIT_RSI = True
-RUN_ANN = True
+RUN_ANN = False  # temporarily, while I am thinking :)
 RUN_BEN = True
 MODIFY_DB = True
 
