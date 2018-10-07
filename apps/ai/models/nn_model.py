@@ -92,8 +92,10 @@ class AnnModel(models.Model):
             raw_data_frame[pd.isnull(raw_data_frame)] = None
             data_ts['price'] = raw_data_frame['close_price']
             data_ts['volume'] = raw_data_frame['close_volume']
-            data_ts['price_var'] = raw_data_frame['price'].var()
-            data_ts['volume_var'] = raw_data_frame['volume'].var()
+            data_ts['price_max'] = raw_data_frame['high_price']
+            data_ts['price_min'] = raw_data_frame['low_price']
+            data_ts['price_var'] = raw_data_frame['price_variance']
+            data_ts['volume_var'] = raw_data_frame['volume_variance']
             data_ts = data_ts.interpolate()
 
 
