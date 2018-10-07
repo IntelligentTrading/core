@@ -1,7 +1,10 @@
 import logging
 import time
+import pandas as pd
 from django.db import models
 
+from apps.indicator.models.price_history import get_n_last_prices_ts, get_n_last_volumes_ts
+from apps.indicator.models.price_resampl import get_n_last_resampl_df
 from unixtimestampfield.fields import UnixTimeStampField
 from apps.common.utilities.s3 import download_file_from_s3
 from settings import RUN_ANN, SOURCE_CHOICES
@@ -56,9 +59,54 @@ class AnnModel(models.Model):
             logger.debug(" >> KERAS model loaded and returned!")
             return self.keras_model
 
+    # retrieve an appropriate dataset for a given model_type
+    def get_dataset(self, **kwargs):
+        if self.model_name == "PRICE_PREDICT":
+            ''' in case of PRICE_PREDICT we use 1min price and then do resampling
+            '''
+            resample_period = str(self.period) + 'min'  # '10min'
+
+            needed_records = self.slide_win_size * self.period + 10  # because of 10min/60 min + some extra
+
+            # get raw prices from Price table to form a feature vector to feed up to ANN (to predict price)
+            raw_price_ts = get_n_last_prices_ts(needed_records, kwargs['source'], kwargs['transaction_currency'], kwargs['counter_currency'])
+            raw_volume_ts = get_n_last_volumes_ts(needed_records, kwargs['source'], kwargs['transaction_currency'], kwargs['counter_currency'])
+
+            raw_data_frame = pd.merge(raw_price_ts.to_frame(name='price'), raw_volume_ts.to_frame(name='volume'), how='left', left_index=True, right_index=True)
+            raw_data_frame[pd.isnull(raw_data_frame)] = None
+
+            # resample (might be different from our standart values 60/240/1440
+            # calculate additional features (variance)
+            data_ts = raw_data_frame.resample(rule=resample_period).mean()
+            data_ts['price_var'] = raw_data_frame['price'].resample(rule=resample_period).var()
+            data_ts['volume_var'] = raw_data_frame['volume'].resample(rule=resample_period).var()
+            data_ts = data_ts.interpolate()
+
+
+        if self.model_name == "PRICE_MAXHIT":
+            needed_records = self.slide_win_size + 2
+            raw_data_frame = get_n_last_resampl_df(
+                needed_records, kwargs['source'], kwargs['transaction_currency'], kwargs['counter_currency'], kwargs['resample_period']
+            )
+
+            raw_data_frame[pd.isnull(raw_data_frame)] = None
+            data_ts['price'] = raw_data_frame['close_price']
+            data_ts['volume'] = raw_data_frame['close_volume']
+            data_ts['price_var'] = raw_data_frame['price'].var()
+            data_ts['volume_var'] = raw_data_frame['volume'].var()
+            data_ts = data_ts.interpolate()
+
+
+        # FINALLY: get only recent time points according to trained model
+        data_ts = data_ts.tail(self.slide_win_size)
+        logger.debug('   ... length of one feature vector to predict on is ' + str(len(data_ts)))
+        assert len(data_ts) == self.slide_win_size, ' @@@@@ :: Wrong training example length!'
+
+        return data_ts
+
 
 # download model file from s3 to local then import it into keras model, then return this keras model
-def get_ann_model_object(s3_model_file):
+def lookup_ann_model_object(s3_model_file):
     start = time.time()
 
     ann_model = AnnModel.objects.get(s3_model_file=s3_model_file) ## get ann model metainfo from DB(django objects.get)

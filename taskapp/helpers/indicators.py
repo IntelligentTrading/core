@@ -9,7 +9,7 @@ from apps.indicator.models.events_logical import EventsLogical
 from apps.indicator.models.price_resampl import PriceResampl
 from apps.indicator.models.sma import Sma
 from apps.indicator.models.rsi import Rsi
-from apps.ai.models.nn_model import get_ann_model_object
+from apps.ai.models.nn_model import lookup_ann_model_object
 from apps.strategy.models.strategy_ref import get_all_strategy_classes
 from apps.user.models.user import get_horizon_value_from_string
 

@@ -28,6 +28,7 @@ class PriceResampl(AbstractIndicator):
     close_volume = models.FloatField(null=True)
     low_volume = models.FloatField(null=True)
     high_volume = models.FloatField(null=True)
+    volume_variance = models.FloatField(null=True)
 
 
     class Meta:
@@ -86,6 +87,7 @@ class PriceResampl(AbstractIndicator):
             self.close_volume = float(volumes[-1])
             self.low_volume = float(volumes.min())
             self.high_volume = float(volumes.max())
+            self.volume_variance = volumes.var()
 
             return True
         else:

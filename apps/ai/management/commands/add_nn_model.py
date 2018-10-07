@@ -26,7 +26,7 @@ class Command(BaseCommand):
             AnnModel.objects.create(
                 timestamp=time.time(),
                 source = POLONIEX,
-                model_name = 'LSTM',
+                model_name = 'PRICE_PREDICT',
                 s3_model_file = 'lstm_model_2_2.h5',
                 s3_notebook_file = '04_ML_Keras_LSTM_Three_Class_ALLCOINS_2.ipynb',
                 period = 10,  # 10min
@@ -53,7 +53,7 @@ class Command(BaseCommand):
             AnnModel.objects.create(
                 timestamp=time.time(),
                 source = POLONIEX,
-                model_name = 'LSTM',
+                model_name = 'PRICE_PREDICT',
                 s3_model_file = 'lstm_short_60m_160_8_3class_return_0.03.h5',
                 s3_notebook_file = 'NA',
                 period = 60,  # min
@@ -79,7 +79,7 @@ class Command(BaseCommand):
             AnnModel.objects.create(
                 timestamp=time.time(),
                 source = POLONIEX,
-                model_name = 'LSTM',
+                model_name = 'PRICE_PREDICT',
                 s3_model_file = 'lstm_medium_240m_100_12_3class_return_0.08.h5',
                 s3_notebook_file = 'NA',
                 period = 240,  # min
@@ -133,7 +133,7 @@ class Command(BaseCommand):
             AnnModel.objects.create(
                 timestamp=time.time(),
                 source = POLONIEX,
-                model_name = 'LSTM',
+                model_name = 'PRICE_MAXHIT',
                 s3_model_file = model_name,
                 s3_notebook_file = 'NA',
                 period = 240,  # min

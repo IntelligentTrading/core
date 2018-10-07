@@ -93,28 +93,30 @@ class AnnPriceClassification(AbstractIndicator):
 
 
 def _compute_lstm_classification(ann_model, **kwargs):
-    trend_predicted = None
 
-    resample_period = str(ann_model.period) + 'min'  #'10min'
-    needed_records = ann_model.slide_win_size * ann_model.period + 10  # because of 10min/60 min + some extra
+    # resample_period = str(ann_model.period) + 'min'  #'10min'
+    # needed_records = ann_model.slide_win_size * ann_model.period + 10  # because of 10min/60 min + some extra
+    #
+    # # get raw prices from Price table to form a feature vector to feed up to ANN (to predict price)
+    # raw_price_ts = get_n_last_prices_ts(needed_records, kwargs['source'], kwargs['transaction_currency'], kwargs['counter_currency'])
+    # raw_volume_ts = get_n_last_volumes_ts(needed_records, kwargs['source'], kwargs['transaction_currency'], kwargs['counter_currency'])
+    #
+    # raw_data_frame = pd.merge(raw_price_ts.to_frame(name='price'), raw_volume_ts.to_frame(name='volume'), how='left', left_index=True, right_index=True)
+    # raw_data_frame[pd.isnull(raw_data_frame)] = None
+    #
+    # # resample (might be different from our standart values 60/240/1440
+    # # calculate additional features (variance)
+    # data_ts = raw_data_frame.resample(rule=resample_period).mean()
+    # data_ts['price_var'] = raw_data_frame['price'].resample(rule=resample_period).var()
+    # data_ts['volume_var'] = raw_data_frame['volume'].resample(rule=resample_period).var()
+    # data_ts = data_ts.interpolate()
+    #
+    # # get only recent time points according to trained model
+    # data_ts = data_ts.tail(ann_model.slide_win_size)
+    # logger.debug('   ... length of one feature vector to predict on is ' + str(len(data_ts)) )
+    # assert len(data_ts) == ann_model.slide_win_size, ' @@@@@ :: Wrong training example length!'
 
-    # get raw prices from Price table to form a feature vector to feed up to ANN (to predict price)
-    raw_price_ts = get_n_last_prices_ts(needed_records, kwargs['source'], kwargs['transaction_currency'], kwargs['counter_currency'])
-    raw_volume_ts = get_n_last_volumes_ts(needed_records, kwargs['source'], kwargs['transaction_currency'], kwargs['counter_currency'])
-
-    raw_data_frame = pd.merge(raw_price_ts.to_frame(name='price'), raw_volume_ts.to_frame(name='volume'), how='left', left_index=True, right_index=True)
-    raw_data_frame[pd.isnull(raw_data_frame)] = None
-
-    # resample (might be different from our standart values 60/240/1440
-    # calculate additional features (variance)
-    data_ts = raw_data_frame.resample(rule=resample_period).mean()
-    data_ts['price_var'] = raw_data_frame['price'].resample(rule=resample_period).var()
-    data_ts['volume_var'] = raw_data_frame['volume'].resample(rule=resample_period).var()
-    data_ts = data_ts.interpolate()
-    # get only recent time points according to trained model
-    data_ts = data_ts.tail(ann_model.slide_win_size)
-    logger.debug('   ... length of one feature vector to predict on is ' + str(len(data_ts)) )
-    assert len(data_ts) == ann_model.slide_win_size, ' @@@@@ :: Wrong training example length!'
+    data_ts = ann_model.get_dataset(**kwargs)
 
     # combine the data into X matrix like that
     # (examples=124451, features=196, classes=4) : 4 = price/volume/price_var/volume_var
@@ -145,6 +147,7 @@ def _compute_lstm_classification(ann_model, **kwargs):
     # check if I can load the model here or do a batch predictionat the end for all currencies
 
     # run prediction
+    trend_predicted = None
     if ann_model.keras_model :
         loaded_model = ann_model.keras_model
         #logger.info(loaded_model.summary())
