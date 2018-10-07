@@ -11,15 +11,18 @@ import pandas as pd
 import numpy as np
 
 from django.db import models
-from django.db import connection
+#from django.db import connection
 from apps.indicator.models.abstract_indicator import AbstractIndicator
 from apps.ai.models.nn_model import AnnModel
 from apps.indicator.models.price_history import get_n_last_prices_ts, get_n_last_volumes_ts
-#from apps.indicator.models.volume import get_n_last_volumes_ts
-from settings import MODIFY_DB
+#from apps.indicator.models.ann_future_price_classification import AnnPriceClassification
+from apps.ai.models.nn_model import get_ann_model_object
+from settings import SHORT, MEDIUM, LONG, HORIZONS_TIME2NAMES, RUN_ANN, MODIFY_DB
 
 import logging
 logger = logging.getLogger(__name__)
+
+MODEL_LIST = ["PRICE_PREDICT", "PRICE_MAXHIT"] # , "PRICE_MINHIT"
 
 
 class AnnPriceClassification(AbstractIndicator):
@@ -31,6 +34,9 @@ class AnnPriceClassification(AbstractIndicator):
 
     #TODO: add a model type: AnnSImple / ANN MAX HIY
     # in the future remove th FK to ann_model
+
+    # PRICE_PREDICT / PRICE_MAXHIT / PRICE_MINHIT
+    ai_model = models.CharField(max_length=16, null=True, blank=True)
 
     predicted_ahead_for = models.SmallIntegerField(null=True) # in mins, price predicted for this time frame
     probability_same = models.FloatField(null=True)  # probability of price will stay the same
@@ -48,31 +54,58 @@ class AnnPriceClassification(AbstractIndicator):
 
 
     @staticmethod
-    def compute_all(cls, ann_model, **kwargs):
-        logger.info('   @@@@@@    Run AI indicator calculation  with %s model   @@@@@@@@@' % (ann_model.s3_model_file))
+    def compute_all(cls, **kwargs):
+
+        resample_period = kwargs['resample_period']
+
+        # choose the pre-trained ANN model depending on period, here are the same
+        period2model = {
+        SHORT:
+            {"PRICE_PREDICT" : 'lstm_short_60m_160_8_3class_return_0.03.h5',
+             "PRICE_MAXHIT"  : "*.h5"},
+        MEDIUM:
+            {"PRICE_PREDICT" : 'lstm_medium_240m_100_12_3class_return_0.08.h5',
+             "PRICE_MAXHIT"  : "*.h5"},
+        LONG:
+            {"PRICE_PREDICT" :'lstm_model_2_2.h5',
+             "PRICE_MAXHIT"  : "*.h5"}
+        }
+
+        # period2model_new = {
+        #     SHORT: 'lstm_short_60m_160_8_3class_return_0.03.h5',
+        #     MEDIUM: 'lstm_medium_240m_100_20_3class_return_0.1.h5',
+        #     LONG: 'lstm_long_1440m_28_10_class3_return_0.1.h5'
+        # }
+
 
         start = time.time()
 
-        trend_predicted = _compute_lstm_classification(ann_model, **kwargs)
+        for model in MODEL_LIST:
+            logger.info( '   @@@@@@    Run AI indicator calculation  with %s model   @@@@@@@@@' % (model))
 
-        # create a record if we have predicted values
-        if trend_predicted is not None:
+            # load model from S3 and database
+            ann_model_object = get_ann_model_object(period2model[resample_period][model])
 
-            new_instance = cls(  #cls.objects.create( <- we do "save" separatelly now
-                **kwargs,
-                ann_model=ann_model,
-                predicted_ahead_for = ann_model.predicted_win_size * ann_model.period,  # in mins, can remove we also have it in ann model
-                probability_same = trend_predicted[0],
-                probability_up = trend_predicted[1],
-                probability_down = trend_predicted[2]
-            )
-            if MODIFY_DB: new_instance.save()
-            logger.info("   ...LSTM prediction indicator has been calculated and saved.")
-        else:
-            logger.info(" ... No predicted probabilities have been returned")
+            # run prediction
+            trend_predicted = _compute_lstm_classification(ann_model_object, **kwargs)
+
+            # create a record if we have predicted values
+            if trend_predicted is not None:
+                new_instance = cls(  #cls.objects.create( <- we do "save" separatelly now
+                    **kwargs,
+                    ann_model=ann_model_object, #FK
+                    ai_model=model,
+                    predicted_ahead_for = ann_model_object.predicted_win_size * ann_model_object.period,  # in mins, can remove we also have it in ann model
+                    probability_same = trend_predicted[0],
+                    probability_up = trend_predicted[1],
+                )
+                if MODIFY_DB: new_instance.save()
+                logger.info("   ...LSTM prediction indicator has been calculated and saved.")
+            else:
+                logger.info(" ... No predicted probabilities have been returned")
 
         end = time.time()
-        #logger.info("||| SQL::AnnPriceClassification.compute_all(): " + str(connection.queries))
+
         logger.info("   @@@@@@   End of running AI indicator.  ELAPSED Time: " + str(end - start))
 
 
@@ -146,9 +179,10 @@ def _compute_lstm_classification(ann_model, **kwargs):
 
 
 
-def get_n_last_ann_classif_df(n, **kwargs)->pd.DataFrame:
+def get_n_last_ann_classif_df(n, model_name, **kwargs) ->pd.DataFrame:
 
     last_records = list(AnnPriceClassification.objects.filter(
+        ai_model=model_name,
         source=kwargs['source'],
         resample_period=kwargs['resample_period'],
         transaction_currency=kwargs['transaction_currency'],

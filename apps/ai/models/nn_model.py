@@ -1,19 +1,20 @@
 import logging
 import time
 from django.db import models
-#from apps.channel.models.exchange_data import SOURCE_CHOICES
 
 from unixtimestampfield.fields import UnixTimeStampField
 from apps.common.utilities.s3 import download_file_from_s3
 from settings import RUN_ANN, SOURCE_CHOICES
 
+logger = logging.getLogger(__name__)
 
 if RUN_ANN:
     from keras.models import load_model
 
-logger = logging.getLogger(__name__)
 
-# TODO: remove storing it in DB and keep all models in named dictionary
+# AnnModel is a not very smart way to store all keras models we have in the system
+# we can load the model by 's3_model_file'
+# TODO: remove storing it in DB and keep all models in named dictionary?
 
 
 class AnnModel(models.Model):
