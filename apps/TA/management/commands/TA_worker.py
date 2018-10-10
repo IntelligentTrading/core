@@ -21,6 +21,7 @@ earliest_price_timestamp = int(float(database.zrangebyscore("BTC_USDT:bittrex:Pr
 # ✅ - use rabbitmq as a centralized task queue so workers can scale horizontally
 #  - reduce number of tickers being processed
 
+
 class Command(BaseCommand):
     help = 'Run Redis Subscribers for TA'
 
