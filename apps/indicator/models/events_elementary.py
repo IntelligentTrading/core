@@ -2,6 +2,9 @@ import time
 import logging
 import pandas as pd
 import numpy as np
+from scipy.stats import multivariate_normal
+from scipy import stats
+
 from settings import LOAD_TALIB
 if LOAD_TALIB:
     import talib
@@ -52,7 +55,8 @@ ICHI_ELEMENTARY_EVENTS = [
 ]
 
 AI_ELEMENTARY_EVENTS = [
-    'ann_price_2class_simple'
+    'ann_price_2class_simple',
+    'ann_price_anomaly'
 ]
 
 BEN_VOLUME_EVENTS = [
@@ -89,18 +93,17 @@ VBI_VOLUME_CROSS_PERCENT = 0.02
 
 
 
-def _process_ai_simple(horizon, **kwargs):
+def _process_ai_simple(horizon, ann_classif_df, **kwargs):
     '''
     very simple strategy: emit signal anytime it changes state from up to down
     '''
-    # get two reacent objects as a dataframe
 
-    # NOTE: here I hardcoded two class classification ignoring SAME - should be don ona  model level!!
+    # NOTE: here I hardcoded two class classification ignoring SAME - should be done on a  model level!!
 
-    ann_classif_df = get_n_last_ann_classif_df(5, **kwargs)
-    if ann_classif_df.empty:
-        logger.error('  get_n_last_ann: something wrong with AI indicators... we dont have it ...')
-        return False
+    # ann_classif_df = get_n_last_ann_classif_df(5, **kwargs)
+    # if ann_classif_df.empty:
+    #     logger.error('  get_n_last_ann: something wrong with AI indicators... we dont have it ...')
+    #     return False
 
     # choose only two class classification (ignore SAME), then add a new column with the best class
     df = ann_classif_df[['probability_up','probability_down']]
@@ -143,6 +146,69 @@ def _process_ai_simple(horizon, **kwargs):
             logger.error(" Error saving/emitting ANN Event " + e)
     else:
         logger.debug("   ... no AI event generated (predicts no changes in price")
+
+
+def _process_ai_anomaly(horizon, ann_classif_df, **kwargs):
+    '''
+    yet another strategy based on ai indicator
+    '''
+
+    # we have a multivariate (3-variate) disctribution of price predictiton, calculate mean, varuance for each
+    # fit Normal distribution to previousd data, calculater parameters: mean vector and covariance matrix
+    # [var_same, var_up, var_down]
+    data = ann_classif_df[0:-1][['probability_same','probability_up','probability_down']]
+    cov = np.array(data.cov())
+    mu = np.array(data.mean(axis=0))
+
+    # get the current data point
+    x = np.array(ann_classif_df.tail(1)[['probability_same','probability_up','probability_down']])
+
+    # calculate single pdf value, for test
+    #p = multivariate_normal.pdf(x, mu, cov, allow_singular=True)
+
+    #### here we calculate an area under 3D Gaussian curve which is probability of current point belonging to this disctibution
+    m_dist_x = np.dot((x - mu), np.linalg.inv(cov))
+    m_dist_x = np.dot(m_dist_x, (x - mu).transpose())
+
+    # here p is probability of upcoming vector of price prediction being inside normal distribution of previous probabilities
+    p = float(1 - stats.chi2.cdf(m_dist_x, 3))
+    logger.info("  || ANOMALY DETECTION: probability of price belong to current distribution p = " + str(p))
+
+    # have to learn that threshold
+    TRESHOLD = 0.06
+
+    if p < TRESHOLD:
+        # emit signal
+        try:
+            logger.debug("******************** ANOMALY THRESHOLD AI event is detected *****************")
+            new_instance = EventsElementary(
+                **kwargs,
+                event_name="ann_price_anomaly",
+                event_value=p,
+            )
+            if MODIFY_DB: new_instance.save()
+
+            signal_ai = Signal(
+                **kwargs,
+                signal='ANN_AnomalyPrc',
+                trend= int(0),
+                strength_value= int(3),
+                horizon=horizon,
+                predicted_ahead_for= ann_classif_df.tail(1)['predicted_ahead_for'][0],
+                probability_same = p,
+                #probability_up = -1,
+                #probability_down = -1
+            )
+            logger.debug("------> AI Anomaly Signal to save:" + str(signal_ai))
+
+            if MODIFY_DB: signal_ai.save()
+            logger.debug("  || Anomaly ANN event FIRED!")
+        except Exception as e:
+            logger.error(" Error saving/emitting Anomaly ANN Event " + e)
+    else:
+        logger.debug(" || no Anomaly AI  detected")
+
+
 
 
 
@@ -492,8 +558,14 @@ class EventsElementary(AbstractIndicator):
         # we have ANN indicators only for SHORT period for now!
         # TODO: remove SHORT/ MEDIUM when models for 3 horizons will be added!
         if RUN_ANN and (kwargs['resample_period'] in [SHORT,MEDIUM]):
-            logger.info("   ... Check  AI Elementary Events for PERIOD: " + str(kwargs['resample_period']))
-            _process_ai_simple(horizon, **kwargs)
+            # get recent ai_indicators from DB
+            ann_classif_df = get_n_last_ann_classif_df(200, "PRICE_PREDICT", **kwargs)
+            if ann_classif_df.empty:
+                logger.error('  get_n_last_ann: something wrong with AI indicators... we dont have it ...')
+            else:
+                logger.info("   ... Check  AI Elementary Events for PERIOD: " + str(kwargs['resample_period']))
+                _process_ai_simple(horizon, ann_classif_df, **kwargs)
+                _process_ai_anomaly(horizon, ann_classif_df, **kwargs)
         else:
             logger.info("   ... ANN elementary event calculation has been skipped")
 

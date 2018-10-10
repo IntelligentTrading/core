@@ -5,7 +5,7 @@ import logging
 from celery import Celery
 from celery.schedules import crontab
 
-from settings import SHORT, MEDIUM, LONG
+from settings import SHORT, MEDIUM, LONG, RUN_ANN
 
 logger = logging.getLogger(__name__)
 
@@ -48,20 +48,21 @@ def setup_periodic_tasks(sender, **_):
     # FIRST - calculate ANN for SHORT period at every hour and half OO:30, 01:30 ...
     # @Alex: I put it back to 00:00 because the time stamp is a key and should match hours
     # move it back if server performance sufferrs, but make sure to pass a right timestamp
-    logger.info("   >>>>>  adding a AI task to queue: compute_ann_for_all_sources")
-    # AI SHORT
-    sender.add_periodic_task(
-        crontab(minute=25, hour='*'),
-        tasks.compute_ann_for_all_sources.s(resample_period=SHORT),
-        name='at the beginning of every hour and half',
-        )
+    if RUN_ANN:
+        logger.info("   >>>>>  adding a AI task to queue: compute_ann_for_all_sources")
+        # AI SHORT
+        sender.add_periodic_task(
+            crontab(minute=25, hour='*'),
+            tasks.compute_ann_for_all_sources.s(resample_period=SHORT),
+            name='at the beginning of every hour and half',
+            )
 
-    # AI MEDIUM
-    sender.add_periodic_task(
-        crontab(minute=40, hour='*/4'),
-        tasks.compute_ann_for_all_sources.s(resample_period=MEDIUM),
-        name='40 minutes later then MEDIUM indicators start... every 4.40',
-        )
+        # AI MEDIUM
+        sender.add_periodic_task(
+            crontab(minute=40, hour='*/4'),
+            tasks.compute_ann_for_all_sources.s(resample_period=MEDIUM),
+            name='40 minutes later then MEDIUM indicators start... every 4.40',
+            )
 
 
     #calculate SHORT period at the start of the hour

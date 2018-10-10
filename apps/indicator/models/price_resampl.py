@@ -28,6 +28,7 @@ class PriceResampl(AbstractIndicator):
     close_volume = models.FloatField(null=True)
     low_volume = models.FloatField(null=True)
     high_volume = models.FloatField(null=True)
+    volume_variance = models.FloatField(null=True)
 
 
     class Meta:
@@ -86,6 +87,7 @@ class PriceResampl(AbstractIndicator):
             self.close_volume = float(volumes[-1])
             self.low_volume = float(volumes.min())
             self.high_volume = float(volumes.max())
+            self.volume_variance = volumes.var()
 
             return True
         else:
@@ -103,7 +105,7 @@ def get_n_last_resampl_df(n, source, transaction_currency, counter_currency, res
         transaction_currency=transaction_currency,
         counter_currency=counter_currency,
         timestamp__gte = datetime.now() - timedelta(minutes=resample_period * n)
-    ).values('timestamp', 'low_price', 'high_price', 'close_price', 'midpoint_price','mean_price','close_volume').order_by('-timestamp'))
+    ).values('timestamp', 'low_price', 'high_price', 'close_price', 'midpoint_price','mean_price','close_volume','volume_variance').order_by('-timestamp'))
 
     df = pd.DataFrame()
     if last_prices:
@@ -114,15 +116,21 @@ def get_n_last_resampl_df(n, source, transaction_currency, counter_currency, res
         close_prices = pd.Series(data=[rec['close_price'] for rec in last_prices], index=ts)
         midpoint_prices = pd.Series([rec['midpoint_price'] for rec in last_prices], index=ts)
         mean_prices = pd.Series([rec['mean_price'] for rec in last_prices], index=ts)
+        price_variance = pd.Series([rec['price_variance'] for rec in last_prices], index=ts)
 
         close_volume = pd.Series([rec['close_volume'] for rec in last_prices], index=ts)
+        volume_variance = pd.Series([rec['volume_variance'] for rec in last_prices], index=ts)
 
         df['low_price'] = low_prices
         df['high_price'] = high_prices
         df['close_price'] = close_prices
         df['midpoint_price'] = midpoint_prices
         df['mean_price'] = mean_prices
+        df['price_variance'] = price_variance
+
         df['close_volume'] = close_volume
+        df['volume_variance'] = volume_variance
+
         # we need df in a right order (from past to future) to make sma rolling work righ
         df = df.iloc[::-1] # df.sort_index(inplace=True)  might works too
 

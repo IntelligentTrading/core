@@ -67,6 +67,7 @@ ALL_SIGNALS = {
 
     'ann_simple_bull': SignalType('ANN_Simple', 1, 3),  # price cross sma200 up
     'ann_simple_bear': SignalType('ANN_Simple', -1, 3),
+    'ann_price_anomaly': SignalType('ANN_AnomalyPrc', 0, 3),
 
     'vbi_buy': SignalType('VBI', 1, 3),
 
