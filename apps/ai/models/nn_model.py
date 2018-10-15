@@ -8,12 +8,22 @@ from apps.indicator.models.price_resampl import get_n_last_resampl_df
 from unixtimestampfield.fields import UnixTimeStampField
 from apps.common.utilities.s3 import download_file_from_s3
 from settings import RUN_ANN, SOURCE_CHOICES
+from settings import SHORT, MEDIUM, LONG
 
 logger = logging.getLogger(__name__)
 
+
+MODEL_REF = {
+    ("PRICE_PREDICT", SHORT): 'lstm_short_60m_160_8_3class_return_0.03.h5',
+    ("PRICE_PREDICT", MEDIUM): 'lstm_medium_240m_100_12_3class_return_0.08.h5',
+    ("PRICE_PREDICT", LONG): 'lstm_model_2_2.h5',
+
+    ("PRICE_MAXHIT", MEDIUM): "lstm_medium_240m_120_8_maxhit2cl_0.05.h5"
+}
+
+
 if RUN_ANN:
     from keras.models import load_model
-
 
 # AnnModel is a not very smart way to store all keras models we have in the system
 # we can load the model by 's3_model_file'
@@ -90,7 +100,8 @@ class AnnModel(models.Model):
                 needed_records, kwargs['source'], kwargs['transaction_currency'], kwargs['counter_currency'], kwargs['resample_period']
             )
 
-            raw_data_frame[pd.isnull(raw_data_frame)] = None
+            #raw_data_frame[pd.isnull(raw_data_frame)] = None   # TODO need better filtering NA
+            data_ts = pd.DataFrame()
             data_ts['price'] = raw_data_frame['close_price']
             data_ts['volume'] = raw_data_frame['close_volume']
 
@@ -105,7 +116,7 @@ class AnnModel(models.Model):
         # FINALLY: get only recent time points according to trained model
         data_ts = data_ts.tail(self.slide_win_size)
         logger.debug('   ... length of one feature vector to predict on is ' + str(len(data_ts)))
-        assert len(data_ts) == self.slide_win_size, ' @@@@@ :: Wrong training example length!'
+        assert len(data_ts) == self.slide_win_size, ' @@@@@ :: Wrong training example length! It means we have some gaps in time series data and cannot predict accuratelly!'
 
         return data_ts
 
@@ -128,4 +139,14 @@ def lookup_ann_model_object(s3_model_file):
     return ann_model
 
 
+def load_all_models():
+    MODELS_PRELOADED = {}
+    start = time.time()
 
+    logger.info("  >>>>>   Start loading AI models... ")
+    for model_name in MODEL_REF:
+        ann_model_object = lookup_ann_model_object(MODEL_REF[model_name])
+        MODELS_PRELOADED[model_name] = ann_model_object
+
+    logger.info("        ==== Finish loading AI models in time: " + str(time.time() - start) + " ====== ")
+    return MODELS_PRELOADED

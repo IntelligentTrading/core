@@ -33,7 +33,10 @@ def _compute_ann(source, resample_period):
         return
 
     # TODO: here we have to load two models for SHORT and pass them
-    from apps.ai.settings.ai_preload import MODELS_PRELOADED
+    #from apps.ai.settings.ai_preload import MODELS_PRELOADED
+    from apps.ai.models.nn_model import load_all_models
+    MODELS_PRELOADED = load_all_models()   #TODO: find a way to cache it!!!
+
 
     #TODO: get pairs from def(SOURCE)
     #pairs_to_iterate = [(itm,Price.USDT) for itm in USDT_COINS] + [(itm,Price.BTC) for itm in BTC_COINS]

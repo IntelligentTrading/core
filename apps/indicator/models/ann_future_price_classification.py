@@ -17,7 +17,7 @@ from apps.ai.models.nn_model import AnnModel
 from apps.indicator.models.price_history import get_n_last_prices_ts, get_n_last_volumes_ts
 #from apps.indicator.models.ann_future_price_classification import AnnPriceClassification
 from settings import MODIFY_DB
-from apps.ai.settings.ai_preload import MODEL_REF
+from apps.ai.models.nn_model import MODEL_REF
 
 import logging
 logger = logging.getLogger(__name__)
