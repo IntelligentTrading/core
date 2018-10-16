@@ -76,10 +76,10 @@ class AnnPriceClassification(AbstractIndicator):
                 new_instance = cls(  #cls.objects.create( <- we do "save" separatelly now
                     **kwargs,
                     ann_model=ann_model_object, #FK
-                    ai_model=model[:15],  # to fit in 16 string field
-                    predicted_ahead_for = ann_model_object.predicted_win_size * ann_model_object.period,  # in mins, can remove we also have it in ann model
-                    probability_same = trend_predicted[0],
-                    probability_up = trend_predicted[1],
+                    ai_model=str(model[:15]),  # to fit in 16 string field
+                    predicted_ahead_for=ann_model_object.predicted_win_size * ann_model_object.period,  # in mins, can remove we also have it in ann model
+                    probability_same=trend_predicted[0],
+                    probability_up=trend_predicted[1],
                     probability_down=trend_predicted[2] if len(trend_predicted) == 3 else None,
                 )
                 if MODIFY_DB: new_instance.save()
