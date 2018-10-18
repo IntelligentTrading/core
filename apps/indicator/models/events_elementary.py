@@ -6,7 +6,6 @@ import pandas as pd
 from scipy import stats
 
 from settings import LOAD_TALIB
-
 if LOAD_TALIB:
     import talib
 

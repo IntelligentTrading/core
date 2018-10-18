@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 from django.db import models
 from apps.indicator.models.abstract_indicator import AbstractIndicator
-#from apps.indicator.models.price import Price
 from apps.indicator.models.price_history import PriceHistory
 import time
 
