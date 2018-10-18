@@ -12,8 +12,8 @@ class Address(Timestampable, models.Model):
     city = models.CharField(max_length=35, null=True, blank=True)
     region = models.CharField(max_length=35, null=True, blank=True)
     postal_code = models.CharField(max_length=10, null=True, blank=True)
-    country = models.ForeignKey(
-        'common.Country', related_name='addresses', null=True)
+    country = models.ForeignKey('common.Country', related_name='addresses',
+                                null=True, on_delete=models.SET_NULL)
 
     # MODEL PROPERTIES
     @property

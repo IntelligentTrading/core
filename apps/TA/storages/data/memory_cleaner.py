@@ -25,12 +25,15 @@ def redisCleanup():
 
     # PriceVolumeHistoryStorage
     # delete all values 2 hours old or older
-    old_for_pv_history = now_timestamp - (3600 * 2)  # 2 hours
+    old_for_pv_history_timestamp = now_timestamp - (3600 * 2)  # 2 hours
+
+    from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage
+    old_score = PriceVolumeHistoryStorage.score_from_timestamp(old_for_pv_history_timestamp)
 
     pv_history_keys = database.keys(f'*:PriceVolumeHistoryStorage:*')
     for pv_history_key in pv_history_keys:
         try:
-            database.zremrangebyscore(pv_history_key, 0, old_for_pv_history)
+            database.zremrangebyscore(pv_history_key, 0, old_score)
         except Exception as e:
             logger.error(str(e))
 
@@ -38,22 +41,26 @@ def redisCleanup():
     # PriceStorage
     # delete all values 200 days old or older
     if STAGE:
-        old_for_price_history = now_timestamp - (5 * SMA_LIST[-1])  # 200 periods on short
+        old_for_price_timestamp = now_timestamp - (5 * SMA_LIST[-1])  # 200 periods on short
     else:
-        old_for_price_history = now_timestamp - (3600 * 24 * SMA_LIST[-1])  # 200 days
+        old_for_price_timestamp = now_timestamp - (3600 * 24 * SMA_LIST[-1])  # 200 days
+
+    from apps.TA.storages.data.price import PriceStorage
+    old_score = PriceStorage.score_from_timestamp(old_for_price_timestamp)
 
     price_history_keys = database.keys(f'*:PriceStorage:*')
     for price_history_key in price_history_keys:
         try:
-            database.zremrangebyscore(price_history_key, 0, old_for_price_history)
+            database.zremrangebyscore(price_history_key, 0, old_score)
         except Exception as e:
             logger.error(str(e))
 
-    # remove all poloniex and bittrex data for now
-    # todo: remove this and make sure it's not necessary
-    for key in database.keys("*:poloniex:*"):
-        database.delete(key)
-    for key in database.keys("*:bittrex:*"):
-        database.delete(key)
+    if STAGE:
+        # remove all poloniex and bittrex data for now
+        # todo: remove this and make sure it's not necessary
+        for key in database.keys("*:poloniex:*"):
+            database.delete(key)
+        for key in database.keys("*:bittrex:*"):
+            database.delete(key)
 
 # from apps.TA.storages.data.memory_cleaner import redisCleanup as rC

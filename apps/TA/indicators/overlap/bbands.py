@@ -3,7 +3,7 @@ if LOAD_TALIB:
     import talib
 
 from apps.TA import HORIZONS
-from apps.TA.storages.abstract.indicator import IndicatorStorage, BULLISH, BEARISH
+from apps.TA.storages.abstract.indicator import IndicatorStorage, BULLISH, BEARISH, OTHER
 from apps.TA.storages.abstract.indicator_subscriber import IndicatorSubscriber
 from apps.TA.storages.data.price import PriceStorage
 from settings import logger
@@ -13,10 +13,25 @@ class BbandsStorage(IndicatorStorage):
 
     def produce_signal(self):
 
-        squeeze = self.upperband - self.lowerband
-        if squeeze < 5:
-            self.send_signal(trend=BULLISH, squeeze=squeeze)
+        self.width = (self.upperband - self.lowerband) / self.middleband
 
+        bands_of_last_180_periods = BbandsStorage.query(ticker=self.ticker, exchange=self.exchange,
+                                     timestamp=self.timestamp, periods=180)
+
+        all_widths = [((bb.upperband - bb.lowerband) / bb.middleband) for bb in bands_of_last_180_periods]
+        if self.width <= min(all_widths): # smallest width (squeeze) in the last 180 periods
+            # squeeze = True
+
+            if self.price > self.upperband: # price breaks out above the band
+                self.trend = BULLISH
+
+            elif self.price < self.lowerband: # price breaks out below the band
+                self.trend = BEARISH
+
+            else: # price doesn't break out - but the squeeze thing is cool
+                self.trend = OTHER
+
+            self.send_signal(type="BBands", trend=self.trend, width=self.width)
 
 
 

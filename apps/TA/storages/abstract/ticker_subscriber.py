@@ -13,7 +13,7 @@ class SubscriberException(TAException):
 
 
 class TickerSubscriber(ABC):
-
+    class_describer = "ticker_subscriber"
     classes_subscribing_to = [
         # ...
     ]

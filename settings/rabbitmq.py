@@ -3,6 +3,8 @@ import sys
 from abc import ABC
 import pika
 
+from apps.common.utilities.multithreading import start_new_thread
+
 
 class RabbitMQ(ABC):
 
@@ -34,8 +36,15 @@ class WorkQueue(RabbitMQ):
     def add_task(self, message):
         message = ' '.join(sys.argv[1:]) or "Hello World!"
         self.channel.basic_publish(exchange='',
-                          routing_key='hello',
+                          routing_key=self.topic,
                           body=message)
+
+    def process_tasks(self):
+        self.channel.consume(queue=self.topic)
+
+    @start_new_thread
+    def process_tasks_async(self):
+        self.channel.consume(queue=self.topic)
 
 
 class PubSub(RabbitMQ):

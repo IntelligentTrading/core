@@ -132,7 +132,7 @@ def _compute_lstm_classification(ann_model, **kwargs):
     # TODO: download price and VOLUME tables too!
     logger.debug("    ... Do we have NaNs in X?: " + str(np.isnan(X_predict[0, :, :]).any()))
 
-    if sum(sum(np.isnan(X_predict[0, :, :]))) > 20:
+    if sum(sum(np.isnan(X_predict[0, :, :]))) > 40:
         logger.info(" >> Cancel AI prediction, because too many NaNs, prediction is not reliable!")
         return None
 
