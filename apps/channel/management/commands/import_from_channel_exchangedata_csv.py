@@ -29,6 +29,7 @@ class Command(BaseCommand):
     #     parser.add_argument('filename', type=str)
 
     def handle(self, *args, **options):
+        pass
         ## import price history from Core app  channel exchange data csv
         #read_from_core_channel_exchange_data_poloniex()
 

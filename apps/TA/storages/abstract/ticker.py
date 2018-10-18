@@ -16,10 +16,10 @@ class TickerStorage(TimeseriesStorage):
     todo: split the db by each exchange source
     """
     class_describer = "ticker"
+    value_sig_figs = 6
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.class_describer = kwargs.get('class_describer', self.__class__.class_describer)
 
         # 'ticker' REQUIRED
         # 'exchange EXPECTED BUT CAN STILL SAVE WITHOUT

@@ -19,6 +19,7 @@ class EmaStorage(IndicatorStorage):
 
 
 class EmaSubscriber(IndicatorSubscriber):
+
     classes_subscribing_to = [
         PriceStorage
     ]

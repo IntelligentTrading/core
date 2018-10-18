@@ -25,6 +25,7 @@ class IndicatorStorage(TickerStorage):
     add short, medium, long as 1hr, 4hr, 24hr time horizons
     """
     class_describer = "indicator"
+    value_sig_figs = 6
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -44,6 +45,18 @@ class IndicatorStorage(TickerStorage):
                                      f'must be a factor of periods {self.periods}')
 
         self.db_key_suffix = f':{self.periods}'
+
+
+    @classmethod
+    def score_from_timestamp(cls, *args, **kwargs) -> int:
+        # enforce integer score == num of 5min periods since Jan_1_2017
+        return int(round(super().score_from_timestamp(*args, **kwargs)))
+
+    @classmethod
+    def periods_from_seconds(cls, *args, **kwargs) -> int:
+        # enforce integer periods, round to nearest
+        return int(round(super().periods_from_seconds(*args, **kwargs)))
+
 
     @classmethod
     def query(cls, *args, **kwargs):
@@ -65,7 +78,7 @@ class IndicatorStorage(TickerStorage):
         :return: None
         """
         if "this indicator" == "interesting":
-            self.send_signal(trend=BULLISH)  # trend is required
+            self.send_signal(trend=BULLISH)
 
     def send_signal(self, trend=OTHER, *args, **kwargs):
         """
@@ -108,7 +121,6 @@ class IndicatorStorage(TickerStorage):
             raise IndicatorException("save error, missing data")
 
         self.db_key_suffix = f'{str(self.periods)}'
-        logger.debug("ready to save, db_key will be " + self.get_db_key())
         save_result = super().save(*args, **kwargs)
         self.produce_signal()
         return save_result

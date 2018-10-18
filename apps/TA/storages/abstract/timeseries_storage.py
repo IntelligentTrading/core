@@ -25,7 +25,6 @@ class TimeseriesStorage(KeyValueStorage):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.class_describer = kwargs.get('class_describer', self.__class__.class_describer)
 
         # 'timestamp' REQUIRED, VALIDATE
         try:
@@ -50,8 +49,24 @@ class TimeseriesStorage(KeyValueStorage):
             database.sadd("sorted_sets", self.describer_key)
 
     @classmethod
+    def score_from_timestamp(cls, timestamp) -> float:
+        return round(float(timestamp - JAN_1_2017_TIMESTAMP) / 300, 3)
+
+    @classmethod
+    def timestamp_from_score(cls, score) -> int:
+        return int(score * 300) + JAN_1_2017_TIMESTAMP
+
+    @classmethod
+    def periods_from_seconds(cls, seconds) -> float:
+        return float(seconds) / 300
+
+    @classmethod
+    def seconds_from_periods(cls, periods) -> int:
+        return int(periods * 300)
+
+    @classmethod
     def query(cls, key: str = "", key_suffix: str = "", key_prefix: str = "",
-              timestamp: int = None, periods_range: int = 0,
+              timestamp: int = None, periods_range: float = 0.01,
               timestamp_tolerance: int = 299,
               *args, **kwargs) -> dict:
 
@@ -80,56 +95,66 @@ class TimeseriesStorage(KeyValueStorage):
                         'values': []}
 
         # if no timestamp, assume query to find the most recent, the last one
+
         if not timestamp:
             query_response = database.zrange(sorted_set_key, -1, -1)
+            try:
+                [value, timestamp] = query_response[0].decode("utf-8").split(":")
+            except:
+                value, timestamp = "unknown", JAN_1_2017_TIMESTAMP
 
-        if timestamp or periods_range:
-            if not timestamp:
-                try:
-                    [value, timestamp] = query_response[0].decode("utf-8").split(":")
-                except:
-                    # force no results, which raises IndexError exception later
-                    timestamp = JAN_1_2017_TIMESTAMP  # 1483228800
+        else:
+            # compress timestamps to scores
+            target_score = cls.score_from_timestamp(timestamp)
+            score_tolerance = cls.periods_from_seconds(timestamp_tolerance)
 
-            max_timestamp = timestamp = int(timestamp) + timestamp_tolerance
-            min_timestamp = max_timestamp - ((periods_range * 300) + timestamp_tolerance)
-            query_response = database.zrangebyscore(sorted_set_key, min_timestamp, max_timestamp)
+            query_response = database.zrangebyscore(
+                sorted_set_key,
+                (target_score - score_tolerance - periods_range),  # min_query_score
+                (target_score + score_tolerance)  # max_query_score
+            )
 
-        # example query_response = [b'0.06288:1532163247']
+        # OLD example query_response = [b'0.06288:1532163247']
         # which came from f'{self.value}:{str(self.unix_timestamp)}'
-        try:
-            if timestamp == JAN_1_2017_TIMESTAMP:
-                values = []
-            else:  # we are returning a list
-                values = [vt.decode("utf-8").split(":")[0] for vt in query_response]
-                timestamps = [vt.decode("utf-8").split(":")[1] for vt in query_response]
-                #  todo: double check that [-1] in list is most recent timestamp
 
-            if periods_range > 1 and len(values) < periods_range:
-                "Sorry we couldn't find enough values for you :("
+        # NEW example query_response = [b'0.06288:1532163247']
+        # which came from f'{self.value}:{str(score)}' where score = (self.timestamp-JAN_1_2017_TIMESTAMP)/300
+
+        return_dict = {
+            'values': [],
+            'values_count': 0,
+            'timestamp': timestamp,
+            'earliest_timestamp': timestamp,
+            'latest_timest': timestamp,
+            'periods_range': periods_range or 1,
+            'period_size': 300,
+        }
+
+        if not len(query_response):
+            return return_dict
+
+        try:
+            return_dict['values_count'] = len(query_response)
+
+            if len(query_response) < periods_range:
+                return_dict["warning"] = "fewer values than query's periods_range"
+                logger.info("Sorry we couldn't find enough values for you :(")
                 # todo: add buffer values? no, let the receiver solve their own problem
                 # todo: but perhaps publish an alert to create missing values around this timestamp
 
-            return {
+            values = [value_score.decode("utf-8").split(":")[0] for value_score in query_response]
+            scores = [value_score.decode("utf-8").split(":")[1] for value_score in query_response]
+            #  todo: double check that [-1] in list is most recent timestamp
+
+            return_dict.update({
                 'values': values,
-                'values_count': len(values),
-                'timestamp': timestamp,
-                'earliest_timestamp': timestamps[0],
-                'latest_timest': timestamps[-1],
-                'periods_range': periods_range or 1,
-                'period_size': "300" if periods_range else None,
-            }
+                'earliest_timestamp': cls.timestamp_from_score(scores[0]),
+                'latest_timest': cls.timestamp_from_score(scores[-1]),
+            })
 
         except IndexError:
-            return {
-                'values': [],
-                'values_count': 0,
-                'timestamp': timestamp,
-                'earliest_timestamp': timestamp,
-                'latest_timest': timestamp,
-                'periods_range': periods_range or 1,
-                'period_size': "300" if periods_range else None,
-            }
+            return return_dict
+
         except Exception as e:
             logger.error("redis query problem: " + str(e))
             raise TimeseriesException(str(e))  # wtf happened?
@@ -143,9 +168,9 @@ class TimeseriesStorage(KeyValueStorage):
 
         self.save_own_existance()
 
-        z_add_key = self.get_db_key()  # set key name
-        z_add_name = f'{self.value}:{str(self.unix_timestamp)}'  # item unique value
-        z_add_score = int(self.unix_timestamp)  # timestamp as score (int or float)
+        z_add_key = f'{self.get_db_key()}'  # set key name
+        z_add_score = f'{self.score_from_timestamp(self.unix_timestamp)}'  # timestamp as score (int or float)
+        z_add_name = f'{self.value}:{z_add_score}'  # item unique value
         z_add_data = {"key": z_add_key, "name": z_add_name, "score": z_add_score}  # key, score, name
         logger.debug(f'saving data with args {z_add_data}')
 
@@ -165,6 +190,23 @@ class TimeseriesStorage(KeyValueStorage):
     def get_value(self, *args, **kwargs):
         TimeseriesException("function not yet implemented! ¯\_(ツ)_/¯ ")
         pass
+
+
+
+def round_sig_figs(value, sig_figs):
+    value = float(value)
+    non_decimal_place = len(str(int(value)))
+    # decimal_places = max(len(str(value % 1))-2, 0)
+
+    if value < 0:
+        distance_from_decimal = 0
+        for char in str(value):
+            if char is ".": continue
+            elif int(char) > 0: break
+            else: distance_from_decimal += 1
+        return round(value, (distance_from_decimal+sig_figs))
+    else:
+        return round(value, (sig_figs-non_decimal_place))
 
 
 

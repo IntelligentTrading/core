@@ -5,7 +5,7 @@ import numpy as np
 
 
 class IndicatorSubscriber(TickerSubscriber):
-
+    class_describer = "indicator_subscriber"
     classes_subscribing_to = [
         # ...
     ]
