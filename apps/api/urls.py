@@ -1,10 +1,10 @@
-from django.conf.urls import url, include
+from django.conf.urls import url
 from rest_framework_swagger.views import get_swagger_view
 
-from apps.api.views import v1_price, v1_volume, v1_user, v1_csv
 from apps.api.views import ann_price_classification, events_elementary, events_logical, \
-                            history_price, resampled_price, rsi, signal, sma, volume, price
+    history_price, resampled_price, rsi, signal, sma, volume, price
 from apps.api.views import tickers, itt
+from apps.api.views import v1_price, v1_volume, v1_user, v1_csv
 
 app_name = 'api'
 

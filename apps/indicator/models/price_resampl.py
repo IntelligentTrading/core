@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 from django.db import models
 from apps.indicator.models.abstract_indicator import AbstractIndicator
-#from apps.indicator.models.price import Price
 from apps.indicator.models.price_history import PriceHistory
 import time
 
@@ -88,7 +87,6 @@ class PriceResampl(AbstractIndicator):
             self.low_volume = float(volumes.min())
             self.high_volume = float(volumes.max())
             self.volume_variance = float(volumes.var())
-            logger.info('====================>  volume_variance = %d,  (%s)' % (self.volume_variance, self.resample_period))
 
             return True
         else:
