@@ -1,6 +1,7 @@
 from apps.TA.resources import historical_data, price_volume
 from django.conf.urls import url
 
+app_name = 'redis_api'
 
 urlpatterns = [
 

@@ -4,6 +4,8 @@ from apps.dashboard.views.main import Main
 # from apps.dashboard.views.market import Market
 from apps.dashboard.views.ticker import Ticker
 
+app_name = 'dashboard'
+
 urlpatterns = [
 
     url(r'^$', cache_page(3600 * 4)(Main.as_view()), name='main'),

@@ -6,6 +6,7 @@ from apps.api.views import ann_price_classification, events_elementary, events_l
                             history_price, resampled_price, rsi, signal, sma, volume, price
 from apps.api.views import tickers, itt
 
+app_name = 'api'
 
 schema_view = get_swagger_view(title='ITT Core API')
 

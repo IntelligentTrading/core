@@ -11,8 +11,8 @@ class Country(
     calling_code = models.CharField(max_length=3, blank=True)
 
     # assuming countries stick to one currency nationwide
-    currency = models.ForeignKey(
-        'common.Currency', related_name='countries', null=True)
+    currency = models.ForeignKey('common.Currency', related_name='countries',
+                                 null=True, on_delete=models.SET_NULL)
 
     # MODEL PROPERTIES
 
