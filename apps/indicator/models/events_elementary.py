@@ -1,27 +1,24 @@
-import time
 import logging
-import pandas as pd
+import time
+
 import numpy as np
-from scipy.stats import multivariate_normal
+import pandas as pd
 from scipy import stats
 
 from settings import LOAD_TALIB
+
 if LOAD_TALIB:
     import talib
 
 from django.db import models
-from django.db import connection
 from apps.indicator.models.abstract_indicator import AbstractIndicator
 from apps.indicator.models.price_resampl import get_n_last_resampl_df
 from apps.indicator.models.sma import get_n_last_sma_df
 from apps.indicator.models.rsi import Rsi
 from apps.signal.models.signal import Signal
-from apps.indicator.models.ann_future_price_classification import AnnPriceClassification, get_n_last_ann_classif_df
-#from apps.indicator.models.volume import get_n_last_volumes_ts
-from apps.indicator.models.price_history import get_n_last_volumes_ts
 
 from apps.user.models.user import get_horizon_value_from_string
-from settings import SHORT, MEDIUM, LONG
+from settings import SHORT
 from settings import HORIZONS_TIME2NAMES, EMIT_RSI, EMIT_SMA, RUN_ANN, MODIFY_DB, MEDIUM, RUN_BEN
 
 
@@ -559,6 +556,7 @@ class EventsElementary(AbstractIndicator):
         # TODO: remove SHORT/ MEDIUM when models for 3 horizons will be added!
         if RUN_ANN and (kwargs['resample_period'] in [SHORT,MEDIUM]):
             # get recent ai_indicators from DB
+            from apps.indicator.models.ann_future_price_classification import get_n_last_ann_classif_df
             ann_classif_df = get_n_last_ann_classif_df(200, "PRICE_PREDICT", **kwargs)
             if ann_classif_df.empty:
                 logger.error('  get_n_last_ann: something wrong with AI indicators... we dont have it ...')
