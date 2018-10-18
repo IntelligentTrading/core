@@ -50,7 +50,7 @@ class TimeseriesStorage(KeyValueStorage):
 
     @classmethod
     def score_from_timestamp(cls, timestamp) -> float:
-        return float(timestamp - JAN_1_2017_TIMESTAMP) / 300
+        return round(float(timestamp - JAN_1_2017_TIMESTAMP) / 300, 3)
 
     @classmethod
     def timestamp_from_score(cls, score) -> int:

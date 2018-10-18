@@ -23,6 +23,7 @@ ipython==5.1.0
 jsonfield==1.0.3
 numpy==1.14.4
 pandas==0.23.4
+pika==0.12.0
 python-binary-memcached==0.26.1
 python-dateutil==2.6.0
 python-memcached==1.59

@@ -9,7 +9,10 @@ from settings.redis_db import database
 
 logger = logging.getLogger(__name__)
 
-earliest_price_timestamp = int(float(database.zrangebyscore("BTC_USDT:bittrex:PriceStorage:close_price", 0, "inf", 0, 1)[0].decode("utf-8").split(":")[0]))
+try:
+    earliest_price_timestamp = int(float(database.zrangebyscore("BTC_USDT:bittrex:PriceStorage:close_price", 0, "inf", 0, 1)[0].decode("utf-8").split(":")[0]))
+except:
+    earliest_price_timestamp = int(time.time())
 
 
 # todo for making this more efficient
