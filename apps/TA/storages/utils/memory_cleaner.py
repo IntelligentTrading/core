@@ -78,3 +78,18 @@ def redisCleanup():
             database.delete(key)
 
 # from apps.TA.storages.data.memory_cleaner import redisCleanup as rC
+
+
+def clear_pv_history_values(ticker: str, exchange: str, score: float, conservative: bool = True) -> bool:
+    from apps.TA.storages.abstract.ticker_subscriber import get_nearest_5min_score
+
+    # todo: move logic to PriceVolumeHistoryStorage.destroy()
+
+    # 45s/300 is range for deletion, other
+    score = get_nearest_5min_score(score)
+
+    min_score = score - 1 + ((45/300) if conservative else 0)
+    max_score = score - ((255/300) if conservative else 0)
+
+    for key in database.keys(f"{ticker}:{exchange}:PriceVolumeHistoryStorage:*price*"):
+        database.zremrangebyscore(key, min_score, max_score)
