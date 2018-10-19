@@ -78,7 +78,7 @@ class TimeseriesStorage(KeyValueStorage):
         """
 
         sorted_set_key = cls.compile_db_key(key=key, key_prefix=key_prefix, key_suffix=key_suffix)
-        logger.debug(f'query for sorted set key {sorted_set_key}')
+        # logger.debug(f'query for sorted set key {sorted_set_key}')
         # example key f'{key_prefix}:{cls.__name__}:{key_suffix}'
 
         # do a quick check to make sure this is a class of things we know is in existence
@@ -97,13 +97,11 @@ class TimeseriesStorage(KeyValueStorage):
             target_score = cls.score_from_timestamp(timestamp)
             score_tolerance = cls.periods_from_seconds(timestamp_tolerance)
 
-            logger.debug(f"querying for key {sorted_set_key} with score {target_score} and back {periods_range} periods")
+            # logger.debug(f"querying for key {sorted_set_key} with score {target_score} and back {periods_range} periods")
 
-            query_response = database.zrangebyscore(
-                sorted_set_key,
-                (target_score - score_tolerance - periods_range),  # min_query_score
-                (target_score + score_tolerance)  # max_query_score
-            )
+            min_score, max_score = (target_score - score_tolerance - periods_range), (target_score + score_tolerance)
+
+            query_response = database.zrangebyscore(sorted_set_key, min_score, max_score)
 
         # OLD example query_response = [b'0.06288:1532163247']
         # which came from f'{self.value}:{str(self.unix_timestamp)}'
@@ -115,8 +113,8 @@ class TimeseriesStorage(KeyValueStorage):
             'values': [],
             'values_count': 0,
             'timestamp': timestamp,
-            'earliest_timestamp': timestamp,
-            'latest_timest': timestamp,
+            'earliest_timestamp': TimeseriesStorage.score_from_timestamp(min_score),
+            'latest_timestamp': TimeseriesStorage.score_from_timestamp(max_score),
             'periods_range': periods_range or 1,
             'period_size': 300,
         }
@@ -140,7 +138,7 @@ class TimeseriesStorage(KeyValueStorage):
             return_dict.update({
                 'values': values,
                 'earliest_timestamp': cls.timestamp_from_score(float(scores[0])),
-                'latest_timest': cls.timestamp_from_score(float(scores[-1])),
+                'latest_timestamp': cls.timestamp_from_score(float(scores[-1])),
             })
             return return_dict
 
@@ -166,7 +164,7 @@ class TimeseriesStorage(KeyValueStorage):
         z_add_score = f'{self.score_from_timestamp(self.unix_timestamp)}'  # timestamp as score (int or float)
         z_add_name = f'{self.value}:{z_add_score}'  # item unique value
         z_add_data = {"key": z_add_key, "name": z_add_name, "score": z_add_score}  # key, score, name
-        logger.debug(f'saving data with args {z_add_data}')
+        # logger.debug(f'saving data with args {z_add_data}')
 
         if pipeline is not None:
             # logger.debug("added command to redis pipeline")
