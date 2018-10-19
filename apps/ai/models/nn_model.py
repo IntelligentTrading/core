@@ -14,9 +14,9 @@ logger = logging.getLogger(__name__)
 
 
 MODEL_REF = {
-    ("PRICE_PREDICT", SHORT): 'lstm_short_60m_160_8_3class_return_0.03.h5',
+    ("PRICE_PREDICT", SHORT) : 'lstm_short_60m_160_8_3class_return_0.03.h5',
     ("PRICE_PREDICT", MEDIUM): 'lstm_medium_240m_100_12_3class_return_0.08.h5',
-    ("PRICE_PREDICT", LONG): 'lstm_model_2_2.h5',
+    ("PRICE_PREDICT", LONG)  : 'lstm_model_2_2.h5',
 
     ("PRICE_MAXHIT", MEDIUM): "lstm_medium_240m_120_8_maxhit2cl_0.05.h5"
 }
@@ -66,7 +66,7 @@ class AnnModel(models.Model):
         else:
             download_file_from_s3(self.s3_model_file)
             self.keras_model = load_model(self.s3_model_file) # 'lstm_model.h5'
-            logger.debug(" >> KERAS model loaded and returned!")
+            logger.debug(" >> KERAS model loaded and returned: " + self.s3_model_file)
             return self.keras_model
 
     # retrieve an appropriate dataset for a given model_type
@@ -130,9 +130,9 @@ def lookup_ann_model_object(s3_model_file):
     if not ann_model.keras_model:
         try:
             ann_model.initialize()   # download model from S3, save it on local disk, then upload to class
-            logger.info(">> ANN model loaded FIRST TIME, ELapsed time: " + str(time.time() - start) + s3_model_file)
+            logger.info(">> ANN model loaded FIRST TIME, ELapsed time: " + str(time.time() - start) + " / " + s3_model_file)
         except Exception as e:
-            logger.error(" Cannot load ANN model: either no Model in DB or S3 file does not exist")
+            logger.error(" Cannot load ANN model: either no Model in DB or S3 file does not exist" + " / " + s3_model_file)
     else:
         logger.info(">> get ANN model from CACHE, elapsed time: " + str(time.time() - start))
 
