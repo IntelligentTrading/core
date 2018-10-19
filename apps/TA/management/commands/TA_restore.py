@@ -1,8 +1,10 @@
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.core.management.base import BaseCommand
+
+from apps.TA.storages.abstract.timeseries_storage import TimeseriesStorage
 from settings.redis_db import database
 from apps.indicator.models.price_history import PriceHistory
 from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, default_price_indexes, default_volume_indexes
@@ -24,31 +26,26 @@ class Command(BaseCommand):
         logger.info("Starting TA restore script.")
 
         # jan_1_2017_unix = 1483228800
-        # timestamp = jan_1_2017 = datetime(2017, 1, 1)
-        # timestamp_unix = int(timestamp.timestamp())
 
-        PriceHistory.objects.order_by("timestamp").count()
+        ### PULL PRICE HISTORY RECORDS FROM CORE PRICE HISTORY DATABASE ###
 
+        today = datetime.now()
+        start_day = datetime(today.year, today.month, today.day)
 
-        year, month = 2017, 1
-        start_date = jan_1_2017 = datetime(year, month, 1, 0, 0)
+        start_day = datetime(2018, 9, 29)
+        end_day = datetime(2017, 1, 1, 0, 0)
+        process_day = start_day
 
-        # batch_num = 0
-        # batch_size = 500
-        # batch_num_stop = 1  # set to -1 for infinity
-
-        # all_price_history = PriceHistory.objects.order_by("timestamp")
-        # all_price_history_count = all_price_history.count()
-
-        while month <= 12:
-            month += 1
-            all_price_history = PriceHistory.objects.filter(timestamp__year=year, timestamp__month=month)
-
-        # while (batch_num * batch_size < all_price_history_count) and not (batch_num == batch_num_stop):
+        while process_day > end_day:
+            process_day -= timedelta(days=1)
+            price_history_objects = PriceHistory.objects.filter(
+                timestamp__gte=process_day,
+                timestamp__lt=process_day+timedelta(days=1)
+            )
 
             pipeline = database.pipeline()  # transaction=False
 
-            for ph_object in all_price_history:
+            for ph_object in price_history_objects:
                 # batch_num += 1
 
                 if ph_object.transaction_currency not in transaction_currencies:
@@ -90,10 +87,32 @@ class Command(BaseCommand):
                 if ph_object.volume and ph_object.volume > 0:
                     pv_storage.index = "close_volume"
                     pv_storage.value = ph_object.volume
-                    pipeline = pv_storage.save(publish=True, pipeline=pipeline)
+                    pipeline = pv_storage.save(publish=False, pipeline=pipeline)
 
             database_response = pipeline.execute()
             logger.debug(f"{sum(database_response)} values added to Redis")
+
+        ### END PULL OF PRICE HISTORY RECORDS ###
+
+
+### RESAMPLE PRICES TO 5 MIN PRICE STORAGE RECORDS ###
+def price_history_to_price_storage():
+    start_score = processing_score = 0
+    end_score = TimeseriesStorage.score_from_timestamp((datetime.today() - timedelta(hours=2)).timestamp())
+
+    while processing_score < end_score:
+        processing_score += 1
+
+
+
+
+
+### END RESAMPLE FOR PRICE STORAGE RECORDS ###
+
+
+
+
+
 
 
 transaction_currencies = [
