@@ -93,3 +93,4 @@ def clear_pv_history_values(ticker: str, exchange: str, score: float, conservati
 
     for key in database.keys(f"{ticker}:{exchange}:PriceVolumeHistoryStorage:*price*"):
         database.zremrangebyscore(key, min_score, max_score)
+        # logger.debug(f"removing values in {key} for scores {min_score} to {max_score}")

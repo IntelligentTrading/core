@@ -5,7 +5,6 @@ from apps.TA.storages.abstract.ticker import TickerStorage
 from apps.TA.storages.abstract.ticker_subscriber import TickerSubscriber, score_is_near_5min
 from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, default_price_indexes, derived_price_indexes
 from apps.TA.storages.utils.memory_cleaner import clear_pv_history_values
-from apps.TA.storages.utils.pv_resampling import generate_pv_storages
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +89,7 @@ class PriceSubscriber(TickerSubscriber):
                            f'is different than score `{score}`')
 
         if score_is_near_5min(score):
+            from apps.TA.storages.utils.pv_resampling import generate_pv_storages
             if generate_pv_storages(ticker, exchange, index, score):
                 if index == "close_price":
                     clear_pv_history_values(ticker, exchange, score)

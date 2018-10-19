@@ -10,15 +10,16 @@ from settings.redis_db import database
 logger = logging.getLogger(__name__)
 
 try:
-    earliest_price_timestamp = int(float(database.zrangebyscore("BTC_USDT:bittrex:PriceStorage:close_price", 0, "inf", 0, 1)[0].decode("utf-8").split(":")[0]))
+    earliest_price_score = int(float(database.zrangebyscore("BTC_USDT:bittrex:PriceStorage:close_price", 0, "inf", 0, 1)[0].decode("utf-8").split(":")[0]))
 except:
-    earliest_price_timestamp = int(time.time())
+    from apps.TA.storages.abstract.timeseries_storage import TimeseriesStorage
+    earliest_price_score = TimeseriesStorage.score_from_timestamp(int(time.time()))
 
 
 # todo for making this more efficient
 #  - only 5min price history, all else can be generated on demand
 # ✅ def compress(timestamp): return (timestamp - JAN_1_2017_TIMESTAMP)/300
-#  - floor all prices to 6 sig-figs (saving up to 6 digits for XX_USDT prices) on TickerStorage
+# 🚫 - floor all prices to 6 sig-figs (saving up to 6 digits for XX_USDT prices) on TickerStorage
 # ✅  - but maybe no because we like operating with satoshis always
 # ✅ - cast scores on indicators to integers (saving 2 digits)
 # ✅ - use rabbitmq as a centralized task queue so workers can scale horizontally

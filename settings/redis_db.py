@@ -17,9 +17,6 @@ else:
 
 logger.info("Redis connection established for app database.")
 
-# hold this in python memory for fast access
-# todo: does this even work with namespaces??
-set_of_known_sets_in_redis = set()
 
 allowed_tickers = [
     'AGI_BTC',

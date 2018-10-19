@@ -20,7 +20,7 @@ def generate_pv_storages(ticker: str, exchange: str, index: str, score: float) -
     else:
         raise Exception("I don't know what kind of index this is")
 
-    logger.debug(f'process price for ticker: {ticker} and index: {index}')
+    # logger.debug(f'process price for ticker: {ticker} and index: {index}')
 
     # eg. key_format = f'{ticker}:{exchange}:PriceVolumeHistoryStorage:{index}'
 
@@ -30,8 +30,8 @@ def generate_pv_storages(ticker: str, exchange: str, index: str, score: float) -
         periods_range=1, timestamp_tolerance=29
     )
 
-    logger.debug("results from PriceVolumeHistoryStorage query... ")
-    logger.debug(query_results)
+    # logger.debug("results from PriceVolumeHistoryStorage query... ")
+    # logger.debug(query_results)
 
     try:
         index_values = [int(v) for v in query_results['values']]
@@ -60,7 +60,7 @@ def generate_pv_storages(ticker: str, exchange: str, index: str, score: float) -
         if storage.value:
             storage.index = index
             storage.save(publish=False)
-            logger.info("saved new thing: " + storage.get_db_key())
+            # logger.info("saved new thing: " + storage.get_db_key())
 
     if index == "close_price":
         all_values_set = set(index_values)  # these are the close prices
