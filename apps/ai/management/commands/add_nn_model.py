@@ -138,7 +138,7 @@ class Command(BaseCommand):
                 s3_notebook_file = 'NA',
                 period = 240,  # min
 
-                slide_win_size = 100, # so timewise it is 200 x 10min = 33,3 hours
+                slide_win_size = 120, # so timewise it is 200 x 10min = 33,3 hours
                 predicted_win_size = 8, # 90 x 10min = 15 hours
                 delta_tolerance = 0.05, # +/- 2%
 
