@@ -38,6 +38,20 @@ def redisCleanup():
             logger.error(str(e))
 
 
+    #PriceVolumeHistoryStorage
+    from datetime import datetime, timedelta
+    from apps.TA.storages.abstract.timeseries_storage import TimeseriesStorage
+    old_score = TimeseriesStorage.score_from_timestamp(datetime(2017, 1, 1).timestamp())
+    highest_allowed_score = TimeseriesStorage.score_from_timestamp((datetime.today() + timedelta(days=1)).timestamp())
+
+    for price_history_key in database.keys("*PriceVolumeHistoryStorage*"):
+        # remove anything without a valid score (valid is between jan_1_2017 and today using timeseries score)
+        database.zremrangebyscore(price_history_key, 0, old_score)
+        database.zremrangebyscore(price_history_key, highest_allowed_score, datetime.today().timestamp())
+    #PriceVolumeHistoryStorage
+
+
+
     # PriceStorage
     # delete all values 200 days old or older
     if STAGE:
