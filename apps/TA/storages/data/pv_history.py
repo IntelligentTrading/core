@@ -71,5 +71,5 @@ class PriceVolumeHistoryStorage(TickerStorage):
                 raise PriceVolumeHistoryException("unknown index: " + str(self.index))
 
         self.db_key_suffix = f':{self.index}'
-        logger.debug("ready to save, db_key will be " + self.get_db_key())
+        # logger.debug("ready to save, db_key will be " + self.get_db_key())
         return super().save(*args, **kwargs)

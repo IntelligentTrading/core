@@ -1,8 +1,8 @@
 import json
 import logging
 from apps.TA import TAException, JAN_1_2017_TIMESTAMP
-from settings.redis_db import database, set_of_known_sets_in_redis
 from apps.TA.storages.abstract.key_value import KeyValueStorage
+from settings.redis_db import database
 
 logger = logging.getLogger(__name__)
 
@@ -44,9 +44,6 @@ class TimeseriesStorage(KeyValueStorage):
     def save_own_existance(self, describer_key=""):
         self.describer_key = describer_key or f'{self.__class__.class_describer}:{self.get_db_key()}'
 
-        if self.describer_key not in set_of_known_sets_in_redis:
-            set_of_known_sets_in_redis.add(self.describer_key)
-            database.sadd("sorted_sets", self.describer_key)
 
     @classmethod
     def score_from_timestamp(cls, timestamp) -> float:
@@ -86,14 +83,6 @@ class TimeseriesStorage(KeyValueStorage):
 
         # do a quick check to make sure this is a class of things we know is in existence
         describer_key = f'{cls.class_describer}:{sorted_set_key}'
-        if describer_key not in set_of_known_sets_in_redis:
-            if database.sismember("sorted_sets", describer_key):
-                set_of_known_sets_in_redis.add(describer_key)
-            else:
-                logger.warning("query made for unrecognized class type: " + str(describer_key))
-                return {'error': "class type is unrecognized to database",
-                        'values': []}
-
         # if no timestamp, assume query to find the most recent, the last one
 
         if not timestamp:
@@ -180,13 +169,13 @@ class TimeseriesStorage(KeyValueStorage):
         logger.debug(f'saving data with args {z_add_data}')
 
         if pipeline is not None:
-            logger.debug("added command to redis pipeline")
+            # logger.debug("added command to redis pipeline")
             if publish:
                 pipeline = pipeline.publish(self.__class__.__name__, json.dumps(z_add_data))
             return pipeline.zadd(*z_add_data.values())
 
         else:
-            logger.debug("no pipeline, executing zadd command immediately.")
+            # logger.debug("no pipeline, executing zadd command immediately.")
             response = database.zadd(*z_add_data.values())
             if publish:
                 database.publish(self.__class__.__name__, json.dumps(z_add_data))
