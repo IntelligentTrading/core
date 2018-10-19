@@ -2,7 +2,7 @@ import logging
 
 from django.core.management.base import BaseCommand
 
-from apps.TA.storages.data.memory_cleaner import redisCleanup
+from apps.TA.storages.utils.memory_cleaner import redisCleanup
 
 logger = logging.getLogger(__name__)
 

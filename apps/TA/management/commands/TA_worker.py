@@ -3,7 +3,7 @@ import time
 
 from django.core.management.base import BaseCommand
 
-from apps.TA.storages.data.memory_cleaner import redisCleanup
+from apps.TA.storages.utils.memory_cleaner import redisCleanup
 from settings.rabbitmq import WorkQueue
 from settings.redis_db import database
 
