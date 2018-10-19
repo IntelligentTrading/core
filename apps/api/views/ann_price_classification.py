@@ -4,9 +4,7 @@ from apps.api.serializers import AnnPriceClassificationSerializer
 from apps.api.permissions import RestAPIPermission
 from apps.api.paginations import StandardResultsSetPagination
 
-from apps.api.helpers import filter_queryset_by_timestamp#, queryset_for_list_with_resample_period
-
-
+from apps.api.helpers import filter_queryset_by_timestamp  # , queryset_for_list_with_resample_period
 
 
 #  model: AnnPriceClassification
@@ -35,12 +33,14 @@ class ListAnnPriceClassification(ListAPIView):
         page_size -- a numeric value indicating the page size
     """
 
-    permission_classes = (RestAPIPermission, )
+    permission_classes = (RestAPIPermission,)
     pagination_class = StandardResultsSetPagination
     serializer_class = AnnPriceClassificationSerializer
-    filter_fields = ('source', 'resample_period', 'counter_currency', 'transaction_currency', 'predicted_ahead_for', 'ann_model_id')
+    filter_fields = (
+    'source', 'resample_period', 'counter_currency', 'transaction_currency', 'predicted_ahead_for', 'ann_model_id')
 
     model = serializer_class.Meta.model
+
     def get_queryset(self):
         queryset = filter_queryset_by_timestamp(self)
         return queryset

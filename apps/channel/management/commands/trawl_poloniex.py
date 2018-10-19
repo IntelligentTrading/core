@@ -40,7 +40,7 @@ class Command(BaseCommand):
         elif arg == 'compute_indicators':
             for (t_currency, c_currency) in get_currency_pairs(source=POLONIEX, period_in_seconds=1*60*60):
                 _compute_indicators_for(source=POLONIEX, transaction_currency=t_currency,
-                                        counter_currency=c_currency, resample_period=SHORT)
+                                        counter_currency=c_currency, resample_period=MEDIUM)  # SHORT
         elif arg == 'ann':
             from taskapp.tasks import compute_ann_for_all_sources
             #compute_ann_for_all_sources(resample_period=SHORT)

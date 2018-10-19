@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 from django.db import models
 from apps.indicator.models.abstract_indicator import AbstractIndicator
-#from apps.indicator.models.price import Price
 from apps.indicator.models.price_history import PriceHistory
 import time
 
@@ -87,7 +86,7 @@ class PriceResampl(AbstractIndicator):
             self.close_volume = float(volumes[-1])
             self.low_volume = float(volumes.min())
             self.high_volume = float(volumes.max())
-            self.volume_variance = volumes.var()
+            self.volume_variance = float(volumes.var())
 
             return True
         else:
@@ -105,7 +104,7 @@ def get_n_last_resampl_df(n, source, transaction_currency, counter_currency, res
         transaction_currency=transaction_currency,
         counter_currency=counter_currency,
         timestamp__gte = datetime.now() - timedelta(minutes=resample_period * n)
-    ).values('timestamp', 'low_price', 'high_price', 'close_price', 'midpoint_price','mean_price','close_volume','volume_variance').order_by('-timestamp'))
+    ).values('timestamp', 'low_price', 'high_price', 'close_price', 'midpoint_price','mean_price','price_variance','close_volume','volume_variance').order_by('-timestamp'))
 
     df = pd.DataFrame()
     if last_prices:

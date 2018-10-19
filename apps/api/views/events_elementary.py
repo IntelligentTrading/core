@@ -1,15 +1,9 @@
 from rest_framework.generics import ListAPIView
 
-from rest_framework.views import APIView
-
-from apps.api.serializers import EventsElementarySerializer
-from apps.api.permissions import RestAPIPermission
-from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
-
 from apps.api.helpers import filter_queryset_by_timestamp, queryset_for_list_with_resample_period
-
-from apps.indicator.models import EventsElementary
-
+from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
+from apps.api.permissions import RestAPIPermission
+from apps.api.serializers import EventsElementarySerializer
 
 
 class ListEventsElementary(ListAPIView):

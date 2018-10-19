@@ -17,7 +17,7 @@ from apps.ai.models.nn_model import AnnModel
 from apps.indicator.models.price_history import get_n_last_prices_ts, get_n_last_volumes_ts
 #from apps.indicator.models.ann_future_price_classification import AnnPriceClassification
 from settings import MODIFY_DB
-from apps.ai.settings.ai_preload import MODEL_REF
+from apps.ai.models.nn_model import MODEL_REF
 
 import logging
 logger = logging.getLogger(__name__)
@@ -76,10 +76,11 @@ class AnnPriceClassification(AbstractIndicator):
                 new_instance = cls(  #cls.objects.create( <- we do "save" separatelly now
                     **kwargs,
                     ann_model=ann_model_object, #FK
-                    ai_model=model,
+                    ai_model=model[:15],
                     predicted_ahead_for = ann_model_object.predicted_win_size * ann_model_object.period,  # in mins, can remove we also have it in ann model
                     probability_same = trend_predicted[0],
                     probability_up = trend_predicted[1],
+                    probability_down=trend_predicted[2] if len(trend_predicted)==3 else None,
                 )
                 if MODIFY_DB: new_instance.save()
                 logger.info("   ...LSTM prediction indicator has been calculated and saved.")
@@ -131,7 +132,7 @@ def _compute_lstm_classification(ann_model, **kwargs):
     # TODO: download price and VOLUME tables too!
     logger.debug("    ... Do we have NaNs in X?: " + str(np.isnan(X_predict[0, :, :]).any()))
 
-    if sum(sum(np.isnan(X_predict[0, :, :]))) > 20:
+    if sum(sum(np.isnan(X_predict[0, :, :]))) > 40:
         logger.info(" >> Cancel AI prediction, because too many NaNs, prediction is not reliable!")
         return None
 

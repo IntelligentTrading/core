@@ -105,7 +105,7 @@ class Command(BaseCommand):
             AnnModel.objects.create(
                 timestamp=time.time(),
                 source = POLONIEX,
-                model_name = 'LSTM',
+                model_name = 'PRICE_PREDICT',
                 s3_model_file = 'lstm_long_1440m_28_10_class3_return_0.1.h5',
                 s3_notebook_file = 'NA',
                 period = 1440,  # min
@@ -138,7 +138,7 @@ class Command(BaseCommand):
                 s3_notebook_file = 'NA',
                 period = 240,  # min
 
-                slide_win_size = 100, # so timewise it is 200 x 10min = 33,3 hours
+                slide_win_size = 120, # so timewise it is 200 x 10min = 33,3 hours
                 predicted_win_size = 8, # 90 x 10min = 15 hours
                 delta_tolerance = 0.05, # +/- 2%
 
