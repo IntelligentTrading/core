@@ -12,13 +12,6 @@ from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, default_
 
 logger = logging.getLogger(__name__)
 
-try:
-    earliest_price_timestamp = int(float(
-        database.zrangebyscore("BTC:bittrex:PriceStorage:close_price", 0, "inf", 0, 1)[0].decode("utf-8").split(":")[
-            0]))
-except:
-    earliest_price_timestamp = int(time.time())
-
 
 class Command(BaseCommand):
     help = 'Run Redis Subscribers for TA'
@@ -27,23 +20,30 @@ class Command(BaseCommand):
         logger.info("Starting TA restore script.")
 
         today = datetime.now()
-        start_day = datetime(today.year, today.month, today.day)
+        start_datetime = datetime(today.year, today.month, today.day)
 
-        start_day = datetime(2018, 1, 1)
-        end_day = datetime(2018, 8, 29)
-        assert start_day < end_day  # please go forward in time :)
-        process_day = start_day
+        start_datetime = datetime(2018, 6, 1)
+        end_datetime = datetime(2018, 9, 1)
+        assert start_datetime < end_datetime  # please go forward in time :)
+        process_datetime = start_datetime
 
 
-        while process_day < end_day:
-            process_day += timedelta(days=1)
+        while process_datetime < end_datetime:
+            process_datetime += timedelta(hours=1)
+
+            logger.debug(f"restoring past hours data to {process_datetime}")
+
             price_history_objects = PriceHistory.objects.filter(
-                timestamp__gte=process_day - timedelta(days=1),
-                timestamp__lt=process_day
+                timestamp__gte=process_datetime - timedelta(hours=1),
+                timestamp__lt=process_datetime
             )
 
             results = multithread_this_shit(save_pv_histories_to_redis, price_history_objects)
-            total_results = sum([sum(result) for result in results])
+            try:
+                total_results = sum([sum(result) for result in results])
+            except Exception as e:
+                # logger.debug("couldn't sum all of it: " + str(e))
+                total_results = 'unknown'
 
             # for ph_object in price_history_objects:
             #     if ph_object.transaction_currency not in transaction_currencies:
@@ -52,12 +52,16 @@ class Command(BaseCommand):
             # database_response = pipeline.execute()
             # total_results = sum(database_response)
 
-            logger.debug(f"{sum(total_results)} values added to Redis")
+            logger.debug(f"{total_results} values added to Redis")
 
             price_history_to_price_storage(
-                ticker_exchanges=[(pho.ticker, pho.exchange) for pho in price_history_objects],
-                start_score=TimeseriesStorage.score_from_timestamp((process_day - timedelta(days=1)).timestamp()),
-                end_score=TimeseriesStorage.score_from_timestamp(process_day.timestamp())
+                ticker_exchanges=[
+                    (f'{pho.transaction_currency}_{pho.get_counter_currency_display()}', pho.get_source_display())
+                    # (ticker, exchange) as strings
+                    for pho in price_history_objects
+                ],
+                start_score=TimeseriesStorage.score_from_timestamp((process_datetime - timedelta(hours=1)).timestamp()),
+                end_score=TimeseriesStorage.score_from_timestamp(process_datetime.timestamp())
             )
 
 
@@ -135,6 +139,8 @@ def price_history_to_price_storage(ticker_exchanges, start_score=None, end_score
 
     if not end_score:
         end_score = TimeseriesStorage.score_from_timestamp((datetime.today() - timedelta(hours=2)).timestamp())
+
+    logger.debug(f"starting price resampling for scores {start_score} to {end_score}")
 
     while processing_score < end_score:
         processing_score += 1
