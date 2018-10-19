@@ -46,7 +46,8 @@ class PriceVolumeHistoryStorage(TickerStorage):
 
         results_dict = super().query(*args, **kwargs)
 
-        results_dict['index'] = index
+        if results_dict:
+            results_dict['index'] = index
         return results_dict
 
 

@@ -50,11 +50,11 @@ class TimeseriesStorage(KeyValueStorage):
 
     @classmethod
     def score_from_timestamp(cls, timestamp) -> float:
-        return round(float(timestamp - JAN_1_2017_TIMESTAMP) / 300, 3)
+        return round((float(timestamp) - JAN_1_2017_TIMESTAMP) / 300, 3)
 
     @classmethod
     def timestamp_from_score(cls, score) -> int:
-        return int(score * 300) + JAN_1_2017_TIMESTAMP
+        return int(float(score) * 300) + JAN_1_2017_TIMESTAMP
 
     @classmethod
     def periods_from_seconds(cls, seconds) -> float:
@@ -62,7 +62,7 @@ class TimeseriesStorage(KeyValueStorage):
 
     @classmethod
     def seconds_from_periods(cls, periods) -> int:
-        return int(periods * 300)
+        return int(float(periods) * 300)
 
     @classmethod
     def query(cls, key: str = "", key_suffix: str = "", key_prefix: str = "",
@@ -108,6 +108,8 @@ class TimeseriesStorage(KeyValueStorage):
             target_score = cls.score_from_timestamp(timestamp)
             score_tolerance = cls.periods_from_seconds(timestamp_tolerance)
 
+            logger.debug(f"querying for key {sorted_set_key} with score {target_score} and back {periods_range} periods")
+
             query_response = database.zrangebyscore(
                 sorted_set_key,
                 (target_score - score_tolerance - periods_range),  # min_query_score
@@ -148,16 +150,19 @@ class TimeseriesStorage(KeyValueStorage):
 
             return_dict.update({
                 'values': values,
-                'earliest_timestamp': cls.timestamp_from_score(scores[0]),
-                'latest_timest': cls.timestamp_from_score(scores[-1]),
+                'earliest_timestamp': cls.timestamp_from_score(float(scores[0])),
+                'latest_timest': cls.timestamp_from_score(float(scores[-1])),
             })
+            return return_dict
 
         except IndexError:
             return return_dict
 
         except Exception as e:
             logger.error("redis query problem: " + str(e))
-            raise TimeseriesException(str(e))  # wtf happened?
+            return {'error': "redis query problem: " + str(e), # wtf happened?
+                    'values': []}
+
 
     def save(self, publish=False, pipeline=None, *args, **kwargs):
         if not self.value:

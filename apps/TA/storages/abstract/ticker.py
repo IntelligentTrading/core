@@ -53,7 +53,7 @@ class TickerStorage(TimeseriesStorage):
         kwargs["key_prefix"] = f'{ticker}:{exchange}'
 
         results_dict = super().query(*args, **kwargs)
-
-        results_dict['exchange'] = exchange
-        results_dict['ticker'] = ticker
+        if results_dict:
+            results_dict['exchange'] = exchange
+            results_dict['ticker'] = ticker
         return results_dict
