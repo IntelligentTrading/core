@@ -1,8 +1,11 @@
 import logging
+
 from apps.TA import TAException
 from apps.TA.storages.abstract.ticker import TickerStorage
-from apps.TA.storages.abstract.ticker_subscriber import TickerSubscriber, timestamp_is_near_5min, get_nearest_5min_timestamp
+from apps.TA.storages.abstract.ticker_subscriber import TickerSubscriber, score_is_near_5min
 from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, default_price_indexes, derived_price_indexes
+from apps.TA.storages.utils.memory_cleaner import clear_pv_history_values
+from apps.TA.storages.utils.pv_resampling import generate_pv_storages
 
 logger = logging.getLogger(__name__)
 
@@ -66,9 +69,11 @@ class PriceSubscriber(TickerSubscriber):
         # parse data like...
         # {
         #     "key": "POLY_BTC:binance:PriceVolumeHistoryStorage:open_price",
-        #     "name": "3665:1533884227",
-        #     "score": "1533884227"
+        #     "name": "3665:176255.873",
+        #     "score": "176255.873"
         # }
+
+        # eg. sorted_set_key = data["key"]
 
         [ticker, exchange, object_class, index] = data["key"].split(":")
         if not object_class == channel == PriceVolumeHistoryStorage.__name__:
@@ -78,96 +83,13 @@ class PriceSubscriber(TickerSubscriber):
                            f'subscribing class: {PriceVolumeHistoryStorage.__name__}')
         [value, name_score] = data["name"].split(":")
 
-        timestamp = int(float(data["score"]))
+        score = float(data["score"])
 
-        if not timestamp == int(float(data["score"])):
-            logger.warning(f'Unexpected that score in name `{data["score"]}` '
-                           f'is different than score `{timestamp}`')
+        if not name_score == float(data["score"]):
+            logger.warning(f'Unexpected that score in name `{name_score}` '
+                           f'is different than score `{score}`')
 
-        if not timestamp_is_near_5min(timestamp):
-            return
-        else:
-            logger.debug("near to a 5 min time marker")
-
-        timestamp = get_nearest_5min_timestamp(timestamp)
-
-        price = PriceStorage(ticker=ticker, exchange=exchange, timestamp=timestamp)
-
-        logger.debug(f'process price for ticker: {ticker} and index: {index}')
-
-        # key_format = f'{ticker}:{exchange}:PriceVolumeHistoryStorage:{index}'
-        sorted_set_key = data["key"]
-
-        query_results = PriceVolumeHistoryStorage.query(
-            ticker=ticker, exchange=exchange,
-            index=index, timestamp=timestamp,
-            periods_range=1, timestamp_tolerance=29
-        )
-
-        logger.debug("results from PriceVolumeHistoryStorage query... ")
-        logger.debug(query_results)
-
-        index_values = [int(v) for v in query_results['values']]
-        # timestamps = [int(v) for v in query_results['timestamps']]
-
-        try:
-            if not len(index_values):
-                price.value = None
-            elif index == "open_price":
-                price.value = index_values[0]
-            elif index == "close_price":
-                price.value = index_values[-1]
-            elif index == "low_price":
-                price.value = min(index_values)
-            elif index == "high_price":
-                price.value = max(index_values)
-
-        except IndexError:
-            pass  # couldn't find a useful value
-        except ValueError:
-            pass  # couldn't find a useful value
-        else:
-            if price.value:
-                price.index = index
-                price.save(publish=True)
-                logger.info("saved new thing: " + price.get_db_key())
-
-        if index == "close_price":
-            all_values_set = set(index_values)
-            for other_index in ["open_price", "low_price", "high_price"]:
-                query_results = PriceVolumeHistoryStorage.query(
-                    ticker=ticker, exchange=exchange,
-                    index=other_index, timestamp=timestamp,
-                    periods_range=1, timestamp_tolerance=29
-                )
-
-                index_values = [int(v) for v in query_results['values']]
-
-            all_values_set = all_values_set | set(index_values)
-
-            if not len(all_values_set):
-                return
-
-            for index in derived_price_indexes:
-                price.index = index
-                price.value = None
-
-                values_set = all_values_set.copy()
-
-                if index == "midpoint_price":
-                    while len(values_set) > 2:
-                        values_set.remove(max(values_set))
-                        values_set.remove(min(values_set))
-                    price.value = values_set.pop()
-
-                elif index == "mean_price":
-                    price.value = sum(values_set) / (len(values_set) or 1)
-
-                elif index == "price_variance":
-                    # this is too small of a period size to measure variance
-                    pass
-
-                if price.value:
-                    price.value = int(price.value)
-                    price.index = str(index)
-                    price.save(publish=bool(index=="close_price"))
+        if score_is_near_5min(score):
+            if generate_pv_storages(ticker, exchange, index, score):
+                if index == "close_price":
+                    clear_pv_history_values(ticker, exchange, score)

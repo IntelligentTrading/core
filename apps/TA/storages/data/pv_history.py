@@ -51,6 +51,11 @@ class PriceVolumeHistoryStorage(TickerStorage):
         return results_dict
 
 
+    @classmethod
+    def destroy(cls, *args, **kwargs):
+        pass
+
+
     def save(self, *args, **kwargs):
 
         # meets basic requirements for saving
