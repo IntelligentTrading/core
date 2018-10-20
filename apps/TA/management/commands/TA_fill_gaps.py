@@ -17,34 +17,38 @@ class Command(BaseCommand):
 
 
     def handle(self, *args, **options):
-        arg = options['arg']
-
         logger.info("Starting data gaps restoration...")
 
-        today = datetime.now()
-        start_datetime = datetime(today.year, today.month, today.day)
+        arg = options['arg']
+        fill_data_gaps(arg=='force_fill_gaps')
 
-        start_datetime = datetime(2018, 6, 1)
-        end_datetime = datetime(2018, 9, 1)
-        assert start_datetime < end_datetime  # please go forward in time :)
-        process_datetime = start_datetime
 
-        for key in database.keys("*PriceStorage*"):
-            [ticker, exchange, storage_class, index] = key.decode("utf-8").split(":")
+def fill_data_gaps(force_fill=False):
 
-            start_score = missing_data.find_start_score(ticker, exchange, index)
+    today = datetime.now()
+    start_datetime = datetime(today.year, today.month, today.day)
 
-            missing_scores = missing_data.find_pv_storage_data_gaps(ticker, exchange, index, start_score)
+    start_datetime = datetime(2018, 3, 1)
+    end_datetime = datetime(2018, 10, 20)
+    assert start_datetime < end_datetime  # please go forward in time :)
+    process_datetime = start_datetime
 
-            if missing_scores:
-                logger.warning(
-                    "The followng scores could not be recovered and are still missing...\n" +
-                    f"for key: {ticker}:{exchange}:PriceStorage:{index}" + "\n" +
-                    str(missing_scores)
-                )
-                break  # just one at a times for good measure :)
 
-            if arg == 'force_fill_gaps':
-                logger.warning("STARTING FORCE FILL OF THESE VALUES...")
-                logger.warning("!! THERE'S NO GOING BACK FROM HERE. DATA MAY WILL BE PERMAMENTLY CORRUPTED !!")
-                missing_data.force_plug_pv_storage_data_gaps(ticker, exchange, index, missing_scores)
+    for key in database.keys("*PriceStorage*"):
+        [ticker, exchange, storage_class, index] = key.decode("utf-8").split(":")
+
+        start_score = missing_data.find_start_score(ticker, exchange, index)
+
+        missing_scores = missing_data.find_pv_storage_data_gaps(ticker, exchange, index, start_score)
+
+        if missing_scores:
+            logger.warning(
+                "The followng scores could not be recovered and are still missing...\n" +
+                f"for key: {ticker}:{exchange}:PriceStorage:{index}" + "\n" +
+                str(missing_scores)
+            )
+
+        if force_fill:
+            logger.warning("STARTING FORCE FILL OF THESE VALUES...")
+            logger.warning("!! THERE'S NO GOING BACK FROM HERE. DATA MAY WILL BE PERMAMENTLY CORRUPTED !!")
+            missing_data.force_plug_pv_storage_data_gaps(ticker, exchange, index, missing_scores)
