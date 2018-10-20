@@ -49,7 +49,7 @@ class IndicatorSubscriber(TickerSubscriber):
 
 
     @staticmethod
-    def get_values_array_from_query(query_results, limit=0):
+    def get_values_array_from_query(query_results: dict, limit: int = 0):
 
         value_array = [float(v) for v in query_results['values']]
 

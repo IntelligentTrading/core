@@ -46,8 +46,14 @@ class PriceVolumeHistoryStorage(TickerStorage):
 
         results_dict = super().query(*args, **kwargs)
 
-        results_dict['index'] = index
+        if results_dict:
+            results_dict['index'] = index
         return results_dict
+
+
+    @classmethod
+    def destroy(cls, *args, **kwargs):
+        pass
 
 
     def save(self, *args, **kwargs):
@@ -65,5 +71,5 @@ class PriceVolumeHistoryStorage(TickerStorage):
                 raise PriceVolumeHistoryException("unknown index: " + str(self.index))
 
         self.db_key_suffix = f':{self.index}'
-        logger.debug("ready to save, db_key will be " + self.get_db_key())
+        # logger.debug("ready to save, db_key will be " + self.get_db_key())
         return super().save(*args, **kwargs)

@@ -66,7 +66,7 @@ class VolumeSubscriber(TickerSubscriber):
             index_values[index] = [
                 float(db_value.decode("utf-8").split(":")[0])
                 for db_value
-                in self.database.zrangebyscore(sorted_set_key, timestamp - 300, timestamp + 45)
+                in self.database.zrangebyscore(sorted_set_key, timestamp - 300, timestamp + 45) # todo: update to scores
             ]
 
             try:
@@ -85,7 +85,7 @@ class VolumeSubscriber(TickerSubscriber):
                 if volume.value:
                     volume.index = index
                     volume.save()
-                    logger.info("saved new thing: " + volume.get_db_key())
+                    # logger.info("saved new thing: " + volume.get_db_key())
 
             # all_values_set = (
             #         set(index_values["open_volume"])

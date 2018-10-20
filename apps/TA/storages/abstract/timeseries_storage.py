@@ -1,8 +1,10 @@
 import json
 import logging
+from datetime import datetime
+
 from apps.TA import TAException, JAN_1_2017_TIMESTAMP
-from settings.redis_db import database, set_of_known_sets_in_redis
 from apps.TA.storages.abstract.key_value import KeyValueStorage
+from settings.redis_db import database
 
 logger = logging.getLogger(__name__)
 
@@ -44,17 +46,18 @@ class TimeseriesStorage(KeyValueStorage):
     def save_own_existance(self, describer_key=""):
         self.describer_key = describer_key or f'{self.__class__.class_describer}:{self.get_db_key()}'
 
-        if self.describer_key not in set_of_known_sets_in_redis:
-            set_of_known_sets_in_redis.add(self.describer_key)
-            database.sadd("sorted_sets", self.describer_key)
 
     @classmethod
     def score_from_timestamp(cls, timestamp) -> float:
-        return round(float(timestamp - JAN_1_2017_TIMESTAMP) / 300, 3)
+        return round((float(timestamp) - JAN_1_2017_TIMESTAMP) / 300, 3)
 
     @classmethod
     def timestamp_from_score(cls, score) -> int:
-        return int(score * 300) + JAN_1_2017_TIMESTAMP
+        return int(float(score) * 300) + JAN_1_2017_TIMESTAMP
+
+    @classmethod
+    def datetime_from_score(cls, score) -> datetime:
+        return datetime.fromtimestamp(cls.timestamp_from_score(score))
 
     @classmethod
     def periods_from_seconds(cls, seconds) -> float:
@@ -62,14 +65,14 @@ class TimeseriesStorage(KeyValueStorage):
 
     @classmethod
     def seconds_from_periods(cls, periods) -> int:
-        return int(periods * 300)
+        return int(float(periods) * 300)
 
     @classmethod
     def query(cls, key: str = "", key_suffix: str = "", key_prefix: str = "",
-              timestamp: int = None, periods_range: float = 0.01,
+              timestamp: int = None,
               timestamp_tolerance: int = 299,
+              periods_range: float = 0.01,
               *args, **kwargs) -> dict:
-
         """
         :param key: the exact redis sortedset key (optional)
         :param key_suffix: suffix on the key  (optional)
@@ -81,19 +84,11 @@ class TimeseriesStorage(KeyValueStorage):
         """
 
         sorted_set_key = cls.compile_db_key(key=key, key_prefix=key_prefix, key_suffix=key_suffix)
-        logger.debug(f'query for sorted set key {sorted_set_key}')
+        # logger.debug(f'query for sorted set key {sorted_set_key}')
         # example key f'{key_prefix}:{cls.__name__}:{key_suffix}'
 
         # do a quick check to make sure this is a class of things we know is in existence
         describer_key = f'{cls.class_describer}:{sorted_set_key}'
-        if describer_key not in set_of_known_sets_in_redis:
-            if database.sismember("sorted_sets", describer_key):
-                set_of_known_sets_in_redis.add(describer_key)
-            else:
-                logger.warning("query made for unrecognized class type: " + str(describer_key))
-                return {'error': "class type is unrecognized to database",
-                        'values': []}
-
         # if no timestamp, assume query to find the most recent, the last one
 
         if not timestamp:
@@ -103,16 +98,18 @@ class TimeseriesStorage(KeyValueStorage):
             except:
                 value, timestamp = "unknown", JAN_1_2017_TIMESTAMP
 
+            min_score = max_score = cls.score_from_timestamp(timestamp)
+
         else:
             # compress timestamps to scores
             target_score = cls.score_from_timestamp(timestamp)
             score_tolerance = cls.periods_from_seconds(timestamp_tolerance)
 
-            query_response = database.zrangebyscore(
-                sorted_set_key,
-                (target_score - score_tolerance - periods_range),  # min_query_score
-                (target_score + score_tolerance)  # max_query_score
-            )
+            # logger.debug(f"querying for key {sorted_set_key} with score {target_score} and back {periods_range} periods")
+
+            min_score, max_score = (target_score - score_tolerance - periods_range), (target_score + score_tolerance)
+
+            query_response = database.zrangebyscore(sorted_set_key, min_score, max_score)
 
         # OLD example query_response = [b'0.06288:1532163247']
         # which came from f'{self.value}:{str(self.unix_timestamp)}'
@@ -124,9 +121,9 @@ class TimeseriesStorage(KeyValueStorage):
             'values': [],
             'values_count': 0,
             'timestamp': timestamp,
-            'earliest_timestamp': timestamp,
-            'latest_timest': timestamp,
-            'periods_range': periods_range or 1,
+            'earliest_timestamp': cls.score_from_timestamp(min_score),
+            'latest_timestamp': cls.score_from_timestamp(max_score),
+            'periods_range': periods_range,
             'period_size': 300,
         }
 
@@ -136,28 +133,29 @@ class TimeseriesStorage(KeyValueStorage):
         try:
             return_dict['values_count'] = len(query_response)
 
-            if len(query_response) < periods_range:
+            if len(query_response) < periods_range + 1:
                 return_dict["warning"] = "fewer values than query's periods_range"
-                logger.info("Sorry we couldn't find enough values for you :(")
-                # todo: add buffer values? no, let the receiver solve their own problem
-                # todo: but perhaps publish an alert to create missing values around this timestamp
 
             values = [value_score.decode("utf-8").split(":")[0] for value_score in query_response]
             scores = [value_score.decode("utf-8").split(":")[1] for value_score in query_response]
-            #  todo: double check that [-1] in list is most recent timestamp
+            # todo: double check that [-1] in list is most recent timestamp
 
             return_dict.update({
                 'values': values,
-                'earliest_timestamp': cls.timestamp_from_score(scores[0]),
-                'latest_timest': cls.timestamp_from_score(scores[-1]),
+                'scores': scores,
+                'earliest_timestamp': cls.timestamp_from_score(float(scores[0])),
+                'latest_timestamp': cls.timestamp_from_score(float(scores[-1])),
             })
+            return return_dict
 
         except IndexError:
             return return_dict
 
         except Exception as e:
             logger.error("redis query problem: " + str(e))
-            raise TimeseriesException(str(e))  # wtf happened?
+            return {'error': "redis query problem: " + str(e), # wtf happened?
+                    'values': []}
+
 
     def save(self, publish=False, pipeline=None, *args, **kwargs):
         if not self.value:
@@ -172,16 +170,16 @@ class TimeseriesStorage(KeyValueStorage):
         z_add_score = f'{self.score_from_timestamp(self.unix_timestamp)}'  # timestamp as score (int or float)
         z_add_name = f'{self.value}:{z_add_score}'  # item unique value
         z_add_data = {"key": z_add_key, "name": z_add_name, "score": z_add_score}  # key, score, name
-        logger.debug(f'saving data with args {z_add_data}')
+        # logger.debug(f'saving data with args {z_add_data}')
 
         if pipeline is not None:
-            logger.debug("added command to redis pipeline")
+            # logger.debug("added command to redis pipeline")
             if publish:
                 pipeline = pipeline.publish(self.__class__.__name__, json.dumps(z_add_data))
             return pipeline.zadd(*z_add_data.values())
 
         else:
-            logger.debug("no pipeline, executing zadd command immediately.")
+            # logger.debug("no pipeline, executing zadd command immediately.")
             response = database.zadd(*z_add_data.values())
             if publish:
                 database.publish(self.__class__.__name__, json.dumps(z_add_data))
@@ -190,24 +188,6 @@ class TimeseriesStorage(KeyValueStorage):
     def get_value(self, *args, **kwargs):
         TimeseriesException("function not yet implemented! ¯\_(ツ)_/¯ ")
         pass
-
-
-
-def round_sig_figs(value, sig_figs):
-    value = float(value)
-    non_decimal_place = len(str(int(value)))
-    # decimal_places = max(len(str(value % 1))-2, 0)
-
-    if value < 0:
-        distance_from_decimal = 0
-        for char in str(value):
-            if char is ".": continue
-            elif int(char) > 0: break
-            else: distance_from_decimal += 1
-        return round(value, (distance_from_decimal+sig_figs))
-    else:
-        return round(value, (sig_figs-non_decimal_place))
-
 
 
 """
