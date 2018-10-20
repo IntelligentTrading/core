@@ -14,16 +14,17 @@ from settings.redis_db import database
 logger = logging.getLogger(__name__)
 
 
-def find_start_score(ticker: str, exchange: str, index: str) -> int:
+def find_start_score(ticker: str, exchange: str, index: str) -> float:
     """
     Find the score for the first value.
     To for informing data recovery because it's probably pointless
     to search for data before this starting score. Better to start at this
     score and then recover data from then up until now()
+
     :param ticker: eg. "ETH_BTC"
     :param exchange: eg. "binance"
     :param index: eg. "close_price"
-    :return:
+    :return: the score as a float, eg. 148609.0
     """
 
     #eg. key = "ETH_BTC:binance:PriceStorage:close_price"
@@ -37,6 +38,7 @@ def find_start_score(ticker: str, exchange: str, index: str) -> int:
 def find_pv_storage_data_gaps(ticker: str, exchange: str, index: str, start_score: float = 0, end_score: float = 0) -> list:
     """
     Find and plug up gaps in the data for Price and Volume Storages
+
     :param ticker: eg. "ETH_BTC"
     :param exchange: eg. "binance"
     :param index: eg. "close_price", should be found in TA.PRICE_INDEXES or TA.VOLUME_INDEXES
