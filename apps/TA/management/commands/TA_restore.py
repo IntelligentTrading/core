@@ -23,8 +23,8 @@ class Command(BaseCommand):
         today = datetime.now()
         start_datetime = datetime(today.year, today.month, today.day)
 
-        start_datetime = datetime(2018, 3, 1)
-        end_datetime = datetime(2018, 10, 20)
+        start_datetime = datetime(2018, 1, 1)
+        end_datetime = datetime.today()
         assert start_datetime < end_datetime  # please go forward in time :)
         process_datetime = start_datetime
 
@@ -69,6 +69,10 @@ class Command(BaseCommand):
                 ),
                 end_score=TimeseriesStorage.score_from_timestamp(process_datetime.timestamp())
             )
+
+        from apps.TA.management.commands.TA_fill_gaps import fill_data_gaps
+        fill_data_gaps()
+
 
 
 ### PULL PRICE HISTORY RECORDS FROM CORE PRICE HISTORY DATABASE ###
@@ -133,7 +137,7 @@ def save_pv_histories_to_redis(ph_object, pipeline=None):
 
 
 ### RESAMPLE PRICES TO 5 MIN PRICE STORAGE RECORDS ###
-@start_new_thread
+# @start_new_thread
 def price_history_to_price_storage(ticker_exchanges, start_score=None, end_score=None):
     from apps.TA.storages.utils.pv_resampling import generate_pv_storages
 
