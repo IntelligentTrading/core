@@ -1,5 +1,7 @@
 import json
 import logging
+from datetime import datetime
+
 from apps.TA import TAException, JAN_1_2017_TIMESTAMP
 from apps.TA.storages.abstract.key_value import KeyValueStorage
 from settings.redis_db import database
@@ -54,6 +56,10 @@ class TimeseriesStorage(KeyValueStorage):
         return int(float(score) * 300) + JAN_1_2017_TIMESTAMP
 
     @classmethod
+    def datetime_from_score(cls, score) -> datetime:
+        return datetime.fromtimestamp(cls.timestamp_from_score(score))
+
+    @classmethod
     def periods_from_seconds(cls, seconds) -> float:
         return float(seconds) / 300
 
@@ -66,7 +72,6 @@ class TimeseriesStorage(KeyValueStorage):
               timestamp: int = None, periods_range: float = 0.01,
               timestamp_tolerance: int = 299,
               *args, **kwargs) -> dict:
-
         """
         :param key: the exact redis sortedset key (optional)
         :param key_suffix: suffix on the key  (optional)
