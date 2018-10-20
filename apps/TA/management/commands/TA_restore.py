@@ -23,8 +23,8 @@ class Command(BaseCommand):
         today = datetime.now()
         start_datetime = datetime(today.year, today.month, today.day)
 
-        start_datetime = datetime(2018, 6, 1)
-        end_datetime = datetime(2018, 9, 1)
+        start_datetime = datetime(2018, 3, 1)
+        end_datetime = datetime(2018, 10, 20)
         assert start_datetime < end_datetime  # please go forward in time :)
         process_datetime = start_datetime
 
@@ -33,7 +33,7 @@ class Command(BaseCommand):
         while process_datetime < end_datetime:
             process_datetime += timedelta(hours=num_hours_per_query)
 
-            logger.debug(f"restoring past hours data to {process_datetime}")
+            logger.debug(f"restoring past {num_hours_per_query} hours data to {process_datetime}")
 
             price_history_objects = PriceHistory.objects.filter(
                 timestamp__gte=process_datetime - timedelta(hours=1),
