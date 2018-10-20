@@ -71,8 +71,9 @@ class Command(BaseCommand):
             )
 
         from apps.TA.management.commands.TA_fill_gaps import fill_data_gaps
-        fill_data_gaps()
-
+        while True:
+            fill_data_gaps()
+            time.sleep(60 * 60 * 2)  # 2 hours
 
 
 ### PULL PRICE HISTORY RECORDS FROM CORE PRICE HISTORY DATABASE ###

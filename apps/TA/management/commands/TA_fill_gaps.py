@@ -1,8 +1,9 @@
 import logging
-from datetime import datetime
+import time
 
 from django.core.management.base import BaseCommand
 
+from apps.TA.storages.abstract.timeseries_storage import TimeseriesStorage
 from apps.TA.storages.utils import missing_data
 from settings.redis_db import database
 
@@ -15,29 +16,24 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('arg', nargs='?', default='compute_indicators_for_poloniex', type=str)
 
-
     def handle(self, *args, **options):
         logger.info("Starting data gaps restoration...")
 
         arg = options['arg']
-        fill_data_gaps(arg=='force_fill_gaps')
+
+        while True:
+            fill_data_gaps(arg == 'force_fill_gaps')
+            time.sleep(60 * 60 * 2)  # 2 hours
 
 
 def fill_data_gaps(force_fill=False):
-
-    today = datetime.now()
-    start_datetime = datetime(today.year, today.month, today.day)
-
-    start_datetime = datetime(2018, 3, 1)
-    end_datetime = datetime(2018, 10, 20)
-    assert start_datetime < end_datetime  # please go forward in time :)
-    process_datetime = start_datetime
-
-
     for key in database.keys("*PriceStorage*"):
         [ticker, exchange, storage_class, index] = key.decode("utf-8").split(":")
 
         start_score = missing_data.find_start_score(ticker, exchange, index)
+
+        logger.debug(f"working on {ticker}:{exchange}:PVStorages:{index}..." +
+                     f"starting at {TimeseriesStorage.datetime_from_score(start_score)}")
 
         missing_scores = missing_data.find_pv_storage_data_gaps(ticker, exchange, index, start_score)
 
