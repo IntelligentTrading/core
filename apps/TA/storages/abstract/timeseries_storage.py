@@ -92,6 +92,8 @@ class TimeseriesStorage(KeyValueStorage):
             except:
                 value, timestamp = "unknown", JAN_1_2017_TIMESTAMP
 
+            min_score = max_score = cls.score_from_timestamp(timestamp)
+
         else:
             # compress timestamps to scores
             target_score = cls.score_from_timestamp(timestamp)
@@ -113,9 +115,9 @@ class TimeseriesStorage(KeyValueStorage):
             'values': [],
             'values_count': 0,
             'timestamp': timestamp,
-            'earliest_timestamp': TimeseriesStorage.score_from_timestamp(min_score),
-            'latest_timestamp': TimeseriesStorage.score_from_timestamp(max_score),
-            'periods_range': periods_range or 1,
+            'earliest_timestamp': cls.score_from_timestamp(min_score),
+            'latest_timestamp': cls.score_from_timestamp(max_score),
+            'periods_range': periods_range,
             'period_size': 300,
         }
 
@@ -125,15 +127,12 @@ class TimeseriesStorage(KeyValueStorage):
         try:
             return_dict['values_count'] = len(query_response)
 
-            if len(query_response) < periods_range:
+            if len(query_response) < periods_range + 1:
                 return_dict["warning"] = "fewer values than query's periods_range"
-                logger.info("Sorry we couldn't find enough values for you :(")
-                # todo: add buffer values? no, let the receiver solve their own problem
-                # todo: but perhaps publish an alert to create missing values around this timestamp
 
             values = [value_score.decode("utf-8").split(":")[0] for value_score in query_response]
             scores = [value_score.decode("utf-8").split(":")[1] for value_score in query_response]
-            #  todo: double check that [-1] in list is most recent timestamp
+            # todo: double check that [-1] in list is most recent timestamp
 
             return_dict.update({
                 'values': values,
