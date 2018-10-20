@@ -1,5 +1,6 @@
 import logging
 
+from apps.TA import PRICE_INDEXES, VOLUME_INDEXES
 from apps.TA.storages.abstract.ticker_subscriber import get_nearest_5min_score
 from apps.TA.storages.abstract.timeseries_storage import TimeseriesStorage
 from apps.TA.storages.data.price import PriceStorage
@@ -10,15 +11,24 @@ logger = logging.getLogger(__name__)
 
 
 def generate_pv_storages(ticker: str, exchange: str, index: str, score: float) -> bool:
+    """
+    resample values from PriceVolumeHistoryStorage into 5min periods in PriceStorage and VolumeStorage
+    :param ticker: eg. "ETH_BTC"
+    :param exchange: eg. "binance"
+    :param index: eg. "close_price"
+    :param score: as defined by TimeseriesStorage.score_from_timestamp()
+    :return: True if successful at generating a new storage index value for the score, else False
+    """
     score = get_nearest_5min_score(score)
     timestamp = TimeseriesStorage.timestamp_from_score(score)
 
-    if "price" in index:
-        storage = PriceStorage(ticker=ticker, exchange=exchange, timestamp=timestamp)
-    elif "volume" in index:
-        storage = VolumeStorage(ticker=ticker, exchange=exchange, timestamp=timestamp)
+    if index in PRICE_INDEXES:
+        storage = PriceStorage(ticker=ticker, exchange=exchange, timestamp=timestamp, index=index)
+    elif index in VOLUME_INDEXES:
+        storage = VolumeStorage(ticker=ticker, exchange=exchange, timestamp=timestamp, index=index)
     else:
-        raise Exception("I don't know what kind of index this is")
+        logger.error("I don't know what kind of index this is")
+        return False
 
     # logger.debug(f'process price for ticker: {ticker} and index: {index}')
 
@@ -29,6 +39,9 @@ def generate_pv_storages(ticker: str, exchange: str, index: str, score: float) -
         index=index, timestamp=timestamp,
         periods_range=1, timestamp_tolerance=29
     )
+
+    if not query_results['values_count']:
+        return False
 
     # logger.debug("results from PriceVolumeHistoryStorage query... ")
     # logger.debug(query_results)
@@ -53,14 +66,16 @@ def generate_pv_storages(ticker: str, exchange: str, index: str, score: float) -
             raise IndexError("unknown index)")
 
     except IndexError:
-        pass  # couldn't find a useful value or index (sorry for using this for both definitions of "index")
+        return False # couldn't find a useful value or index (sorry for using this for both definitions of "index")
     except ValueError:
-        pass  # couldn't find a useful value
-    else:
-        if storage.value:
-            storage.index = index
-            storage.save(publish=False)
-            # logger.info("saved new thing: " + storage.get_db_key())
+        return False # couldn't find a useful value
+    except Exception as e:
+        logger.error("there's a bug here: " + str(e))
+        return False
+
+    if storage.value:
+        storage.save(publish=False)
+        # logger.info("saved new thing: " + storage.get_db_key())
 
     if index == "close_price":
         all_values_set = set(index_values)  # these are the close prices
@@ -72,17 +87,14 @@ def generate_pv_storages(ticker: str, exchange: str, index: str, score: float) -
             )
 
             index_values = [int(v) for v in query_results['values']]
-
-        all_values_set = all_values_set | set(index_values)
+            all_values_set = all_values_set | set(index_values)
 
         if not len(all_values_set):
+            logger.error("This shouldn't be possible. Serious bug if you see this!")
             return False
 
-        price_storage = PriceStorage(ticker=ticker, exchange=exchange, timestamp=timestamp)
-
         for index in derived_price_indexes:
-            price_storage.index = index
-            price_storage.value = None
+            price_storage = PriceStorage(ticker=ticker, exchange=exchange, timestamp=timestamp, index=index)
 
             values_set = all_values_set.copy()
 
