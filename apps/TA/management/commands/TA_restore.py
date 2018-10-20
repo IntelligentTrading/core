@@ -15,10 +15,10 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = 'Run Redis Subscribers for TA'
+    help = 'Run Redis Data Restore from SQL'
 
     def handle(self, *args, **options):
-        logger.info("Starting TA restore script.")
+        logger.info("Starting TA restore script...")
 
         today = datetime.now()
         start_datetime = datetime(today.year, today.month, today.day)

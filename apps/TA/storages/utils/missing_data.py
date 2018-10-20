@@ -5,23 +5,33 @@ from apps.TA import PRICE_INDEXES, VOLUME_INDEXES
 from apps.TA.management.commands.TA_restore import save_pv_histories_to_redis
 from apps.TA.storages.abstract.timeseries_storage import TimeseriesStorage
 from apps.TA.storages.data.price import PriceStorage
-from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage
 from apps.TA.storages.data.volume import VolumeStorage
 from apps.TA.storages.utils.pv_resampling import generate_pv_storages
 from apps.api.helpers import get_source_index, get_counter_currency_index
 from apps.indicator.models import PriceHistory
-
+from settings.redis_db import database
 
 logger = logging.getLogger(__name__)
 
 
 def find_start_score(ticker: str, exchange: str, index: str) -> int:
+    """
+    Find the score for the first value.
+    To for informing data recovery because it's probably pointless
+    to search for data before this starting score. Better to start at this
+    score and then recover data from then up until now()
+    :param ticker: eg. "ETH_BTC"
+    :param exchange: eg. "binance"
+    :param index: eg. "close_price"
+    :return:
+    """
 
-    score = 0
+    #eg. key = "ETH_BTC:binance:PriceStorage:close_price"
+    key = f"{ticker}:{exchange}:PriceStorage:{index}"
 
-
-
-    return int(score)
+    query_response = database.zrange(key, 0, 0)
+    score = float(query_response[0].decode("utf-8").split(":")[1])
+    return score
 
 
 def find_pv_storage_data_gaps(ticker: str, exchange: str, index: str, start_score: float = 0, end_score: float = 0) -> list:
@@ -128,15 +138,14 @@ def force_plug_pv_storage_data_gaps(ticker: str, exchange: str, index: str, scor
             #value is not missing
             continue
 
-
         q_value = int(query_response['values'][0])
         q_score = float(query_response['scores'][0])
 
+        # logger.debug(f"working with {score} == timestamp {TimeseriesStorage.timestamp_from_score(score)}")
+        # logger.debug("printing query response >>>")
+        # logger.debug(query_response)
 
-        logger.debug(f"working with {score} == timestamp {TimeseriesStorage.timestamp_from_score(score)}")
-        logger.debug("printing query response >>>")
-        logger.debug(query_response)
-
+        assert 'warning' in query_response
         assert float(query_response['earliest_timestamp']) == float(query_response['latest_timestamp'])
         assert float(query_response['latest_timestamp']) == TimeseriesStorage.timestamp_from_score(score-1)
         assert q_score == score - 1
@@ -154,7 +163,6 @@ def force_plug_pv_storage_data_gaps(ticker: str, exchange: str, index: str, scor
 
 
 def test_force_plug_pv_storage_data_gaps():
-    from settings.redis_db import database
 
     ticker = "ETH_BTC"
     exchange = "binance"
@@ -165,3 +173,20 @@ def test_force_plug_pv_storage_data_gaps():
     scores = [155773, 155773+1, 155773+2]
 
     force_plug_pv_storage_data_gaps(ticker, exchange, index, scores)
+
+    database.zremrangebyscore(key, 155773 + 1, 155773 + 2)
+
+# exmaple query with missing data
+# key = "ETH_BTC:binance:PriceStorage:close_price"
+# db.zrange(key, -20, -1, withscores=True)
+# [(b'7337200:155773.0', 155773.0),
+#  (b'7389999:155785.0', 155785.0),
+#  (b'7380700:155797.0', 155797.0),
+#  (b'7368200:155809.0', 155809.0),
+#  (b'7118600:156049.0', 156049.0),
+#  (b'4019799:175105.0', 175105.0),
+#  (b'4023500:175106.0', 175106.0),
+#  (b'4021099:175107.0', 175107.0),
+#  (b'4020700:175108.0', 175108.0),
+#  (b'4031599:175117.0', 175117.0),
+#  (b'4033000:175129.0', 175129.0)]
