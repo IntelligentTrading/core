@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta
 
 from apps.TA import PRICE_INDEXES, VOLUME_INDEXES
@@ -9,6 +10,9 @@ from apps.TA.storages.data.volume import VolumeStorage
 from apps.TA.storages.utils.pv_resampling import generate_pv_storages
 from apps.api.helpers import get_source_index, get_counter_currency_index
 from apps.indicator.models import PriceHistory
+
+
+logger = logging.getLogger(__name__)
 
 
 def find_start_score(ticker: str, exchange: str, index: str) -> int:
@@ -33,9 +37,9 @@ def find_pv_storage_data_gaps(ticker: str, exchange: str, index: str, start_scor
 
     # validate index and determine storage class
     if index in PRICE_INDEXES:
-        storage = PriceStorage
+        storage_class = PriceStorage
     elif index in VOLUME_INDEXES:
-        storage = VolumeStorage
+        storage_class = VolumeStorage
     else:
         raise Exception("unknown index")
 
@@ -50,7 +54,7 @@ def find_pv_storage_data_gaps(ticker: str, exchange: str, index: str, start_scor
     while processing_score < end_score:
         processing_score += 1
 
-        query_response = storage.query(
+        query_response = storage_class.query(
             ticker=ticker,
             exchange=exchange,
             index=index,
@@ -64,6 +68,7 @@ def find_pv_storage_data_gaps(ticker: str, exchange: str, index: str, start_scor
             continue  # no missing data, all is groovy, move along
 
         if generate_pv_storages(ticker, exchange, index, processing_score):
+            logger.debug("successfully restored from PriceVolumeHistoryStorage")
             continue  # problem solved!
 
         # still here? well damn, we have big hole in the data
@@ -84,15 +89,17 @@ def find_pv_storage_data_gaps(ticker: str, exchange: str, index: str, start_scor
             counter_currency=get_counter_currency_index(ticker.split("_")[1])
         )
 
+        new_datapoints_saved = 0
         for ph_object in price_history_objects:
-            new_datapoints_saved = 0
             results = save_pv_histories_to_redis(ph_object)
             new_datapoints_saved += sum(results)
 
         if new_datapoints_saved > 0:
+            logger.debug("successfully restored missing data from SQL into PriceVolumeHistoryStorage")
             # go back and try this score again
             processing_score -= 1
 
+    logger.debug("finished with missing scores: " + str(missing_scores))
     return missing_scores
 
 
@@ -100,15 +107,15 @@ def force_plug_pv_storage_data_gaps(ticker: str, exchange: str, index: str, scor
 
     # validate index and determine storage class
     if index in PRICE_INDEXES:
-        storage = PriceStorage
+        storage_class = PriceStorage
     elif index in VOLUME_INDEXES:
-        storage = VolumeStorage
+        storage_class = VolumeStorage
     else:
         raise Exception("unknown index")
 
     for score in scores:
 
-        query_response = storage.query(
+        query_response = storage_class.query(
             ticker=ticker,
             exchange=exchange,
             index=index,
@@ -117,3 +124,44 @@ def force_plug_pv_storage_data_gaps(ticker: str, exchange: str, index: str, scor
             periods_range=1
         )
 
+        if query_response['values_count'] > 0 and score == float(query_response['scores'][-1]):
+            #value is not missing
+            continue
+
+
+        q_value = int(query_response['values'][0])
+        q_score = float(query_response['scores'][0])
+
+
+        logger.debug(f"working with {score} == timestamp {TimeseriesStorage.timestamp_from_score(score)}")
+        logger.debug("printing query response >>>")
+        logger.debug(query_response)
+
+        assert float(query_response['earliest_timestamp']) == float(query_response['latest_timestamp'])
+        assert float(query_response['latest_timestamp']) == TimeseriesStorage.timestamp_from_score(score-1)
+        assert q_score == score - 1
+
+        storage = storage_class(ticker=ticker,
+                                exchange=exchange,
+                                timestamp=TimeseriesStorage.timestamp_from_score(score),
+                                index=index)
+
+        # save value equal to previous score's value
+        storage.value = q_value
+        storage.save()
+        logger.debug("Filled the gap on score " + str(score))
+
+
+
+def test_force_plug_pv_storage_data_gaps():
+    from settings.redis_db import database
+
+    ticker = "ETH_BTC"
+    exchange = "binance"
+    index = "close_price"
+    key = f"{ticker}:{exchange}:PriceStorage:{index}"
+    database.zremrangebyscore(key, 155773 + 1, 155773 + 2)
+
+    scores = [155773, 155773+1, 155773+2]
+
+    force_plug_pv_storage_data_gaps(ticker, exchange, index, scores)
