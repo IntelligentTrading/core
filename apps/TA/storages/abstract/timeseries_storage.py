@@ -69,8 +69,9 @@ class TimeseriesStorage(KeyValueStorage):
 
     @classmethod
     def query(cls, key: str = "", key_suffix: str = "", key_prefix: str = "",
-              timestamp: int = None, periods_range: float = 0.01,
+              timestamp: int = None,
               timestamp_tolerance: int = 299,
+              periods_range: float = 0.01,
               *args, **kwargs) -> dict:
         """
         :param key: the exact redis sortedset key (optional)
@@ -141,6 +142,7 @@ class TimeseriesStorage(KeyValueStorage):
 
             return_dict.update({
                 'values': values,
+                'scores': scores,
                 'earliest_timestamp': cls.timestamp_from_score(float(scores[0])),
                 'latest_timestamp': cls.timestamp_from_score(float(scores[-1])),
             })

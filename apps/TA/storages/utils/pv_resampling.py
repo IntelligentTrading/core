@@ -74,7 +74,7 @@ def generate_pv_storages(ticker: str, exchange: str, index: str, score: float) -
         return False
 
     if storage.value:
-        storage.save(publish=False)
+        storage.save(publish=bool(index == "close_price"))
         # logger.info("saved new thing: " + storage.get_db_key())
 
     if index == "close_price":
@@ -93,27 +93,26 @@ def generate_pv_storages(ticker: str, exchange: str, index: str, score: float) -
             logger.error("This shouldn't be possible. Serious bug if you see this!")
             return False
 
-        for index in derived_price_indexes:
-            price_storage = PriceStorage(ticker=ticker, exchange=exchange, timestamp=timestamp, index=index)
+        for d_index in derived_price_indexes:
+            price_storage = PriceStorage(ticker=ticker, exchange=exchange, timestamp=timestamp, index=d_index)
 
             values_set = all_values_set.copy()
 
-            if index == "midpoint_price":
+            if d_index == "midpoint_price":
                 while len(values_set) > 2:
                     values_set.remove(max(values_set))
                     values_set.remove(min(values_set))
                 price_storage.value = values_set.pop()
 
-            elif index == "mean_price":
+            elif d_index == "mean_price":
                 price_storage.value = sum(values_set) / (len(values_set) or 1)
 
-            elif index == "price_variance":
+            elif d_index == "price_variance":
                 # this is too small of a period size to measure variance
                 pass
 
             if price_storage.value:
                 price_storage.value = int(price_storage.value)
-                price_storage.index = str(index)
-                price_storage.save(publish=bool(index == "close_price"))
+                price_storage.save()
 
     return True
