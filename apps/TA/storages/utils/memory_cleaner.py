@@ -1,6 +1,7 @@
 import logging
 import time
 
+from apps.common.utilities.multithreading import start_new_thread
 from apps.indicator.models.sma import SMA_LIST
 from settings import STAGE
 from settings.redis_db import database
@@ -79,8 +80,17 @@ def redisCleanup():
 
 # from apps.TA.storages.data.memory_cleaner import redisCleanup as rC
 
-
+@start_new_thread
 def clear_pv_history_values(ticker: str, exchange: str, score: float, conservative: bool = True) -> bool:
+    """
+    Permanently delete values from PriceVolumeHistoryStorage
+    :param ticker: eg. "ETH_BTC"
+    :param exchange: eg. "binance"
+    :param score: the score number as defined by TimeseriesStorage.score_from_timestamp()
+    :param conservative: set to False to delete all values within the score period.
+    Default is True, which will not delete values within 45s of the edge of the 5min period
+    :return:
+    """
     from apps.TA.storages.abstract.ticker_subscriber import get_nearest_5min_score
 
     # todo: move logic to PriceVolumeHistoryStorage.destroy()
