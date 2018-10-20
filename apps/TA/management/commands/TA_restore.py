@@ -6,6 +6,7 @@ from django.core.management.base import BaseCommand
 
 from apps.TA.storages.abstract.timeseries_storage import TimeseriesStorage
 from apps.common.utilities.multithreading import start_new_thread, multithread_this_shit
+from settings import BTC, USDT, BINANCE
 from settings.redis_db import database
 from apps.indicator.models.price_history import PriceHistory
 from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, default_price_indexes, default_volume_indexes
@@ -27,15 +28,18 @@ class Command(BaseCommand):
         assert start_datetime < end_datetime  # please go forward in time :)
         process_datetime = start_datetime
 
+        num_hours_per_query = 4
 
         while process_datetime < end_datetime:
-            process_datetime += timedelta(hours=1)
+            process_datetime += timedelta(hours=num_hours_per_query)
 
             logger.debug(f"restoring past hours data to {process_datetime}")
 
             price_history_objects = PriceHistory.objects.filter(
                 timestamp__gte=process_datetime - timedelta(hours=1),
-                timestamp__lt=process_datetime
+                timestamp__lt=process_datetime,
+                source=BINANCE,  # Binance only for now
+                counter_currency__in=[BTC, USDT]
             )
 
             results = multithread_this_shit(save_pv_histories_to_redis, price_history_objects)
@@ -60,15 +64,16 @@ class Command(BaseCommand):
                     # (ticker, exchange) as strings
                     for pho in price_history_objects
                 ],
-                start_score=TimeseriesStorage.score_from_timestamp((process_datetime - timedelta(hours=1)).timestamp()),
+                start_score=TimeseriesStorage.score_from_timestamp(
+                    (process_datetime - timedelta(hours=num_hours_per_query)).timestamp()
+                ),
                 end_score=TimeseriesStorage.score_from_timestamp(process_datetime.timestamp())
             )
 
 
 ### PULL PRICE HISTORY RECORDS FROM CORE PRICE HISTORY DATABASE ###
 def save_pv_histories_to_redis(ph_object, pipeline=None):
-
-    if ph_object.transaction_currency not in transaction_currencies:
+    if ph_object.source is not BINANCE or ph_object.counter_currency not in [BTC, USDT]:
         return pipeline or [0]
 
     using_local_pipeline = (not pipeline)
@@ -79,7 +84,6 @@ def save_pv_histories_to_redis(ph_object, pipeline=None):
     ticker = f'{ph_object.transaction_currency}_{ph_object.get_counter_currency_display()}'
     exchange = str(ph_object.get_source_display())
     unix_timestamp = int(ph_object.timestamp.timestamp())
-
 
     # SAVE VALUES IN REDIS USING PriceVolumeHistoryStorage OBJECT
     # CREATE OBJECT FOR STORAGE
@@ -124,6 +128,7 @@ def save_pv_histories_to_redis(ph_object, pipeline=None):
     else:
         return pipeline
 
+
 ### END PULL OF PRICE HISTORY RECORDS ###
 
 
@@ -134,7 +139,8 @@ def price_history_to_price_storage(ticker_exchanges, start_score=None, end_score
 
     if not start_score:
         # start_score = 0  # this is jan 1 2017
-        start_score = int((datetime(2018,9,1).timestamp() - datetime(2017,1,1).timestamp())/300)  # this is Sep 1 2018
+        start_score = int(
+            (datetime(2018, 9, 1).timestamp() - datetime(2017, 1, 1).timestamp()) / 300)  # this is Sep 1 2018
     processing_score = start_score
 
     if not end_score:
@@ -155,15 +161,3 @@ def price_history_to_price_storage(ticker_exchanges, start_score=None, end_score
 
     # returns nothing - can be threaded with collection of results
 ### END RESAMPLE FOR PRICE STORAGE RECORDS ###
-
-
-transaction_currencies = [
-    'XVG', 'IOTX', 'LTC', 'YOYOW', 'STR', 'TRX', 'ADA', 'CDT', 'VET', 'KEY', 'HOT', 'AGI', 'XMR', 'LEND', 'DENT',
-    'NPXS', 'ZIL', 'XRP', 'IOST', 'EOS', 'VRC', 'ETH', 'ETC', 'NCASH', 'AST', 'RPX', 'VIB', 'ZRX', 'DGB', 'BTC', 'SC',
-    'MFT', 'GTO', 'XEM', 'DASH', 'DOGE', 'XLM', 'FCT', 'BAT', 'QKC', 'POE', 'ENJ', 'FUN', 'STRAT', 'ICX', 'BCN', 'TNB',
-    'CHAT', 'DOCK', 'REQ', 'IOTA', 'STORM', 'TNT', 'SNT', 'FUEL', 'BCH', 'LSK', 'OMG', 'BTS', 'WPR', 'ZEC', 'GAME',
-    'MTH', 'OST', 'RCN', 'REP'
-]
-counter_currencies = [
-    'BTC', 'ETH', 'USDT'
-]
