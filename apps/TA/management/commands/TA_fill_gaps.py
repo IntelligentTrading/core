@@ -30,7 +30,7 @@ class Command(BaseCommand):
         process_datetime = start_datetime
 
         for key in database.keys("*PriceStorage*"):
-            [ticker, exchange, storage_class, index] = key.split(":")
+            [ticker, exchange, storage_class, index] = key.decode("utf-8").split(":")
 
             start_score = missing_data.find_start_score(ticker, exchange, index)
 
