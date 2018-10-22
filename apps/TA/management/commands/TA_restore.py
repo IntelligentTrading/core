@@ -33,7 +33,7 @@ class Command(BaseCommand):
         while process_datetime < end_datetime:
             process_datetime += timedelta(hours=num_hours_per_query)
 
-            logger.debug(f"restoring past {num_hours_per_query} hours data to {process_datetime}")
+            logger.info(f"restoring past {num_hours_per_query} hours data to {process_datetime}")
 
             price_history_objects = PriceHistory.objects.filter(
                 timestamp__gte=process_datetime - timedelta(hours=1),
@@ -56,7 +56,7 @@ class Command(BaseCommand):
             # database_response = pipeline.execute()
             # total_results = sum(database_response)
 
-            logger.debug(f"{total_results} values added to Redis")
+            logger.info(f"{total_results} values added to Redis")
 
             price_history_to_price_storage(
                 ticker_exchanges=[
