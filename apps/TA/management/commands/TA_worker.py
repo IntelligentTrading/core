@@ -24,7 +24,19 @@ except:
 # ✅ - cast scores on indicators to integers (saving 2 digits)
 # ✅ - use rabbitmq as a centralized task queue so workers can scale horizontally
 # ✅ - reduce number of tickers being processed
-
+# 
+# firehose download historical data
+# resampling and missing data
+# Get pubsub thing working
+# Send signals to SNS
+# Confirm new signals are same as old
+# Fully replace old signals with new
+# turn signals into votes for portfolio
+# Autotrade on portfolio
+#
+# Next week:
+# Push all updates live
+# Stop using old Aurora database
 
 class Command(BaseCommand):
     help = 'Run Redis Subscribers for TA'
