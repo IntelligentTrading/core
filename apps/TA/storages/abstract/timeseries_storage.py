@@ -170,7 +170,7 @@ class TimeseriesStorage(KeyValueStorage):
         z_add_score = f'{self.score_from_timestamp(self.unix_timestamp)}'  # timestamp as score (int or float)
         z_add_name = f'{self.value}:{z_add_score}'  # item unique value
         z_add_data = {"key": z_add_key, "name": z_add_name, "score": z_add_score}  # key, score, name
-        # logger.debug(f'saving data with args {z_add_data}')
+        # # logger.debug(f'savingdata with args {z_add_data}')
 
         if pipeline is not None:
             # logger.debug("added command to redis pipeline")

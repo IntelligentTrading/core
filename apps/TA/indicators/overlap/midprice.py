@@ -56,7 +56,7 @@ class MidpriceSubscriber(IndicatorSubscriber):
 
             timeperiod = min([len(high_value_np_array), len(low_value_np_array), periods])
             midprice_value = talib.MIDPRICE(high_value_np_array, low_value_np_array, timeperiod=timeperiod)[-1]
-            logger.debug(f'saving Midprice value {midprice_value}for {self.ticker} on {periods} periods')
+            # logger.debug(f'savingMidprice value {midprice_value}for {self.ticker} on {periods} periods')
 
             new_midprice_storage.periods = periods
             new_midprice_storage.value = int(float(midprice_value))

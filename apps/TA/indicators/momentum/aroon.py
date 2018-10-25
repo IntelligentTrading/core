@@ -56,7 +56,7 @@ class AroonSubscriber(IndicatorSubscriber):
 
             timeperiod = min([len(high_value_np_array), len(low_value_np_array), periods])
             aroondown_value, aroonup_value = talib.AROON(high_value_np_array, low_value_np_array, timeperiod=timeperiod)[-1]
-            logger.debug(f'saving Aroon values {aroondown_value}, {aroonup_value} for {self.ticker} on {periods} periods')
+            # logger.debug(f'savingAroon values {aroondown_value}, {aroonup_value} for {self.ticker} on {periods} periods')
 
             new_aroon_storage.periods = periods
             new_aroon_storage.aroondown = aroondown_value

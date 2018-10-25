@@ -72,7 +72,7 @@ class BopSubscriber(IndicatorSubscriber):
             limit=periods)
 
         bop_value = talib.BOP(open_value_np_array, high_value_np_array, low_value_np_array, close_value_np_array)[-1]
-        logger.debug(f'saving Bop value {bop_value} for {self.ticker} on {periods} periods')
+        # logger.debug(f'savingBop value {bop_value} for {self.ticker} on {periods} periods')
 
         new_bop_storage.value = bop_value
         new_bop_storage.save()
