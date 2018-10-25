@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 
 from django.core.management.base import BaseCommand
 
+from apps.TA.storages.abstract.ticker_subscriber import timestamp_is_near_5min
 from apps.TA.storages.abstract.timeseries_storage import TimeseriesStorage
 from apps.common.utilities.multithreading import start_new_thread, multithread_this_shit
 from settings import BTC, USDT, BINANCE
@@ -40,7 +41,7 @@ class Command(BaseCommand):
             logger.info(f"restoring past {num_hours_per_query} hours data to {process_datetime}")
 
             price_history_objects = PriceHistory.objects.filter(
-                timestamp__gte=process_datetime - timedelta(hours=1),
+                timestamp__gte=process_datetime - timedelta(hours=num_hours_per_query),
                 timestamp__lt=process_datetime,
                 source=BINANCE,  # Binance only for now
                 counter_currency__in=[BTC, USDT]
@@ -105,25 +106,27 @@ def save_pv_histories_to_redis(ph_object, pipeline=None):
         timestamp=unix_timestamp
     )
 
+    publish_close_price = timestamp_is_near_5min(unix_timestamp)
+
     if ph_object.volume and ph_object.volume > 0:
         pv_storage.index = "close_volume"
         pv_storage.value = ph_object.volume
-        pipeline = pv_storage.save(publish=False, pipeline=pipeline)
+        pipeline = pv_storage.save(publish=publish_close_price, pipeline=pipeline)
 
     if ph_object.open_p and ph_object.open_p > 0:
         pv_storage.index = "open_price"
         pv_storage.value = ph_object.open_p
-        pipeline = pv_storage.save(publish=True, pipeline=pipeline)
+        pipeline = pv_storage.save(publish=False, pipeline=pipeline)
 
     if ph_object.high and ph_object.high > 0:
         pv_storage.index = "high_price"
         pv_storage.value = ph_object.high
-        pipeline = pv_storage.save(publish=True, pipeline=pipeline)
+        pipeline = pv_storage.save(publish=False, pipeline=pipeline)
 
     if ph_object.low and ph_object.low > 0:
         pv_storage.index = "low_price"
         pv_storage.value = ph_object.low
-        pipeline = pv_storage.save(publish=True, pipeline=pipeline)
+        pipeline = pv_storage.save(publish=False, pipeline=pipeline)
 
     # always run 'close_price' index last
     # why? when it saves, it triggers price storage to resample

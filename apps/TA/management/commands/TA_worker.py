@@ -94,13 +94,16 @@ class Command(BaseCommand):
 def get_subscriber_classes():
 
     from apps.TA.storages.data.price import PriceSubscriber
+    # from apps.TA.storages.data.volume import VolumeSubscriber
+    # only PriceStorage:close_price is publishing. All other p and v indexes are muted
+
     from apps.TA.indicators.overlap import sma, ema, wma, dema, tema, trima, bbands, ht_trendline, kama, midprice
     from apps.TA.indicators.momentum import adx, adxr, apo, aroon, aroonosc, bop, cci, cmo, dx, macd, mom, ppo, \
         roc, rocr, rsi, stoch, stochf, stochrsi, trix, ultosc, willr
 
     return [
         PriceSubscriber,
-        # todo: VolumeSubscriber,
+        # VolumeSubscriber,  # the PriceSubscriber handles volume resampling
 
         # OVERLAP INDICATORS
         midprice.MidpriceSubscriber,
