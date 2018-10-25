@@ -3,6 +3,7 @@ import time
 
 from django.core.management.base import BaseCommand
 
+from apps.TA import PRICE_INDEXES
 from apps.TA.storages.abstract.timeseries_storage import TimeseriesStorage
 from apps.TA.storages.utils import missing_data
 from settings.redis_db import database
@@ -27,24 +28,28 @@ class Command(BaseCommand):
 
 
 def fill_data_gaps(force_fill=False):
-    for key in database.keys("*PriceStorage*"):
-        [ticker, exchange, storage_class, index] = key.decode("utf-8").split(":")
 
-        start_score = missing_data.find_start_score(ticker, exchange, index)
+    for ticker in ["*_USDT", "*_BTC"]:
+        for index in ['close_price', 'open_price', 'high_price', 'low_price']:
 
-        logger.debug(f"working on {ticker}:{exchange}:PVStorages:{index}..." +
-                     f"starting at {TimeseriesStorage.datetime_from_score(start_score)}")
+            for key in database.keys(f"*{ticker}*PriceStorage*{index}*"):
+                [ticker, exchange, storage_class, index] = key.decode("utf-8").split(":")
 
-        missing_scores = missing_data.find_pv_storage_data_gaps(ticker, exchange, index, start_score)
+                start_score = missing_data.find_start_score(ticker, exchange, index)
 
-        if missing_scores:
-            logger.warning(
-                "The followng scores could not be recovered and are still missing...\n" +
-                f"for key: {ticker}:{exchange}:PriceStorage:{index}" + "\n" +
-                str(missing_scores)
-            )
+                logger.debug(f"working on {ticker}:{exchange}:PVStorages:{index}..." +
+                             f"starting at {TimeseriesStorage.datetime_from_score(start_score)}")
 
-        if force_fill:
-            logger.warning("STARTING FORCE FILL OF THESE VALUES...")
-            logger.warning("!! THERE'S NO GOING BACK FROM HERE. DATA MAY WILL BE PERMAMENTLY CORRUPTED !!")
-            missing_data.force_plug_pv_storage_data_gaps(ticker, exchange, index, missing_scores)
+                missing_scores = missing_data.find_pv_storage_data_gaps(ticker, exchange, index, start_score)
+
+                if missing_scores:
+                    logger.warning(
+                        "The followng scores could not be recovered and are still missing...\n" +
+                        f"for key: {ticker}:{exchange}:PriceStorage:{index}" + "\n" +
+                        str(missing_scores)
+                    )
+
+                if force_fill:
+                    logger.warning("STARTING FORCE FILL OF THESE VALUES...")
+                    logger.warning("!! THERE'S NO GOING BACK FROM HERE. DATA MAY WILL BE PERMAMENTLY CORRUPTED !!")
+                    missing_data.force_plug_pv_storage_data_gaps(ticker, exchange, index, missing_scores)
