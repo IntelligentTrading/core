@@ -1,7 +1,8 @@
 import logging
-from apps.TA import TAException, PERIODS_4HR
+
+from apps.TA import TAException
 from apps.TA.storages.abstract.ticker import TickerStorage
-from apps.TA.storages.abstract.timeseries_storage import TimeseriesException
+from apps.TA.storages.data.price import PriceStorage
 from apps.signal.models import Signal
 
 logger = logging.getLogger(__name__)
@@ -55,6 +56,8 @@ class IndicatorStorage(TickerStorage):
                 self.value = self.query(
                     ticker=self.ticker, exchange=self.exchange, timestamp=self.unix_timestamp
                 )['values'][-1]
+            if not self.value:
+                self.value = self.compute_value()
         except IndexError:
             self.value = None # value not found
         except Exception as e:
@@ -87,9 +90,31 @@ class IndicatorStorage(TickerStorage):
         results_dict['periods_key'] = periods_key
         return results_dict
 
+    def get_denoted_price_array(self, index: str = "close_price", periods: int = 0):
+
+        results_dict = PriceStorage.query(
+            ticker=self.ticker,
+            exchange=self.exchange,
+            index=index,
+            timestamp=self.unix_timestamp,
+            periods_range=periods or self.periods
+        )
+        return self.get_values_array_from_query(results_dict, limit=periods)
+
+    def compute_value(self, periods: int = 0) -> str:
+        """
+        overwrite me, defining the criteria for computing a value
+
+        :param periods:
+        :return:
+        """
+        periods = periods or self.periods
+        return None
+
     def produce_signal(self):
         """
-        overwrite me :-)
+        overwrite me, defining the criteria for sending signals
+
         :return: None
         """
         if "this indicator" == "interesting":
@@ -137,7 +162,10 @@ class IndicatorStorage(TickerStorage):
 
         self.db_key_suffix = f'{str(self.periods)}'
         save_result = super().save(*args, **kwargs)
-        self.produce_signal()
+        try:
+            self.produce_signal()
+        except Exception as e:
+            logger.error("error producing signal for indicator" + str(e))
         return save_result
 
 

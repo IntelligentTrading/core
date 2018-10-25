@@ -15,7 +15,40 @@ SMA_LIST = [9, 20, 26, 30, 50, 52, 60, 120, 200]
 
 class SmaStorage(IndicatorStorage):
 
+    def get_periods_list(self):
+        periods_list = []
+        for s in SMA_LIST:
+            periods_list.extend([h * s for h in HORIZONS])
+        return set(periods_list)
+
     # sorted_set_key = "BTC_USDT:poloniex:SmaStorage:20"
+
+    def compute_value(self, periods: int = 0) -> str:
+        periods = periods or self.periods
+
+        value_array = self.get_denoted_price_array("close_price", periods)
+        if not len(value_array): return ""
+
+        sma_value = talib.SMA(value_array, timeperiod=periods)[-1]
+        if math.isnan(sma_value): return ""
+
+        return str(sma_value)
+
+    def compute_and_save(self) -> bool:
+        """
+
+        :return: True if value saved, else False
+        """
+
+        if not all([
+            self.ticker, self.exchange, self.timestamp, self.periods
+        ]):
+            raise Exception("missing required values")
+
+        self.value = self.compute_value(self.periods)
+        if self.value:
+            self.save()
+        return bool(self.value)
 
     def produce_signal(self):
         pass
@@ -28,38 +61,13 @@ class SmaSubscriber(IndicatorSubscriber):
 
     def handle(self, channel, data, *args, **kwargs):
 
-        self.index = self.key_suffix
-
-        if self.index != 'close_price':
-            logger.debug(f'index {self.index} is not close_price ...ignoring...')
+        if not 'close_price' == self.key_suffix:
+            logger.debug(f'index {self.key_suffix} is not close_price ...ignoring...')
             return
 
-        periods_list = []
-        for s in SMA_LIST:
-            periods_list.extend([h * s for h in HORIZONS])
+        new_sma_storage = SmaStorage(ticker=self.ticker, exchange=self.exchange, timestamp=self.timestamp)
 
-        for periods in set(periods_list):
-
-            # todo: this can be refactored into only one query!
-            # todo: after one query for all values, then cut to sizes for horizons and periods
-            results_dict = PriceStorage.query(
-                ticker=self.ticker,
-                exchange=self.exchange,
-                index=self.index,
-                timestamp=self.timestamp,
-                periods_range=periods
-            )
-
-            value_np_array = self.get_values_array_from_query(results_dict, limit=periods)
-            if not len(value_np_array):
-                return
-
-            sma_value = talib.SMA(value_np_array, timeperiod=periods)[-1]
-            if math.isnan(sma_value):
-                return
-            # logger.debug(f'savingSMA value {sma_value}for {self.ticker} on {periods} periods')
-
-            new_sma_storage = SmaStorage(ticker=self.ticker, exchange=self.exchange, timestamp=self.timestamp)
+        for periods in self.get_periods_list():
             new_sma_storage.periods = periods
-            new_sma_storage.value = float(sma_value)
-            new_sma_storage.save()
+            new_sma_storage.compute_and_save()
+            # logger.debug(f'savingSMA value {sma_value}for {self.ticker} on {periods} periods')

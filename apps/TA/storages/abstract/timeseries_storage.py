@@ -1,7 +1,7 @@
 import json
 import logging
 from datetime import datetime
-
+import numpy as np
 from apps.TA import TAException, JAN_1_2017_TIMESTAMP
 from apps.TA.storages.abstract.key_value import KeyValueStorage
 from settings.redis_db import database
@@ -45,7 +45,6 @@ class TimeseriesStorage(KeyValueStorage):
 
     def save_own_existance(self, describer_key=""):
         self.describer_key = describer_key or f'{self.__class__.class_describer}:{self.get_db_key()}'
-
 
     @classmethod
     def score_from_timestamp(cls, timestamp) -> float:
@@ -153,9 +152,22 @@ class TimeseriesStorage(KeyValueStorage):
 
         except Exception as e:
             logger.error("redis query problem: " + str(e))
-            return {'error': "redis query problem: " + str(e), # wtf happened?
+            return {'error': "redis query problem: " + str(e),  # wtf happened?
                     'values': []}
 
+    @staticmethod
+    def get_values_array_from_query(query_results: dict, limit: int = 0):
+
+        value_array = [float(v) for v in query_results['values']]
+
+        if limit:
+            if not isinstance(limit, int) or limit < 1:
+                raise TimeseriesException(f"bad limit: {limit}")
+
+            elif len(value_array) > limit:
+                value_array = value_array[-limit:]
+
+        return np.array(value_array)
 
     def save(self, publish=False, pipeline=None, *args, **kwargs):
         if not self.value:
