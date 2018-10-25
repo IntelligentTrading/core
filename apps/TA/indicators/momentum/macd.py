@@ -36,14 +36,7 @@ class MacdSubscriber(IndicatorSubscriber):
         for horizon in HORIZONS:
             periods = horizon * 26
 
-            close_value_np_array = self.get_values_array_from_query(
-                PriceStorage.query(
-                    ticker=self.ticker,
-                    exchange=self.exchange,
-                    index='close_price',
-                    periods_range=periods
-                ),
-                limit=periods)
+            close_value_np_array = new_macd_storage.get_denoted_price_array("close_price", periods)
 
             macd_value, macdsignal, macdhist = talib.MACD(close_value_np_array, fastperiod=horizon*12, slowperiod=horizon*26, signalperiod=horizon*9)[-1]
             # logger.debug(f'savingMacd value {macd_value} for {self.ticker} on {periods} periods')

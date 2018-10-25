@@ -36,32 +36,9 @@ class AdxrSubscriber(IndicatorSubscriber):
         for horizon in HORIZONS:
             periods = horizon * 14
 
-            high_value_np_array = self.get_values_array_from_query(
-                PriceStorage.query(
-                    ticker=self.ticker,
-                    exchange=self.exchange,
-                    index='high_price',
-                    periods_range=periods
-                ),
-                limit=periods)
-
-            low_value_np_array = self.get_values_array_from_query(
-                PriceStorage.query(
-                    ticker=self.ticker,
-                    exchange=self.exchange,
-                    index='low_price',
-                    periods_range=periods
-                ),
-                limit=periods)
-
-            close_value_np_array = self.get_values_array_from_query(
-                PriceStorage.query(
-                    ticker=self.ticker,
-                    exchange=self.exchange,
-                    index='close_price',
-                    periods_range=periods
-                ),
-                limit=periods)
+            high_value_np_array = new_adxr_storage.get_denoted_price_array("high_price", periods)
+            low_value_np_array = new_adxr_storage.get_denoted_price_array("low_price", periods)
+            close_value_np_array = new_adxr_storage.get_denoted_price_array("close_price", periods)
 
             timeperiod = min([len(high_value_np_array), len(low_value_np_array), len(close_value_np_array), periods])
             adxr_value = talib.ADXR(high_value_np_array, low_value_np_array, close_value_np_array, timeperiod=timeperiod)[-1]

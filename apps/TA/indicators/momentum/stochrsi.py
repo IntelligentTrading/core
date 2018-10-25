@@ -36,15 +36,7 @@ class StochrsiSubscriber(IndicatorSubscriber):
         for horizon in HORIZONS:
             periods = horizon * 14
 
-            close_value_np_array = self.get_values_array_from_query(
-                PriceStorage.query(
-                    ticker=self.ticker,
-                    exchange=self.exchange,
-                    index='close_price',
-                    timestamp=self.timestamp,
-                    periods_range=periods
-                ),
-                limit=periods)
+            close_value_np_array = new_stochrsi_storage.get_denoted_price_array("close_price", periods)
 
             fastk, fastd = talib.STOCHRSI(close_value_np_array, timeperiod=horizon*14,
                                         fastk_period=horizon*5, fastd_period=horizon*3, fastd_matype=0)[-1]

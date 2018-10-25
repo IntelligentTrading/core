@@ -36,35 +36,9 @@ class StochfSubscriber(IndicatorSubscriber):
         for horizon in HORIZONS:
             periods = horizon * 5
 
-            high_value_np_array = self.get_values_array_from_query(
-                PriceStorage.query(
-                    ticker=self.ticker,
-                    exchange=self.exchange,
-                    index='high_price',
-                    timestamp=self.timestamp,
-                    periods_range=periods
-                ),
-                limit=periods)
-
-            low_value_np_array = self.get_values_array_from_query(
-                PriceStorage.query(
-                    ticker=self.ticker,
-                    exchange=self.exchange,
-                    index='low_price',
-                    timestamp=self.timestamp,
-                    periods_range=periods
-                ),
-                limit=periods)
-
-            close_value_np_array = self.get_values_array_from_query(
-                PriceStorage.query(
-                    ticker=self.ticker,
-                    exchange=self.exchange,
-                    index='close_price',
-                    timestamp=self.timestamp,
-                    periods_range=periods
-                ),
-                limit=periods)
+            high_value_np_array = new_stochf_storage.get_denoted_price_array("high_price", periods)
+            low_value_np_array = new_stochf_storage.get_denoted_price_array("low_price", periods)
+            close_value_np_array = new_stochf_storage.get_denoted_price_array("close_price", periods)
 
             fastk, fastd = talib.STOCHF(high_value_np_array, low_value_np_array, close_value_np_array,
                                         fastk_period=horizon*5, fastd_period=horizon*3, fastd_matype=0)[-1]

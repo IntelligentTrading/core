@@ -36,35 +36,9 @@ class UltoscSubscriber(IndicatorSubscriber):
         for horizon in HORIZONS:
             periods = horizon * 28
 
-            high_value_np_array = self.get_values_array_from_query(
-                PriceStorage.query(
-                    ticker=self.ticker,
-                    exchange=self.exchange,
-                    index='high_price',
-                    timestamp=self.timestamp,
-                    periods_range=periods
-                ),
-                limit=periods)
-
-            low_value_np_array = self.get_values_array_from_query(
-                PriceStorage.query(
-                    ticker=self.ticker,
-                    exchange=self.exchange,
-                    index='low_price',
-                    timestamp=self.timestamp,
-                    periods_range=periods
-                ),
-                limit=periods)
-
-            close_value_np_array = self.get_values_array_from_query(
-                PriceStorage.query(
-                    ticker=self.ticker,
-                    exchange=self.exchange,
-                    index='close_price',
-                    timestamp=self.timestamp,
-                    periods_range=periods
-                ),
-                limit=periods)
+            high_value_np_array = new_ultosc_storage.get_denoted_price_array("high_price", periods)
+            low_value_np_array = new_ultosc_storage.get_denoted_price_array("low_price", periods)
+            close_value_np_array = new_ultosc_storage.get_denoted_price_array("close_price", periods)
 
             ultosc_value = talib.ULTOSC(high_value_np_array, low_value_np_array, close_value_np_array,
                                         timeperiod1=horizon * 7, timeperiod2=horizon * 14, timeperiod3=horizon * 28)[-1]

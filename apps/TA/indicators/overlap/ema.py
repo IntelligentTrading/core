@@ -39,28 +39,19 @@ class EmaSubscriber(IndicatorSubscriber):
         for s in EMA_LIST:
             periods_list.extend([h * s for h in HORIZONS])
 
+        new_ema_storage = EmaStorage(ticker=self.ticker, exchange=self.exchange, timestamp=self.timestamp)
         for periods in set(periods_list):
 
-            # todo: this can be refactored into only one query!
-            # todo: after one query for all values, then cut to sizes for horizons and periods
-            results_dict = PriceStorage.query(
-                ticker=self.ticker,
-                exchange=self.exchange,
-                index=self.index,
-                timestamp=self.timestamp,
-                periods_range=periods
-            )
-
-            value_np_array = self.get_values_array_from_query(results_dict, limit=periods)
-            if not len(value_np_array):
+            close_value_np_array = new_ema_storage.get_denoted_price_array("close_price", periods)
+            if not len(close_value_np_array):
                 return
 
-            ema_value = talib.EMA(value_np_array, timeperiod=periods)[-1]
+            ema_value = talib.EMA(close_value_np_array, timeperiod=periods)[-1]
             if math.isnan(ema_value):
                 return
             # # logger.debug(f'savingEma value {ema_value}for {self.ticker} on {periods} periods')
 
-            new_ema_storage = EmaStorage(ticker=self.ticker, exchange=self.exchange, timestamp=self.timestamp)
+
             new_ema_storage.periods = periods
             new_ema_storage.value = float(ema_value)
             new_ema_storage.save()

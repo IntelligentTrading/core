@@ -102,7 +102,7 @@ class BbandsSubscriber(IndicatorSubscriber):
                 periods_range=periods,
             )
 
-            value_np_array = self.get_values_array_from_query(results_dict, limit=periods)
+            value_np_array = new_bband_storage.get_values_array_from_query(results_dict, limit=periods)
 
             # todo: add this line to all indicator handlers
             if not len(value_np_array):

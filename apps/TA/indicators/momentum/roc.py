@@ -36,15 +36,7 @@ class RocSubscriber(IndicatorSubscriber):
         for horizon in HORIZONS:
             periods = horizon * 10
 
-            close_value_np_array = self.get_values_array_from_query(
-                PriceStorage.query(
-                    ticker=self.ticker,
-                    exchange=self.exchange,
-                    index='close_price',
-                    timestamp=self.timestamp,
-                    periods_range=periods
-                ),
-                limit=periods)
+            close_value_np_array = new_roc_storage.get_denoted_price_array("close_price", periods)
 
             timeperiod = min([len(close_value_np_array), periods])
             roc_value = talib.ROC(close_value_np_array, timeperiod=timeperiod)[-1]

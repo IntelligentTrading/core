@@ -41,17 +41,9 @@ class TrimaSubscriber(IndicatorSubscriber):
 
         for periods in set(periods_list):
 
-            results_dict = PriceStorage.query(
-                ticker=self.ticker,
-                exchange=self.exchange,
-                index=self.index,
-                timestamp=self.timestamp,
-                periods_range=periods
-            )
+            close_value_np_array = new_trima_storage.get_denoted_price_array("close_price", periods)
 
-            value_np_array = self.get_values_array_from_query(results_dict, limit=periods)
-
-            trima_value = talib.TRIMA(value_np_array, timeperiod=periods)[-1]
+            trima_value = talib.TRIMA(close_value_np_array, timeperiod=periods)[-1]
             # logger.debug(f'savingTrima value {trima_value}for {self.ticker} on {periods} periods')
 
             new_trima_storage.periods = periods

@@ -38,27 +38,21 @@ class WmaSubscriber(IndicatorSubscriber):
         for s in WMA_LIST:
             periods_list.extend([h * s for h in HORIZONS])
 
+        new_wma_storage = WmaStorage(ticker=self.ticker, exchange=self.exchange, timestamp=self.timestamp)
+
         for periods in set(periods_list):
 
-            # todo: this can be refactored into only one query!
-            # todo: after one query for all values, then cut to sizes for horizons and periods
-            results_dict = PriceStorage.query(
-                ticker=self.ticker,
-                exchange=self.exchange,
-                index=self.index,
-                periods_range=periods
-            )
+            close_value_np_array = new_wma_storage.get_denoted_price_array("close_price", periods)
 
-            value_np_array = self.get_values_array_from_query(results_dict, limit=periods)
-            if not len(value_np_array):
+            if not len(close_value_np_array):
                 return
 
-            wma_value = talib.WMA(value_np_array, timeperiod=periods)[-1]
+            wma_value = talib.WMA(close_value_np_array, timeperiod=periods)[-1]
             if math.isnan(wma_value):
                 return
             # logger.debug(f'savingWma value {wma_value}for {self.ticker} on {periods} periods')
 
-            new_wma_storage = WmaStorage(ticker=self.ticker, exchange=self.exchange, timestamp=self.timestamp)
+
             new_wma_storage.periods = periods
             new_wma_storage.value = float(wma_value)
             new_wma_storage.save()
