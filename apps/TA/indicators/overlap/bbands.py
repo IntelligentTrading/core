@@ -1,3 +1,5 @@
+import math
+
 from settings import LOAD_TALIB
 if LOAD_TALIB:
     import talib
@@ -32,6 +34,7 @@ class BbandsStorage(IndicatorStorage):
                 self.trend = OTHER
 
             self.send_signal(type="BBands", trend=self.trend, width=self.width)
+            logger.debug("new BBands signal sent")
 
 
 
@@ -65,21 +68,30 @@ class BbandsSubscriber(IndicatorSubscriber):
 
         for horizon in HORIZONS:
 
+            periods = horizon * 5
+
             results_dict = PriceStorage.query(
                 ticker=self.ticker,
                 exchange=self.exchange,
                 index=self.index,
-                periods_range=horizon*5
+                periods_range=periods
             )
 
-            value_np_array = self.get_values_array_from_query(results_dict, limit=horizon)
+            value_np_array = self.get_values_array_from_query(results_dict, limit=periods)
+
+            # todo: add this line to all indicator handlers
+            if not len(value_np_array):
+                return
 
             upperband, middleband, lowerband = talib.BBANDS(
                 value_np_array,
-                timeperiod=len(value_np_array),
+                timeperiod=periods,
                 nbdevup=2, nbdevdn=2, matype=0)
 
             # logger.debug(f'savingBbands for {self.ticker} on {horizon} periods')
+
+            if math.isnan(upperband[-1] + middleband[-1] + lowerband[-1]):
+                return
 
             new_bband_storage.periods = horizon
             new_bband_storage.upperband = upperband
@@ -87,3 +99,5 @@ class BbandsSubscriber(IndicatorSubscriber):
             new_bband_storage.lowerband = lowerband
             new_bband_storage.value = ":".join([str(upperband), str(middleband), str(lowerband)])
             new_bband_storage.save()
+            logger.debug("new BBands value saved")
+            new_bband_storage.produce_signal()
