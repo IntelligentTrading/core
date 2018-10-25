@@ -1,4 +1,4 @@
-from apps.TA.storages.abstract.indicator import IndicatorException
+from apps.TA.storages.abstract.indicator import IndicatorException, IndicatorStorage
 from apps.TA.storages.abstract.ticker_subscriber import TickerSubscriber, get_nearest_5min_timestamp
 from settings import logger
 import numpy as np
@@ -29,16 +29,17 @@ class IndicatorSubscriber(TickerSubscriber):
                            f'channel: {channel}, '
                            f'subscribing classes: {self.classes_subscribing_to}')
 
-        [value, timestamp] = data["name"].split(":")
-        self.value = float(value)
-        self.timestamp = int(float(timestamp))
+        [value, score] = data["name"].split(":")
+        self.value, self.score = float(value), float(score)
 
-        if not self.timestamp == int(float(data["score"])):
-            logger.warning(f'Unexpected that score in name {self.timestamp} '
+        if not self.score == int(float(data["score"])):
+            logger.warning(f'Unexpected that score in name {self.score} '
                            f'is different than score {data["score"]}')
 
-        if not self.timestamp == get_nearest_5min_timestamp(self.timestamp):
-            raise IndicatorException("indicator timestamp should be 5min timestamp")
+        if not self.score == int(self.score):
+            raise IndicatorException("indicator timestamp should be 5min timestamp, score should be whole number (int)")
+
+        self.timestamp = IndicatorStorage.timestamp_from_score(self.score)
 
         return
 

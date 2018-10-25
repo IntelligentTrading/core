@@ -5,7 +5,6 @@ from apps.TA.storages.abstract.ticker import TickerStorage
 from apps.TA.storages.abstract.ticker_subscriber import TickerSubscriber, score_is_near_5min
 from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, default_price_indexes, derived_price_indexes
 from apps.TA.storages.utils.memory_cleaner import clear_pv_history_values
-from apps.TA.storages.utils.pv_resampling import generate_pv_storages
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +64,7 @@ class PriceSubscriber(TickerSubscriber):
     ]
 
     def handle(self, channel, data, *args, **kwargs):
+        from apps.TA.storages.utils.pv_resampling import generate_pv_storages # import here, bc has circular dependancy
 
         # parse data like...
         # {
@@ -85,9 +85,9 @@ class PriceSubscriber(TickerSubscriber):
 
         score = float(data["score"])
 
-        if not name_score == float(data["score"]):
-            logger.warning(f'Unexpected that score in name `{name_score}` '
-                           f'is different than score `{score}`')
+        if not float(name_score) == float(data["score"]):
+            logger.warning(f'Unexpected that score in name {name_score}'
+                           f'is different than score {score}')
 
         if score_is_near_5min(score):
             if generate_pv_storages(ticker, exchange, index, score):
