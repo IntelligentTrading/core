@@ -23,7 +23,11 @@ class Command(BaseCommand):
         today = datetime.now()
         start_datetime = datetime(today.year, today.month, today.day)
 
-        start_datetime = datetime(2018, 1, 1)
+        key = "BTC_USDT:binance:PriceStorage:close_price"
+        last_score = database.zrange(key, -1, -1)[0].decode("utf-8").split(":")[1]
+        last_datetime = TimeseriesStorage.datetime_from_score(last_score)
+
+        start_datetime = last_datetime or datetime(2018, 1, 1)
         end_datetime = datetime.today()
         assert start_datetime < end_datetime  # please go forward in time :)
         process_datetime = start_datetime
@@ -33,7 +37,7 @@ class Command(BaseCommand):
         while process_datetime < end_datetime:
             process_datetime += timedelta(hours=num_hours_per_query)
 
-            logger.debug(f"restoring past {num_hours_per_query} hours data to {process_datetime}")
+            logger.info(f"restoring past {num_hours_per_query} hours data to {process_datetime}")
 
             price_history_objects = PriceHistory.objects.filter(
                 timestamp__gte=process_datetime - timedelta(hours=1),
@@ -56,7 +60,10 @@ class Command(BaseCommand):
             # database_response = pipeline.execute()
             # total_results = sum(database_response)
 
-            logger.debug(f"{total_results} values added to Redis")
+            logger.info(f"{total_results} values added to Redis")
+
+            if total_results < 4*60*5: #  minute data for 1 ticker
+                continue
 
             price_history_to_price_storage(
                 ticker_exchanges=[
@@ -71,8 +78,9 @@ class Command(BaseCommand):
             )
 
         from apps.TA.management.commands.TA_fill_gaps import fill_data_gaps
-        fill_data_gaps()
-
+        while True:
+            fill_data_gaps()
+            time.sleep(60 * 60 * 2)  # 2 hours
 
 
 ### PULL PRICE HISTORY RECORDS FROM CORE PRICE HISTORY DATABASE ###
@@ -137,9 +145,10 @@ def save_pv_histories_to_redis(ph_object, pipeline=None):
 
 
 ### RESAMPLE PRICES TO 5 MIN PRICE STORAGE RECORDS ###
-# @start_new_thread
+@start_new_thread
 def price_history_to_price_storage(ticker_exchanges, start_score=None, end_score=None):
     from apps.TA.storages.utils.pv_resampling import generate_pv_storages
+    from apps.TA.storages.utils.memory_cleaner import clear_pv_history_values
 
     if not start_score:
         # start_score = 0  # this is jan 1 2017
@@ -150,7 +159,7 @@ def price_history_to_price_storage(ticker_exchanges, start_score=None, end_score
     if not end_score:
         end_score = TimeseriesStorage.score_from_timestamp((datetime.today() - timedelta(hours=2)).timestamp())
 
-    logger.debug(f"starting price resampling for scores {start_score} to {end_score}")
+    logger.debug(f"STARTING price resampling for scores {start_score} to {end_score}")
 
     while processing_score < end_score:
         processing_score += 1
@@ -160,8 +169,8 @@ def price_history_to_price_storage(ticker_exchanges, start_score=None, end_score
             for index in default_price_indexes:
                 if generate_pv_storages(ticker, exchange, index, processing_score):
                     if index == "close_price":
-                        from apps.TA.storages.utils.memory_cleaner import clear_pv_history_values
                         clear_pv_history_values(ticker, exchange, processing_score)
 
+    logger.debug(f"FINISHED price resampling for scores {start_score} to {end_score}")
     # returns nothing - can be threaded with collection of results
 ### END RESAMPLE FOR PRICE STORAGE RECORDS ###

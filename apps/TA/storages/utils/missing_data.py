@@ -34,6 +34,14 @@ def find_start_score(ticker: str, exchange: str, index: str) -> float:
     score = float(query_response[0].decode("utf-8").split(":")[1])
     return score
 
+def find_range_with_data_gaps(ticker: str, exchange: str, index: str, start_score: float = 0, end_score: float = 0) -> list:
+
+    # todo: binary-style search for blocks of values with missing scores
+    #
+    # if len(values_count) < periods_range+1:
+    #     has_missing_data = True
+    # 
+    pass
 
 def find_pv_storage_data_gaps(ticker: str, exchange: str, index: str, start_score: float = 0, end_score: float = 0) -> list:
     """
