@@ -59,6 +59,6 @@ class IndicatorSubscriber(TickerSubscriber):
                 raise IndicatorException(f"bad limit: {limit}")
 
             elif len(value_array) > limit:
-                value_array = value_array[-limit:0]
+                value_array = value_array[-limit:]
 
         return np.array(value_array)
