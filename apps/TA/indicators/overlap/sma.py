@@ -1,3 +1,4 @@
+import math
 from settings import LOAD_TALIB
 
 if LOAD_TALIB:
@@ -14,6 +15,8 @@ SMA_LIST = [9, 20, 26, 30, 50, 52, 60, 120, 200]
 
 class SmaStorage(IndicatorStorage):
 
+    # sorted_set_key = "BTC_USDT:poloniex:SmaStorage:20"
+
     def produce_signal(self):
         pass
 
@@ -23,28 +26,13 @@ class SmaSubscriber(IndicatorSubscriber):
         PriceStorage
     ]
 
-    # sorted_set_key = "BTC_USDT:poloniex:SmaStorage:20"
-
     def handle(self, channel, data, *args, **kwargs):
 
-        """
-        now available:
-            self.ticker as str
-            self.exchange as str
-            self.key_suffix as str
-            self.timestamp as int
-            self.value as str
-        """
-        # key for PriceStorage like "BLZ_ETH:binance:PriceStorage:close_price"
         self.index = self.key_suffix
 
         if self.index != 'close_price':
             logger.debug(f'index {self.index} is not close_price ...ignoring...')
             return
-
-        new_sma_storage = SmaStorage(ticker=self.ticker,
-                                     exchange=self.exchange,
-                                     timestamp=self.timestamp)
 
         periods_list = []
         for s in SMA_LIST:
@@ -58,16 +46,20 @@ class SmaSubscriber(IndicatorSubscriber):
                 ticker=self.ticker,
                 exchange=self.exchange,
                 index=self.index,
+                timestamp=self.timestamp,
                 periods_range=periods
             )
 
-            logger.debug(results_dict)
-
             value_np_array = self.get_values_array_from_query(results_dict, limit=periods)
+            if not len(value_np_array):
+                return
 
             sma_value = talib.SMA(value_np_array, timeperiod=periods)[-1]
+            if math.isnan(sma_value):
+                return
             # logger.debug(f'savingSMA value {sma_value}for {self.ticker} on {periods} periods')
 
+            new_sma_storage = SmaStorage(ticker=self.ticker, exchange=self.exchange, timestamp=self.timestamp)
             new_sma_storage.periods = periods
-            new_sma_storage.value = int(float(sma_value))
+            new_sma_storage.value = float(sma_value)
             new_sma_storage.save()
