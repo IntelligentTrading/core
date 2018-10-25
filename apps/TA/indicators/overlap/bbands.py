@@ -46,7 +46,7 @@ class BbandsSubscriber(IndicatorSubscriber):
         self.index = self.key_suffix
 
         if self.index is not 'close_price':
-            logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
+            # logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
             return
 
         new_bband_storage = BbandsStorage(ticker=self.ticker,
