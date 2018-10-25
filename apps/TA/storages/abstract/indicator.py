@@ -45,7 +45,23 @@ class IndicatorStorage(TickerStorage):
                                      f'must be a factor of periods {self.periods}')
 
         self.db_key_suffix = f':{self.periods}'
+        self.value = None
 
+    def get_value(self, refresh_from_db=False):
+        try:
+            if self.value and not refresh_from_db:
+                pass
+            else:
+                self.value = self.query(
+                    ticker=self.ticker, exchange=self.exchange, timestamp=self.unix_timestamp
+                )['values'][-1]
+        except IndexError:
+            self.value = None # value not found
+        except Exception as e:
+            logger.error(str(e))
+            self.value = None
+
+        return self.value
 
     @classmethod
     def score_from_timestamp(cls, *args, **kwargs) -> int:
@@ -56,7 +72,6 @@ class IndicatorStorage(TickerStorage):
     def periods_from_seconds(cls, *args, **kwargs) -> int:
         # enforce integer periods, round to nearest
         return int(round(super().periods_from_seconds(*args, **kwargs)))
-
 
     @classmethod
     def query(cls, *args, **kwargs):
