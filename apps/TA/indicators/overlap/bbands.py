@@ -1,6 +1,7 @@
 import math
 
 from settings import LOAD_TALIB
+
 if LOAD_TALIB:
     import talib
 
@@ -13,33 +14,57 @@ from settings import logger
 
 class BbandsStorage(IndicatorStorage):
 
+    def get_width(self):
+        self.value = self.get_value()
+        if self.value:
+            [self.upperband_val, self.middleband_val, self.lowerband_val] = [float(val) for val in
+                                                                             self.value.split(":")]
+            self.width = (self.upperband_val - self.lowerband_val) / self.middleband_val
+        else:
+            self.width = None
+        return self.width
+
     def produce_signal(self):
 
-        self.width = (self.upperband - self.lowerband) / self.middleband
+        self.value = self.get_value()
+        # Bbands value like f"{upperband_val}:{middleband_val}:{lowerband_val}"
 
-        bands_of_last_180_periods = BbandsStorage.query(ticker=self.ticker, exchange=self.exchange,
-                                     timestamp=self.timestamp, periods=180)
+        [self.upperband_val, self.middleband_val, self.lowerband_val] = [float(val) for val in self.value.split(":")]
+        self.width = (self.upperband_val - self.lowerband_val) / self.middleband_val
 
-        all_widths = [((bb.upperband - bb.lowerband) / bb.middleband) for bb in bands_of_last_180_periods]
-        if self.width <= min(all_widths): # smallest width (squeeze) in the last 180 periods
+        query_result = BbandsStorage.query(
+            ticker=self.ticker, exchange=self.exchange, timestamp=self.unix_timestamp, periods=180
+        )
+        if query_result['values_count'] < 180:
+            return  # not enough data
+
+        bbands_values = query_result['values'][-180:]
+
+        upper, middle, lower = 0, 1, 2
+
+        bbands_widths = [(float(v.split(":")[upper]) - float(v.split(":")[lower])) / float(v.split(":")[middle])
+                         for v in query_result['values']]
+
+        if self.width <= min(bbands_widths):  # smallest width (squeeze) in the last 180 periods
             # squeeze = True
 
-            if self.price > self.upperband: # price breaks out above the band
+            self.price = float(PriceStorage.query(ticker=self.ticker, exchange=self.exchange, index="close_price",
+                                                  timestamp=self.unix_timestamp)['values'][-1])
+
+            if self.price > self.upperband_val:  # price breaks out above the band
                 self.trend = BULLISH
 
-            elif self.price < self.lowerband: # price breaks out below the band
+            elif self.price < self.lowerband_val:  # price breaks out below the band
                 self.trend = BEARISH
 
-            else: # price doesn't break out - but the squeeze thing is cool
+            else:  # price doesn't break out - but the squeeze thing is cool
                 self.trend = OTHER
 
             self.send_signal(type="BBands", trend=self.trend, width=self.width)
             logger.debug("new BBands signal sent")
 
 
-
 class BbandsSubscriber(IndicatorSubscriber):
-
     classes_subscribing_to = [
         PriceStorage
     ]
@@ -53,7 +78,6 @@ class BbandsSubscriber(IndicatorSubscriber):
     #
     # )
 
-
     def handle(self, channel, data, *args, **kwargs):
 
         self.index = self.key_suffix
@@ -63,8 +87,8 @@ class BbandsSubscriber(IndicatorSubscriber):
             return
 
         new_bband_storage = BbandsStorage(ticker=self.ticker,
-                                     exchange=self.exchange,
-                                     timestamp=self.timestamp)
+                                          exchange=self.exchange,
+                                          timestamp=self.timestamp)
 
         for horizon in HORIZONS:
 
@@ -88,16 +112,10 @@ class BbandsSubscriber(IndicatorSubscriber):
                 timeperiod=periods,
                 nbdevup=2, nbdevdn=2, matype=0)
 
-            # logger.debug(f'savingBbands for {self.ticker} on {horizon} periods')
-
             if math.isnan(upperband[-1] + middleband[-1] + lowerband[-1]):
                 return
 
             new_bband_storage.periods = horizon
-            new_bband_storage.upperband = upperband
-            new_bband_storage.middleband = middleband
-            new_bband_storage.lowerband = lowerband
-            new_bband_storage.value = ":".join([str(upperband), str(middleband), str(lowerband)])
-            new_bband_storage.save()
+            new_bband_storage.value = f"{upperband[-1]}:{middleband[-1]}:{lowerband[-1]}"
+            new_bband_storage.save()  # will produce signal if necessary
             logger.debug("new BBands value saved")
-            new_bband_storage.produce_signal()
