@@ -76,7 +76,7 @@ class RsiSubscriber(IndicatorSubscriber):
 
             value_np_array = self.get_values_array_from_query(results_dict, limit=horizon)
 
-            rsi_value = talib.RSI(value_np_array, timeperiod=len(value_np_array))[-1]
+            rsi_value = talib.RSI(value_np_array, timeperiod=periods)[-1]
             # logger.debug(f'savingRSI value {rsi_value} for {self.ticker} on {horizon*14} periods')
 
             new_rsi_storage.periods = horizon

@@ -53,7 +53,7 @@ class EmaSubscriber(IndicatorSubscriber):
 
             value_np_array = self.get_values_array_from_query(results_dict, limit=periods)
 
-            ema_value = talib.EMA(value_np_array, timeperiod=len(value_np_array))[-1]
+            ema_value = talib.EMA(value_np_array, timeperiod=periods)[-1]
             # # logger.debug(f'savingEma value {ema_value}for {self.ticker} on {periods} periods')
 
             new_ema_storage.periods = periods

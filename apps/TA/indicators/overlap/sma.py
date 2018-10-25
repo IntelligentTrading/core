@@ -65,7 +65,7 @@ class SmaSubscriber(IndicatorSubscriber):
 
             value_np_array = self.get_values_array_from_query(results_dict, limit=periods)
 
-            sma_value = talib.SMA(value_np_array, timeperiod=len(value_np_array))[-1]
+            sma_value = talib.SMA(value_np_array, timeperiod=periods)[-1]
             # logger.debug(f'savingSMA value {sma_value}for {self.ticker} on {periods} periods')
 
             new_sma_storage.periods = periods
