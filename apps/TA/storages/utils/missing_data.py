@@ -27,15 +27,16 @@ def find_start_score(ticker: str, exchange: str, index: str) -> float:
     :return: the score as a float, eg. 148609.0
     """
 
-    #eg. key = "ETH_BTC:binance:PriceStorage:close_price"
+    # eg. key = "ETH_BTC:binance:PriceStorage:close_price"
     key = f"{ticker}:{exchange}:PriceStorage:{index}"
 
     query_response = database.zrange(key, 0, 0)
     score = float(query_response[0].decode("utf-8").split(":")[1])
     return score
 
-def find_range_with_data_gaps(ticker: str, exchange: str, index: str, start_score: float = 0, end_score: float = 0) -> list:
 
+def find_range_with_data_gaps(ticker: str, exchange: str, index: str, start_score: float = 0,
+                              end_score: float = 0) -> list:
     # todo: binary-style search for blocks of values with missing scores
     #
     # if len(values_count) < periods_range+1:
@@ -43,7 +44,9 @@ def find_range_with_data_gaps(ticker: str, exchange: str, index: str, start_scor
     # 
     pass
 
-def find_pv_storage_data_gaps(ticker: str, exchange: str, index: str, start_score: float = 0, end_score: float = 0) -> list:
+
+def find_pv_storage_data_gaps(ticker: str, exchange: str, index: str, start_score: float = 0,
+                              end_score: float = 0) -> list:
     """
     Find and plug up gaps in the data for Price and Volume Storages
 
@@ -65,7 +68,7 @@ def find_pv_storage_data_gaps(ticker: str, exchange: str, index: str, start_scor
 
     # set score range for processing
     start_score = start_score or 0
-    end_score = end_score or TimeseriesStorage.score_from_timestamp((datetime.today()-timedelta(hours=2)).timestamp())
+    end_score = end_score or TimeseriesStorage.score_from_timestamp((datetime.today() - timedelta(hours=2)).timestamp())
     processing_score = start_score
 
     missing_scores = []
@@ -92,7 +95,7 @@ def find_pv_storage_data_gaps(ticker: str, exchange: str, index: str, start_scor
             continue  # problem solved!
 
         # still here? well damn, we have big hole in the data
-        if dont_repeat_this_score == processing_score: # we dont' want to try this more than once
+        if dont_repeat_this_score == processing_score:  # we dont' want to try this more than once
             missing_scores.append(processing_score)
             continue  # we give up on this score :(
 
@@ -123,8 +126,7 @@ def find_pv_storage_data_gaps(ticker: str, exchange: str, index: str, start_scor
     return missing_scores
 
 
-def force_plug_pv_storage_data_gaps(ticker: str, exchange: str, index: str, scores: list =[]):
-
+def force_plug_pv_storage_data_gaps(ticker: str, exchange: str, index: str, scores: list = []):
     # validate index and determine storage class
     if index in PRICE_INDEXES:
         storage_class = PriceStorage
@@ -145,7 +147,7 @@ def force_plug_pv_storage_data_gaps(ticker: str, exchange: str, index: str, scor
         )
 
         if query_response['values_count'] > 0 and score == float(query_response['scores'][-1]):
-            #value is not missing
+            # value is not missing
             continue
 
         q_value = int(query_response['values'][0])
@@ -157,7 +159,7 @@ def force_plug_pv_storage_data_gaps(ticker: str, exchange: str, index: str, scor
 
         assert 'warning' in query_response
         assert float(query_response['earliest_timestamp']) == float(query_response['latest_timestamp'])
-        assert float(query_response['latest_timestamp']) == TimeseriesStorage.timestamp_from_score(score-1)
+        assert float(query_response['latest_timestamp']) == TimeseriesStorage.timestamp_from_score(score - 1)
         assert q_score == score - 1
 
         storage = storage_class(ticker=ticker,
@@ -171,16 +173,14 @@ def force_plug_pv_storage_data_gaps(ticker: str, exchange: str, index: str, scor
         logger.debug("Filled the gap on score " + str(score))
 
 
-
 def test_force_plug_pv_storage_data_gaps():
-
     ticker = "ETH_BTC"
     exchange = "binance"
     index = "close_price"
     key = f"{ticker}:{exchange}:PriceStorage:{index}"
     database.zremrangebyscore(key, 155773 + 1, 155773 + 2)
 
-    scores = [155773, 155773+1, 155773+2]
+    scores = [155773, 155773 + 1, 155773 + 2]
 
     force_plug_pv_storage_data_gaps(ticker, exchange, index, scores)
 
