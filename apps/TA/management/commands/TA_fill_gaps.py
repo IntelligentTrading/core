@@ -1,5 +1,6 @@
 import logging
 import time
+from datetime import datetime
 
 from django.core.management.base import BaseCommand
 
@@ -24,7 +25,7 @@ class Command(BaseCommand):
 
         while True:
             fill_data_gaps(arg == 'force_fill_gaps')
-            time.sleep(60 * 60 * 2)  # 2 hours
+            time.sleep(1)
 
 
 def fill_data_gaps(force_fill=False):
@@ -36,11 +37,16 @@ def fill_data_gaps(force_fill=False):
                 [ticker, exchange, storage_class, index] = key.decode("utf-8").split(":")
 
                 start_score = missing_data.find_start_score(ticker, exchange, index)
+                # end score is either 24hrs later or now() at the latest
+                end_score = min([start_score+(12*24), TimeseriesStorage.score_from_timestamp(datetime.today().timestamp())])
 
                 logger.debug(f"working on {ticker}:{exchange}:PVStorages:{index}..." +
                              f"starting at {TimeseriesStorage.datetime_from_score(start_score)}")
 
-                missing_scores = missing_data.find_pv_storage_data_gaps(ticker, exchange, index, start_score)
+                missing_scores = missing_data.find_pv_storage_data_gaps(
+                    ticker, exchange, index,
+                    start_score, end_score=end_score)  # process only up to 1 day
+
 
                 if missing_scores:
                     logger.warning(

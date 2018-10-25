@@ -52,30 +52,19 @@ class Command(BaseCommand):
 
         for s in subscribers:
             logger.debug(f'latest channels: {subscribers[s].database.pubsub_channels()}')
-            break
 
         logger.info("Pubsub clients are ready.")
 
         while True:
-            counter = 0
             for class_name in subscribers:
                 # logger.debug(f'checking subscription {class_name}: {subscribers[class_name]}')
                 try:
                     subscribers[class_name]()  # run subscriber class
                 except Exception as e:
                     logger.error(str(e))
+                    logger.debug(subscribers[class_name].__dict__)
 
-                time.sleep(0.0001)  # be nice to the system :)
-
-                if counter > (3600 / 0.0001):
-                    counter = 0
-                    try:
-                        if int(database.info()['used_memory']) > (2 ** 30 * .9):
-                            redisCleanup()
-                    except:
-                        pass
-                else:
-                    counter += 1
+                time.sleep(0.001)  # be nice to the system :)
 
 
     def new_handle(self, *args, **options):
@@ -106,16 +95,17 @@ def get_subscriber_classes():
         # VolumeSubscriber,  # the PriceSubscriber handles volume resampling
 
         # OVERLAP INDICATORS
-        midprice.MidpriceSubscriber,
+        # midprice.MidpriceSubscriber,
         sma.SmaSubscriber, ema.EmaSubscriber, wma.WmaSubscriber,
-        dema.DemaSubscriber, tema.TemaSubscriber, trima.TrimaSubscriber, kama.KamaSubscriber,
-        bbands.BbandsSubscriber, ht_trendline.HtTrendlineSubscriber,
+        # dema.DemaSubscriber, tema.TemaSubscriber, trima.TrimaSubscriber, kama.KamaSubscriber,
+        bbands.BbandsSubscriber,
+        # ht_trendline.HtTrendlineSubscriber,
 
-        # MOMENTUM INDICATORS
-        adx.AdxSubscriber, adxr.AdxrSubscriber, apo.ApoSubscriber, aroon.AroonSubscriber, aroonosc.AroonOscSubscriber,
-        bop.BopSubscriber, cci.CciSubscriber, cmo.CmoSubscriber, dx.DxSubscriber, macd.MacdSubscriber,
-        # mfi.MfiSubscriber,
-        mom.MomSubscriber, ppo.PpoSubscriber, roc.RocSubscriber, rocr.RocrSubscriber, rsi.RsiSubscriber,
-        stoch.StochSubscriber, stochf.StochfSubscriber, stochrsi.StochrsiSubscriber,
-        trix.TrixSubscriber, ultosc.UltoscSubscriber, willr.WillrSubscriber,
+        # # MOMENTUM INDICATORS
+        # adx.AdxSubscriber, adxr.AdxrSubscriber, apo.ApoSubscriber, aroon.AroonSubscriber, aroonosc.AroonOscSubscriber,
+        # bop.BopSubscriber, cci.CciSubscriber, cmo.CmoSubscriber, dx.DxSubscriber, macd.MacdSubscriber,
+        # # mfi.MfiSubscriber,
+        # mom.MomSubscriber, ppo.PpoSubscriber, roc.RocSubscriber, rocr.RocrSubscriber, rsi.RsiSubscriber,
+        # stoch.StochSubscriber, stochf.StochfSubscriber, stochrsi.StochrsiSubscriber,
+        # trix.TrixSubscriber, ultosc.UltoscSubscriber, willr.WillrSubscriber,
     ]
