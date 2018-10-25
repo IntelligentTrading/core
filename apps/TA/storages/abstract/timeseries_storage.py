@@ -121,8 +121,8 @@ class TimeseriesStorage(KeyValueStorage):
             'values': [],
             'values_count': 0,
             'timestamp': timestamp,
-            'earliest_timestamp': cls.score_from_timestamp(min_score),
-            'latest_timestamp': cls.score_from_timestamp(max_score),
+            'earliest_timestamp': cls.timestamp_from_score(min_score),
+            'latest_timestamp': cls.timestamp_from_score(max_score),
             'periods_range': periods_range,
             'period_size': 300,
         }

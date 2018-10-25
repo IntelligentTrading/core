@@ -47,10 +47,8 @@ class PriceStorage(TickerStorage):
             raise PriceException("periods_key is not usable in PriceStorage query")
 
         key_suffix = kwargs.get("key_suffix", "")
-        index = kwargs.get("index", "")
-
-        if index:
-            kwargs["key_suffix"] = f'{index}' + (f':{key_suffix}' if key_suffix else "")
+        index = kwargs.get("index", "close_price")
+        kwargs["key_suffix"] = f'{index}' + (f':{key_suffix}' if key_suffix else "")
 
         results_dict = super().query(*args, **kwargs)
 
