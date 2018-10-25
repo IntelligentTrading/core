@@ -68,5 +68,5 @@ class DxSubscriber(IndicatorSubscriber):
             # logger.debug(f'savingDx value {dx_value} for {self.ticker} on {periods} periods')
 
             new_dx_storage.periods = periods
-            new_dx_storage.value = int(float(dx_value))
+            new_dx_storage.value = float(dx_value)
             new_dx_storage.save()

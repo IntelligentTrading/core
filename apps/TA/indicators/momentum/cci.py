@@ -68,5 +68,5 @@ class CciSubscriber(IndicatorSubscriber):
             # logger.debug(f'savingCci value {cci_value} for {self.ticker} on {periods} periods')
 
             new_cci_storage.periods = periods
-            new_cci_storage.value = int(float(cci_value))
+            new_cci_storage.value = float(cci_value)
             new_cci_storage.save()

@@ -116,7 +116,6 @@ def generate_pv_storages(ticker: str, exchange: str, index: str, score: float) -
                 pass
 
             if price_storage.value:
-                price_storage.value = int(price_storage.value)
                 price_storage.save()
 
     return True

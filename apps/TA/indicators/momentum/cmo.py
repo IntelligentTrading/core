@@ -50,5 +50,5 @@ class CmoSubscriber(IndicatorSubscriber):
             # logger.debug(f'savingCmo value {cmo_value} for {self.ticker} on {periods} periods')
 
             new_cmo_storage.periods = periods
-            new_cmo_storage.value = int(float(cmo_value))
+            new_cmo_storage.value = float(cmo_value)
             new_cmo_storage.save()

@@ -80,5 +80,5 @@ class MfiSubscriber(IndicatorSubscriber):
             # logger.debug(f'savingMfi value {mfi_value} for {self.ticker} on {periods} periods')
 
             new_mfi_storage.periods = periods
-            new_mfi_storage.value = int(float(mfi_value))
+            new_mfi_storage.value = float(mfi_value)
             new_mfi_storage.save()

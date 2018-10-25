@@ -45,10 +45,9 @@ class KamaSubscriber(IndicatorSubscriber):
                 ticker=self.ticker,
                 exchange=self.exchange,
                 index=self.index,
+                timestamp=self.timestamp,
                 periods_range=periods
             )
-
-            logger.debug(results_dict)
 
             value_np_array = self.get_values_array_from_query(results_dict, limit=periods)
 
@@ -56,5 +55,5 @@ class KamaSubscriber(IndicatorSubscriber):
             # logger.debug(f'savingKama value {kama_value}for {self.ticker} on {periods} periods')
 
             new_kama_storage.periods = periods
-            new_kama_storage.value = int(float(kama_value))
+            new_kama_storage.value = float(kama_value)
             new_kama_storage.save()

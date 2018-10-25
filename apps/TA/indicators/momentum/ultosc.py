@@ -41,6 +41,7 @@ class UltoscSubscriber(IndicatorSubscriber):
                     ticker=self.ticker,
                     exchange=self.exchange,
                     index='high_price',
+                    timestamp=self.timestamp,
                     periods_range=periods
                 ),
                 limit=periods)
@@ -50,6 +51,7 @@ class UltoscSubscriber(IndicatorSubscriber):
                     ticker=self.ticker,
                     exchange=self.exchange,
                     index='low_price',
+                    timestamp=self.timestamp,
                     periods_range=periods
                 ),
                 limit=periods)
@@ -59,6 +61,7 @@ class UltoscSubscriber(IndicatorSubscriber):
                     ticker=self.ticker,
                     exchange=self.exchange,
                     index='close_price',
+                    timestamp=self.timestamp,
                     periods_range=periods
                 ),
                 limit=periods)
@@ -68,5 +71,5 @@ class UltoscSubscriber(IndicatorSubscriber):
             # logger.debug(f'savingUltosc value {ultosc_value} for {self.ticker} on {periods} periods')
 
             new_ultosc_storage.periods = periods
-            new_ultosc_storage.value = int(float(ultosc_value))
+            new_ultosc_storage.value = float(ultosc_value)
             new_ultosc_storage.save()

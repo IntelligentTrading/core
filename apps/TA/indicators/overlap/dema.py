@@ -45,10 +45,9 @@ class DemaSubscriber(IndicatorSubscriber):
                 ticker=self.ticker,
                 exchange=self.exchange,
                 index=self.index,
+                timestamp=self.timestamp,
                 periods_range=periods
             )
-
-            logger.debug(results_dict)
 
             value_np_array = self.get_values_array_from_query(results_dict, limit=periods)
 
@@ -56,5 +55,5 @@ class DemaSubscriber(IndicatorSubscriber):
             # logger.debug(f'savingDema value {dema_value}for {self.ticker} on {periods} periods')
 
             new_dema_storage.periods = periods
-            new_dema_storage.value = int(float(dema_value))
+            new_dema_storage.value = float(dema_value)
             new_dema_storage.save()

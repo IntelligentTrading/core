@@ -41,6 +41,7 @@ class TrixSubscriber(IndicatorSubscriber):
                     ticker=self.ticker,
                     exchange=self.exchange,
                     index='close_price',
+                    timestamp=self.timestamp,
                     periods_range=periods
                 ),
                 limit=periods)
@@ -50,5 +51,5 @@ class TrixSubscriber(IndicatorSubscriber):
             # logger.debug(f'savingTrix value {trix_value} for {self.ticker} on {periods} periods')
 
             new_trix_storage.periods = periods
-            new_trix_storage.value = int(float(trix_value))
+            new_trix_storage.value = float(trix_value)
             new_trix_storage.save()

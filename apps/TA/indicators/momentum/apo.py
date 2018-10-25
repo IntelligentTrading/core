@@ -50,7 +50,7 @@ class ApoSubscriber(IndicatorSubscriber):
 
                 # logger.debug(f'savingApo value {apo_value} for {self.ticker} on {periods} periods')
                 new_apo_storage.periods = periods
-                new_apo_storage.value = int(float(apo_value))
+                new_apo_storage.value = float(apo_value)
                 new_apo_storage.save()
 
             except Exception as e:

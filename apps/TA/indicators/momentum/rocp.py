@@ -41,6 +41,7 @@ class RocpSubscriber(IndicatorSubscriber):
                     ticker=self.ticker,
                     exchange=self.exchange,
                     index='close_price',
+                    timestamp=self.timestamp,
                     periods_range=periods
                 ),
                 limit=periods)
@@ -50,5 +51,5 @@ class RocpSubscriber(IndicatorSubscriber):
             # logger.debug(f'savingRocp value {rocp_value} for {self.ticker} on {periods} periods')
 
             new_rocp_storage.periods = periods
-            new_rocp_storage.value = int(float(rocp_value))
+            new_rocp_storage.value = float(rocp_value)
             new_rocp_storage.save()

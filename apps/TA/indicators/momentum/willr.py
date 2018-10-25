@@ -41,6 +41,7 @@ class WillrSubscriber(IndicatorSubscriber):
                     ticker=self.ticker,
                     exchange=self.exchange,
                     index='high_price',
+                    timestamp=self.timestamp,
                     periods_range=periods
                 ),
                 limit=periods)
@@ -50,6 +51,7 @@ class WillrSubscriber(IndicatorSubscriber):
                     ticker=self.ticker,
                     exchange=self.exchange,
                     index='low_price',
+                    timestamp=self.timestamp,
                     periods_range=periods
                 ),
                 limit=periods)
@@ -59,6 +61,7 @@ class WillrSubscriber(IndicatorSubscriber):
                     ticker=self.ticker,
                     exchange=self.exchange,
                     index='close_price',
+                    timestamp=self.timestamp,
                     periods_range=periods
                 ),
                 limit=periods)
@@ -68,5 +71,5 @@ class WillrSubscriber(IndicatorSubscriber):
             # logger.debug(f'savingWillr value {willr_value} for {self.ticker} on {periods} periods')
 
             new_willr_storage.periods = periods
-            new_willr_storage.value = int(float(willr_value))
+            new_willr_storage.value = float(willr_value)
             new_willr_storage.save()

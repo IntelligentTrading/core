@@ -41,6 +41,7 @@ class MomSubscriber(IndicatorSubscriber):
                     ticker=self.ticker,
                     exchange=self.exchange,
                     index='close_price',
+                    timestamp=self.timestamp,
                     periods_range=periods
                 ),
                 limit=periods)
@@ -50,5 +51,5 @@ class MomSubscriber(IndicatorSubscriber):
             # logger.debug(f'savingMom value {mom_value} for {self.ticker} on {periods} periods')
 
             new_mom_storage.periods = periods
-            new_mom_storage.value = int(float(mom_value))
+            new_mom_storage.value = float(mom_value)
             new_mom_storage.save()

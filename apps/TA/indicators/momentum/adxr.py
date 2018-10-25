@@ -68,5 +68,5 @@ class AdxrSubscriber(IndicatorSubscriber):
             # logger.debug(f'savingAdxr value {adxr_value} for {self.ticker} on {periods} periods')
 
             new_adxr_storage.periods = periods
-            new_adxr_storage.value = int(float(adxr_value))
+            new_adxr_storage.value = float(adxr_value)
             new_adxr_storage.save()

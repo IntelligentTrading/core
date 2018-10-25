@@ -59,5 +59,5 @@ class MidpriceSubscriber(IndicatorSubscriber):
             # logger.debug(f'savingMidprice value {midprice_value}for {self.ticker} on {periods} periods')
 
             new_midprice_storage.periods = periods
-            new_midprice_storage.value = int(float(midprice_value))
+            new_midprice_storage.value = float(midprice_value)
             new_midprice_storage.save()

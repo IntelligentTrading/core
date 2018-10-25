@@ -45,10 +45,9 @@ class TrimaSubscriber(IndicatorSubscriber):
                 ticker=self.ticker,
                 exchange=self.exchange,
                 index=self.index,
+                timestamp=self.timestamp,
                 periods_range=periods
             )
-
-            logger.debug(results_dict)
 
             value_np_array = self.get_values_array_from_query(results_dict, limit=periods)
 
@@ -56,5 +55,5 @@ class TrimaSubscriber(IndicatorSubscriber):
             # logger.debug(f'savingTrima value {trima_value}for {self.ticker} on {periods} periods')
 
             new_trima_storage.periods = periods
-            new_trima_storage.value = int(float(trima_value))
+            new_trima_storage.value = float(trima_value)
             new_trima_storage.save()

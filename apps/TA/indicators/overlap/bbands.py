@@ -98,7 +98,8 @@ class BbandsSubscriber(IndicatorSubscriber):
                 ticker=self.ticker,
                 exchange=self.exchange,
                 index=self.index,
-                periods_range=periods
+                timestamp=self.timestamp,
+                periods_range=periods,
             )
 
             value_np_array = self.get_values_array_from_query(results_dict, limit=periods)
@@ -115,7 +116,7 @@ class BbandsSubscriber(IndicatorSubscriber):
             if math.isnan(upperband[-1] + middleband[-1] + lowerband[-1]):
                 return
 
-            new_bband_storage.periods = horizon
+            new_bband_storage.periods = periods
             new_bband_storage.value = f"{upperband[-1]}:{middleband[-1]}:{lowerband[-1]}"
             new_bband_storage.save()  # will produce signal if necessary
             logger.debug("new BBands value saved")

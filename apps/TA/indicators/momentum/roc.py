@@ -41,6 +41,7 @@ class RocSubscriber(IndicatorSubscriber):
                     ticker=self.ticker,
                     exchange=self.exchange,
                     index='close_price',
+                    timestamp=self.timestamp,
                     periods_range=periods
                 ),
                 limit=periods)
@@ -50,5 +51,5 @@ class RocSubscriber(IndicatorSubscriber):
             # logger.debug(f'savingRoc value {roc_value} for {self.ticker} on {periods} periods')
 
             new_roc_storage.periods = periods
-            new_roc_storage.value = int(float(roc_value))
+            new_roc_storage.value = float(roc_value)
             new_roc_storage.save()

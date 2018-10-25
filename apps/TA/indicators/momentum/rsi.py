@@ -80,5 +80,5 @@ class RsiSubscriber(IndicatorSubscriber):
             # logger.debug(f'savingRSI value {rsi_value} for {self.ticker} on {horizon*14} periods')
 
             new_rsi_storage.periods = horizon
-            new_rsi_storage.value = int(float(rsi_value))
+            new_rsi_storage.value = float(rsi_value)
             new_rsi_storage.save()
