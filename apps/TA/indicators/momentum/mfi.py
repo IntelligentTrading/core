@@ -26,8 +26,8 @@ class MfiSubscriber(IndicatorSubscriber):
 
         self.index = self.key_suffix
 
-        if self.index is not 'close_price':
-            logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
+        if str(self.index) is not "close_price":
+            logger.debug(f'index {self.index} is not close_price ...ignoring...')
             return
 
         new_mfi_storage = MfiStorage(ticker=self.ticker,
@@ -77,7 +77,7 @@ class MfiSubscriber(IndicatorSubscriber):
 
             timeperiod = min([len(high_value_np_array), len(low_value_np_array), len(close_value_np_array), periods])
             mfi_value = talib.MFI(high_value_np_array, low_value_np_array, close_value_np_array, volume_value_np_array, timeperiod=timeperiod)[-1]
-            logger.debug(f'saving Mfi value {mfi_value} for {self.ticker} on {periods} periods')
+            # logger.debug(f'savingMfi value {mfi_value} for {self.ticker} on {periods} periods')
 
             new_mfi_storage.periods = periods
             new_mfi_storage.value = int(float(mfi_value))

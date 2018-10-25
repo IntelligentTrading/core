@@ -29,7 +29,7 @@ class EmaSubscriber(IndicatorSubscriber):
         self.index = self.key_suffix
 
         if self.index != 'close_price':
-            logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
+            logger.debug(f'index {self.index} is not close_price ...ignoring...')
             return
 
         new_ema_storage = EmaStorage(ticker=self.ticker,
@@ -54,7 +54,7 @@ class EmaSubscriber(IndicatorSubscriber):
             value_np_array = self.get_values_array_from_query(results_dict, limit=periods)
 
             ema_value = talib.EMA(value_np_array, timeperiod=len(value_np_array))[-1]
-            logger.debug(f'saving Ema value {ema_value}for {self.ticker} on {periods} periods')
+            # # logger.debug(f'savingEma value {ema_value}for {self.ticker} on {periods} periods')
 
             new_ema_storage.periods = periods
             new_ema_storage.value = int(float(ema_value))

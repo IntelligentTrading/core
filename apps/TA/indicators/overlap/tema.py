@@ -28,7 +28,7 @@ class TemaSubscriber(IndicatorSubscriber):
         self.index = self.key_suffix
 
         if self.index != 'close_price':
-            logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
+            logger.debug(f'index {self.index} is not close_price ...ignoring...')
             return
 
         new_tema_storage = TemaStorage(ticker=self.ticker,
@@ -53,7 +53,7 @@ class TemaSubscriber(IndicatorSubscriber):
             value_np_array = self.get_values_array_from_query(results_dict, limit=periods)
 
             tema_value = talib.TEMA(value_np_array, timeperiod=len(value_np_array))[-1]
-            logger.debug(f'saving Tema value {tema_value}for {self.ticker} on {periods} periods')
+            # logger.debug(f'savingTema value {tema_value}for {self.ticker} on {periods} periods')
 
             new_tema_storage.periods = periods
             new_tema_storage.value = int(float(tema_value))

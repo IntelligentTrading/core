@@ -28,7 +28,7 @@ class DemaSubscriber(IndicatorSubscriber):
         self.index = self.key_suffix
 
         if self.index != 'close_price':
-            logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
+            logger.debug(f'index {self.index} is not close_price ...ignoring...')
             return
 
         new_dema_storage = DemaStorage(ticker=self.ticker,
@@ -53,7 +53,7 @@ class DemaSubscriber(IndicatorSubscriber):
             value_np_array = self.get_values_array_from_query(results_dict, limit=periods)
 
             dema_value = talib.DEMA(value_np_array, timeperiod=len(value_np_array))[-1]
-            logger.debug(f'saving Dema value {dema_value}for {self.ticker} on {periods} periods')
+            # logger.debug(f'savingDema value {dema_value}for {self.ticker} on {periods} periods')
 
             new_dema_storage.periods = periods
             new_dema_storage.value = int(float(dema_value))

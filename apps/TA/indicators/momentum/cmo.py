@@ -25,8 +25,8 @@ class CmoSubscriber(IndicatorSubscriber):
 
         self.index = self.key_suffix
 
-        if self.index is not 'close_price':
-            logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
+        if str(self.index) is not "close_price":
+            logger.debug(f'index {self.index} is not close_price ...ignoring...')
             return
 
         new_cmo_storage = CmoStorage(ticker=self.ticker,
@@ -47,7 +47,7 @@ class CmoSubscriber(IndicatorSubscriber):
 
             timeperiod = min([len(close_value_np_array), periods])
             cmo_value = talib.CMO(close_value_np_array, timeperiod=timeperiod)[-1]
-            logger.debug(f'saving Cmo value {cmo_value} for {self.ticker} on {periods} periods')
+            # logger.debug(f'savingCmo value {cmo_value} for {self.ticker} on {periods} periods')
 
             new_cmo_storage.periods = periods
             new_cmo_storage.value = int(float(cmo_value))

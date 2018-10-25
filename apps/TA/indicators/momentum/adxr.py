@@ -25,8 +25,8 @@ class AdxrSubscriber(IndicatorSubscriber):
 
         self.index = self.key_suffix
 
-        if self.index is not 'close_price':
-            logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
+        if str(self.index) is not "close_price":
+            logger.debug(f'index {self.index} is not close_price ...ignoring...')
             return
 
         new_adxr_storage = AdxrStorage(ticker=self.ticker,
@@ -65,7 +65,7 @@ class AdxrSubscriber(IndicatorSubscriber):
 
             timeperiod = min([len(high_value_np_array), len(low_value_np_array), len(close_value_np_array), periods])
             adxr_value = talib.ADXR(high_value_np_array, low_value_np_array, close_value_np_array, timeperiod=timeperiod)[-1]
-            logger.debug(f'saving Adxr value {adxr_value} for {self.ticker} on {periods} periods')
+            # logger.debug(f'savingAdxr value {adxr_value} for {self.ticker} on {periods} periods')
 
             new_adxr_storage.periods = periods
             new_adxr_storage.value = int(float(adxr_value))

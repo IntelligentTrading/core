@@ -41,12 +41,22 @@ class BbandsSubscriber(IndicatorSubscriber):
         PriceStorage
     ]
 
+    # todo: make handler compiler
+    # handle = IndicatorSubscriber.create_handle_method(
+    #     index_data = ['close_price'],
+    #     storage_class = RocpStorage,
+    #     horizon_multiplier=10
+    #
+    #
+    # )
+
+
     def handle(self, channel, data, *args, **kwargs):
 
         self.index = self.key_suffix
 
-        if self.index is not 'close_price':
-            # logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
+        if str(self.index) is not "close_price":
+            # logger.debug(f'index {self.index} is not close_price ...ignoring...')
             return
 
         new_bband_storage = BbandsStorage(ticker=self.ticker,
@@ -69,7 +79,7 @@ class BbandsSubscriber(IndicatorSubscriber):
                 timeperiod=len(value_np_array),
                 nbdevup=2, nbdevdn=2, matype=0)
 
-            logger.debug(f'saving Bbands for {self.ticker} on {horizon} periods')
+            # logger.debug(f'savingBbands for {self.ticker} on {horizon} periods')
 
             new_bband_storage.periods = horizon
             new_bband_storage.upperband = upperband

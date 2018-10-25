@@ -25,8 +25,8 @@ class PpoSubscriber(IndicatorSubscriber):
 
         self.index = self.key_suffix
 
-        if self.index is not 'close_price':
-            logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
+        if str(self.index) is not "close_price":
+            logger.debug(f'index {self.index} is not close_price ...ignoring...')
             return
 
         new_ppo_storage = PpoStorage(ticker=self.ticker,
@@ -46,7 +46,7 @@ class PpoSubscriber(IndicatorSubscriber):
                 limit=periods)
 
             ppo_value = talib.PPO(close_value_np_array, fastperiod=horizon*12, slowperiod=horizon*26, matype=0)[-1]
-            logger.debug(f'saving Ppo value {ppo_value} for {self.ticker} on {periods} periods')
+            # logger.debug(f'savingPpo value {ppo_value} for {self.ticker} on {periods} periods')
 
             new_ppo_storage.periods = periods
             new_ppo_storage.value = str(ppo_value)

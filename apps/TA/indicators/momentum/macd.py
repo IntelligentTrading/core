@@ -25,8 +25,8 @@ class MacdSubscriber(IndicatorSubscriber):
 
         self.index = self.key_suffix
 
-        if self.index is not 'close_price':
-            logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
+        if str(self.index) is not "close_price":
+            logger.debug(f'index {self.index} is not close_price ...ignoring...')
             return
 
         new_macd_storage = MacdStorage(ticker=self.ticker,
@@ -46,7 +46,7 @@ class MacdSubscriber(IndicatorSubscriber):
                 limit=periods)
 
             macd_value, macdsignal, macdhist = talib.MACD(close_value_np_array, fastperiod=horizon*12, slowperiod=horizon*26, signalperiod=horizon*9)[-1]
-            logger.debug(f'saving Macd value {macd_value} for {self.ticker} on {periods} periods')
+            # logger.debug(f'savingMacd value {macd_value} for {self.ticker} on {periods} periods')
 
             new_macd_storage.periods = periods
             new_macd_storage.value = f'{macd_value}:{macdsignal}:{macdhist}'

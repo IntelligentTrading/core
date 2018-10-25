@@ -39,7 +39,7 @@ class SmaSubscriber(IndicatorSubscriber):
         self.index = self.key_suffix
 
         if self.index != 'close_price':
-            logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
+            logger.debug(f'index {self.index} is not close_price ...ignoring...')
             return
 
         new_sma_storage = SmaStorage(ticker=self.ticker,
@@ -66,7 +66,7 @@ class SmaSubscriber(IndicatorSubscriber):
             value_np_array = self.get_values_array_from_query(results_dict, limit=periods)
 
             sma_value = talib.SMA(value_np_array, timeperiod=len(value_np_array))[-1]
-            logger.debug(f'saving SMA value {sma_value}for {self.ticker} on {periods} periods')
+            # logger.debug(f'savingSMA value {sma_value}for {self.ticker} on {periods} periods')
 
             new_sma_storage.periods = periods
             new_sma_storage.value = int(float(sma_value))

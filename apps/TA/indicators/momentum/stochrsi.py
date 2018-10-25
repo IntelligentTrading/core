@@ -25,8 +25,8 @@ class StochrsiSubscriber(IndicatorSubscriber):
 
         self.index = self.key_suffix
 
-        if self.index is not 'close_price':
-            logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
+        if str(self.index) is not "close_price":
+            logger.debug(f'index {self.index} is not close_price ...ignoring...')
             return
 
         new_stochrsi_storage = StochrsiStorage(ticker=self.ticker,
@@ -47,7 +47,7 @@ class StochrsiSubscriber(IndicatorSubscriber):
 
             fastk, fastd = talib.STOCHRSI(close_value_np_array, timeperiod=horizon*14,
                                         fastk_period=horizon*5, fastd_period=horizon*3, fastd_matype=0)[-1]
-            logger.debug(f'saving Stochrsi value {fastk}, {fastd} for {self.ticker} on {periods} periods')
+            # logger.debug(f'savingStochrsi value {fastk}, {fastd} for {self.ticker} on {periods} periods')
 
             new_stochrsi_storage.periods = periods
             new_stochrsi_storage.value = f'{fastk}:{fastd}'

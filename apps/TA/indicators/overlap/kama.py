@@ -28,7 +28,7 @@ class KamaSubscriber(IndicatorSubscriber):
         self.index = self.key_suffix
 
         if self.index != 'close_price':
-            logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
+            logger.debug(f'index {self.index} is not close_price ...ignoring...')
             return
 
         new_kama_storage = KamaStorage(ticker=self.ticker,
@@ -53,7 +53,7 @@ class KamaSubscriber(IndicatorSubscriber):
             value_np_array = self.get_values_array_from_query(results_dict, limit=periods)
 
             kama_value = talib.KAMA(value_np_array, timeperiod=len(value_np_array))[-1]
-            logger.debug(f'saving Kama value {kama_value}for {self.ticker} on {periods} periods')
+            # logger.debug(f'savingKama value {kama_value}for {self.ticker} on {periods} periods')
 
             new_kama_storage.periods = periods
             new_kama_storage.value = int(float(kama_value))

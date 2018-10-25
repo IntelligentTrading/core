@@ -28,7 +28,7 @@ class WmaSubscriber(IndicatorSubscriber):
         self.index = self.key_suffix
 
         if self.index != 'close_price':
-            logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
+            logger.debug(f'index {self.index} is not close_price ...ignoring...')
             return
 
         new_wma_storage = WmaStorage(ticker=self.ticker,
@@ -53,7 +53,7 @@ class WmaSubscriber(IndicatorSubscriber):
             value_np_array = self.get_values_array_from_query(results_dict, limit=periods)
 
             wma_value = talib.WMA(value_np_array, timeperiod=len(value_np_array))[-1]
-            logger.debug(f'saving Wma value {wma_value}for {self.ticker} on {periods} periods')
+            # logger.debug(f'savingWma value {wma_value}for {self.ticker} on {periods} periods')
 
             new_wma_storage.periods = periods
             new_wma_storage.value = int(float(wma_value))

@@ -25,8 +25,8 @@ class ApoSubscriber(IndicatorSubscriber):
 
         self.index = self.key_suffix
 
-        if self.index is not 'close_price':
-            logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
+        if str(self.index) is not "close_price":
+            logger.debug(f'index {self.index} is not close_price ...ignoring...')
             return
 
         new_apo_storage = ApoStorage(ticker=self.ticker,
@@ -48,7 +48,7 @@ class ApoSubscriber(IndicatorSubscriber):
             try:
                 apo_value = talib.APO(close_value_np_array, fastperiod=12, slowperiod=26, matype=0)[-1]
 
-                logger.debug(f'saving Apo value {apo_value} for {self.ticker} on {periods} periods')
+                # logger.debug(f'savingApo value {apo_value} for {self.ticker} on {periods} periods')
                 new_apo_storage.periods = periods
                 new_apo_storage.value = int(float(apo_value))
                 new_apo_storage.save()
