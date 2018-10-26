@@ -42,18 +42,18 @@ class Command(BaseCommand):
 
 def fill_data_gaps(SQL_fill = True, force_fill=False):
 
-
+    method_params = []
+    
     for ticker in ["*_USDT", "*_BTC"]:
         for index in ['close_price', 'open_price', 'high_price', 'low_price', 'close_volume']:
 
-            method_params = []
-            for key in database.keys(f"*{ticker}*PriceStorage*{index}*"):
+            for key in database.keys(f"{ticker}*PriceStorage*{index}*"):
                 [ticker, exchange, storage_class, index] = key.decode("utf-8").split(":")
 
                 ugly_tuple = (ticker, exchange, index, bool(SQL_fill))
                 method_params.append(ugly_tuple)
 
-    logger.info(f"{len(method_params)} tickers ready to fill gaps on up to feb_7_2018")
+    logger.info(f"{len(method_params)} tickers ready to fill gaps")
 
     results = multithread_this_shit(condensed_find_gaps, method_params)
 
