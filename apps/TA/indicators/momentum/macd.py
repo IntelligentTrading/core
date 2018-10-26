@@ -5,6 +5,7 @@ if LOAD_TALIB:
 from apps.TA.storages.abstract.indicator import IndicatorStorage
 from apps.TA.storages.abstract.indicator_subscriber import IndicatorSubscriber
 from apps.TA.storages.data.price import PriceStorage
+from settings import logger
 
 
 class MacdStorage(IndicatorStorage):
@@ -29,6 +30,8 @@ class MacdStorage(IndicatorStorage):
             requisite_pv_index_arrrays["close_price"],
             fastperiod=fastperiod, slowperiod=slowperiod, signalperiod=signalperiod
         )
+
+        logger.debug(f"Macd computed: {macd_value[-1]}:{macdsignal[-1]}:{macdhist[-1]}")
 
         if math.isnan(sum([macd_value[-1], macdsignal[-1], macdhist[-1]])): return ""
 

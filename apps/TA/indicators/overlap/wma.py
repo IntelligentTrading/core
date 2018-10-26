@@ -1,10 +1,7 @@
-import math
 from settings import LOAD_TALIB
-
 if LOAD_TALIB:
-    import talib
+    import math, talib
 
-from apps.TA import HORIZONS
 from apps.TA.storages.abstract.indicator import IndicatorStorage
 from apps.TA.storages.abstract.indicator_subscriber import IndicatorSubscriber
 from apps.TA.storages.data.price import PriceStorage
@@ -32,6 +29,8 @@ class WmaStorage(IndicatorStorage):
             requisite_pv_index_arrrays["close_price"],
             timeperiod=periods or self.periods
         )[-1]
+
+        logger.debug(f"WMA computed: {wma_value}")
 
         if math.isnan(wma_value): return ""
 

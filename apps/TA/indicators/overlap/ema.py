@@ -5,6 +5,7 @@ if LOAD_TALIB:
 from apps.TA.storages.abstract.indicator import IndicatorStorage
 from apps.TA.storages.abstract.indicator_subscriber import IndicatorSubscriber
 from apps.TA.storages.data.price import PriceStorage
+from settings import logger
 
 EMA_LIST = [30, 50, 200, ]
 
@@ -28,6 +29,8 @@ class EmaStorage(IndicatorStorage):
             requisite_pv_index_arrrays["close_price"],
             timeperiod=periods or self.periods
         )[-1]
+
+        logger.debug(f"EMA computed: {ema_value}")
 
         if math.isnan(ema_value): return ""
 

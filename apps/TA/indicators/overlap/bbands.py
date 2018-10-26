@@ -1,11 +1,7 @@
-import math
-
 from settings import LOAD_TALIB
-
 if LOAD_TALIB:
-    import talib
+    import math, talib
 
-from apps.TA import HORIZONS
 from apps.TA.storages.abstract.indicator import IndicatorStorage, BULLISH, BEARISH, OTHER
 from apps.TA.storages.abstract.indicator_subscriber import IndicatorSubscriber
 from apps.TA.storages.data.price import PriceStorage
@@ -43,6 +39,8 @@ class BbandsStorage(IndicatorStorage):
             timeperiod=periods,
             nbdevup=2, nbdevdn=2, matype=0
         )
+
+        logger.debug(f"Bbands computed: {upperband[-1]}:{middleband[-1]}:{lowerband[-1]}")
 
         if math.isnan(sum([upperband[-1], middleband[-1], lowerband[-1]])): return ""
 
