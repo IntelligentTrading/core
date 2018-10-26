@@ -58,7 +58,7 @@ def fill_data_gaps(SQL_fill = True, force_fill=False):
 
 def condensed_find_gaps(ugly_tuple):
     (ticker, exchange, index, back_to_the_backlog) = ugly_tuple
-    return missing_data.find_pv_storage_data_gaps(ticker, exchange, index, back_to_the_backlog=False)
+    return missing_data.find_pv_storage_data_gaps(ticker, exchange, index, back_to_the_backlog=back_to_the_backlog)
 
 
 ### OLD todo: rewrite to run much much faster, batching redis queries ###

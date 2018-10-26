@@ -6,3 +6,4 @@ pollqueue: python manage.py poll_queue
 infobot: python manage.py run_info_bot
 redis_TA_restore: python manage.py TA_restore
 redis_TA_worker: python manage.py TA_worker
+redis_TA_fill_gaps: python manage.py TA_fill_gaps
