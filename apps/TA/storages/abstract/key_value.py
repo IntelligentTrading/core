@@ -58,7 +58,7 @@ class KeyValueStorage(ABC):
         if not self.force_save:
             # validate some rules here?
             pass
-        logger.debug(f'saving key, value: {self.get_db_key()}, {self.value}')
+        # logger.debug(f'savingkey, value: {self.get_db_key()}, {self.value}')
         return database.set(self.get_db_key(), self.value)
 
     def get_value(self, db_key="", *args, **kwargs):

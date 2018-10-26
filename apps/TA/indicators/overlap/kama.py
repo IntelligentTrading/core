@@ -28,7 +28,7 @@ class KamaSubscriber(IndicatorSubscriber):
         self.index = self.key_suffix
 
         if self.index != 'close_price':
-            logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
+            logger.debug(f'index {self.index} is not close_price ...ignoring...')
             return
 
         new_kama_storage = KamaStorage(ticker=self.ticker,
@@ -41,20 +41,11 @@ class KamaSubscriber(IndicatorSubscriber):
 
         for periods in set(periods_list):
 
-            results_dict = PriceStorage.query(
-                ticker=self.ticker,
-                exchange=self.exchange,
-                index=self.index,
-                periods_range=periods
-            )
+            close_value_np_array = new_kama_storage.get_denoted_price_array("close_price", periods)
 
-            logger.debug(results_dict)
-
-            value_np_array = self.get_values_array_from_query(results_dict, limit=periods)
-
-            kama_value = talib.KAMA(value_np_array, timeperiod=len(value_np_array))[-1]
-            logger.debug(f'saving Kama value {kama_value}for {self.ticker} on {periods} periods')
+            kama_value = talib.KAMA(close_value_np_array, timeperiod=periods)[-1]
+            # logger.debug(f'savingKama value {kama_value}for {self.ticker} on {periods} periods')
 
             new_kama_storage.periods = periods
-            new_kama_storage.value = int(float(kama_value))
+            new_kama_storage.value = float(kama_value)
             new_kama_storage.save()

@@ -25,8 +25,8 @@ class MomSubscriber(IndicatorSubscriber):
 
         self.index = self.key_suffix
 
-        if self.index is not 'close_price':
-            logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
+        if str(self.index) is not "close_price":
+            logger.debug(f'index {self.index} is not close_price ...ignoring...')
             return
 
         new_mom_storage = MomStorage(ticker=self.ticker,
@@ -36,19 +36,12 @@ class MomSubscriber(IndicatorSubscriber):
         for horizon in HORIZONS:
             periods = horizon * 10
 
-            close_value_np_array = self.get_values_array_from_query(
-                PriceStorage.query(
-                    ticker=self.ticker,
-                    exchange=self.exchange,
-                    index='close_price',
-                    periods_range=periods
-                ),
-                limit=periods)
+            close_value_np_array = new_mom_storage.get_denoted_price_array("close_price", periods)
 
             timeperiod = min([len(close_value_np_array), periods])
             mom_value = talib.MOM(close_value_np_array, timeperiod=timeperiod)[-1]
-            logger.debug(f'saving Mom value {mom_value} for {self.ticker} on {periods} periods')
+            # logger.debug(f'savingMom value {mom_value} for {self.ticker} on {periods} periods')
 
             new_mom_storage.periods = periods
-            new_mom_storage.value = int(float(mom_value))
+            new_mom_storage.value = float(mom_value)
             new_mom_storage.save()

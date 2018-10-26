@@ -77,6 +77,10 @@ def generate_pv_storages(ticker: str, exchange: str, index: str, score: float) -
         storage.save(publish=bool(index == "close_price"))
         # logger.info("saved new thing: " + storage.get_db_key())
 
+    if index == 'close_volume':
+        # todo:  for index in derived_volume_indexes: calculate and save volume index
+        pass
+
     if index == "close_price":
         all_values_set = set(index_values)  # these are the close prices
         for other_index in ["open_price", "low_price", "high_price"]:
@@ -112,7 +116,6 @@ def generate_pv_storages(ticker: str, exchange: str, index: str, score: float) -
                 pass
 
             if price_storage.value:
-                price_storage.value = int(price_storage.value)
                 price_storage.save()
 
     return True

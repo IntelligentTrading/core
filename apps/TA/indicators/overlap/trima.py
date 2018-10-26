@@ -28,7 +28,7 @@ class TrimaSubscriber(IndicatorSubscriber):
         self.index = self.key_suffix
 
         if self.index != 'close_price':
-            logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
+            logger.debug(f'index {self.index} is not close_price ...ignoring...')
             return
 
         new_trima_storage = TrimaStorage(ticker=self.ticker,
@@ -41,20 +41,11 @@ class TrimaSubscriber(IndicatorSubscriber):
 
         for periods in set(periods_list):
 
-            results_dict = PriceStorage.query(
-                ticker=self.ticker,
-                exchange=self.exchange,
-                index=self.index,
-                periods_range=periods
-            )
+            close_value_np_array = new_trima_storage.get_denoted_price_array("close_price", periods)
 
-            logger.debug(results_dict)
-
-            value_np_array = self.get_values_array_from_query(results_dict, limit=periods)
-
-            trima_value = talib.TRIMA(value_np_array, timeperiod=len(value_np_array))[-1]
-            logger.debug(f'saving Trima value {trima_value}for {self.ticker} on {periods} periods')
+            trima_value = talib.TRIMA(close_value_np_array, timeperiod=periods)[-1]
+            # logger.debug(f'savingTrima value {trima_value}for {self.ticker} on {periods} periods')
 
             new_trima_storage.periods = periods
-            new_trima_storage.value = int(float(trima_value))
+            new_trima_storage.value = float(trima_value)
             new_trima_storage.save()

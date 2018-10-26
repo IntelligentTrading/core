@@ -1,7 +1,7 @@
 import json
 import logging
 from datetime import datetime
-
+import numpy as np
 from apps.TA import TAException, JAN_1_2017_TIMESTAMP
 from apps.TA.storages.abstract.key_value import KeyValueStorage
 from settings.redis_db import database
@@ -45,7 +45,6 @@ class TimeseriesStorage(KeyValueStorage):
 
     def save_own_existance(self, describer_key=""):
         self.describer_key = describer_key or f'{self.__class__.class_describer}:{self.get_db_key()}'
-
 
     @classmethod
     def score_from_timestamp(cls, timestamp) -> float:
@@ -121,8 +120,8 @@ class TimeseriesStorage(KeyValueStorage):
             'values': [],
             'values_count': 0,
             'timestamp': timestamp,
-            'earliest_timestamp': cls.score_from_timestamp(min_score),
-            'latest_timestamp': cls.score_from_timestamp(max_score),
+            'earliest_timestamp': cls.timestamp_from_score(min_score),
+            'latest_timestamp': cls.timestamp_from_score(max_score),
             'periods_range': periods_range,
             'period_size': 300,
         }
@@ -153,9 +152,29 @@ class TimeseriesStorage(KeyValueStorage):
 
         except Exception as e:
             logger.error("redis query problem: " + str(e))
-            return {'error': "redis query problem: " + str(e), # wtf happened?
+            return {'error': "redis query problem: " + str(e),  # wtf happened?
                     'values': []}
 
+    @staticmethod
+    def get_values_array_from_query(query_results: dict, limit: int = 0):
+
+        value_array = [float(v) for v in query_results['values']]
+
+        if limit:
+            if not isinstance(limit, int) or limit < 1:
+                raise TimeseriesException(f"bad limit: {limit}")
+
+            elif len(value_array) > limit:
+                value_array = value_array[-limit:]
+
+        return np.array(value_array)
+
+    def get_z_add_data(self):
+        z_add_key = f'{self.get_db_key()}'  # set key name
+        z_add_score = f'{self.score_from_timestamp(self.unix_timestamp)}'  # timestamp as score (int or float)
+        z_add_name = f'{self.value}:{z_add_score}'  # item unique value
+        z_add_data = {"key": z_add_key, "name": z_add_name, "score": z_add_score}  # key, score, name
+        return z_add_data
 
     def save(self, publish=False, pipeline=None, *args, **kwargs):
         if not self.value:
@@ -166,24 +185,25 @@ class TimeseriesStorage(KeyValueStorage):
 
         self.save_own_existance()
 
-        z_add_key = f'{self.get_db_key()}'  # set key name
-        z_add_score = f'{self.score_from_timestamp(self.unix_timestamp)}'  # timestamp as score (int or float)
-        z_add_name = f'{self.value}:{z_add_score}'  # item unique value
-        z_add_data = {"key": z_add_key, "name": z_add_name, "score": z_add_score}  # key, score, name
-        # logger.debug(f'saving data with args {z_add_data}')
+        z_add_data = self.get_z_add_data()
+        # # logger.debug(f'savingdata with args {z_add_data}')
 
         if pipeline is not None:
+            pipeline = pipeline.zadd(*z_add_data.values())
             # logger.debug("added command to redis pipeline")
-            if publish:
-                pipeline = pipeline.publish(self.__class__.__name__, json.dumps(z_add_data))
-            return pipeline.zadd(*z_add_data.values())
-
+            if publish: pipeline = self.publish(pipeline)
+            return pipeline
         else:
-            # logger.debug("no pipeline, executing zadd command immediately.")
             response = database.zadd(*z_add_data.values())
-            if publish:
-                database.publish(self.__class__.__name__, json.dumps(z_add_data))
+            # logger.debug("no pipeline, executing zadd command immediately.")
+            if publish: self.publish()
             return response
+
+    def publish(self, pipeline=None):
+        if pipeline:
+            return pipeline.publish(self.__class__.__name__, json.dumps(self.get_z_add_data()))
+        else:
+            return database.publish(self.__class__.__name__, json.dumps(self.get_z_add_data()))
 
     def get_value(self, *args, **kwargs):
         TimeseriesException("function not yet implemented! ¯\_(ツ)_/¯ ")
