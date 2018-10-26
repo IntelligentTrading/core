@@ -8,6 +8,7 @@ class IndicatorSubscriber(TickerSubscriber):
     classes_subscribing_to = [
         # ...
     ]
+    storage_class = IndicatorStorage  # override with applicable storage class
 
     def extract_params(self, channel, data, *args, **kwargs):
 
@@ -46,3 +47,23 @@ class IndicatorSubscriber(TickerSubscriber):
     def pre_handle(self, channel, data, *args, **kwargs):
         self.extract_params(channel, data, *args, **kwargs)
         super().pre_handle(channel, data, *args, **kwargs)
+
+
+    def handle(self, channel, data, *args, **kwargs):
+        """
+        a new instance was saved belonging to one of the classes subscribed to
+        for standard indicators self.ticker, self.exchange, and self.timestamp are available
+        these values were collected by self.pre_handle() and self.extract_params()
+
+        :param channel:
+        :param data:
+        :param args:
+        :param kwargs:
+        :return:
+        """
+
+        if self.key_suffix not in self.storage_class.requisite_pv_indexes:
+            logger.debug(f'index {self.key_suffix} is not in {self.storage_class.requisite_pv_indexes} ...ignoring...')
+            return
+
+        self.storage_class.compute_and_save_all_values_for_timestamp(self.ticker, self.exchange, self.timestamp)

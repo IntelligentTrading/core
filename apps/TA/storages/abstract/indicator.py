@@ -1,6 +1,6 @@
 import logging
 
-from apps.TA import TAException
+from apps.TA import TAException, HORIZONS
 from apps.TA.storages.abstract.ticker import TickerStorage
 from apps.signal.models import Signal
 
@@ -27,6 +27,14 @@ class IndicatorStorage(TickerStorage):
     class_describer = "indicator"
     value_sig_figs = 6
 
+    class_periods_list = []  # class should override this
+    # list of integers where for x: (1 <= x <= 200)
+
+    requisite_pv_indexes = []  # class should override this.
+
+    # may only include values in default_price_indexes or default_volume_indexes
+    # eg. ["high_price", "low_price", "open_price", "close_price", "close_volume"]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -34,15 +42,15 @@ class IndicatorStorage(TickerStorage):
         if self.unix_timestamp % 300 != 0:
             raise IndicatorException("indicator timestamp should be % 300")
 
-        self.horizon = int(kwargs.get('horizon', 1))
-        self.periods = int(kwargs.get('periods', 1 * self.horizon))
+        # self.horizon = int(kwargs.get('horizon', 1))
+        self.periods = int(kwargs.get('periods', 1))  # * self.horizon))
 
-        if self.periods // self.horizon == 0:
-            raise IndicatorException(f'horizon {self.horizon} '
-                                     f'must be less than periods {self.periods} (or ==1)')
-        elif self.periods % self.horizon != 0:
-            raise IndicatorException(f'horizon {self.horizon} '
-                                     f'must be a factor of periods {self.periods}')
+        # if self.periods // self.horizon == 0:
+        #     raise IndicatorException(f'horizon {self.horizon} '
+        #                              f'must be less than periods {self.periods} (or ==1)')
+        # elif self.periods % self.horizon != 0:
+        #     raise IndicatorException(f'horizon {self.horizon} '
+        #                              f'must be a factor of periods {self.periods}')
 
         self.db_key_suffix = f':{self.periods}'
         self.value = None
@@ -58,7 +66,7 @@ class IndicatorStorage(TickerStorage):
             if not self.value:
                 self.value = self.compute_value()
         except IndexError:
-            self.value = None # value not found
+            self.value = None  # value not found
         except Exception as e:
             logger.error(str(e))
             self.value = None
@@ -89,6 +97,13 @@ class IndicatorStorage(TickerStorage):
         results_dict['periods_key'] = periods_key
         return results_dict
 
+    @classmethod
+    def get_periods_list(cls):
+        periods_list = []
+        for s in cls.class_periods_list:
+            periods_list.extend([h * s for h in HORIZONS])
+        return set(periods_list)
+
     def get_denoted_price_array(self, index: str = "close_price", periods: int = 0):
         from apps.TA.storages.data.price import PriceStorage
         results_dict = PriceStorage.query(
@@ -101,14 +116,55 @@ class IndicatorStorage(TickerStorage):
         return self.get_values_array_from_query(results_dict, limit=periods)
 
     def compute_value(self, periods: int = 0) -> str:
-        """
-        overwrite me, defining the criteria for computing a value
+        periods = periods or self.periods
 
-        :param periods:
+        index_value_arrrays = {}
+        for index in self.requisite_pv_indexes:
+            index_value_arrrays[index] = self.get_denoted_price_array(index, periods)
+            if not len(index_value_arrrays[index]): return ""
+
+        return self.compute_value_with_requisite_indexes(index_value_arrrays, periods)
+
+    def compute_value_with_requisite_indexes(self, requisite_pv_index_arrrays: dict, periods: int = 0) -> str:
+        """
+        custom class should set cls.requisite_pv_indexes
+        override this function with custom logic
+
+        :param index_value_arrrays: a dict with keys matching requisite+pv_indexes and values from self.get_denoted_price_array()
+        :param periods: number of periods to compute value for
         :return:
         """
-        periods = periods or self.periods
-        return None
+        # example:
+        # import talib, math
+        # periods = periods or self.periods
+        # sma_value = talib.SMA(requisite_pv_index_arrrays["close_price"], timeperiod=periods)[-1]
+        # if math.isnan(sma_value):
+        #     return ""
+        # return str(sma_value)
+        return ""
+
+    def compute_and_save(self) -> bool:
+        """
+
+        :return: True if value saved, else False
+        """
+
+        if not all([
+            self.ticker, self.exchange, self.unix_timestamp, self.periods
+        ]):
+            raise Exception("missing required values")
+
+        self.value = self.compute_value(self.periods)
+        if self.value:
+            self.save()
+        return bool(self.value)
+
+    @classmethod
+    def compute_and_save_all_values_for_timestamp(cls, ticker, exchange, timestamp):
+        new_class_storage = cls(ticker=ticker, exchange=exchange, timestamp=timestamp)
+        for periods in cls.get_periods_list():
+            new_class_storage.periods = periods
+            new_class_storage.compute_and_save()
 
     def produce_signal(self):
         """
@@ -141,7 +197,7 @@ class IndicatorStorage(TickerStorage):
             source=self.exchange,
             transaction_currency=self.ticker.split("_")[0],
             counter_currency=self.ticker.split("_")[1],
-            resample_period=self.horizon * 5,
+            resample_period=self.periods * 5,  # Signal object uses 1-min periods
             # horizon=self.horizon * 5,
 
             signal=self.__class__.__name__.replace("Storage", "").upper(),
