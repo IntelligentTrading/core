@@ -169,6 +169,13 @@ class TimeseriesStorage(KeyValueStorage):
 
         return np.array(value_array)
 
+    def get_z_add_data(self):
+        z_add_key = f'{self.get_db_key()}'  # set key name
+        z_add_score = f'{self.score_from_timestamp(self.unix_timestamp)}'  # timestamp as score (int or float)
+        z_add_name = f'{self.value}:{z_add_score}'  # item unique value
+        z_add_data = {"key": z_add_key, "name": z_add_name, "score": z_add_score}  # key, score, name
+        return z_add_data
+
     def save(self, publish=False, pipeline=None, *args, **kwargs):
         if not self.value:
             raise StorageException("no value set, nothing to save!")
@@ -178,24 +185,25 @@ class TimeseriesStorage(KeyValueStorage):
 
         self.save_own_existance()
 
-        z_add_key = f'{self.get_db_key()}'  # set key name
-        z_add_score = f'{self.score_from_timestamp(self.unix_timestamp)}'  # timestamp as score (int or float)
-        z_add_name = f'{self.value}:{z_add_score}'  # item unique value
-        z_add_data = {"key": z_add_key, "name": z_add_name, "score": z_add_score}  # key, score, name
+        z_add_data = self.get_z_add_data()
         # # logger.debug(f'savingdata with args {z_add_data}')
 
         if pipeline is not None:
+            pipeline = pipeline.zadd(*z_add_data.values())
             # logger.debug("added command to redis pipeline")
-            if publish:
-                pipeline = pipeline.publish(self.__class__.__name__, json.dumps(z_add_data))
-            return pipeline.zadd(*z_add_data.values())
-
+            if publish: pipeline = self.publish(pipeline)
+            return pipeline
         else:
-            # logger.debug("no pipeline, executing zadd command immediately.")
             response = database.zadd(*z_add_data.values())
-            if publish:
-                database.publish(self.__class__.__name__, json.dumps(z_add_data))
+            # logger.debug("no pipeline, executing zadd command immediately.")
+            if publish: self.publish()
             return response
+
+    def publish(self, pipeline=None):
+        if pipeline:
+            return pipeline.publish(self.__class__.__name__, json.dumps(self.get_z_add_data()))
+        else:
+            return database.publish(self.__class__.__name__, json.dumps(self.get_z_add_data()))
 
     def get_value(self, *args, **kwargs):
         TimeseriesException("function not yet implemented! ¯\_(ツ)_/¯ ")
