@@ -2,7 +2,6 @@ import logging
 from datetime import datetime, timedelta
 
 from apps.TA import PRICE_INDEXES, VOLUME_INDEXES
-from apps.TA.management.commands.TA_restore import save_pv_histories_to_redis
 from apps.TA.storages.abstract.timeseries_storage import TimeseriesStorage
 from apps.TA.storages.data.price import PriceStorage
 from apps.TA.storages.data.volume import VolumeStorage
@@ -57,6 +56,7 @@ def find_pv_storage_data_gaps(ticker: str, exchange: str, index: str, start_scor
     :param end_score: optional, default will reset to 2 hours ago from now()
     :return: list of scores that are still missing gaps, [] empty list means no gaps
     """
+    from apps.TA.management.commands.TA_restore import save_pv_histories_to_redis
 
     # validate index and determine storage class
     if index in PRICE_INDEXES:
