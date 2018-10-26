@@ -1,6 +1,6 @@
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.core.management.base import BaseCommand
 
@@ -29,42 +29,36 @@ class Command(BaseCommand):
             time.sleep(1)
 
 
-def fill_data_gaps(force_fill=False):
+def fill_data_gaps(SQL_fill = True, force_fill=False):
 
 
     for ticker in ["*_USDT", "*_BTC"]:
-        for index in ['close_price', 'open_price', 'high_price', 'low_price']:
+        for index in ['close_price']:  # , 'open_price', 'high_price', 'low_price']:
 
+            method_params = []
             for key in database.keys(f"*{ticker}*PriceStorage*{index}*"):
                 [ticker, exchange, storage_class, index] = key.decode("utf-8").split(":")
 
-                start_score = missing_data.find_start_score(ticker, exchange, index)
-                # end score is either 24hrs later or now() at the latest
-                end_score = min([start_score+(12*24), TimeseriesStorage.score_from_timestamp(datetime.today().timestamp())])
+                ugly_tuple = (ticker, exchange, index, bool(SQL_fill))
+                method_params.append(ugly_tuple)
 
-                logger.debug(f"working on {ticker}:{exchange}:PVStorages:{index}..." +
-                             f"starting at {TimeseriesStorage.datetime_from_score(start_score)}")
+    logger.info(f"{len(method_params)} tickers ready to fill gaps on up to feb_7_2018")
 
-                missing_scores = missing_data.find_pv_storage_data_gaps(
-                    ticker, exchange, index,
-                    start_score, end_score=end_score)  # process only up to 1 day
+    results = multithread_this_shit(condensed_find_gaps, method_params)
 
+    missing_scores_count = sum([len(result) for result in results])
+    logger.warning(f"{missing_scores_count} scores could not be recovered and are still missing.")
 
-                if missing_scores:
-                    logger.warning(
-                        "The followng scores could not be recovered and are still missing...\n" +
-                        f"for key: {ticker}:{exchange}:PriceStorage:{index}" + "\n" +
-                        str(missing_scores)
-                    )
-
-                if force_fill:
-                    logger.warning("STARTING FORCE FILL OF THESE VALUES...")
-                    logger.warning("!! THERE'S NO GOING BACK FROM HERE. DATA MAY WILL BE PERMAMENTLY CORRUPTED !!")
-                    missing_data.force_plug_pv_storage_data_gaps(ticker, exchange, index, missing_scores)
+    if force_fill:
+        logger.warning("STARTING FORCE FILL OF THESE VALUES...")
+        logger.warning("!! THERE'S NO GOING BACK FROM HERE. DATA MAY WILL BE PERMAMENTLY CORRUPTED !!")
+        for missing_scores in results:
+            missing_data.force_plug_pv_storage_data_gaps(ticker, exchange, index, missing_scores)
 
 
-
-
+def condensed_find_gaps(ugly_tuple):
+    (ticker, exchange, index, back_to_the_backlog) = ugly_tuple
+    return missing_data.find_pv_storage_data_gaps(ticker, exchange, index, back_to_the_backlog=False)
 
 
 ### OLD todo: rewrite to run much much faster, batching redis queries ###
