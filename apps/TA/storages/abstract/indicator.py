@@ -27,7 +27,7 @@ class IndicatorStorage(TickerStorage):
     class_describer = "indicator"
     value_sig_figs = 6
 
-    class_periods_list = []  # class should override this
+    class_periods_list = [1,]  # class should override this
     # list of integers where for x: (1 <= x <= 200)
 
     requisite_pv_indexes = []  # class should override this.

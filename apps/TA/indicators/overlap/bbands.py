@@ -14,6 +14,9 @@ from settings import logger
 
 class BbandsStorage(IndicatorStorage):
 
+    class_periods_list = [5]
+    requisite_pv_indexes = ["close_price"]
+
     def get_width(self):
         self.value = self.get_value()
         if self.value:
@@ -23,6 +26,28 @@ class BbandsStorage(IndicatorStorage):
         else:
             self.width = None
         return self.width
+
+
+    def compute_value_with_requisite_indexes(self, requisite_pv_index_arrrays: dict, periods: int = 0) -> str:
+        """
+        with cls.requisite_pv_indexes set
+
+        :param index_value_arrrays: a dict with keys matching requisite+pv_indexes and values from self.get_denoted_price_array()
+        :param periods: number of periods to compute value for
+        :return:
+        """
+        periods = periods or self.periods
+
+        upperband, middleband, lowerband = talib.BBANDS(
+            requisite_pv_index_arrrays["close_price"],
+            timeperiod=periods,
+            nbdevup=2, nbdevdn=2, matype=0
+        )
+
+        if math.isnan(sum([upperband[-1], middleband[-1], lowerband[-1]])): return ""
+
+        return f"{upperband[-1]}:{middleband[-1]}:{lowerband[-1]}"
+
 
     def produce_signal(self):
 
@@ -65,58 +90,5 @@ class BbandsStorage(IndicatorStorage):
 
 
 class BbandsSubscriber(IndicatorSubscriber):
-    classes_subscribing_to = [
-        PriceStorage
-    ]
-
-    # todo: make handler compiler
-    # handle = IndicatorSubscriber.create_handle_method(
-    #     index_data = ['close_price'],
-    #     storage_class = RocpStorage,
-    #     horizon_multiplier=10
-    #
-    #
-    # )
-
-    def handle(self, channel, data, *args, **kwargs):
-
-        self.index = self.key_suffix
-
-        if str(self.index) is not "close_price":
-            # logger.debug(f'index {self.index} is not close_price ...ignoring...')
-            return
-
-        new_bband_storage = BbandsStorage(ticker=self.ticker,
-                                          exchange=self.exchange,
-                                          timestamp=self.timestamp)
-
-        for horizon in HORIZONS:
-
-            periods = horizon * 5
-
-            results_dict = PriceStorage.query(
-                ticker=self.ticker,
-                exchange=self.exchange,
-                index=self.index,
-                timestamp=self.timestamp,
-                periods_range=periods,
-            )
-
-            value_np_array = new_bband_storage.get_values_array_from_query(results_dict, limit=periods)
-
-            # todo: add this line to all indicator handlers
-            if not len(value_np_array):
-                return
-
-            upperband, middleband, lowerband = talib.BBANDS(
-                value_np_array,
-                timeperiod=periods,
-                nbdevup=2, nbdevdn=2, matype=0)
-
-            if math.isnan(upperband[-1] + middleband[-1] + lowerband[-1]):
-                return
-
-            new_bband_storage.periods = periods
-            new_bband_storage.value = f"{upperband[-1]}:{middleband[-1]}:{lowerband[-1]}"
-            new_bband_storage.save()  # will produce signal if necessary
-            logger.debug("new BBands value saved")
+    classes_subscribing_to = [PriceStorage]
+    storage_class = BbandsStorage

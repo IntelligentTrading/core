@@ -5,7 +5,6 @@ if LOAD_TALIB:
 from apps.TA.storages.abstract.indicator import IndicatorStorage, BULLISH, BEARISH, OTHER
 from apps.TA.storages.abstract.indicator_subscriber import IndicatorSubscriber
 from apps.TA.storages.data.price import PriceStorage
-from settings import logger
 
 SMA_LIST = [9, 20, 26, 30, 50, 52, 60, 120, 200]
 
@@ -44,14 +43,5 @@ class SmaStorage(IndicatorStorage):
 
 
 class SmaSubscriber(IndicatorSubscriber):
-    classes_subscribing_to = [
-        PriceStorage
-    ]
-
-    def handle(self, channel, data, *args, **kwargs):
-
-        if not 'close_price' == self.key_suffix:
-            logger.debug(f'index {self.key_suffix} is not close_price ...ignoring...')
-            return
-
-        SmaStorage.compute_and_save_all_values_for_timestamp(self.ticker, self.exchange, self.timestamp)
+    classes_subscribing_to = [PriceStorage]
+    storage_class = SmaStorage
