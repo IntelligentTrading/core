@@ -2,7 +2,6 @@ import logging
 
 from apps.TA import TAException
 from apps.TA.storages.abstract.ticker import TickerStorage
-from apps.TA.storages.data.price import PriceStorage
 from apps.signal.models import Signal
 
 logger = logging.getLogger(__name__)
@@ -91,7 +90,7 @@ class IndicatorStorage(TickerStorage):
         return results_dict
 
     def get_denoted_price_array(self, index: str = "close_price", periods: int = 0):
-
+        from apps.TA.storages.data.price import PriceStorage
         results_dict = PriceStorage.query(
             ticker=self.ticker,
             exchange=self.exchange,

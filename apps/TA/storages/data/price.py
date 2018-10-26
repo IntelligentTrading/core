@@ -3,7 +3,7 @@ import logging
 from apps.TA import TAException
 from apps.TA.storages.abstract.ticker import TickerStorage
 from apps.TA.storages.abstract.ticker_subscriber import TickerSubscriber, score_is_near_5min
-from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, default_price_indexes, derived_price_indexes
+from apps.TA.storages.data.pv_history import default_price_indexes, derived_price_indexes, PriceVolumeHistoryStorage
 from apps.TA.storages.utils.memory_cleaner import clear_pv_history_values
 
 logger = logging.getLogger(__name__)
