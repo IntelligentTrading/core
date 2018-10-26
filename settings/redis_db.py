@@ -2,7 +2,6 @@ import os
 import logging
 import redis
 from apps.TA import deployment_type
-from settings import redis_database_url
 
 SIMULATED_ENV = deployment_type == "LOCAL"
 # todo: use this to mark keys in redis db, so they can be separated and deleted
@@ -10,6 +9,7 @@ SIMULATED_ENV = deployment_type == "LOCAL"
 logger = logging.getLogger('redis_db')
 
 if deployment_type == "LOCAL":
+    from settings.local_settings import redis_database_url
     if redis_database_url:
         database = redis.from_url(redis_database_url)
     else:
