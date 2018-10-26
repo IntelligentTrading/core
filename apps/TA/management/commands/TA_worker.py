@@ -103,7 +103,8 @@ def get_subscriber_classes():
 
         # # MOMENTUM INDICATORS
         # adx.AdxSubscriber, adxr.AdxrSubscriber, apo.ApoSubscriber, aroon.AroonSubscriber, aroonosc.AroonOscSubscriber,
-        # bop.BopSubscriber, cci.CciSubscriber, cmo.CmoSubscriber, dx.DxSubscriber, macd.MacdSubscriber,
+        # bop.BopSubscriber, cci.CciSubscriber, cmo.CmoSubscriber, dx.DxSubscriber,
+        macd.MacdSubscriber,
         # # mfi.MfiSubscriber,
         # mom.MomSubscriber, ppo.PpoSubscriber, roc.RocSubscriber, rocr.RocrSubscriber, rsi.RsiSubscriber,
         # stoch.StochSubscriber, stochf.StochfSubscriber, stochrsi.StochrsiSubscriber,
