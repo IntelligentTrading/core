@@ -24,26 +24,24 @@ class Command(BaseCommand):
 
         arg = options['arg']
 
-        month = 3
+        fill_data_gaps(SQL_fill=False, force_fill=False)
 
-        while True:
-            fill_data_gaps(arg == 'force_fill_gaps')
+        from apps.TA.management.commands.TA_restore import restore_db_to_redis
+        for month in range(4,11):
+            restore_db_to_redis(
+                datetime(2018, month, 1),
+                datetime(2018, month+1, 1),
+            )
 
-            from apps.TA.management.commands.TA_restore import restore_db_to_redis
-            if month < 11:
-                restore_db_to_redis(
-                    datetime(2018, month, 1),
-                    datetime(2018, month+1, 1),
-                )
-                month += 1
-
-            time.sleep(60)
+        fill_data_gaps(SQL_fill=True, force_fill=False)
+        fill_data_gaps(SQL_fill=False, force_fill=False)
+        fill_data_gaps(SQL_fill=True, force_fill=(arg=='force_fill_gaps'))
 
 
-def fill_data_gaps(SQL_fill = True, force_fill=False):
+def fill_data_gaps(SQL_fill = False, force_fill=False):
 
     method_params = []
-    
+
     for ticker in ["*_USDT", "*_BTC"]:
         for index in ['close_price', 'open_price', 'high_price', 'low_price', 'close_volume']:
 
@@ -55,10 +53,15 @@ def fill_data_gaps(SQL_fill = True, force_fill=False):
 
     logger.info(f"{len(method_params)} tickers ready to fill gaps")
 
-    results = multithread_this_shit(condensed_find_gaps, method_params)
+    results = multithread_this_shit(condensed_fill_redis_gaps, method_params)
 
     missing_scores_count = sum([len(result) for result in results])
     logger.warning(f"{missing_scores_count} scores could not be recovered and are still missing.")
+
+    if SQL_fill:
+        results = multithread_this_shit(condensed_fill_SQL_gaps, method_params)
+        missing_scores_count = sum([len(result) for result in results])
+        logger.warning(f"{missing_scores_count} scores could not be recovered and are still missing.")
 
     if force_fill:
         logger.warning("STARTING FORCE FILL OF THESE VALUES...")
@@ -67,10 +70,13 @@ def fill_data_gaps(SQL_fill = True, force_fill=False):
             missing_data.force_plug_pv_storage_data_gaps(ticker, exchange, index, missing_scores)
 
 
-def condensed_find_gaps(ugly_tuple):
+def condensed_fill_redis_gaps(ugly_tuple):
     (ticker, exchange, index, back_to_the_backlog) = ugly_tuple
-    return missing_data.find_pv_storage_data_gaps(ticker, exchange, index, back_to_the_backlog=back_to_the_backlog)
+    return missing_data.find_pv_storage_data_gaps(ticker, exchange, index, back_to_the_backlog=False)
 
+def condensed_fill_SQL_gaps(ugly_tuple):
+    (ticker, exchange, index, back_to_the_backlog) = ugly_tuple
+    return missing_data.find_pv_storage_data_gaps(ticker, exchange, index, back_to_the_backlog=True)
 
 ### OLD todo: rewrite to run much much faster, batching redis queries ###
 

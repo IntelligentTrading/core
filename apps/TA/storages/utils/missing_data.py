@@ -62,18 +62,6 @@ def find_pv_storage_data_gaps(ticker: str, exchange: str, index: str, back_to_th
     missing_scores = missing_elements(scores)
 
     restored_scores = []
-    for processing_score in missing_scores:
-        if generate_pv_storages(ticker, exchange, index, processing_score):
-            restored_scores.append(processing_score)
-            continue  # problem solved!
-
-    missing_scores = set(missing_scores) - set(restored_scores)
-
-    if len(restored_scores):
-        logger.debug(f"successfully restored {len(restored_scores)} scores from PriceVolumeHistoryStorage")
-
-    if len(missing_scores):
-        logger.debug(f"there are {len(missing_scores)} mores scores not yet restored")
 
     if back_to_the_backlog:
         # let's go "back to the backlog"; try to reach back and deep into the SQL
@@ -97,11 +85,18 @@ def find_pv_storage_data_gaps(ticker: str, exchange: str, index: str, back_to_th
         if len(restorable_scores):
             logger.debug("successfully restored missing data from SQL into PriceVolumeHistoryStorage")
 
-        for processing_score in restorable_scores:
-            if generate_pv_storages(ticker, exchange, index, processing_score):
-                restored_scores.append(processing_score)
+    for processing_score in missing_scores:
+        if generate_pv_storages(ticker, exchange, index, processing_score):
+            restored_scores.append(processing_score)
+            continue  # problem solved!
 
-        logger.debug(f"successfully restored {len(restored_scores)} scores total")
+    missing_scores = set(missing_scores) - set(restored_scores)
+
+    if len(restored_scores):
+        logger.debug(f"successfully restored {len(restored_scores)} scores from PriceVolumeHistoryStorage")
+
+    if len(missing_scores):
+        logger.debug(f"there are {len(missing_scores)} mores scores not yet restored")
 
     return list(missing_scores - set(restored_scores))
 
