@@ -21,69 +21,67 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         logger.info("Starting TA restore script...")
 
-        today = datetime.now()
-        start_datetime = datetime(today.year, today.month, today.day)
-
-        # key = "BTC_USDT:binance:PriceStorage:close_price"
-        # last_score = database.zrange(key, -1, -1)[0].decode("utf-8").split(":")[1]
-        # last_datetime = TimeseriesStorage.datetime_from_score(last_score)
-        # start_datetime = last_datetime
-
         start_datetime = datetime(2018, 2, 23, 12)
         end_datetime = datetime.today()
-        assert start_datetime < end_datetime  # please go forward in time :)
-        process_datetime = start_datetime
 
-        num_hours_per_query = 4
-
-        while process_datetime < end_datetime:
-            process_datetime += timedelta(hours=num_hours_per_query)
-
-            logger.info(f"restoring past {num_hours_per_query} hours data to {process_datetime}")
-
-            price_history_objects = PriceHistory.objects.filter(
-                timestamp__gte=process_datetime - timedelta(hours=num_hours_per_query),
-                timestamp__lt=process_datetime,
-                source=BINANCE,  # Binance only for now
-                counter_currency__in=[BTC, USDT]
-            )
-
-            results = multithread_this_shit(save_pv_histories_to_redis, price_history_objects)
-            try:
-                total_results = sum([sum(result) for result in results])
-            except Exception as e:
-                # logger.debug("couldn't sum all of it: " + str(e))
-                total_results = 'unknown'
-
-            # for ph_object in price_history_objects:
-            #     if ph_object.transaction_currency not in transaction_currencies:
-            #         continue
-            #     pipeline = save_pv_histories_to_redis(ph_object)
-            # database_response = pipeline.execute()
-            # total_results = sum(database_response)
-
-            logger.info(f"{total_results} values added to Redis")
-
-            # if total_results < 4*60*5: #  minute data for 1 ticker
-            #     continue
-            #
-            # price_history_to_price_storage(
-            #     ticker_exchanges=[
-            #         (f'{pho.transaction_currency}_{pho.get_counter_currency_display()}', pho.get_source_display())
-            #         # (ticker, exchange) as strings
-            #         for pho in price_history_objects
-            #     ],
-            #     start_score=TimeseriesStorage.score_from_timestamp(
-            #         (process_datetime - timedelta(hours=num_hours_per_query)).timestamp()
-            #     ),
-            #     end_score=TimeseriesStorage.score_from_timestamp(process_datetime.timestamp())
-            # )
-
+        restore_db_to_redis(start_datetime, end_datetime)
 
         from apps.TA.management.commands.TA_fill_gaps import fill_data_gaps
         while True:
             fill_data_gaps()
-            time.sleep(60 * 60 * 2)  # 2 hours
+            time.sleep(60 * 60)  # 1 hour
+
+
+def restore_db_to_redis(start_datetime, end_datetime):
+    if start_datetime > end_datetime:  # please go forward in time :)
+        return
+
+    process_datetime = start_datetime
+
+    num_hours_per_query = 4
+
+    while process_datetime < end_datetime:
+        process_datetime += timedelta(hours=num_hours_per_query)
+
+        logger.info(f"restoring past {num_hours_per_query} hours data to {process_datetime}")
+
+        price_history_objects = PriceHistory.objects.filter(
+            timestamp__gte=process_datetime - timedelta(hours=num_hours_per_query),
+            timestamp__lt=process_datetime,
+            source=BINANCE,  # Binance only for now
+            counter_currency__in=[BTC, USDT]
+        )
+
+        results = multithread_this_shit(save_pv_histories_to_redis, price_history_objects)
+        try:
+            total_results = sum([sum(result) for result in results])
+        except Exception as e:
+            # logger.debug("couldn't sum all of it: " + str(e))
+            total_results = 'unknown'
+
+        # for ph_object in price_history_objects:
+        #     if ph_object.transaction_currency not in transaction_currencies:
+        #         continue
+        #     pipeline = save_pv_histories_to_redis(ph_object)
+        # database_response = pipeline.execute()
+        # total_results = sum(database_response)
+
+        logger.info(f"{total_results} values added to Redis")
+
+        # if total_results < 4*60*5: #  minute data for 1 ticker
+        #     continue
+        #
+        # price_history_to_price_storage(
+        #     ticker_exchanges=[
+        #         (f'{pho.transaction_currency}_{pho.get_counter_currency_display()}', pho.get_source_display())
+        #         # (ticker, exchange) as strings
+        #         for pho in price_history_objects
+        #     ],
+        #     start_score=TimeseriesStorage.score_from_timestamp(
+        #         (process_datetime - timedelta(hours=num_hours_per_query)).timestamp()
+        #     ),
+        #     end_score=TimeseriesStorage.score_from_timestamp(process_datetime.timestamp())
+        # )
 
 
 ### PULL PRICE HISTORY RECORDS FROM CORE PRICE HISTORY DATABASE ###

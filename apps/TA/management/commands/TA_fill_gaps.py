@@ -24,16 +24,27 @@ class Command(BaseCommand):
 
         arg = options['arg']
 
+        month = 3
+
         while True:
             fill_data_gaps(arg == 'force_fill_gaps')
-            time.sleep(1)
+
+            from apps.TA.management.commands.TA_restore import restore_db_to_redis
+            if month < 11:
+                restore_db_to_redis(
+                    datetime(2018, month, 1),
+                    datetime(2018, month+1, 1),
+                )
+                month += 1
+
+            time.sleep(60)
 
 
 def fill_data_gaps(SQL_fill = True, force_fill=False):
 
 
     for ticker in ["*_USDT", "*_BTC"]:
-        for index in ['close_price']:  # , 'open_price', 'high_price', 'low_price']:
+        for index in ['close_price', 'open_price', 'high_price', 'low_price', 'close_volume']:
 
             method_params = []
             for key in database.keys(f"*{ticker}*PriceStorage*{index}*"):

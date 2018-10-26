@@ -61,10 +61,6 @@ def find_pv_storage_data_gaps(ticker: str, exchange: str, index: str, back_to_th
     scores = [int(score) for (value, score) in redis_zset_withscores]
     missing_scores = missing_elements(scores)
 
-    # todo: remove these 2 lines
-    feb_7_score = TimeseriesStorage.score_from_timestamp(datetime(2018,3,3).timestamp())
-    missing_scores = [score for score in missing_scores if score < feb_7_score]
-
     restored_scores = []
     for processing_score in missing_scores:
         if generate_pv_storages(ticker, exchange, index, processing_score):
