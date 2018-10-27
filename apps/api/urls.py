@@ -2,7 +2,7 @@ from django.conf.urls import url
 from rest_framework_swagger.views import get_swagger_view
 
 from apps.api.views import ann_price_classification, events_elementary, events_logical, \
-    history_price, resampled_price, rsi, signal, sma, volume, price
+    history_price, resampled_price, rsi, signal, sma, volume, price, autotrading
 from apps.api.views import tickers, itt
 from apps.api.views import v1_price, v1_volume, v1_user, v1_csv
 
@@ -28,7 +28,7 @@ urlpatterns = [
 
     url(r'^v1/csv$', v1_csv.CSV.as_view(), name='v1_csv'),
 
-#   url(r'^sma$', views.sma.SMA.as_view(), name='sma'),
+    # url(r'^sma$', views.sma.SMA.as_view(), name='sma'),
 
     url(r'^v2/signals/$', signal.ListSignals.as_view(), name='signals'), 
     #url(r'^v2/signals/(?P<transaction_currency>.+)$', signal.ListSignal.as_view(), name='signal'),
@@ -62,7 +62,9 @@ urlpatterns = [
 
     url(r'^v2/ann-price-classification/$', ann_price_classification.ListAnnPriceClassification.as_view(), name='ann-price-classification'),
 
-     url(r'^v2/sma/$', sma.ListSma.as_view(), name='sma'),
+    url(r'^v2/sma/$', sma.ListSma.as_view(), name='sma'),
+
+    url(r'^portfolio_reccomendation/$', autotrading.Portfolio.as_view(), name='sma'),
 
     url(r'^$', schema_view), # swagger
  ]
