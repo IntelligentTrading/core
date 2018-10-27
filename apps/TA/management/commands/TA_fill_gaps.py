@@ -24,17 +24,20 @@ class Command(BaseCommand):
 
         arg = options['arg']
 
-        fill_data_gaps(SQL_fill=False, force_fill=False)
+        # fill_data_gaps(SQL_fill=False, force_fill=False)
+        #
+        # from apps.TA.management.commands.TA_restore import restore_db_to_redis
+        # for month in range(4,11):
+        #     restore_db_to_redis(
+        #         datetime(2018, month, 1),
+        #         datetime(2018, month+1, 1),
+        #     )
 
-        from apps.TA.management.commands.TA_restore import restore_db_to_redis
-        for month in range(4,11):
-            restore_db_to_redis(
-                datetime(2018, month, 1),
-                datetime(2018, month+1, 1),
-            )
-
+        # First, fill missing data from SQL
         fill_data_gaps(SQL_fill=True, force_fill=False)
+        # Second, try to fix yourself inside Redis only
         fill_data_gaps(SQL_fill=False, force_fill=False)
+        # Third, final pass, pulling from SQL and forcing values if demanded in arg
         fill_data_gaps(SQL_fill=True, force_fill=(arg=='force_fill_gaps'))
 
 
