@@ -247,6 +247,19 @@ SOURCE_CHOICES = (
     (HITBTC, 'hitbtc'),
 )
 
+(REDDIT, BITCOINTALK, TWITTER) = list(range(3))
+SENTIMENT_SOURCE_CHOICES = (
+    (REDDIT, 'reddit'),
+    (BITCOINTALK, 'bitcointalk'),
+    (TWITTER, 'twitter'),
+)
+
+(VADER, NN_SENTIMENT) = list(range(2))
+SENTIMENT_MODEL_CHOICES = (
+    (VADER, 'vader'),
+    (NN_SENTIMENT, 'nn_sentiment'),
+)
+
 
 # list of supported counter currencies
 COUNTER_CURRENCIES = ('BTC', 'ETH', 'USDT')

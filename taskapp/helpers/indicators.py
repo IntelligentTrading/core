@@ -8,6 +8,7 @@ from apps.common.utilities.sqs import send_sqs
 from apps.indicator.models.price_resampl import PriceResampl
 from apps.indicator.models.rsi import Rsi
 from apps.indicator.models.sma import Sma
+from apps.indicator.models.sentiment import Sentiment
 from apps.strategy.models.strategy_ref import get_all_strategy_classes
 from apps.user.models.user import get_horizon_value_from_string
 from settings import SHORT, MEDIUM, HORIZONS_TIME2NAMES, RUN_ANN, MODIFY_DB
@@ -83,6 +84,9 @@ def _compute_indicators_for(source, transaction_currency, counter_currency, resa
 
     timestamp = time.time() // (1 * 60) * (1 * 60)  # current time rounded to a minute
 
+    logger.info('Computing sentiment...')
+    Sentiment.compute_all(timestamp)
+
     # create a dictionary of parameters to improve readability
     indicator_params_dict = {
         'timestamp': timestamp,
@@ -142,6 +146,8 @@ def _compute_indicators_for(source, transaction_currency, counter_currency, resa
         # logger.error(" -> RESAMPLE EXCEPTION: " + str(e))
         logger.error(
             f">>>>{quad_formatted(source, transaction_currency, counter_currency, resample_period)} -> RESAMPLE EXCEPTION: {e}")
+
+
 
     # 2 ###########################
     # calculate and save simple indicators
