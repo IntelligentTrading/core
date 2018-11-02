@@ -84,9 +84,6 @@ def _compute_indicators_for(source, transaction_currency, counter_currency, resa
 
     timestamp = time.time() // (1 * 60) * (1 * 60)  # current time rounded to a minute
 
-    logger.info('Computing sentiment...')
-    Sentiment.compute_all(timestamp)
-
     # create a dictionary of parameters to improve readability
     indicator_params_dict = {
         'timestamp': timestamp,

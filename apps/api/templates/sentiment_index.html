@@ -18,7 +18,7 @@ function drawBtcRedditChart() {
 var data = google.visualization.arrayToDataTable([
          ['Sentiment', 'Likelihood', { role: 'style' }, { role: 'annotation' } ],
          ['Positive', {{ btc_reddit.positive}}, '#3D9970', '+' ],
-         ['Neutral', {{ btc_reddit.neutral}}, '#999', '' ],
+         ['Neutral',  {{ btc_reddit.neutral}}, '#999', '' ],
          ['Negative', {{ btc_reddit.negative}}, '#E74C3C', '-' ],
       ]);
   // Optional; add a title and set the width and height of the chart

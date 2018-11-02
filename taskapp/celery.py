@@ -86,13 +86,18 @@ def setup_periodic_tasks(sender, **_):
         name='daily at midnight',
         )
 
-
-
     # LAST - run backtesting daily
     sender.add_periodic_task(
         crontab(minute=40, hour=13),
         tasks.backtest_all_strategies.s(),
         name='daily at 13:40',
+        )
+
+    # sentiment analysis
+    sender.add_periodic_task(
+        crontab(second=0, minute='*'),
+        tasks.compute_sentiment,
+        name='every minute',
         )
 
     # Precache info_bot every 4 hours
