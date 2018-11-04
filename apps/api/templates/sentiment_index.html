@@ -7,7 +7,9 @@
 
 {% for result_name, result in result_data.items %}
 
+{{ result.reddit.neutral|stringformat:"i"}}
 
+<p>{{result_name}}</p>
 <div id="{{result_name}}"></div>
 
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
@@ -22,11 +24,19 @@ function drawRedditChart{{result_name}}() {
 var data = google.visualization.arrayToDataTable([
          ['Sentiment', 'Likelihood', { role: 'style' }, { role: 'annotation' } ],
          ['Positive', {{ result.reddit.positive}}, '#3D9970', '+' ],
-         ['Neutral',  {{ result.reddit.neutral}}, '#999', '' ],
          ['Negative', {{ result.reddit.negative}}, '#E74C3C', '-' ],
+         {% if result.reddit.neutral|stringformat:"i" != "" %}
+         ['Neutral',  {{ result.reddit.neutral}}, '#999', '' ],
+        {% endif %}
       ]);
   // Optional; add a title and set the width and height of the chart
-  var options = {'title':'/r/CryptoCurrency on Reddit', 'width':550, 'height':400, legend: { position: "none" }};
+  var options = {'title':'/r/CryptoCurrency on Reddit', 'width':550, 'height':400, legend: { position: "none" }, vAxis: {
+    viewWindow: {
+        min: 0,
+        max: 1
+    },
+    ticks: [0, 0.25, 0.50, 0.75, 1.00] // display labels every 25
+}};
 
   // Display the chart inside the <div> element with id="piechart"
   var chart{{result_name}} = new google.visualization.ColumnChart(document.getElementById('{{result_name}}'));

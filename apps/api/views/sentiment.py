@@ -51,13 +51,13 @@ def _create_sentiment_result_dict(topic, model):
         'reddit_comments':
             _filter_or_none(sentiment_source=REDDIT, model=model, topic=topic, from_comments=True),
         'bitcointalk_comments':
-            _filter_or_none(sentiment_source=REDDIT, model=model, topic=topic, from_comments=True),
+            _filter_or_none(sentiment_source=BITCOINTALK, model=model, topic=topic, from_comments=True),
     }
 
 
 
 def sentiment_index(request):
-    topics = ['BTC', 'crypto']
+    topics = ['BTC', 'alt']
     models = [VADER, NN_SENTIMENT]
     results = {}
 
@@ -83,6 +83,8 @@ def sentiment_index(request):
     # context = {'btc_reddit': latest_data[0]}
     """
 
+    print(results)
+    print(list(results.keys()))
     context = {
         'result_data': results,
     }
