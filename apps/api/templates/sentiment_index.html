@@ -10,16 +10,21 @@
 {{ result.reddit.neutral|stringformat:"i"}}
 
 <p>{{result_name}}</p>
-<div id="{{result_name}}"></div>
+<div id="reddit_{{result_name}}"></div>
+<div id="bitcointalk_{{result_name}}"></div>
+<div id="twitter_{{result_name}}"></div>
+<div id="reddit_comments_{{result_name}}"></div>
+<div id="bitcointalk_comments_{{result_name}}"></div>
 
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 
 <script type="text/javascript">
-google.charts.load('current', {'packages':['corechart']});
 
+<!-- Reddit -->
+
+google.charts.load('current', {'packages':['corechart']});
 google.charts.setOnLoadCallback(drawRedditChart{{result_name}});
 
-// Draw the chart and set the chart values
 function drawRedditChart{{result_name}}() {
 var data = google.visualization.arrayToDataTable([
          ['Sentiment', 'Likelihood', { role: 'style' }, { role: 'annotation' } ],
@@ -30,20 +35,146 @@ var data = google.visualization.arrayToDataTable([
         {% endif %}
       ]);
   // Optional; add a title and set the width and height of the chart
-  var options = {'title':'/r/CryptoCurrency on Reddit', 'width':550, 'height':400, legend: { position: "none" }, vAxis: {
+  var options = {'title':'Reddit (topic titles only)', 'width':550, 'height':400, legend: { position: "none" }, vAxis: {
     viewWindow: {
         min: 0,
         max: 1
     },
-    ticks: [0, 0.25, 0.50, 0.75, 1.00] // display labels every 25
+    ticks: [0, 0.25, 0.50, 0.75, 1.00]
 }};
 
-  // Display the chart inside the <div> element with id="piechart"
-  var chart{{result_name}} = new google.visualization.ColumnChart(document.getElementById('{{result_name}}'));
+  var chart{{result_name}} = new google.visualization.ColumnChart(document.getElementById('reddit_{{result_name}}'));
   chart{{result_name}}.draw(data, options);
 }
 
+<!-- end Reddit -->
+
+
+<!-- Bitcointalk -->
+
+google.charts.load('current', {'packages':['corechart']});
+google.charts.setOnLoadCallback(drawBitcointalkChart{{result_name}});
+
+function drawBitcointalkChart{{result_name}}() {
+var data = google.visualization.arrayToDataTable([
+         ['Sentiment', 'Likelihood', { role: 'style' }, { role: 'annotation' } ],
+         ['Positive', {{ result.bitcointalk.positive}}, '#3D9970', '+' ],
+         ['Negative', {{ result.bitcointalk.negative}}, '#E74C3C', '-' ],
+         {% if result.bitcointalk.neutral|stringformat:"i" != "" %}
+         ['Neutral',  {{ result.bitcointalk.neutral}}, '#999', '' ],
+        {% endif %}
+      ]);
+  // Optional; add a title and set the width and height of the chart
+  var options = {'title':'Bitcointalk (topic titles only)', 'width':550, 'height':400, legend: { position: "none" }, vAxis: {
+    viewWindow: {
+        min: 0,
+        max: 1
+    },
+    ticks: [0, 0.25, 0.50, 0.75, 1.00]
+}};
+
+  var chart{{result_name}} = new google.visualization.ColumnChart(document.getElementById('bitcointalk_{{result_name}}'));
+  chart{{result_name}}.draw(data, options);
+}
+
+<!-- end Bitcointalk -->
+
+
+<!-- Twitter -->
+
+google.charts.load('current', {'packages':['corechart']});
+google.charts.setOnLoadCallback(drawTwitterChart{{result_name}});
+
+function drawTwitterChart{{result_name}}() {
+var data = google.visualization.arrayToDataTable([
+         ['Sentiment', 'Likelihood', { role: 'style' }, { role: 'annotation' } ],
+         ['Positive', {{ result.twitter.positive}}, '#3D9970', '+' ],
+         ['Negative', {{ result.twitter.negative}}, '#E74C3C', '-' ],
+         {% if result.twitter.neutral|stringformat:"i" != "" %}
+         ['Neutral',  {{ result.twitter.neutral}}, '#999', '' ],
+        {% endif %}
+      ]);
+  // Optional; add a title and set the width and height of the chart
+  var options = {'title':'Twitter', 'width':550, 'height':400, legend: { position: "none" }, vAxis: {
+    viewWindow: {
+        min: 0,
+        max: 1
+    },
+    ticks: [0, 0.25, 0.50, 0.75, 1.00]
+}};
+
+  var chart{{result_name}} = new google.visualization.ColumnChart(document.getElementById('twitter_{{result_name}}'));
+  chart{{result_name}}.draw(data, options);
+}
+
+<!-- end Twitter -->
+
+
+<!-- Reddit comments -->
+
+google.charts.load('current', {'packages':['corechart']});
+google.charts.setOnLoadCallback(drawRedditCommentsChart{{result_name}});
+
+function drawRedditCommentsChart{{result_name}}() {
+var data = google.visualization.arrayToDataTable([
+         ['Sentiment', 'Likelihood', { role: 'style' }, { role: 'annotation' } ],
+         ['Positive', {{ result.redit_comments.positive}}, '#3D9970', '+' ],
+         ['Negative', {{ result.reddit_comments.negative}}, '#E74C3C', '-' ],
+         {% if result.reddit_comments.neutral|stringformat:"i" != "" %}
+         ['Neutral',  {{ result.reddit_comments.neutral}}, '#999', '' ],
+        {% endif %}
+      ]);
+  // Optional; add a title and set the width and height of the chart
+  var options = {'title':'Reddit comments', 'width':550, 'height':400, legend: { position: "none" }, vAxis: {
+    viewWindow: {
+        min: 0,
+        max: 1
+    },
+    ticks: [0, 0.25, 0.50, 0.75, 1.00]
+}};
+
+  var chart{{result_name}} = new google.visualization.ColumnChart(document.getElementById('reddit_comments_{{result_name}}'));
+  chart{{result_name}}.draw(data, options);
+}
+
+<!-- end Reddit comments -->
+
+
+<!-- Bitcointalk comments -->
+
+google.charts.load('current', {'packages':['corechart']});
+google.charts.setOnLoadCallback(drawBitcointalkCommentsChart{{result_name}});
+
+function drawBitcointalkCommentsChart{{result_name}}() {
+var data = google.visualization.arrayToDataTable([
+         ['Sentiment', 'Likelihood', { role: 'style' }, { role: 'annotation' } ],
+         ['Positive', {{ result.bitcointalk_comments.positive}}, '#3D9970', '+' ],
+         ['Negative', {{ result.bitcointalk_comments.negative}}, '#E74C3C', '-' ],
+         {% if result.bitcointalk_comments.neutral|stringformat:"i" != "" %}
+         ['Neutral',  {{ result.bitcointalk_comments.neutral}}, '#999', '' ],
+        {% endif %}
+      ]);
+  // Optional; add a title and set the width and height of the chart
+  var options = {'title':'Bitcointalk comments', 'width':550, 'height':400, legend: { position: "none" }, vAxis: {
+    viewWindow: {
+        min: 0,
+        max: 1
+    },
+    ticks: [0, 0.25, 0.50, 0.75, 1.00]
+}};
+
+  var chart{{result_name}} = new google.visualization.ColumnChart(document.getElementById('bitcointalk_comments_{{result_name}}'));
+  chart{{result_name}}.draw(data, options);
+}
+
+<!-- end Twitter -->
+
+
+
+
 </script>
+
+
 
 {% endfor %}
 
