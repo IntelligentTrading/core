@@ -10,6 +10,7 @@ import requests
 import tweepy
 from tweepy import OAuthHandler
 from apps.indicator.models.nn_sentiment import load_model_and_tokenizer, predict_sentiment
+import time
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -91,6 +92,7 @@ class Bitcointalk(SentimentDataSource):
                 topic_link_url = topic_link['href']
                 topic_title = topic_link.text
                 logging.info(f'Processing topic {topic_title}...')
+                time.sleep(5) # sleep 5 seconds so Bitcointalk doesn't drop us...
                 small = topic_link.next_element.next_element.next_element  # parsing is an ugly thing
                 if str(small).startswith('<small id="pages'):  # we have more than one topic page, find the last one
                     topic_links = small.find_all('a')
