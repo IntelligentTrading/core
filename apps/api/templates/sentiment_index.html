@@ -4,33 +4,38 @@
 
 <h1>Crowd Sentiments on Crypto</h1>
 
-<div id="reddit"></div>
+
+{% for result_name, result in result_data.items %}
+
+
+<div id="{{result_name}}"></div>
 
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 
 <script type="text/javascript">
 google.charts.load('current', {'packages':['corechart']});
 
-google.charts.setOnLoadCallback(drawBtcRedditChart);
+google.charts.setOnLoadCallback(drawRedditChart{{result_name}});
 
 // Draw the chart and set the chart values
-function drawBtcRedditChart() {
+function drawRedditChart{{result_name}}() {
 var data = google.visualization.arrayToDataTable([
          ['Sentiment', 'Likelihood', { role: 'style' }, { role: 'annotation' } ],
-         ['Positive', {{ btc_reddit.positive}}, '#3D9970', '+' ],
-         ['Neutral',  {{ btc_reddit.neutral}}, '#999', '' ],
-         ['Negative', {{ btc_reddit.negative}}, '#E74C3C', '-' ],
+         ['Positive', {{ result.reddit.positive}}, '#3D9970', '+' ],
+         ['Neutral',  {{ result.reddit.neutral}}, '#999', '' ],
+         ['Negative', {{ result.reddit.negative}}, '#E74C3C', '-' ],
       ]);
   // Optional; add a title and set the width and height of the chart
   var options = {'title':'/r/CryptoCurrency on Reddit', 'width':550, 'height':400, legend: { position: "none" }};
 
   // Display the chart inside the <div> element with id="piechart"
-  var chart = new google.visualization.ColumnChart(document.getElementById('reddit'));
-  chart.draw(data, options);
+  var chart{{result_name}} = new google.visualization.ColumnChart(document.getElementById('{{result_name}}'));
+  chart{{result_name}}.draw(data, options);
 }
 
 </script>
 
+{% endfor %}
 
 </body>
 </html>

@@ -95,9 +95,9 @@ def setup_periodic_tasks(sender, **_):
 
     # sentiment analysis
     sender.add_periodic_task(
-        crontab(second=0, minute='*'),
+        crontab(minute=37, hour=14),
         tasks.compute_sentiment,
-        name='every minute',
+        name='daily at 14:37',
         )
 
     # Precache info_bot every 4 hours

@@ -30,10 +30,10 @@ class Sentiment(models.Model):
 
 
     # INDEX
-    #class Meta:
-    #    indexes = [
-    #        models.Index(fields=['timestamp', 'model', 'sentiment_source', 'topic']),
-    #    ]
+    class Meta:
+        indexes = [
+            models.Index(fields=['timestamp', 'model', 'sentiment_source', 'topic']),
+        ]
 
     def _compute(self, timestamp):
         self.sentiment_source = 0
