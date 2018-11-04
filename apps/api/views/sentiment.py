@@ -76,7 +76,7 @@ def _create_sentiment_result_dict(topic, model):
             _filter_or_none(sentiment_source=REDDIT, model=model, topic=topic, from_comments=True),
         'bitcointalk_comments':
             _filter_or_none(sentiment_source=BITCOINTALK, model=model, topic=topic, from_comments=True),
-        'name': f'{pretty_model_names[model]}, topic of interest: {pretty_topic_names[topic]},',
+        'name': f'{pretty_model_names[model]}, topic of interest: {pretty_topic_names[topic]}',
         'reddit_url_info': reddit_url_infos[topic],
         'bitcointalk_url_info': bitcointalk_url_infos[topic],
         'twitter_url_info': twitter_url_infos[topic]

@@ -69,7 +69,7 @@
     <div class="container" id="{{result_name}}">
       <div class="row">
         <div class="col-md-12">
-          <h6 class="" contenteditable="true">Showing data for {{result.name}}</h6>
+          <h4 class="" contenteditable="true">{{result.name}}</h4>
         </div>
       </div>
 
@@ -116,7 +116,7 @@ var data = google.visualization.arrayToDataTable([
         {% endif %}
       ]);
   // Optional; add a title and set the width and height of the chart
-  var options = {'title':'Reddit (topic titles only), /r/{{ result.reddit_url_info}}', 'height':400, legend: { position: "none" }, vAxis: {
+  var options = {'title':'Reddit (topic titles only), /r/{{ result.reddit_url_info}}', 'height':400, titleTextStyle: {fontSize: 12}, legend: { position: "none" }, vAxis: {
     viewWindow: {
         min: 0,
         max: 1
@@ -151,7 +151,7 @@ var data = google.visualization.arrayToDataTable([
         {% endif %}
       ]);
   // Optional; add a title and set the width and height of the chart
-  var options = {'title':'Bitcointalk (topic titles only), {{result.bitcointalk_url_info}}', 'height':400, legend: { position: "none" }, vAxis: {
+  var options = {'title':'Bitcointalk (topic titles only), {{result.bitcointalk_url_info}}', 'height':400, titleTextStyle: {fontSize: 12}, legend: { position: "none" }, vAxis: {
     viewWindow: {
         min: 0,
         max: 1
@@ -186,7 +186,7 @@ var data = google.visualization.arrayToDataTable([
         {% endif %}
       ]);
   // Optional; add a title and set the width and height of the chart
-  var options = {'title':'Twitter, search term: "{{result.twitter_url_info}}"', 'height':400, legend: { position: "none" }, vAxis: {
+  var options = {'title':'Twitter, search term: "{{result.twitter_url_info}}"', 'height':400, titleTextStyle: {fontSize: 12}, legend: { position: "none" }, vAxis: {
     viewWindow: {
         min: 0,
         max: 1
@@ -221,7 +221,7 @@ var data = google.visualization.arrayToDataTable([
         {% endif %}
       ]);
   // Optional; add a title and set the width and height of the chart
-  var options = {'title':'Reddit comments', 'height':400, legend: { position: "none" }, vAxis: {
+  var options = {'title':'Reddit comments', 'height':400, titleTextStyle: {fontSize: 12}, legend: { position: "none" }, vAxis: {
     viewWindow: {
         min: 0,
         max: 1
@@ -257,7 +257,7 @@ var data = google.visualization.arrayToDataTable([
         {% endif %}
       ]);
   // Optional; add a title and set the width and height of the chart
-  var options = {'title':'Bitcointalk comments', 'height':400, legend: { position: "none" }, vAxis: {
+  var options = {'title':'Bitcointalk comments', 'height':400, titleTextStyle: {fontSize: 12}, legend: { position: "none" }, vAxis: {
     viewWindow: {
         min: 0,
         max: 1

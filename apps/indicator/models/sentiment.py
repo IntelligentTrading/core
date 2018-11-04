@@ -8,6 +8,7 @@ import pandas as pd
 import logging
 from settings import time_speed, MODIFY_DB
 from apps.indicator.models.sentiment_analysis import Subreddit, Twitter, Bitcointalk, LSTMSentimentAnalyzer, VaderSentimentAnalyzer
+import numpy as np
 
 SUBREDDIT_BTC = 'BTC'
 SUBREDDIT_CRYPTO = 'CryptoCurrency'
@@ -33,8 +34,8 @@ class Sentiment(models.Model):
     model = models.SmallIntegerField(choices=SENTIMENT_MODEL_CHOICES, null=False)
     positive = models.FloatField(null=False)
     negative = models.FloatField(null=False)
-    neutral = models.FloatField(null=False)
-    compound = models.FloatField(null=False)
+    neutral = models.FloatField(null=True)
+    compound = models.FloatField(null=True)
     timestamp = UnixTimeStampField(null=False)
     from_comments = models.BooleanField(null=False)
 
@@ -56,9 +57,9 @@ class Sentiment(models.Model):
         self.topic = topic
         self.model = analyzer_code
         self.positive = score.positive
-        self.neutral = score.neutral
+        self.neutral = score.neutral if not np.isnan(score.neutral) else None
         self.negative = score.negative
-        self.compound = score.compound
+        self.compound = score.compound if not np.isnan(score.neutral) else None
         self.timestamp = timestamp
         self.from_comments = from_comments\
 
