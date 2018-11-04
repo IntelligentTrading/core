@@ -19,7 +19,8 @@ if deployment_type == "LOCAL":
 else:
     database = redis.from_url(os.environ.get("TA_REDIS_URL"))
 
-logger.info("Redis connection established for app database.")
-used_memory, max_memory = int(database.info()['used_memory']), int(database.info()['maxmemory'])
-max_memory_human = database.info()['maxmemory_human']
-logger.info(f"Redis currently consumes {round(100*used_memory/max_memory, 2)}% out of {max_memory_human}")
+if database:
+    logger.info("Redis connection established for app database.")
+    used_memory, max_memory = int(database.info()['used_memory']), int(database.info()['maxmemory'])
+    max_memory_human = database.info()['maxmemory_human']
+    logger.info(f"Redis currently consumes {round(100*used_memory/(max_memory+0.01), 2)}% out of {max_memory_human}")

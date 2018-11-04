@@ -2,12 +2,21 @@ from datetime import timedelta
 from django.db import models
 from unixtimestampfield.fields import UnixTimeStampField
 #from apps.channel.models.exchange_data import SOURCE_CHOICES
-from settings import SENTIMENT_SOURCE_CHOICES, COUNTER_CURRENCY_CHOICES, SENTIMENT_MODEL_CHOICES
+from settings import SENTIMENT_SOURCE_CHOICES,SENTIMENT_MODEL_CHOICES, REDDIT, TWITTER, BITCOINTALK, NN_SENTIMENT, VADER
 from datetime import timedelta, datetime
 import pandas as pd
 import logging
 from settings import time_speed, MODIFY_DB
+from apps.indicator.models.sentiment_analysis import Subreddit, Twitter, Bitcointalk, LSTMSentimentAnalyzer, VaderSentimentAnalyzer
 
+SUBREDDIT_BTC = 'BTC'
+SUBREDDIT_CRYPTO = 'CryptoCurrency'
+MAX_TOPICS = 10
+BITCOINTALK_BTC = 'https://bitcointalk.org/index.php?board=1.0;sort=last_post;desc'
+BITCOINTALK_ALT = 'https://bitcointalk.org/index.php?board=67.0;sort=last_post;desc'
+TWITTER_BTC_SEARCH_QUERY = 'btc'
+TWITTER_ALT_SEARCH_QUERY = 'crypto'
+NUM_TWEETS = 10
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +36,7 @@ class Sentiment(models.Model):
     neutral = models.FloatField(null=False)
     compound = models.FloatField(null=False)
     timestamp = UnixTimeStampField(null=False)
+    from_comments = models.BooleanField(null=False)
 
 
     # INDEX
@@ -35,23 +45,93 @@ class Sentiment(models.Model):
             models.Index(fields=['timestamp', 'model', 'sentiment_source', 'topic']),
         ]
 
-    def _compute(self, timestamp):
-        self.sentiment_source = 0
-        self.topic = 'BTC'
-        self.model = 0
-        self.positive = 0.23
-        self.neutral = 0.55
-        self.negative = 0.22
-        self.compound = -0.56
+    def _compute(self, timestamp, analyzer, analyzer_code, sentiment_source_code, topic, from_comments):
+
+        if not from_comments:
+            score = analyzer.calculate_current_mean_headline_sentiment()
+        else:
+            score = analyzer.calculate_current_mean_topic_sentiment()
+
+        self.sentiment_source = sentiment_source_code
+        self.topic = topic
+        self.model = analyzer_code
+        self.positive = score.positive
+        self.neutral = score.neutral
+        self.negative = score.negative
+        self.compound = score.compound
         self.timestamp = timestamp
+        self.from_comments = from_comments\
+
+
+    @staticmethod
+    def _create_instance_and_write(timestamp, analyzer, analyzer_code, sentiment_source_code, topic, from_comments):
+        sentiment_instance = Sentiment()
+        sentiment_instance._compute(timestamp, analyzer, analyzer_code, sentiment_source_code, topic, from_comments)
+        if MODIFY_DB:
+            sentiment_instance.save()
+
+    @staticmethod
+    def _go_through_source(timestamp, sentiment_data_source, sentiment_data_source_code, topic, include_comments):
+        lstm_analyzer = LSTMSentimentAnalyzer(sentiment_data_source)
+        Sentiment._create_instance_and_write(
+            timestamp, lstm_analyzer, NN_SENTIMENT, sentiment_data_source_code, topic, False
+        )
+
+        vader_analyzer = VaderSentimentAnalyzer(sentiment_data_source)
+        Sentiment._create_instance_and_write(
+            timestamp, vader_analyzer, VADER, sentiment_data_source_code, topic, False
+        )
+
+        if include_comments:
+            lstm_analyzer = LSTMSentimentAnalyzer(sentiment_data_source)
+            Sentiment._create_instance_and_write(
+                timestamp, lstm_analyzer, NN_SENTIMENT, sentiment_data_source_code, topic, True
+            )
+
+            vader_analyzer = VaderSentimentAnalyzer(sentiment_data_source)
+            Sentiment._create_instance_and_write(
+                timestamp, vader_analyzer, VADER, sentiment_data_source_code, topic, True
+            )
+
+
 
     @staticmethod
     def compute_all(timestamp):
-        try:
-            sentiment_instance = Sentiment()
-            sentiment_instance._compute(timestamp)
-            if MODIFY_DB:
-                sentiment_instance.save()
-        except Exception as e:
-            logger.error(" Compute Exception: " + str(e))
+        if True:
+            try:
+                # go through Reddit
+                logging.info(' >>>>>> Processing Reddit sentiment...')
+                subreddit = Subreddit(SUBREDDIT_BTC, max_topics=MAX_TOPICS)
+                Sentiment._go_through_source(timestamp, subreddit, REDDIT, 'BTC', True)
+
+                subreddit = Subreddit(SUBREDDIT_CRYPTO, max_topics=MAX_TOPICS)
+                Sentiment._go_through_source(timestamp, subreddit, REDDIT, 'alt', True)
+            except Exception as e:
+                logging.error(f'Unable to go through Reddit: {str(e)}')
+
+            try:
+                logging.info('>>>>> Processing Bitcointalk sentiment...')
+                # go through Bitcointalk
+                bitcointalk = Bitcointalk(BITCOINTALK_BTC)
+                Sentiment._go_through_source(timestamp, bitcointalk, BITCOINTALK, 'BTC', True)
+
+                bitcointalk = Bitcointalk(BITCOINTALK_ALT)
+                Sentiment._go_through_source(timestamp, bitcointalk, BITCOINTALK, 'alt', True)
+            except Exception as e:
+                logging.error(f'Unable to go through Bitcointalk: {str(e)}')
+
+            try:
+                logging.info('>>>>> Processing Twitter sentiment...')
+                # go through Twitter
+                twitter = Twitter(TWITTER_BTC_SEARCH_QUERY, NUM_TWEETS)
+                Sentiment._go_through_source(timestamp, twitter, TWITTER, 'BTC', False)
+
+                twitter = Twitter(TWITTER_ALT_SEARCH_QUERY, NUM_TWEETS)
+                Sentiment._go_through_source(timestamp, twitter, TWITTER, 'alt', False)
+            except Exception as e:
+                logging.error(f'Unable to go through Twitter: {str(e)}')
+
+
+
+
         logger.info("   ...All sentiment calculations have been done and saved.")

@@ -30,8 +30,9 @@ class SentimentClassification(ListAPIView):
         return filter_queryset_by_timestamp(self)
 
 
-def _filter_or_none(sentiment_source, topic, model):
-    result = Sentiment.objects.filter(sentiment_source=sentiment_source, model=model, topic=topic).order_by('-timestamp')
+def _filter_or_none(sentiment_source, topic, model, from_comments):
+    result = Sentiment.objects.filter(sentiment_source=sentiment_source, model=model, topic=topic,
+                                      from_comments=from_comments).order_by('-timestamp')
     if result.exists():
         return result[:1][0]
     else:
@@ -42,11 +43,15 @@ def _filter_or_none(sentiment_source, topic, model):
 def _create_sentiment_result_dict(topic, model):
     return {
         'reddit':
-            _filter_or_none(sentiment_source=REDDIT, model=model, topic=topic),
+            _filter_or_none(sentiment_source=REDDIT, model=model, topic=topic, from_comments=False),
         'bitcointalk':
-            _filter_or_none(sentiment_source=BITCOINTALK, model=model, topic=topic),
+            _filter_or_none(sentiment_source=BITCOINTALK, model=model, topic=topic, from_comments=False),
         'twitter':
-            _filter_or_none(sentiment_source=TWITTER, model=model, topic=topic),
+            _filter_or_none(sentiment_source=TWITTER, model=model, topic=topic, from_comments=False),
+        'reddit_comments':
+            _filter_or_none(sentiment_source=REDDIT, model=model, topic=topic, from_comments=True),
+        'bitcointalk_comments':
+            _filter_or_none(sentiment_source=REDDIT, model=model, topic=topic, from_comments=True),
     }
 
 
