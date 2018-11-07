@@ -2,6 +2,7 @@ import os
 import logging
 import redis
 from apps.TA import deployment_type
+from settings import DEBUG
 
 SIMULATED_ENV = deployment_type == "LOCAL"
 # todo: use this to mark keys in redis db, so they can be separated and deleted
@@ -19,7 +20,8 @@ if deployment_type == "LOCAL":
 else:
     database = redis.from_url(os.environ.get("TA_REDIS_URL"))
 
-logger.info("Redis connection established for app database.")
-used_memory, max_memory = int(database.info()['used_memory']), int(database.info()['maxmemory'])
-max_memory_human = database.info()['maxmemory_human']
-logger.info(f"Redis currently consumes {round(100*used_memory/max_memory, 2)}% out of {max_memory_human}")
+if DEBUG:
+    logger.info("Redis connection established for app database.")
+    used_memory, system_memory = int(database.info()['used_memory']), int(database.info()['total_system_memory'])
+    system_memory_human = database.info()['total_system_memory_human']
+    logger.info(f"Redis currently consumes {round(100*used_memory/system_memory, 2)}% out of {system_memory_human}")

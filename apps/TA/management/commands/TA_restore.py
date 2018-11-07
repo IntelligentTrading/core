@@ -21,15 +21,14 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         logger.info("Starting TA restore script...")
 
-        start_datetime = datetime(2018, 2, 23, 12)
+        start_datetime = datetime(2018, 10, 25, 0)
         end_datetime = datetime.today()
 
         restore_db_to_redis(start_datetime, end_datetime)
 
         from apps.TA.management.commands.TA_fill_gaps import fill_data_gaps
-        while True:
-            fill_data_gaps()
-            time.sleep(60 * 60)  # 1 hour
+        fill_data_gaps(SQL_fill=True, force_fill=False)
+        fill_data_gaps(SQL_fill=False, force_fill=False)
 
 
 def restore_db_to_redis(start_datetime, end_datetime):
