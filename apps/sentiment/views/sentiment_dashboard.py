@@ -42,19 +42,6 @@ bitcointalk_url_infos = {
 }
 
 
-class SentimentClassification(ListAPIView):
-
-    permission_classes = (RestAPIPermission,)
-    pagination_class = StandardResultsSetPagination
-    serializer_class = SentimentSerializer
-    filter_fields = ('sentiment_source', 'topic', 'model', 'timestamp')
-
-    model = serializer_class.Meta.model
-
-    def get_queryset(self):
-        return filter_queryset_by_timestamp(self)
-
-
 def _filter_or_none(sentiment_source, topic, model, from_comments):
     result = Sentiment.objects.filter(sentiment_source=sentiment_source, model=model, topic=topic,
                                       from_comments=from_comments).order_by('-timestamp')
@@ -62,7 +49,6 @@ def _filter_or_none(sentiment_source, topic, model, from_comments):
         return result[:1][0]
     else:
         return None
-
 
 def _create_sentiment_result_dict(topic, model):
     return {
@@ -94,21 +80,6 @@ def sentiment_index(request):
             key = f'{topic.lower()}_{model_names[model]}'
             results[key] = _create_sentiment_result_dict(topic, model)
 
-
-    """
-
-    results = {
-        latest_data = Sentiment.objects.filter(sentiment_source=REDDIT, model=VADER, topic='BTC').order_by('-timestamp')[:1]
-        'btc_vader': {
-            'reddit': Sentiment.objects.filter(sentiment_source=REDDIT, model=VADER, topic='BTC').order_by('-timestamp')[:1][0],
-            'bitcointalk': latest_data[0],
-            'twitter': latest_data[0],
-        }
-    }
-
-    print(results)
-    # context = {'btc_reddit': latest_data[0]}
-    """
 
     context = {
         'result_data': results,

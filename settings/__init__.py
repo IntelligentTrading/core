@@ -99,6 +99,7 @@ INSTALLED_APPS = [
     'apps.backtesting',
     'apps.strategy',
     'apps.dashboard',
+    'apps.sentiment',
 
     # DJANGO APPS
     'django.contrib.admin',
@@ -247,19 +248,6 @@ SOURCE_CHOICES = (
     (HITBTC, 'hitbtc'),
 )
 
-(REDDIT, BITCOINTALK, TWITTER) = list(range(3))
-SENTIMENT_SOURCE_CHOICES = (
-    (REDDIT, 'reddit'),
-    (BITCOINTALK, 'bitcointalk'),
-    (TWITTER, 'twitter'),
-)
-
-(VADER, NN_SENTIMENT) = list(range(2))
-SENTIMENT_MODEL_CHOICES = (
-    (VADER, 'vader'),
-    (NN_SENTIMENT, 'nn_sentiment'),
-)
-
 
 # list of supported counter currencies
 COUNTER_CURRENCIES = ('BTC', 'ETH', 'USDT')
@@ -309,6 +297,22 @@ REST_FRAMEWORK = {
 }
 
 INFO_BOT_ADMIN_USERNAME = '' # Telegram info-bot admin disabled
+
+
+# Sentiment-related stuff
+
+(REDDIT, BITCOINTALK, TWITTER) = list(range(3))
+SENTIMENT_SOURCE_CHOICES = (
+    (REDDIT, 'reddit'),
+    (BITCOINTALK, 'bitcointalk'),
+    (TWITTER, 'twitter'),
+)
+
+(VADER, NN_SENTIMENT) = list(range(2))
+SENTIMENT_MODEL_CHOICES = (
+    (VADER, 'vader'),
+    (NN_SENTIMENT, 'nn_sentiment'),
+)
 
 
 if LOCAL:

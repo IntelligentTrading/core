@@ -8,7 +8,6 @@ from apps.common.utilities.sqs import send_sqs
 from apps.indicator.models.price_resampl import PriceResampl
 from apps.indicator.models.rsi import Rsi
 from apps.indicator.models.sma import Sma
-from apps.indicator.models.sentiment import Sentiment
 from apps.strategy.models.strategy_ref import get_all_strategy_classes
 from apps.user.models.user import get_horizon_value_from_string
 from settings import SHORT, MEDIUM, HORIZONS_TIME2NAMES, RUN_ANN, MODIFY_DB

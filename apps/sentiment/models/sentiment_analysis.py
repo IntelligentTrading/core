@@ -9,17 +9,16 @@ import logging
 import requests
 import tweepy
 from tweepy import OAuthHandler
-from apps.indicator.models.nn_sentiment import load_model_and_tokenizer, predict_sentiment
+from apps.sentiment.models.nn_sentiment import load_model_and_tokenizer, predict_sentiment
 import time
+from settings.local_settings import TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET, TWITTER_ACCESS_TOKEN, \
+    TWITTER_ACCESS_TOKEN_SECRET, REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_USER_AGENT
+
 
 logging.getLogger().setLevel(logging.INFO)
 
 ForumTopic = namedtuple('ForumTopic', 'headline comments')
 Score = namedtuple('Score', 'positive neutral negative compound')
-
-
-BITCOINTALK_BTC = 'https://bitcointalk.org/index.php?board=1.0;sort=last_post;desc'
-BITCOINTALK_ALT = 'https://bitcointalk.org/index.php?board=67.0;sort=last_post;desc'
 
 
 class SentimentDataSource(ABC):
@@ -43,9 +42,9 @@ class SentimentDataSource(ABC):
 class Subreddit(SentimentDataSource):
 
     def __init__(self, subreddit, max_topics=None, get_top=False, time_filter='day'):
-        self.reddit = praw.Reddit(client_id='fCrnCZjL30pPxQ',
-                     client_secret='qYiFNCI9n9oE9sQrWgGuf_dnnTc',
-                     user_agent='Majestic_Algae')
+        self.reddit = praw.Reddit(client_id=REDDIT_CLIENT_ID,
+                     client_secret=REDDIT_CLIENT_SECRET,
+                     user_agent=REDDIT_USER_AGENT)
         self.subreddit = subreddit
         self.max_topics = max_topics
         self.get_top = get_top
@@ -72,7 +71,7 @@ class Subreddit(SentimentDataSource):
 
 class Bitcointalk(SentimentDataSource):
 
-    def __init__(self, url=BITCOINTALK_BTC):
+    def __init__(self, url):
         self.url = url
 
     def retrieve_data(self):
@@ -126,10 +125,10 @@ class Bitcointalk(SentimentDataSource):
 class Twitter(SentimentDataSource):
 
     def __init__(self, search_query, num_tweets_to_retrieve):
-        consumer_key = 'jFUNgRVoe3dXAqI3lb2IDg2lC'
-        consumer_secret = 'FFefqZX20jHTtUTQAWPirNpBzW1MkkWsN4oWPJDBLz3KSzgdnL'
-        access_token = '1057931754596642816-BcqUSWU9G0wUrFysbIFLOl3tbi4qZw'
-        access_token_secret = 'd3GJrJkoDjX9oOGlS15C48m4lSgByRCyQqbcy0uJXZv3V'
+        consumer_key = TWITTER_CONSUMER_KEY
+        consumer_secret = TWITTER_CONSUMER_SECRET
+        access_token = TWITTER_ACCESS_TOKEN
+        access_token_secret = TWITTER_ACCESS_TOKEN_SECRET
 
         self.search_query = search_query
         self.num_tweets_to_retrieve = num_tweets_to_retrieve

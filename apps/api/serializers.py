@@ -3,7 +3,8 @@ import json
 from rest_framework import serializers
 
 from apps.signal.models import Signal
-from apps.indicator.models import AnnPriceClassification, EventsElementary, EventsLogical, PriceHistory, PriceResampl, Rsi, Sma, Volume, Price, Sentiment
+from apps.indicator.models import AnnPriceClassification, EventsElementary, EventsLogical, PriceHistory, PriceResampl, Rsi, Sma, Volume, Price
+from apps.sentiment.models import Sentiment
 
 
 # ResampledPrice (model: PriceResampl)

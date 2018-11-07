@@ -1,13 +1,9 @@
-from datetime import timedelta
 from django.db import models
 from unixtimestampfield.fields import UnixTimeStampField
-#from apps.channel.models.exchange_data import SOURCE_CHOICES
 from settings import SENTIMENT_SOURCE_CHOICES,SENTIMENT_MODEL_CHOICES, REDDIT, TWITTER, BITCOINTALK, NN_SENTIMENT, VADER
-from datetime import timedelta, datetime
-import pandas as pd
 import logging
-from settings import time_speed, MODIFY_DB
-from apps.indicator.models.sentiment_analysis import Subreddit, Twitter, Bitcointalk, LSTMSentimentAnalyzer, VaderSentimentAnalyzer
+from settings import MODIFY_DB
+from apps.sentiment.models.sentiment_analysis import Subreddit, Twitter, Bitcointalk, LSTMSentimentAnalyzer, VaderSentimentAnalyzer
 import numpy as np
 
 SUBREDDIT_BTC = 'BTC'
@@ -22,13 +18,6 @@ NUM_TWEETS = 10
 logger = logging.getLogger(__name__)
 
 class Sentiment(models.Model):
-    # (BTC, ETH, USDT, XMR) = list(range(4))
-    # COUNTER_CURRENCY_CHOICES = (
-    #     (BTC, 'BTC'),
-    #     (ETH, 'ETH'),
-    #     (USDT, 'USDT'),
-    #     (XMR, 'XMR'),
-    # )
     sentiment_source = models.SmallIntegerField(choices=SENTIMENT_SOURCE_CHOICES, null=False)
     topic = models.CharField(max_length=6, null=False, blank=False)
     model = models.SmallIntegerField(choices=SENTIMENT_MODEL_CHOICES, null=False)
@@ -131,8 +120,6 @@ class Sentiment(models.Model):
                 Sentiment._go_through_source(timestamp, twitter, TWITTER, 'alt', False)
             except Exception as e:
                 logging.error(f'Unable to go through Twitter: {str(e)}')
-
-
 
 
         logger.info("   ...All sentiment calculations have been done and saved.")
