@@ -10,9 +10,9 @@ SIMULATED_ENV = deployment_type == "LOCAL"
 logger = logging.getLogger('redis_db')
 
 if deployment_type == "LOCAL":
-    from settings.local_settings import redis_database_url
-    if redis_database_url:
-        database = redis.from_url(redis_database_url)
+    from settings.local_settings import TA_REDIS_URL
+    if TA_REDIS_URL:
+        database = redis.from_url(TA_REDIS_URL)
     else:
         REDIS_HOST, REDIS_PORT = "127.0.0.1:6379".split(":")
         pool = redis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, db=0)
@@ -22,6 +22,6 @@ else:
 
 if DEBUG:
     logger.info("Redis connection established for app database.")
-    used_memory, system_memory = int(database.info()['used_memory']), int(database.info()['total_system_memory'])
-    system_memory_human = database.info()['total_system_memory_human']
-    logger.info(f"Redis currently consumes {round(100*used_memory/system_memory, 2)}% out of {system_memory_human}")
+    used_memory, maxmemory = int(database.info()['used_memory']), int(database.info()['maxmemory'])
+    maxmemory_human = database.info()['maxmemory_human']
+    logger.info(f"Redis currently consumes {round(100*used_memory/maxmemory, 2)}% out of {maxmemory_human}")
