@@ -21,7 +21,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         logger.info("Starting TA restore script...")
 
-        start_datetime = datetime(2018, 10, 25, 0)
+        start_datetime = datetime(2018, 11, 7)
         end_datetime = datetime.today()
 
         restore_db_to_redis(start_datetime, end_datetime)
