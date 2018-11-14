@@ -62,26 +62,31 @@ class Sentiment(models.Model):
 
     @staticmethod
     def _go_through_source(timestamp, sentiment_data_source, sentiment_data_source_code, topic, include_comments):
-        lstm_analyzer = LSTMSentimentAnalyzer(sentiment_data_source)
-        Sentiment._create_instance_and_write(
-            timestamp, lstm_analyzer, NN_SENTIMENT, sentiment_data_source_code, topic, False
-        )
-
-        vader_analyzer = VaderSentimentAnalyzer(sentiment_data_source)
-        Sentiment._create_instance_and_write(
-            timestamp, vader_analyzer, VADER, sentiment_data_source_code, topic, False
-        )
-
-        if include_comments:
+        # process LSTM
+        try:
             lstm_analyzer = LSTMSentimentAnalyzer(sentiment_data_source)
             Sentiment._create_instance_and_write(
-                timestamp, lstm_analyzer, NN_SENTIMENT, sentiment_data_source_code, topic, True
+                timestamp, lstm_analyzer, NN_SENTIMENT, sentiment_data_source_code, topic, False
             )
+            if include_comments:
+                Sentiment._create_instance_and_write(
+                    timestamp, lstm_analyzer, NN_SENTIMENT, sentiment_data_source_code, topic, True
+                )
+        except Exception as e:
+            logger.error(f'Unable to process LSTM: {str(e)}')
 
+        # process Vader
+        try:
             vader_analyzer = VaderSentimentAnalyzer(sentiment_data_source)
             Sentiment._create_instance_and_write(
-                timestamp, vader_analyzer, VADER, sentiment_data_source_code, topic, True
+                timestamp, vader_analyzer, VADER, sentiment_data_source_code, topic, False
             )
+            if include_comments:
+                Sentiment._create_instance_and_write(
+                    timestamp, vader_analyzer, VADER, sentiment_data_source_code, topic, True
+                )
+        except Exception as e:
+            logger.error(f'Unable to process Vader: {str(e)}')
 
 
 
