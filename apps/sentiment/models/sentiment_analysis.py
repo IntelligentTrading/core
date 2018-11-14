@@ -11,7 +11,7 @@ import tweepy
 from tweepy import OAuthHandler
 from apps.sentiment.models.nn_sentiment import load_model_and_tokenizer, predict_sentiment
 import time
-from settings.local_settings import TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET, TWITTER_ACCESS_TOKEN, \
+from settings import TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET, TWITTER_ACCESS_TOKEN, \
     TWITTER_ACCESS_TOKEN_SECRET, REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_USER_AGENT
 
 
@@ -145,7 +145,7 @@ class Twitter(SentimentDataSource):
         self._topic_headlines = []
 
         try:
-            tweets = self.api.search(q=self.search_query, count=self.num_tweets_to_retrieve)
+            tweets = self.api.search(q=self.search_query, count=self.num_tweets_to_retrieve, lang='en', result_type='popular')
             retained_tweets = set([tweet.text for tweet in tweets])
             self._topic_headlines = list(retained_tweets)
             self._topics = [ForumTopic(headline, []) for headline in self._topic_headlines]
@@ -242,13 +242,6 @@ def vader_vs_lstm(text):
 
     print(f'LSTM:\n    {lstm_score.positive*100:.2f}% positive, {lstm_score.negative*100:.2f}% negative')
 
-
-if __name__ == '__main__':
-    subreddit = Subreddit('CryptoCurrency', max_topics=10)
-    analyzer = LSTMSentimentAnalyzer(subreddit)
-    print(analyzer.to_dataframe().head())
-    print(analyzer.calculate_current_mean_headline_sentiment())
-    print(analyzer.calculate_current_mean_topic_sentiment())
 
 
 

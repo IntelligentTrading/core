@@ -87,39 +87,38 @@ class Sentiment(models.Model):
 
     @staticmethod
     def compute_all(timestamp):
-        if True:
-            try:
-                # go through Reddit
-                logging.info(' >>>>>> Processing Reddit sentiment...')
-                subreddit = Subreddit(SUBREDDIT_BTC, max_topics=MAX_TOPICS)
-                Sentiment._go_through_source(timestamp, subreddit, REDDIT, 'BTC', True)
+        try:
+            # go through Reddit
+            logging.info(' >>>>>> Processing Reddit sentiment...')
+            subreddit = Subreddit(SUBREDDIT_BTC, max_topics=MAX_TOPICS)
+            Sentiment._go_through_source(timestamp, subreddit, REDDIT, 'BTC', True)
 
-                subreddit = Subreddit(SUBREDDIT_CRYPTO, max_topics=MAX_TOPICS)
-                Sentiment._go_through_source(timestamp, subreddit, REDDIT, 'alt', True)
-            except Exception as e:
-                logging.error(f'Unable to go through Reddit: {str(e)}')
+            subreddit = Subreddit(SUBREDDIT_CRYPTO, max_topics=MAX_TOPICS)
+            Sentiment._go_through_source(timestamp, subreddit, REDDIT, 'alt', True)
+        except Exception as e:
+            logging.error(f'Unable to go through Reddit: {str(e)}')
 
-            try:
-                logging.info('>>>>> Processing Bitcointalk sentiment...')
-                # go through Bitcointalk
-                bitcointalk = Bitcointalk(BITCOINTALK_BTC)
-                Sentiment._go_through_source(timestamp, bitcointalk, BITCOINTALK, 'BTC', True)
+        try:
+            logging.info('>>>>> Processing Bitcointalk sentiment...')
+            # go through Bitcointalk
+            bitcointalk = Bitcointalk(BITCOINTALK_BTC)
+            Sentiment._go_through_source(timestamp, bitcointalk, BITCOINTALK, 'BTC', True)
 
-                bitcointalk = Bitcointalk(BITCOINTALK_ALT)
-                Sentiment._go_through_source(timestamp, bitcointalk, BITCOINTALK, 'alt', True)
-            except Exception as e:
-                logging.error(f'Unable to go through Bitcointalk: {str(e)}')
+            bitcointalk = Bitcointalk(BITCOINTALK_ALT)
+            Sentiment._go_through_source(timestamp, bitcointalk, BITCOINTALK, 'alt', True)
+        except Exception as e:
+            logging.error(f'Unable to go through Bitcointalk: {str(e)}')
 
-            try:
-                logging.info('>>>>> Processing Twitter sentiment...')
-                # go through Twitter
-                twitter = Twitter(TWITTER_BTC_SEARCH_QUERY, NUM_TWEETS)
-                Sentiment._go_through_source(timestamp, twitter, TWITTER, 'BTC', False)
+        try:
+            logging.info('>>>>> Processing Twitter sentiment...')
+            # go through Twitter
+            twitter = Twitter(TWITTER_BTC_SEARCH_QUERY, NUM_TWEETS)
+            Sentiment._go_through_source(timestamp, twitter, TWITTER, 'BTC', False)
 
-                twitter = Twitter(TWITTER_ALT_SEARCH_QUERY, NUM_TWEETS)
-                Sentiment._go_through_source(timestamp, twitter, TWITTER, 'alt', False)
-            except Exception as e:
-                logging.error(f'Unable to go through Twitter: {str(e)}')
+            twitter = Twitter(TWITTER_ALT_SEARCH_QUERY, NUM_TWEETS)
+            Sentiment._go_through_source(timestamp, twitter, TWITTER, 'alt', False)
+        except Exception as e:
+            logging.error(f'Unable to go through Twitter: {str(e)}')
 
 
         logger.info("   ...All sentiment calculations have been done and saved.")
