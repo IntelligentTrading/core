@@ -50,3 +50,4 @@ nltk
 tweepy
 bs4
 praw
+sklearn
