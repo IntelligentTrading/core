@@ -143,6 +143,8 @@ def _compute_indicators_for(source, transaction_currency, counter_currency, resa
         logger.error(
             f">>>>{quad_formatted(source, transaction_currency, counter_currency, resample_period)} -> RESAMPLE EXCEPTION: {e}")
 
+
+
     # 2 ###########################
     # calculate and save simple indicators
     indicators_list = [Sma, Rsi]

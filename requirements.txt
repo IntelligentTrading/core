@@ -46,3 +46,8 @@ tensorflow
 keras
 h5py
 scipy
+nltk
+tweepy
+bs4
+praw
+sklearn

@@ -99,6 +99,7 @@ INSTALLED_APPS = [
     'apps.backtesting',
     'apps.strategy',
     'apps.dashboard',
+    'apps.sentiment',
 
     # DJANGO APPS
     'django.contrib.admin',
@@ -283,6 +284,7 @@ EMIT_SMA = True
 EMIT_RSI = True
 RUN_ANN = True  # temporarily, while I am thinking :)
 RUN_BEN = True
+RUN_SENTIMENT = True
 MODIFY_DB = True
 
 EMIT_SIGNALS = os.environ.get("EMIT_SIGNALS", "true").lower() == "true" # emit if no variable set or when it set to 'true', env variables are strings
@@ -296,6 +298,22 @@ REST_FRAMEWORK = {
 }
 
 INFO_BOT_ADMIN_USERNAME = '' # Telegram info-bot admin disabled
+
+
+# Sentiment-related stuff
+
+(REDDIT, BITCOINTALK, TWITTER) = list(range(3))
+SENTIMENT_SOURCE_CHOICES = (
+    (REDDIT, 'reddit'),
+    (BITCOINTALK, 'bitcointalk'),
+    (TWITTER, 'twitter'),
+)
+
+(VADER, NN_SENTIMENT) = list(range(2))
+SENTIMENT_MODEL_CHOICES = (
+    (VADER, 'vader'),
+    (NN_SENTIMENT, 'nn_sentiment'),
+)
 
 
 if LOCAL:
