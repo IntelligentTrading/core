@@ -1,17 +1,19 @@
-from abc import ABC, abstractmethod
-from collections import namedtuple
-from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
-from bs4 import BeautifulSoup
+#import nltk
+#nltk.download('vader_lexicon')
+import time
+import pickle
 import numpy as np
 import praw
 import pandas as pd
 import logging
 import requests
 import tweepy
+from abc import ABC, abstractmethod
+from collections import namedtuple
+from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
+from bs4 import BeautifulSoup
 from tweepy import OAuthHandler
 from apps.sentiment.models.nn_sentiment import load_model_and_tokenizer, predict_sentiment
-import time
-import pickle
 from settings import SENTIMENT_TWITTER_CONSUMER_KEY, SENTIMENT_TWITTER_CONSUMER_SECRET, SENTIMENT_TWITTER_ACCESS_TOKEN, \
     SENTIMENT_TWITTER_ACCESS_TOKEN_SECRET, SENTIMENT_REDDIT_CLIENT_ID, SENTIMENT_REDDIT_CLIENT_SECRET, SENTIMENT_REDDIT_USER_AGENT
 from apps.common.utilities.s3 import download_file_from_s3
