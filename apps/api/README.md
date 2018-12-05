@@ -14,10 +14,10 @@ ITF RESTful API uses simple [token-based HTTP Authentication scheme](https://www
 For clients to authenticate, the token key should be included in the Authorization HTTP header.
 The key should be prefixed by the string literal "Token", with whitespace separating the two strings.
 For example:
-Authorization: Token 725ea582f6f214bdc8d21437ebd8a13f9717cc56
+`Authorization: Token 725ea582f6f214bdc8d21437ebd8a13f9717cc56`
 
 To create token use Custom Django Management Command:
-python manage.py generate_api_token username user_telegram_id
+`python manage.py generate_api_token username user_telegram_id`
 
 ## Requirements
 
