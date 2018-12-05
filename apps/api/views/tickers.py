@@ -2,8 +2,8 @@ from datetime import timedelta, datetime
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-
-from apps.api.permissions import RestAPIPermission
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 from settings import EXCHANGE_MARKETS, COUNTER_CURRENCIES
 
@@ -30,7 +30,8 @@ class TransactionCurrenciesView(APIView):
         /api/v2/tickers/transaction-currencies?transaction_currency=LTC # sources and counter_currencies for LTC
     '''
 
-    permission_classes = (RestAPIPermission, )
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request, format=None):
         exchange = request.query_params.get('exchange', None)
@@ -61,7 +62,8 @@ class ExchangesView(APIView):
     /api/v2/tickers/exchanges
     '''
 
-    permission_classes = (RestAPIPermission, )
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request, format=None):
         return Response(EXCHANGE_MARKETS)
@@ -73,7 +75,8 @@ class CounterCurrenciesView(APIView):
     /api/v2/tickers/counter-currencies
     '''
 
-    permission_classes = (RestAPIPermission, )
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request, format=None):
         temporary_disable_in_api = ["ETH",]

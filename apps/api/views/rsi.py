@@ -1,8 +1,9 @@
 from rest_framework.generics import ListAPIView
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 from apps.api.helpers import filter_queryset_by_timestamp, queryset_for_list_with_resample_period
 from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
-from apps.api.permissions import RestAPIPermission
 from apps.api.serializers import RsiSerializer
 
 
@@ -34,7 +35,8 @@ class ListRsis(ListAPIView):
         /api/v2/rsi/?startdate=2018-02-10T22:14:37&enddate=2018-01-26T11:08:30
     """
 
-    permission_classes = (RestAPIPermission, )
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
     pagination_class = StandardResultsSetPagination
     serializer_class = RsiSerializer
 
@@ -73,7 +75,8 @@ class ListRsi(ListAPIView):
         /api/v2/rsi/BTC?counter_currency=2&startdate=2018-01-26T11:08:30
     """
 
-    permission_classes = (RestAPIPermission, )
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
     serializer_class = RsiSerializer
     pagination_class = OneRecordPagination
 

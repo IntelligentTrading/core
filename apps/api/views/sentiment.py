@@ -1,7 +1,8 @@
 from rest_framework.generics import ListAPIView
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 from apps.api.serializers import SentimentSerializer
-from apps.api.permissions import RestAPIPermission
 from apps.api.paginations import StandardResultsSetPagination
 
 from apps.api.helpers import filter_queryset_by_timestamp
@@ -10,7 +11,8 @@ from apps.api.helpers import filter_queryset_by_timestamp
 
 class SentimentClassification(ListAPIView):
 
-    permission_classes = (RestAPIPermission,)
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
     pagination_class = StandardResultsSetPagination
     serializer_class = SentimentSerializer
     filter_fields = ('sentiment_source', 'topic', 'model', 'timestamp')

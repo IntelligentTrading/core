@@ -8,8 +8,16 @@ For development and testing start API webserver with command:
 
 Add `web: waitress-serve --port=$PORT settings.wsgi:application` to Procfile if you use heroku.
 
-For accessing API on Stage or Production environment set API-KEY parameter in request header.
-For LOCAL testing environment API-KEY parameter not needed (set REST_API_SECRET_KEY='' in local_settings.py)
+
+ITF RESTful API uses simple [token-based HTTP Authentication scheme](https://www.django-rest-framework.org/api-guide/authentication/#tokenauthentication)
+
+For clients to authenticate, the token key should be included in the Authorization HTTP header.
+The key should be prefixed by the string literal "Token", with whitespace separating the two strings.
+For example:
+Authorization: Token 725ea582f6f214bdc8d21437ebd8a13f9717cc56
+
+To create token use Custom Django Management Command:
+python manage.py generate_api_token username user_telegram_id
 
 ## Requirements
 

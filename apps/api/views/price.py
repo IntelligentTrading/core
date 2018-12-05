@@ -1,9 +1,9 @@
 from rest_framework import exceptions
-
 from rest_framework.generics import ListAPIView
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 from apps.api.serializers import PriceSerializer
-from apps.api.permissions import RestAPIPermission
 from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
 
 from apps.api.helpers import filter_queryset_by_timestamp_history, queryset_for_list_without_resample_period
@@ -37,7 +37,8 @@ class ListPrices(ListAPIView):
         /api/v2/prices/?source=0&transaction_currency=ETH&counter_currency=0&startdate=2018-01-26T10:24:37&enddate=2018-01-26T10:59:02
     """
 
-    permission_classes = (RestAPIPermission, )
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
     pagination_class = StandardResultsSetPagination
     serializer_class = PriceSerializer
 
@@ -82,7 +83,8 @@ class ListPrice(ListAPIView):
         /api/v2/prices/ETH?counter_currency=2 # ETH in USDT
     """
 
-    permission_classes = (RestAPIPermission, )
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
     serializer_class = PriceSerializer
     pagination_class = OneRecordPagination
 

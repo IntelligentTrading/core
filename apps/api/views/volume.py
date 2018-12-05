@@ -1,7 +1,9 @@
+from rest_framework import exceptions
 from rest_framework.generics import ListAPIView
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 from apps.api.serializers import VolumeSerializer
-from apps.api.permissions import RestAPIPermission
 from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
 
 from apps.api.helpers import filter_queryset_by_timestamp_history, queryset_for_list_without_resample_period
@@ -36,7 +38,8 @@ class ListVolumes(ListAPIView):
         /api/v2/volumes/?transaction_currency=ETH&counter_currency=0&startdate=2018-02-10T22:14:37&enddate=2018-02-10T22:27:58
     """
 
-    permission_classes = (RestAPIPermission, )
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
     serializer_class = VolumeSerializer
     pagination_class = StandardResultsSetPagination
 
@@ -78,7 +81,8 @@ class ListVolume(ListAPIView):
         /api/v2/volumes/ETH # ETH in BTC
         /api/v2/volumes/ETH?counter_currency=2 # ETH in USDT
     """
-    permission_classes = (RestAPIPermission, )
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
     serializer_class = VolumeSerializer
     pagination_class = OneRecordPagination
 

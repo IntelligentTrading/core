@@ -1,8 +1,9 @@
 from rest_framework.generics import ListAPIView
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 from apps.api.helpers import filter_queryset_by_timestamp, queryset_for_list_with_resample_period
 from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
-from apps.api.permissions import RestAPIPermission
 from apps.api.serializers import SignalSerializer
 
 
@@ -38,7 +39,8 @@ class ListSignals(ListAPIView):
         /api/v2/signals/?transaction_currency=ETH&signal=RSI
         /api/v2/signals/?startdate=2018-02-10T22:14:37&enddate=2018-02-10T22:27:58
     """
-    permission_classes = (RestAPIPermission, )
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
     serializer_class = SignalSerializer
     pagination_class = StandardResultsSetPagination
 
@@ -84,7 +86,8 @@ class ListSignal(ListAPIView):
         /api/v2/signals/ETH
         /api/v2/signals/ETH?signal=RSI
     """
-    permission_classes = (RestAPIPermission, )
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
     serializer_class = SignalSerializer
     pagination_class = OneRecordPagination
 

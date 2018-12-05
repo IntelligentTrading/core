@@ -1,8 +1,9 @@
 from rest_framework.generics import ListAPIView
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 from apps.api.helpers import filter_queryset_by_timestamp, queryset_for_list_with_resample_period
 from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
-from apps.api.permissions import RestAPIPermission
 from apps.api.serializers import EventsElementarySerializer
 
 
@@ -34,7 +35,8 @@ class ListEventsElementary(ListAPIView):
         /api/v2/events-elementary/?startdate=2018-02-10T22:14:37&enddate=2018-02-10T22:27:58
     """
 
-    permission_classes = (RestAPIPermission, )
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
     pagination_class = StandardResultsSetPagination
     serializer_class = EventsElementarySerializer
     filter_fields = ('source', 'resample_period', 'transaction_currency', 'counter_currency', 'event_name')
@@ -71,7 +73,8 @@ class ListEventElementary(ListAPIView):
         /api/v2/events-elementary/BTC?event_name=conversion_below_base
     """
 
-    permission_classes = (RestAPIPermission, )
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
     serializer_class = EventsElementarySerializer
     pagination_class =  OneRecordPagination
 
