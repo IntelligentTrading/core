@@ -1,10 +1,20 @@
+from datetime import datetime, timedelta
+
+from apps.signal.models import Signal
+
+from django.db.models import Count
+
 from rest_framework.generics import ListAPIView
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 from apps.api.helpers import filter_queryset_by_timestamp, queryset_for_list_with_resample_period
 from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
 from apps.api.serializers import SignalSerializer
+
+
 
 
 class ListSignals(ListAPIView):
@@ -59,7 +69,7 @@ class ListSignals(ListAPIView):
 
 class ListSignal(ListAPIView):
     """Return list of signals for {transaction_currency}.
-    
+
     /api/v2/signals/{transaction_currency}
 
     URL query parameters
@@ -98,3 +108,36 @@ class ListSignal(ListAPIView):
     def get_queryset(self):
         queryset = queryset_for_list_with_resample_period(self)
         return queryset
+
+
+class CoinsWithMostSignals(ListAPIView):
+    """Return list of signals ordered by number of emitted signals.
+
+    /api/v2/signals/coins-with-most-signals/
+
+    URL query parameters:
+
+        maxresults -- the maximum number of records retrieved. Default 10.
+        timeframe -- number of hours past from now. Default 1.
+
+    Examples:
+
+        /api/v2/signals/coins-with-most-signals/?maxresults=20&timeframe=24
+
+    """
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, format=None):
+        maxresults = int(request.query_params.get('maxresults', 10))
+        timeframe = int(request.query_params.get('timeframe', 1))
+        return Response(get_coins_with_most_signals(maxresults, timeframe))
+
+
+# Helpers methods
+def get_coins_with_most_signals(maxresults, timeframe):
+    dtimeframe = datetime.now() - timedelta(hours=int(timeframe))
+    return Signal.objects.values('transaction_currency')\
+            .annotate(signal_counts=Count('*'))\
+            .order_by('-signal_counts')\
+            .filter(timestamp__gte=dtimeframe)[:maxresults]

@@ -30,6 +30,7 @@ urlpatterns = [
 
 #   url(r'^sma$', views.sma.SMA.as_view(), name='sma'),
 
+    url(r'^v2/signals/coins-with-most-signals/$', signal.CoinsWithMostSignals.as_view(), name='coins-with-most-signals'),
     url(r'^v2/signals/$', signal.ListSignals.as_view(), name='signals'), 
     #url(r'^v2/signals/(?P<transaction_currency>.+)$', signal.ListSignal.as_view(), name='signal'),
 
