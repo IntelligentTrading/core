@@ -2,7 +2,6 @@ from rest_framework.generics import ListAPIView
 
 from apps.api.helpers import filter_queryset_by_timestamp, queryset_for_list_with_resample_period
 from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
-from apps.api.permissions import RestAPIPermission
 from apps.api.serializers import ResampledPriceSerializer
 
 
@@ -36,8 +35,7 @@ class ListPrices(ListAPIView):
         /api/v2/resampled-prices/?startdate=2018-01-26T10:24:37&enddate=2018-01-26T10:59:02
         /api/v2/resampled-prices/?transaction_currency=ETH&counter_currency=0&resample_period=60
     """
-     
-    permission_classes = (RestAPIPermission, )
+
     pagination_class = StandardResultsSetPagination
     serializer_class = ResampledPriceSerializer
 
@@ -82,7 +80,6 @@ class ListPrice(ListAPIView):
         /api/v2/resampled-prices/ETH?counter_currency=2 # ETH in USDT
     """
 
-    permission_classes = (RestAPIPermission, )
     serializer_class = ResampledPriceSerializer
     pagination_class = OneRecordPagination
 

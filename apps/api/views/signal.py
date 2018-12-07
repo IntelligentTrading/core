@@ -1,8 +1,15 @@
+from datetime import datetime, timedelta
+
+from apps.signal.models import Signal
+
+from django.db.models import Count, Avg, IntegerField, Sum
+from django.db.models.functions import Cast
+
 from rest_framework.generics import ListAPIView
+from rest_framework.response import Response
 
 from apps.api.helpers import filter_queryset_by_timestamp, queryset_for_list_with_resample_period
 from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
-from apps.api.permissions import RestAPIPermission
 from apps.api.serializers import SignalSerializer
 
 
@@ -38,7 +45,6 @@ class ListSignals(ListAPIView):
         /api/v2/signals/?transaction_currency=ETH&signal=RSI
         /api/v2/signals/?startdate=2018-02-10T22:14:37&enddate=2018-02-10T22:27:58
     """
-    permission_classes = (RestAPIPermission, )
     serializer_class = SignalSerializer
     pagination_class = StandardResultsSetPagination
 
@@ -57,7 +63,7 @@ class ListSignals(ListAPIView):
 
 class ListSignal(ListAPIView):
     """Return list of signals for {transaction_currency}.
-    
+
     /api/v2/signals/{transaction_currency}
 
     URL query parameters
@@ -84,7 +90,7 @@ class ListSignal(ListAPIView):
         /api/v2/signals/ETH
         /api/v2/signals/ETH?signal=RSI
     """
-    permission_classes = (RestAPIPermission, )
+
     serializer_class = SignalSerializer
     pagination_class = OneRecordPagination
 
@@ -95,3 +101,43 @@ class ListSignal(ListAPIView):
     def get_queryset(self):
         queryset = queryset_for_list_with_resample_period(self)
         return queryset
+
+
+class CoinsWithMostSignals(ListAPIView):
+    """Return list of coins ordered by number of emitted signals.
+
+    /api/v2/signals/coins-with-most-signals/
+
+    URL query parameters:
+
+        maxresults -- the maximum number of records retrieved. Default 10.
+        timeframe -- number of hours past from start. Default 1.
+        start -- last, from last signal, now, from now. Default last.
+
+    Examples:
+
+        /api/v2/signals/coins-with-most-signals/?maxresults=20&timeframe=24&start=now
+    """
+
+    def get(self, request, format=None):
+        maxresults = int(request.query_params.get('maxresults', 10))
+        timeframe = int(request.query_params.get('timeframe', 1))
+        start = request.query_params.get('timeframe', 'last')
+        return Response(get_coins_with_most_signals(maxresults, timeframe, start))
+
+
+# Helpers methods
+def get_coins_with_most_signals(maxresults, timeframe, start):
+    if start == 'now':
+        from_date = datetime.now()
+    else:
+        from_date = Signal.objects.values('timestamp')\
+            .order_by('-timestamp')[0]['timestamp']
+    dtimeframe = from_date - timedelta(hours=int(timeframe))
+
+    return Signal.objects.values('transaction_currency')\
+            .annotate(signal_counts=Count('*'))\
+            .annotate(average_trend=Avg(Cast('trend', IntegerField())))\
+            .order_by('-signal_counts')\
+            .filter(timestamp__gte=dtimeframe)[:maxresults]
+

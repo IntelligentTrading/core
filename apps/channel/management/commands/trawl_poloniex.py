@@ -10,6 +10,7 @@ from settings import time_speed  # 1 / 10
 from taskapp.helpers.poloniex import _pull_poloniex_data
 from taskapp.helpers.indicators import _compute_indicators_for, _compute_ann
 from taskapp.helpers.backtesting import _backtest_all_strategies
+from taskapp.helpers.sentiment_analysis import _analyze_sentiment
 from taskapp.helpers.common import get_currency_pairs
 
 
@@ -49,6 +50,10 @@ class Command(BaseCommand):
 
         elif arg == 'backtest':
             _backtest_all_strategies()
+
+        elif arg == 'sentiment':
+            _analyze_sentiment()
+
 
         else:
             print(textwrap.dedent("""How to use:

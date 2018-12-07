@@ -1,7 +1,6 @@
 from rest_framework.generics import ListAPIView
 
 from apps.api.serializers import EventsLogicalSerializer
-from apps.api.permissions import RestAPIPermission
 from apps.api.paginations import StandardResultsSetPagination
 
 from apps.api.helpers import filter_queryset_by_timestamp  # , queryset_for_list_with_resample_period
@@ -35,7 +34,6 @@ class ListEventsLogical(ListAPIView):
         /api/v2/events-logical/?event_name=kumo_breakout_up_signal&source=0&transaction_currency=ZEC&resample_period=60&startdate=2018-06-14T01:00:00
     """
 
-    permission_classes = (RestAPIPermission,)
     pagination_class = StandardResultsSetPagination
     serializer_class = EventsLogicalSerializer
     filter_fields = ('source', 'resample_period', 'transaction_currency', 'counter_currency', 'event_name')
