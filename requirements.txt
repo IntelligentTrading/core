@@ -46,3 +46,8 @@ tensorflow
 keras
 h5py
 scipy
+
+nltk==3.3
+tweepy==3.6.0
+beautifulsoup4==4.6.3
+praw==6.0.0
