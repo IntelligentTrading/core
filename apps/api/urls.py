@@ -63,7 +63,6 @@ urlpatterns = [
     url(r'^v2/ann-price-classification/$', ann_price_classification.ListAnnPriceClassification.as_view(), name='ann-price-classification'),
 
     url(r'^v2/sentiment/$', sentiment.SentimentClassification.as_view(), name='sentiment'),
-    url(r'^v2/sentiment-dashboard/$', sentiment.sentiment_index, name='sentiment'),
 
      url(r'^v2/sma/$', sma.ListSma.as_view(), name='sma'),
 

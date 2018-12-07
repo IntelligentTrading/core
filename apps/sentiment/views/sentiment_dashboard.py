@@ -1,14 +1,7 @@
-from rest_framework.generics import ListAPIView
-
-from apps.api.serializers import SentimentSerializer
-from apps.api.permissions import RestAPIPermission
-from apps.api.paginations import StandardResultsSetPagination
-
-from apps.api.helpers import filter_queryset_by_timestamp
+from django.shortcuts import render
+from django.views.generic import View
 from settings import REDDIT, BITCOINTALK, TWITTER, VADER, NN_SENTIMENT
 from apps.sentiment.models.sentiment import SUBREDDIT_BTC, SUBREDDIT_CRYPTO, TWITTER_ALT_SEARCH_QUERY, TWITTER_BTC_SEARCH_QUERY, BITCOINTALK_BTC, BITCOINTALK_ALT
-
-from django.shortcuts import render
 from apps.sentiment.models.sentiment import Sentiment
 
 model_names = {
@@ -40,6 +33,14 @@ bitcointalk_url_infos = {
     'BTC': BITCOINTALK_BTC,
     'alt': BITCOINTALK_ALT
 }
+
+class SentimentDashboard(View):
+  def dispatch(self, request, *args, **kwargs):
+    return super(SentimentDashboard, self).dispatch(request, *args, **kwargs)
+
+  def get(self, request):
+    context = {}
+    return sentiment_index(request, 'market.html', context)
 
 
 def _filter_or_none(sentiment_source, topic, model, from_comments):

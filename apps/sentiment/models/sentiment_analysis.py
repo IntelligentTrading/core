@@ -11,9 +11,12 @@ import tweepy
 from tweepy import OAuthHandler
 from apps.sentiment.models.nn_sentiment import load_model_and_tokenizer, predict_sentiment
 import time
-from settings.local_settings import TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET, TWITTER_ACCESS_TOKEN, \
-    TWITTER_ACCESS_TOKEN_SECRET, REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_USER_AGENT
-
+import pickle
+from settings import SENTIMENT_TWITTER_CONSUMER_KEY, SENTIMENT_TWITTER_CONSUMER_SECRET, SENTIMENT_TWITTER_ACCESS_TOKEN, \
+    SENTIMENT_TWITTER_ACCESS_TOKEN_SECRET, SENTIMENT_REDDIT_CLIENT_ID, SENTIMENT_REDDIT_CLIENT_SECRET, SENTIMENT_REDDIT_USER_AGENT
+from apps.common.utilities.s3 import download_file_from_s3
+from settings import LOCAL
+from keras.models import load_model
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -42,9 +45,9 @@ class SentimentDataSource(ABC):
 class Subreddit(SentimentDataSource):
 
     def __init__(self, subreddit, max_topics=None, get_top=False, time_filter='day'):
-        self.reddit = praw.Reddit(client_id=REDDIT_CLIENT_ID,
-                     client_secret=REDDIT_CLIENT_SECRET,
-                     user_agent=REDDIT_USER_AGENT)
+        self.reddit = praw.Reddit(client_id=SENTIMENT_REDDIT_CLIENT_ID,
+                                  client_secret=SENTIMENT_REDDIT_CLIENT_SECRET,
+                                  user_agent=SENTIMENT_REDDIT_USER_AGENT)
         self.subreddit = subreddit
         self.max_topics = max_topics
         self.get_top = get_top
@@ -125,10 +128,10 @@ class Bitcointalk(SentimentDataSource):
 class Twitter(SentimentDataSource):
 
     def __init__(self, search_query, num_tweets_to_retrieve):
-        consumer_key = TWITTER_CONSUMER_KEY
-        consumer_secret = TWITTER_CONSUMER_SECRET
-        access_token = TWITTER_ACCESS_TOKEN
-        access_token_secret = TWITTER_ACCESS_TOKEN_SECRET
+        consumer_key = SENTIMENT_TWITTER_CONSUMER_KEY
+        consumer_secret = SENTIMENT_TWITTER_CONSUMER_SECRET
+        access_token = SENTIMENT_TWITTER_ACCESS_TOKEN
+        access_token_secret = SENTIMENT_TWITTER_ACCESS_TOKEN_SECRET
 
         self.search_query = search_query
         self.num_tweets_to_retrieve = num_tweets_to_retrieve
@@ -145,7 +148,7 @@ class Twitter(SentimentDataSource):
         self._topic_headlines = []
 
         try:
-            tweets = self.api.search(q=self.search_query, count=self.num_tweets_to_retrieve)
+            tweets = self.api.search(q=self.search_query, count=self.num_tweets_to_retrieve, lang='en', result_type='popular')
             retained_tweets = set([tweet.text for tweet in tweets])
             self._topic_headlines = list(retained_tweets)
             self._topics = [ForumTopic(headline, []) for headline in self._topic_headlines]
@@ -221,15 +224,41 @@ class VaderSentimentAnalyzer(SentimentAnalyzer):
 
 
 class LSTMSentimentAnalyzer(SentimentAnalyzer):
+    model = None
+    tokenizer = None
 
     def __init__(self, sentiment_data_source):
         super(LSTMSentimentAnalyzer, self).__init__(sentiment_data_source)
-        self.model, self.tokenizer = load_model_and_tokenizer()
+        if self.model is None or self.tokenizer is None:
+            if not LOCAL:
+                self.model, self.tokenizer = load_model_and_tokenizer_from_s3()
+            else:
+                self.model, self.tokenizer = load_model_and_tokenizer()
 
     def _calculate_score(self, text):
         weights = predict_sentiment(text, self.model, self.tokenizer)
         return Score(positive=weights[1], neutral=np.nan,
                      negative=weights[0], compound=np.nan)
+
+
+def load_model_and_tokenizer_from_s3():
+    model_filename = 'sentiment_lstm_model.h5'
+    tokenizer_filename = 'sentiment_tokenizer.pkl'
+    try:
+        download_file_from_s3(model_filename)
+        model = load_model('sentiment_lstm_model.h5')
+    except Exception as e:
+        logging.error(f'Unable to load sentiment model: {str(e)}')
+
+    try:
+        download_file_from_s3(tokenizer_filename)
+        with open(tokenizer_filename, 'rb') as handle:
+            tokenizer = pickle.load(handle)
+    except Exception as e:
+        logging.error(f'Unable to load sentiment tokenizer: {str(e)}')
+
+    return model, tokenizer
+
 
 def vader_vs_lstm(text):
     vader = VaderSentimentAnalyzer(None)
@@ -242,13 +271,6 @@ def vader_vs_lstm(text):
 
     print(f'LSTM:\n    {lstm_score.positive*100:.2f}% positive, {lstm_score.negative*100:.2f}% negative')
 
-
-if __name__ == '__main__':
-    subreddit = Subreddit('CryptoCurrency', max_topics=10)
-    analyzer = LSTMSentimentAnalyzer(subreddit)
-    print(analyzer.to_dataframe().head())
-    print(analyzer.calculate_current_mean_headline_sentiment())
-    print(analyzer.calculate_current_mean_topic_sentiment())
 
 
 
