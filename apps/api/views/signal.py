@@ -2,7 +2,8 @@ from datetime import datetime, timedelta
 
 from apps.signal.models import Signal
 
-from django.db.models import Count
+from django.db.models import Count, Avg, IntegerField, Sum
+from django.db.models.functions import Cast
 
 from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
@@ -98,6 +99,7 @@ class ListSignal(ListAPIView):
     """
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
+
     serializer_class = SignalSerializer
     pagination_class = OneRecordPagination
 
@@ -119,25 +121,39 @@ class CoinsWithMostSignals(ListAPIView):
 
         maxresults -- the maximum number of records retrieved. Default 10.
         timeframe -- number of hours past from now. Default 1.
+        start -- now, from now; last, from last signal. Default last.
 
     Examples:
 
-        /api/v2/signals/coins-with-most-signals/?maxresults=20&timeframe=24
-
+        /api/v2/signals/coins-with-most-signals/?maxresults=20&timeframe=24%start=now
     """
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
+    # # Disable authentification
+    # authentication_classes = ()
+    # permission_classes = ()
+
+
     def get(self, request, format=None):
         maxresults = int(request.query_params.get('maxresults', 10))
         timeframe = int(request.query_params.get('timeframe', 1))
-        return Response(get_coins_with_most_signals(maxresults, timeframe))
+        start = request.query_params.get('timeframe', 'last')
+        return Response(get_coins_with_most_signals(maxresults, timeframe, start))
 
 
 # Helpers methods
-def get_coins_with_most_signals(maxresults, timeframe):
-    dtimeframe = datetime.now() - timedelta(hours=int(timeframe))
+def get_coins_with_most_signals(maxresults, timeframe, start):
+    if start == 'now':
+        from_date = datetime.now()
+    else:
+        from_date = Signal.objects.values('timestamp')\
+            .order_by('-timestamp')[0]['timestamp']
+    dtimeframe = from_date - timedelta(hours=int(timeframe))
+
     return Signal.objects.values('transaction_currency')\
             .annotate(signal_counts=Count('*'))\
+            .annotate(average_trend=Avg(Cast('trend', IntegerField())))\
             .order_by('-signal_counts')\
             .filter(timestamp__gte=dtimeframe)[:maxresults]
+
