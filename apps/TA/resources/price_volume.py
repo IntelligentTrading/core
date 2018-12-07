@@ -5,7 +5,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage
-from apps.api.permissions import RestAPIPermission
 from settings import DEBUG
 
 # ["open_price", "close_price", "low_price", "high_price",
@@ -16,7 +15,9 @@ logger = logging.getLogger(__name__)
 
 
 class PriceVolumeAPI(APIView):
-    permission_classes = (RestAPIPermission,) if not DEBUG else ()
+    if DEBUG:
+        authentication_classes = ()
+        permission_classes = ()
 
     def get(self, request, ticker):
 

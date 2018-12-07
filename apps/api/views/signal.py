@@ -6,16 +6,11 @@ from django.db.models import Count, Avg, IntegerField, Sum
 from django.db.models.functions import Cast
 
 from rest_framework.generics import ListAPIView
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
 
 from apps.api.helpers import filter_queryset_by_timestamp, queryset_for_list_with_resample_period
 from apps.api.paginations import StandardResultsSetPagination, OneRecordPagination
 from apps.api.serializers import SignalSerializer
-
-
 
 
 class ListSignals(ListAPIView):
@@ -50,8 +45,6 @@ class ListSignals(ListAPIView):
         /api/v2/signals/?transaction_currency=ETH&signal=RSI
         /api/v2/signals/?startdate=2018-02-10T22:14:37&enddate=2018-02-10T22:27:58
     """
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
     serializer_class = SignalSerializer
     pagination_class = StandardResultsSetPagination
 
@@ -97,8 +90,6 @@ class ListSignal(ListAPIView):
         /api/v2/signals/ETH
         /api/v2/signals/ETH?signal=RSI
     """
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
 
     serializer_class = SignalSerializer
     pagination_class = OneRecordPagination
@@ -113,27 +104,20 @@ class ListSignal(ListAPIView):
 
 
 class CoinsWithMostSignals(ListAPIView):
-    """Return list of signals ordered by number of emitted signals.
+    """Return list of coins ordered by number of emitted signals.
 
     /api/v2/signals/coins-with-most-signals/
 
     URL query parameters:
 
         maxresults -- the maximum number of records retrieved. Default 10.
-        timeframe -- number of hours past from now. Default 1.
-        start -- now, from now; last, from last signal. Default last.
+        timeframe -- number of hours past from start. Default 1.
+        start -- last, from last signal, now, from now. Default last.
 
     Examples:
 
-        /api/v2/signals/coins-with-most-signals/?maxresults=20&timeframe=24%start=now
+        /api/v2/signals/coins-with-most-signals/?maxresults=20&timeframe=24&start=now
     """
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
-
-    # # Disable authentification
-    # authentication_classes = ()
-    # permission_classes = ()
-
 
     def get(self, request, format=None):
         maxresults = int(request.query_params.get('maxresults', 10))

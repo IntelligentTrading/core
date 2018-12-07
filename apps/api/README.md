@@ -25,7 +25,6 @@ ITF RESTful API uses [Django REST framework](https://github.com/encode/django-re
 
 ### Environment variables and settings
 
-* REST_API_SECRET_KEY - to access API you should set request API-KEY parameter equal to this variable
 * CACHE_MIDDLEWARE_SECONDS - cache API responses for this amount of seconds 
 
 

@@ -3,10 +3,6 @@ from rest_framework.generics import ListAPIView
 from apps.api.serializers import AnnPriceClassificationSerializer
 from apps.api.paginations import StandardResultsSetPagination
 
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
-
-
 from apps.api.helpers import filter_queryset_by_timestamp  # , queryset_for_list_with_resample_period
 
 
@@ -35,9 +31,6 @@ class ListAnnPriceClassification(ListAPIView):
         cursor - the pagination cursor value
         page_size -- a numeric value indicating the page size
     """
-
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
 
     pagination_class = StandardResultsSetPagination
     serializer_class = AnnPriceClassificationSerializer

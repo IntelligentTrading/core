@@ -1,6 +1,4 @@
 from rest_framework.generics import ListAPIView
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
 
 from apps.api.serializers import EventsLogicalSerializer
 from apps.api.paginations import StandardResultsSetPagination
@@ -36,8 +34,6 @@ class ListEventsLogical(ListAPIView):
         /api/v2/events-logical/?event_name=kumo_breakout_up_signal&source=0&transaction_currency=ZEC&resample_period=60&startdate=2018-06-14T01:00:00
     """
 
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
     pagination_class = StandardResultsSetPagination
     serializer_class = EventsLogicalSerializer
     filter_fields = ('source', 'resample_period', 'transaction_currency', 'counter_currency', 'event_name')

@@ -4,19 +4,12 @@ from cache_memoize import cache_memoize
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
-
-
 
 class ITTPriceView(APIView):
     """Return ITT price
 
     /api/v2/itt
     """
-
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
 
     def get(self, request, format=None):
         return Response(get_itt_token_price())

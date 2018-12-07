@@ -277,7 +277,6 @@ HORIZONS_TIME2NAMES = {
 A_PRIME_NUMBER = int(os.environ.get('A_PRIME_NUMBER', 12345))
 TEAM_EMOJIS = os.environ.get('TEAM_EMOJIS', "🤖,").split(",")
 ITT_API_KEY = os.environ.get('ITT_API_KEY', "123ABC")
-REST_API_SECRET_KEY = os.environ.get('REST_API_SECRET_KEY', "123ABC")
 
 LOAD_TALIB = True  # always True unless doing some temporary server update
 time_speed = 1  # set to 1 for production, 10 for fast debugging
@@ -292,11 +291,15 @@ EMIT_SIGNALS = os.environ.get("EMIT_SIGNALS", "true").lower() == "true" # emit i
 
 # @Alexander REST Framework settings
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAdminUser', # Very secure by default:  only admin can access, overwrite on per-view basis
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
     ),
+    'DEFAULT_PERMISSION_CLASSES': (
+         'rest_framework.permissions.IsAuthenticated',
+     ),
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
 }
+
 
 INFO_BOT_ADMIN_USERNAME = '' # Telegram info-bot admin disabled
 
