@@ -122,7 +122,7 @@ class CoinsWithMostSignals(ListAPIView):
     def get(self, request, format=None):
         maxresults = int(request.query_params.get('maxresults', 10))
         timeframe = int(request.query_params.get('timeframe', 1))
-        start = request.query_params.get('timeframe', 'last')
+        start = request.query_params.get('start', 'last')
         return Response(get_coins_with_most_signals(maxresults, timeframe, start))
 
 
