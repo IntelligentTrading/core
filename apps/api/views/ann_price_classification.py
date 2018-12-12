@@ -3,7 +3,7 @@ from rest_framework.generics import ListAPIView
 from apps.api.serializers import AnnPriceClassificationSerializer
 from apps.api.paginations import StandardResultsSetPagination
 
-from apps.api.helpers import filter_queryset_by_timestamp  # , queryset_for_list_with_resample_period
+from apps.api.helpers import filter_queryset_by_timestamp
 
 
 #  model: AnnPriceClassification
