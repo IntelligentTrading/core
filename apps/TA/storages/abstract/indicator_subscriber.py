@@ -1,7 +1,6 @@
-from apps.TA.storages.abstract.indicator import IndicatorException
+from apps.TA.storages.abstract.indicator import IndicatorException, IndicatorStorage
 from apps.TA.storages.abstract.ticker_subscriber import TickerSubscriber, get_nearest_5min_timestamp
 from settings import logger
-import numpy as np
 
 
 class IndicatorSubscriber(TickerSubscriber):
@@ -9,6 +8,7 @@ class IndicatorSubscriber(TickerSubscriber):
     classes_subscribing_to = [
         # ...
     ]
+    storage_class = IndicatorStorage  # override with applicable storage class
 
     def extract_params(self, channel, data, *args, **kwargs):
 
@@ -29,16 +29,17 @@ class IndicatorSubscriber(TickerSubscriber):
                            f'channel: {channel}, '
                            f'subscribing classes: {self.classes_subscribing_to}')
 
-        [value, timestamp] = data["name"].split(":")
-        self.value = float(value)
-        self.timestamp = int(float(timestamp))
+        [value, score] = data["name"].split(":")
+        self.value, self.score = float(value), float(score)
 
-        if not self.timestamp == int(float(data["score"])):
-            logger.warning(f'Unexpected that score in name {self.timestamp} '
+        if not self.score == int(float(data["score"])):
+            logger.warning(f'Unexpected that score in name {self.score} '
                            f'is different than score {data["score"]}')
 
-        if not self.timestamp == get_nearest_5min_timestamp(self.timestamp):
-            raise IndicatorException("indicator timestamp should be 5min timestamp")
+        if not self.score == int(self.score):
+            raise IndicatorException("indicator timestamp should be 5min timestamp, score should be whole number (int)")
+
+        self.timestamp = IndicatorStorage.timestamp_from_score(self.score)
 
         return
 
@@ -48,16 +49,21 @@ class IndicatorSubscriber(TickerSubscriber):
         super().pre_handle(channel, data, *args, **kwargs)
 
 
-    @staticmethod
-    def get_values_array_from_query(query_results, limit=0):
+    def handle(self, channel, data, *args, **kwargs):
+        """
+        a new instance was saved belonging to one of the classes subscribed to
+        for standard indicators self.ticker, self.exchange, and self.timestamp are available
+        these values were collected by self.pre_handle() and self.extract_params()
 
-        value_array = [float(v) for v in query_results['values']]
+        :param channel:
+        :param data:
+        :param args:
+        :param kwargs:
+        :return:
+        """
 
-        if limit:
-            if not isinstance(limit, int) or limit < 1:
-                raise IndicatorException(f"bad limit: {limit}")
+        if self.key_suffix not in self.storage_class.requisite_pv_indexes:
+            logger.debug(f'index {self.key_suffix} is not in {self.storage_class.requisite_pv_indexes} ...ignoring...')
+            return
 
-            elif len(value_array) > limit:
-                value_array = value_array[-limit:0]
-
-        return np.array(value_array)
+        self.storage_class.compute_and_save_all_values_for_timestamp(self.ticker, self.exchange, self.timestamp)

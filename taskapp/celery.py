@@ -5,7 +5,7 @@ import logging
 from celery import Celery
 from celery.schedules import crontab
 
-from settings import SHORT, MEDIUM, LONG, RUN_ANN
+from settings import SHORT, MEDIUM, LONG, RUN_ANN, RUN_SENTIMENT
 
 logger = logging.getLogger(__name__)
 
@@ -86,14 +86,21 @@ def setup_periodic_tasks(sender, **_):
         name='daily at midnight',
         )
 
-
-
     # LAST - run backtesting daily
     sender.add_periodic_task(
         crontab(minute=40, hour=13),
         tasks.backtest_all_strategies.s(),
         name='daily at 13:40',
         )
+
+    # sentiment analysis
+    if RUN_SENTIMENT:
+        logger.info("   >>>>>  Scheduling sentiment calculation...")
+        sender.add_periodic_task(
+            crontab(minute=37, hour=14),
+            tasks.compute_sentiment,
+            name='daily at 14:37',
+            )
 
     # Precache info_bot every 4 hours
     # from settings import INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS

@@ -34,8 +34,8 @@ class TickerSubscriber(ABC):
             return
         if not data_event.get('type') == 'message':
             return
-        else:
-            logger.debug(f'got message: {data_event}')
+
+        # logger.debug(f'got message: {data_event}')
 
         # data_event = {
         #   'type': 'message',
@@ -51,7 +51,7 @@ class TickerSubscriber(ABC):
         try:
             channel_name = data_event.get('channel').decode("utf-8")
             event_data = json.loads(data_event.get('data').decode("utf-8"))
-            logger.debug(f'handling event in {self.__class__.__name__}')
+            # logger.debug(f'handling event in {self.__class__.__name__}')
             self.pre_handle(channel_name, event_data)
             self.handle(channel_name, event_data)
         except KeyError as  e:
@@ -85,6 +85,11 @@ def timestamp_is_near_5min(timestamp) -> bool:
     seconds_from_five_min = (int(timestamp) + 45) % 300
     return bool(seconds_from_five_min < 90)
 
+def score_is_near_5min(score) -> bool:
+    return bool(round(score) - 45/300 < score < round(score) + 45/300)
 
 def get_nearest_5min_timestamp(timestamp) -> int:
     return ((int(timestamp) + 45) // 300) * 300
+
+def get_nearest_5min_score(score) -> int:
+    return int(round(score))

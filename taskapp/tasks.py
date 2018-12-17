@@ -49,6 +49,13 @@ def backtest_all_strategies():
     _backtest_all_strategies()
 
 
+#### Sentiment
+@celery_app.task(retry=False)
+def compute_sentiment():
+    from taskapp.helpers.sentiment_analysis import _analyze_sentiment
+    _analyze_sentiment()
+
+
 # Obsolete
 # @celery_app.task(retry=False)
 # def compute_and_save_indicators_for_all_sources(resample_period):

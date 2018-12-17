@@ -25,8 +25,8 @@ class RocrSubscriber(IndicatorSubscriber):
 
         self.index = self.key_suffix
 
-        if self.index is not 'close_price':
-            logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
+        if str(self.index) is not "close_price":
+            logger.debug(f'index {self.index} is not close_price ...ignoring...')
             return
 
         new_rocr_storage = RocrStorage(ticker=self.ticker,
@@ -36,19 +36,12 @@ class RocrSubscriber(IndicatorSubscriber):
         for horizon in HORIZONS:
             periods = horizon * 10
 
-            close_value_np_array = self.get_values_array_from_query(
-                PriceStorage.query(
-                    ticker=self.ticker,
-                    exchange=self.exchange,
-                    index='close_price',
-                    periods_range=periods
-                ),
-                limit=periods)
+            close_value_np_array = new_rocr_storage.get_denoted_price_array("close_price", periods)
 
             timeperiod = min([len(close_value_np_array), periods])
             rocr_value = talib.ROCR(close_value_np_array, timeperiod=timeperiod)[-1]
-            logger.debug(f'saving Rocr value {rocr_value} for {self.ticker} on {periods} periods')
+            # logger.debug(f'savingRocr value {rocr_value} for {self.ticker} on {periods} periods')
 
             new_rocr_storage.periods = periods
-            new_rocr_storage.value = int(float(rocr_value))
+            new_rocr_storage.value = float(rocr_value)
             new_rocr_storage.save()

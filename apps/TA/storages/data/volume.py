@@ -1,7 +1,9 @@
 import logging
+
 from apps.TA import TAException
-from apps.TA.storages.abstract.indicator import IndicatorStorage
-from apps.TA.storages.abstract.ticker_subscriber import TickerSubscriber, timestamp_is_near_5min, get_nearest_5min_timestamp
+from apps.TA.storages.abstract.ticker import TickerStorage
+from apps.TA.storages.abstract.ticker_subscriber import TickerSubscriber, timestamp_is_near_5min, \
+    get_nearest_5min_timestamp
 from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, default_volume_indexes, derived_volume_indexes
 
 logger = logging.getLogger(__name__)
@@ -11,7 +13,7 @@ class VolumeException(TAException):
     pass
 
 
-class VolumeStorage(IndicatorStorage):
+class VolumeStorage(TickerStorage):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.index = kwargs.get('index', "close_volume")
@@ -49,9 +51,8 @@ class VolumeSubscriber(TickerSubscriber):
 
         if not timestamp_is_near_5min(timestamp):
             return
-        else:
-            logger.debug("near to a 5 min time marker")
 
+        # logger.debug("near to a 5 min time marker")
         timestamp = get_nearest_5min_timestamp(timestamp)
 
         volume = VolumeStorage(ticker=ticker, exchange=exchange, timestamp=timestamp)
@@ -66,7 +67,7 @@ class VolumeSubscriber(TickerSubscriber):
             index_values[index] = [
                 float(db_value.decode("utf-8").split(":")[0])
                 for db_value
-                in self.database.zrangebyscore(sorted_set_key, timestamp - 300, timestamp + 45)
+                in self.database.zrangebyscore(sorted_set_key, timestamp - 300, timestamp + 45) # todo: update to scores
             ]
 
             try:
@@ -85,7 +86,7 @@ class VolumeSubscriber(TickerSubscriber):
                 if volume.value:
                     volume.index = index
                     volume.save()
-                    logger.info("saved new thing: " + volume.get_db_key())
+                    # logger.info("saved new thing: " + volume.get_db_key())
 
             # all_values_set = (
             #         set(index_values["open_volume"])

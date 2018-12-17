@@ -1,6 +1,7 @@
 import logging
 import time
 
+from apps.common.utilities.multithreading import start_new_thread
 from apps.indicator.models.sma import SMA_LIST
 from settings import STAGE
 from settings.redis_db import database
@@ -38,6 +39,20 @@ def redisCleanup():
             logger.error(str(e))
 
 
+    #PriceVolumeHistoryStorage
+    from datetime import datetime, timedelta
+    from apps.TA.storages.abstract.timeseries_storage import TimeseriesStorage
+    old_score = TimeseriesStorage.score_from_timestamp(datetime(2017, 1, 1).timestamp())
+    highest_allowed_score = TimeseriesStorage.score_from_timestamp((datetime.today() + timedelta(days=1)).timestamp())
+
+    for price_history_key in database.keys("*PriceVolumeHistoryStorage*"):
+        # remove anything without a valid score (valid is between jan_1_2017 and today using timeseries score)
+        database.zremrangebyscore(price_history_key, 0, old_score)
+        database.zremrangebyscore(price_history_key, highest_allowed_score, datetime.today().timestamp())
+    #PriceVolumeHistoryStorage
+
+
+
     # PriceStorage
     # delete all values 200 days old or older
     if STAGE:
@@ -64,3 +79,28 @@ def redisCleanup():
             database.delete(key)
 
 # from apps.TA.storages.data.memory_cleaner import redisCleanup as rC
+
+@start_new_thread
+def clear_pv_history_values(ticker: str, exchange: str, score: float, conservative: bool = True) -> bool:
+    """
+    Permanently delete values from PriceVolumeHistoryStorage
+    :param ticker: eg. "ETH_BTC"
+    :param exchange: eg. "binance"
+    :param score: the score number as defined by TimeseriesStorage.score_from_timestamp()
+    :param conservative: set to False to delete all values within the score period.
+    Default is True, which will not delete values within 45s of the edge of the 5min period
+    :return:
+    """
+    from apps.TA.storages.abstract.ticker_subscriber import get_nearest_5min_score
+
+    # todo: move logic to PriceVolumeHistoryStorage.destroy()
+
+    # 45s/300 is range for deletion, other
+    score = get_nearest_5min_score(score)
+
+    min_score = score - 1 + ((45/300) if conservative else 0)
+    max_score = score - ((255/300) if conservative else 0)
+
+    for key in database.keys(f"{ticker}:{exchange}:PriceVolumeHistoryStorage:*price*"):
+        database.zremrangebyscore(key, min_score, max_score)
+        # logger.debug(f"removing values in {key} for scores {min_score} to {max_score}")

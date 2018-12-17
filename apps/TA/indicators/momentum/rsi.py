@@ -57,8 +57,8 @@ class RsiSubscriber(IndicatorSubscriber):
 
         self.index = self.key_suffix
 
-        if self.index is not 'close_price':
-            logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
+        if str(self.index) is not "close_price":
+            logger.debug(f'index {self.index} is not close_price ...ignoring...')
             return
 
         new_rsi_storage = RsiStorage(ticker=self.ticker,
@@ -66,19 +66,13 @@ class RsiSubscriber(IndicatorSubscriber):
                                      timestamp=self.timestamp)
 
         for horizon in HORIZONS:
+            periods = horizon*14
 
-            results_dict = PriceStorage.query(
-                ticker=self.ticker,
-                exchange=self.exchange,
-                index='close_price',
-                periods_range=horizon*14
-            )
+            close_value_np_array = new_rsi_storage.get_denoted_price_array("close_price", periods)
 
-            value_np_array = self.get_values_array_from_query(results_dict, limit=horizon)
-
-            rsi_value = talib.RSI(value_np_array, timeperiod=len(value_np_array))[-1]
-            logger.debug(f'saving RSI value {rsi_value} for {self.ticker} on {horizon*14} periods')
+            rsi_value = talib.RSI(close_value_np_array, timeperiod=periods)[-1]
+            # logger.debug(f'savingRSI value {rsi_value} for {self.ticker} on {horizon*14} periods')
 
             new_rsi_storage.periods = horizon
-            new_rsi_storage.value = int(float(rsi_value))
+            new_rsi_storage.value = float(rsi_value)
             new_rsi_storage.save()

@@ -105,7 +105,7 @@ class Command(BaseCommand):
             AnnModel.objects.create(
                 timestamp=time.time(),
                 source = POLONIEX,
-                model_name = 'LSTM',
+                model_name = 'PRICE_PREDICT',
                 s3_model_file = 'lstm_long_1440m_28_10_class3_return_0.1.h5',
                 s3_notebook_file = 'NA',
                 period = 1440,  # min

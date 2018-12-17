@@ -26,8 +26,8 @@ class MfiSubscriber(IndicatorSubscriber):
 
         self.index = self.key_suffix
 
-        if self.index is not 'close_price':
-            logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
+        if str(self.index) is not "close_price":
+            logger.debug(f'index {self.index} is not close_price ...ignoring...')
             return
 
         new_mfi_storage = MfiStorage(ticker=self.ticker,
@@ -37,36 +37,12 @@ class MfiSubscriber(IndicatorSubscriber):
         for horizon in HORIZONS:
             periods = horizon * 14
 
-            high_value_np_array = self.get_values_array_from_query(
-                PriceStorage.query(
-                    ticker=self.ticker,
-                    exchange=self.exchange,
-                    index='high_price',
-                    periods_range=periods
-                ),
-                limit=periods)
-
-            low_value_np_array = self.get_values_array_from_query(
-                PriceStorage.query(
-                    ticker=self.ticker,
-                    exchange=self.exchange,
-                    index='low_price',
-                    periods_range=periods
-                ),
-                limit=periods)
-
-            close_value_np_array = self.get_values_array_from_query(
-                PriceStorage.query(
-                    ticker=self.ticker,
-                    exchange=self.exchange,
-                    index='close_price',
-                    periods_range=periods
-                ),
-                limit=periods)
+            high_value_np_array = new_mfi_storage.get_denoted_price_array("high_price", periods)
+            low_value_np_array = new_mfi_storage.get_denoted_price_array("low_price", periods)
+            close_value_np_array = new_mfi_storage.get_denoted_price_array("close_price", periods)
 
             # ALERT, WE DON'T HAVE VOLUME FOR MANY TICKERS AND IT'S NOT BEING RESAMPLED
-
-            volume_value_np_array = self.get_values_array_from_query(
+            volume_value_np_array = new_mfi_storage.get_values_array_from_query(
                 VolumeStorage.query(
                     ticker=self.ticker,
                     exchange=self.exchange,
@@ -77,8 +53,8 @@ class MfiSubscriber(IndicatorSubscriber):
 
             timeperiod = min([len(high_value_np_array), len(low_value_np_array), len(close_value_np_array), periods])
             mfi_value = talib.MFI(high_value_np_array, low_value_np_array, close_value_np_array, volume_value_np_array, timeperiod=timeperiod)[-1]
-            logger.debug(f'saving Mfi value {mfi_value} for {self.ticker} on {periods} periods')
+            # logger.debug(f'savingMfi value {mfi_value} for {self.ticker} on {periods} periods')
 
             new_mfi_storage.periods = periods
-            new_mfi_storage.value = int(float(mfi_value))
+            new_mfi_storage.value = float(mfi_value)
             new_mfi_storage.save()

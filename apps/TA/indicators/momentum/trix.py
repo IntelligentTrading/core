@@ -25,8 +25,8 @@ class TrixSubscriber(IndicatorSubscriber):
 
         self.index = self.key_suffix
 
-        if self.index is not 'close_price':
-            logger.debug(f'index {self.index} is not `close_price` ...ignoring...')
+        if str(self.index) is not "close_price":
+            logger.debug(f'index {self.index} is not close_price ...ignoring...')
             return
 
         new_trix_storage = TrixStorage(ticker=self.ticker,
@@ -36,19 +36,12 @@ class TrixSubscriber(IndicatorSubscriber):
         for horizon in HORIZONS:
             periods = horizon * 30
 
-            close_value_np_array = self.get_values_array_from_query(
-                PriceStorage.query(
-                    ticker=self.ticker,
-                    exchange=self.exchange,
-                    index='close_price',
-                    periods_range=periods
-                ),
-                limit=periods)
+            close_value_np_array = new_trix_storage.get_denoted_price_array("close_price", periods)
 
             timeperiod = min([len(close_value_np_array), periods])
             trix_value = talib.TRIX(close_value_np_array, timeperiod=timeperiod)[-1]
-            logger.debug(f'saving Trix value {trix_value} for {self.ticker} on {periods} periods')
+            # logger.debug(f'savingTrix value {trix_value} for {self.ticker} on {periods} periods')
 
             new_trix_storage.periods = periods
-            new_trix_storage.value = int(float(trix_value))
+            new_trix_storage.value = float(trix_value)
             new_trix_storage.save()

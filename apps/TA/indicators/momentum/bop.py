@@ -35,44 +35,13 @@ class BopSubscriber(IndicatorSubscriber):
 
         periods = 2  # doesn't matter, just enough to grab the last one
 
-        open_value_np_array = self.get_values_array_from_query(
-            PriceStorage.query(
-                ticker=self.ticker,
-                exchange=self.exchange,
-                index='open_price',
-                periods_range=periods
-            ),
-            limit=periods)
-
-        high_value_np_array = self.get_values_array_from_query(
-            PriceStorage.query(
-                ticker=self.ticker,
-                exchange=self.exchange,
-                index='high_price',
-                periods_range=periods
-            ),
-            limit=periods)
-
-        low_value_np_array = self.get_values_array_from_query(
-            PriceStorage.query(
-                ticker=self.ticker,
-                exchange=self.exchange,
-                index='low_price',
-                periods_range=periods
-            ),
-            limit=periods)
-
-        close_value_np_array = self.get_values_array_from_query(
-            PriceStorage.query(
-                ticker=self.ticker,
-                exchange=self.exchange,
-                index='close_price',
-                periods_range=periods
-            ),
-            limit=periods)
+        open_value_np_array = new_bop_storage.get_denoted_price_array("open_price", periods)
+        high_value_np_array = new_bop_storage.get_denoted_price_array("high_price", periods)
+        low_value_np_array = new_bop_storage.get_denoted_price_array("low_price", periods)
+        close_value_np_array = new_bop_storage.get_denoted_price_array("close_price", periods)
 
         bop_value = talib.BOP(open_value_np_array, high_value_np_array, low_value_np_array, close_value_np_array)[-1]
-        logger.debug(f'saving Bop value {bop_value} for {self.ticker} on {periods} periods')
+        # logger.debug(f'savingBop value {bop_value} for {self.ticker} on {periods} periods')
 
         new_bop_storage.value = bop_value
         new_bop_storage.save()

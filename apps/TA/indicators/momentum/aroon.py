@@ -36,27 +36,12 @@ class AroonSubscriber(IndicatorSubscriber):
         for horizon in HORIZONS:
             periods = horizon * 14
 
-            high_value_np_array = self.get_values_array_from_query(
-                PriceStorage.query(
-                    ticker=self.ticker,
-                    exchange=self.exchange,
-                    index='high_price',
-                    periods_range=periods
-                ),
-                limit=periods)
-
-            low_value_np_array = self.get_values_array_from_query(
-                PriceStorage.query(
-                    ticker=self.ticker,
-                    exchange=self.exchange,
-                    index='low_price',
-                    periods_range=periods
-                ),
-                limit=periods)
+            high_value_np_array = new_aroon_storage.get_denoted_price_array("high_price", periods)
+            low_value_np_array = new_aroon_storage.get_denoted_price_array("low_price", periods)
 
             timeperiod = min([len(high_value_np_array), len(low_value_np_array), periods])
             aroondown_value, aroonup_value = talib.AROON(high_value_np_array, low_value_np_array, timeperiod=timeperiod)[-1]
-            logger.debug(f'saving Aroon values {aroondown_value}, {aroonup_value} for {self.ticker} on {periods} periods')
+            # logger.debug(f'savingAroon values {aroondown_value}, {aroonup_value} for {self.ticker} on {periods} periods')
 
             new_aroon_storage.periods = periods
             new_aroon_storage.aroondown = aroondown_value
