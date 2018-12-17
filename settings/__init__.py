@@ -284,7 +284,8 @@ EMIT_SMA = True
 EMIT_RSI = True
 RUN_ANN = True  # temporarily, while I am thinking :)
 RUN_BEN = True
-RUN_SENTIMENT = True
+RUN_SENTIMENT = os.environ.get('RUN_SENTIMENT', False)
+RUN_BACKTESTING = os.environ.get('RUN_BACKTESTING', False)
 MODIFY_DB = True
 
 EMIT_SIGNALS = os.environ.get("EMIT_SIGNALS", "true").lower() == "true" # emit if no variable set or when it set to 'true', env variables are strings
