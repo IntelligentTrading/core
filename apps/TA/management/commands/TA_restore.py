@@ -37,7 +37,7 @@ def restore_db_to_redis(start_datetime, end_datetime):
 
     process_datetime = start_datetime
 
-    num_hours_per_query = 48  # temp, reset to 4
+    num_hours_per_query = 4
 
     while process_datetime < end_datetime:
         process_datetime += timedelta(hours=num_hours_per_query)

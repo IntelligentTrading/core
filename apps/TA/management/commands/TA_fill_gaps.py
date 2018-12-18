@@ -17,7 +17,7 @@ class Command(BaseCommand):
     help = 'Run Redis Data gaps filler'
 
     def add_arguments(self, parser):
-        parser.add_argument('arg', nargs='?', default='force_fill_SQL', type=str)
+        parser.add_argument('arg', nargs='?', default='force_fill_gaps', type=str)
 
     def handle(self, *args, **options):
         logger.info("Starting data gaps restoration...")
