@@ -17,7 +17,8 @@ class Command(BaseCommand):
     help = 'Run Redis Data gaps filler'
 
     def add_arguments(self, parser):
-        parser.add_argument('arg', nargs='?', default='compute_indicators_for_poloniex', type=str)
+        # parser.add_argument('arg', nargs='?', default='compute_indicators_for_poloniex', type=str)
+        pass
 
     def handle(self, *args, **options):
         logger.info("Starting data gaps restoration...")
@@ -45,14 +46,15 @@ def fill_data_gaps(SQL_fill = False, force_fill=False):
 
     method_params = []
 
-    for ticker in ["*_USDT", "*_BTC"]:
-        for index in ['close_price', 'open_price', 'high_price', 'low_price', 'close_volume']:
+    for ticker in ["BTC_USDT",]:  # ["*_USDT", "*_BTC"]:
+        for exchange in ["binance", ]:  # ["binance", "poloniex", "bittrex"]:
+            for index in ['close_price', 'open_price', 'high_price', 'low_price', 'close_volume']:
 
-            for key in database.keys(f"{ticker}*PriceStorage*{index}*"):
-                [ticker, exchange, storage_class, index] = key.decode("utf-8").split(":")
+                for key in database.keys(f"{ticker}*{exchange}*PriceStorage*{index}*"):
+                    [ticker, exchange, storage_class, index] = key.decode("utf-8").split(":")
 
-                ugly_tuple = (ticker, exchange, index, bool(SQL_fill))
-                method_params.append(ugly_tuple)
+                    ugly_tuple = (ticker, exchange, index, bool(SQL_fill))
+                    method_params.append(ugly_tuple)
 
     logger.info(f"{len(method_params)} tickers ready to fill gaps")
 
@@ -93,7 +95,8 @@ def price_history_to_price_storage(ticker_exchanges, start_score=None, end_score
     if not start_score:
         # start_score = 0  # this is jan 1 2017
         start_score = int(
-            (datetime(2018, 9, 1).timestamp() - datetime(2017, 1, 1).timestamp()) / 300)  # this is Sep 1 2018
+            (datetime(2018, 9, 1).timestamp() - datetime(2017, 1, 1).timestamp()) / 300
+        )  # this is Sep 1 2018
     processing_score = start_score
 
     if not end_score:
