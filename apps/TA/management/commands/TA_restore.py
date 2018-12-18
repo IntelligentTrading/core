@@ -21,7 +21,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         logger.info("Starting TA restore script...")
 
-        start_datetime = datetime(2018, 11, 7)
+        start_datetime = datetime(2018, 1, 1)
         end_datetime = datetime.today()
 
         restore_db_to_redis(start_datetime, end_datetime)
@@ -37,7 +37,7 @@ def restore_db_to_redis(start_datetime, end_datetime):
 
     process_datetime = start_datetime
 
-    num_hours_per_query = 4
+    num_hours_per_query = 48  # temp, reset to 4
 
     while process_datetime < end_datetime:
         process_datetime += timedelta(hours=num_hours_per_query)
@@ -48,7 +48,11 @@ def restore_db_to_redis(start_datetime, end_datetime):
             timestamp__gte=process_datetime - timedelta(hours=num_hours_per_query),
             timestamp__lt=process_datetime,
             source=BINANCE,  # Binance only for now
-            counter_currency__in=[BTC, USDT]
+
+            transaction_currency="BTC",  #temp setting
+            counter_currency=USDT,  # temp setting
+
+            # counter_currency__in=[BTC, USDT]
         )
 
         results = multithread_this_shit(save_pv_histories_to_redis, price_history_objects)
