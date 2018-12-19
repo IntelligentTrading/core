@@ -73,6 +73,25 @@ def fill_data_gaps(SQL_fill = False, force_fill=False):
         for missing_scores in results:
             missing_data.force_plug_pv_storage_data_gaps(ticker, exchange, index, missing_scores)
 
+    from apps.TA.storages.abstract.timeseries_storage import TimeseriesStorage
+    from apps.TA.storages.utils.pv_resampling import generate_pv_storages
+    from apps.TA.storages.utils.memory_cleaner import clear_pv_history_values
+
+    end_score = TimeseriesStorage.score_from_timestamp(datetime.now().timestamp())
+
+    for score in range(1, int(end_score)):
+        tei_processed = {}
+        for key in database.keys("*PriceVolumeHistoryStorage*"):
+            [ticker, exchange, object_class, index] = key.decode("utf-8").split(":")
+            generate_pv_storages(ticker, exchange, index, score)
+
+            if not (ticker + exchange) in tei_processed:
+                tei_processed[ticker + exchange] = []  # initialize with 0 indexes
+
+            tei_processed[ticker + exchange].append(index)  # add indexes
+            if len(tei_processed[ticker + exchange]) >= 5:  # vol + price hloc
+                clear_pv_history_values(ticker, exchange, score)
+
 
 def condensed_fill_redis_gaps(ugly_tuple):
     (ticker, exchange, index, back_to_the_backlog) = ugly_tuple

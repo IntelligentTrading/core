@@ -125,7 +125,7 @@ def force_plug_pv_storage_data_gaps(ticker: str, exchange: str, index: str, scor
             # value is not missing
             continue
 
-        q_value = int(query_response['values'][0])
+        q_value = int(query_response['values'][0]) # todo: handle index error
         q_score = float(query_response['scores'][0])
 
         # logger.debug(f"working with {score} == timestamp {TimeseriesStorage.timestamp_from_score(score)}")
