@@ -58,7 +58,14 @@ def find_pv_storage_data_gaps(ticker: str, exchange: str, index: str, back_to_th
 
     storage_instance = storage_class(ticker=ticker, exchange=exchange, index=index, timestamp=JAN_1_2017_TIMESTAMP)
     redis_zset_withscores = database.zrange(storage_instance.get_db_key(), 0, -1, withscores=True)
-    scores = [int(score) for (value, score) in redis_zset_withscores]
+
+    start_score = int(TimeseriesStorage.score_from_timestamp(datetime(2018,1,1).timestamp()))
+    end_score = int(TimeseriesStorage.score_from_timestamp(datetime.now().timestamp()))  # 206836 is Dec 20
+
+    scores = [int(score) for (value, score) in redis_zset_withscores if score > start_score]
+    scores.insert(0,start_score)
+    scores.append(end_score+1)
+
     missing_scores = missing_elements(scores)
 
     restored_scores = []

@@ -34,10 +34,8 @@ class Command(BaseCommand):
         #     )
 
         # See if the worker missed generating PV values
-        refill_pv_storages()
+        # refill_pv_storages()
 
-        # fill missing data from SQL
-        fill_data_gaps(SQL_fill=True, force_fill=False)
         # try to fix yourself inside Redis only
         fill_data_gaps(SQL_fill=False, force_fill=False)
         # final pass, pulling from SQL and forcing values if demanded in arg
@@ -50,7 +48,7 @@ def fill_data_gaps(SQL_fill = False, force_fill=False):
 
     for ticker in ["BTC_USDT",]:  # ["*_USDT", "*_BTC"]:
         for exchange in ["binance", ]:  # ["binance", "poloniex", "bittrex"]:
-            for index in ['close_price', 'open_price', 'high_price', 'low_price', 'close_volume']:
+            for index in ['close_volume', 'open_price', 'high_price', 'low_price', 'close_price']:
 
                 for key in database.keys(f"{ticker}*{exchange}*PriceStorage*{index}*"):
                     [ticker, exchange, storage_class, index] = key.decode("utf-8").split(":")
@@ -76,30 +74,30 @@ def fill_data_gaps(SQL_fill = False, force_fill=False):
         for missing_scores in results:
             missing_data.force_plug_pv_storage_data_gaps(ticker, exchange, index, missing_scores)
 
-def refill_pv_storages():
-
-    from apps.TA.storages.abstract.timeseries_storage import TimeseriesStorage
-    from apps.TA.storages.utils.pv_resampling import generate_pv_storages
-    from apps.TA.storages.utils.memory_cleaner import clear_pv_history_values
-
-    start_score = int(TimeseriesStorage.score_from_timestamp(datetime(2018,1,1).timestamp()))  # 206836 is Dec 20
-    end_score = int(TimeseriesStorage.score_from_timestamp(datetime.now().timestamp()))  # 206836 is Dec 20
-
-    tei_processed = {}
-
-    for key in database.keys("BTC_USDT*PriceVolumeHistoryStorage*"):
-        logger.info("running pv refill for " + str(key))
-        [ticker, exchange, object_class, index] = key.decode("utf-8").split(":")
-
-        for score in range(start_score, end_score):
-            generate_pv_storages(ticker, exchange, index, score)
-
-            if not (ticker + exchange) in tei_processed:
-                tei_processed[ticker + exchange] = []  # initialize with 0 indexes
-
-            tei_processed[ticker + exchange].append(index)  # add indexes
-            if len(tei_processed[ticker + exchange]) >= 5:  # vol + price hloc
-                clear_pv_history_values(ticker, exchange, score)
+# def refill_pv_storages():
+#
+#     from apps.TA.storages.abstract.timeseries_storage import TimeseriesStorage
+#     from apps.TA.storages.utils.pv_resampling import generate_pv_storages
+#     from apps.TA.storages.utils.memory_cleaner import clear_pv_history_values
+#
+#     start_score = int(TimeseriesStorage.score_from_timestamp(datetime(2018,1,1).timestamp()))
+#     end_score = int(TimeseriesStorage.score_from_timestamp(datetime.now().timestamp()))  # 206836 is Dec 20
+#
+#     tei_processed = {}
+#
+#     for key in database.keys("BTC_USDT*PriceVolumeHistoryStorage*"):
+#         logger.info("running pv refill for " + str(key))
+#         [ticker, exchange, object_class, index] = key.decode("utf-8").split(":")
+#
+#         for score in range(start_score, end_score):
+#             generate_pv_storages(ticker, exchange, index, score)
+#
+#             if not (ticker + exchange) in tei_processed:
+#                 tei_processed[ticker + exchange] = []  # initialize with 0 indexes
+#
+#             tei_processed[ticker + exchange].append(index)  # add indexes
+#             if len(tei_processed[ticker + exchange]) >= 5:  # vol + price hloc
+#                 clear_pv_history_values(ticker, exchange, score)
 
 
 def condensed_fill_redis_gaps(ugly_tuple):
