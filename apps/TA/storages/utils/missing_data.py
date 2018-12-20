@@ -59,7 +59,7 @@ def find_pv_storage_data_gaps(ticker: str, exchange: str, index: str, back_to_th
     storage_instance = storage_class(ticker=ticker, exchange=exchange, index=index, timestamp=JAN_1_2017_TIMESTAMP)
     redis_zset_withscores = database.zrange(storage_instance.get_db_key(), 0, -1, withscores=True)
 
-    start_score = int(TimeseriesStorage.score_from_timestamp(datetime(2018,1,1).timestamp()))
+    start_score = int(TimeseriesStorage.score_from_timestamp(datetime(2018,12,11).timestamp()))  # todo: change to 2018,1,1
     end_score = int(TimeseriesStorage.score_from_timestamp(datetime.now().timestamp()))  # 206836 is Dec 20
 
     scores = [int(score) for (value, score) in redis_zset_withscores if score > start_score]
@@ -70,27 +70,27 @@ def find_pv_storage_data_gaps(ticker: str, exchange: str, index: str, back_to_th
 
     restored_scores = []
 
-    if back_to_the_backlog:
-        # let's go "back to the backlog"; try to reach back and deep into the SQL
-        restorable_scores = []
-
-        for processing_score in missing_scores:
-            processing_datetime = TimeseriesStorage.datetime_from_score(processing_score)
-
-            price_history_objects = PriceHistory.objects.filter(
-                timestamp__gte=processing_datetime - timedelta(minutes=1),
-                timestamp__lte=processing_datetime,
-                source=get_source_index(exchange),
-                counter_currency=get_counter_currency_index(ticker.split("_")[1])
-            )
-
-            for ph_object in price_history_objects:
-                results = save_pv_histories_to_redis(ph_object)
-                if sum(results):
-                    restorable_scores.append(processing_score)
-
-        if len(restorable_scores):
-            logger.debug("successfully restored missing data from SQL into PriceVolumeHistoryStorage")
+    # if back_to_the_backlog:
+    #     # let's go "back to the backlog"; try to reach back and deep into the SQL
+    #     restorable_scores = []
+    #
+    #     for processing_score in missing_scores:
+    #         processing_datetime = TimeseriesStorage.datetime_from_score(processing_score)
+    #
+    #         price_history_objects = PriceHistory.objects.filter(
+    #             timestamp__gte=processing_datetime - timedelta(minutes=1),
+    #             timestamp__lte=processing_datetime,
+    #             source=get_source_index(exchange),
+    #             counter_currency=get_counter_currency_index(ticker.split("_")[1])
+    #         )
+    #
+    #         for ph_object in price_history_objects:
+    #             results = save_pv_histories_to_redis(ph_object)
+    #             if sum(results):
+    #                 restorable_scores.append(processing_score)
+    #
+    #     if len(restorable_scores):
+    #         logger.debug("successfully restored missing data from SQL into PriceVolumeHistoryStorage")
 
     for processing_score in missing_scores:
         if generate_pv_storages(ticker, exchange, index, processing_score):
@@ -118,46 +118,47 @@ def force_plug_pv_storage_data_gaps(ticker: str, exchange: str, index: str, scor
     else:
         raise Exception("unknown index")
 
-    for score in scores:
+    for missing_score in scores:
+        logger.debug(f"working with {missing_score} == timestamp {TimeseriesStorage.timestamp_from_score(missing_score)}")
 
         query_response = storage_class.query(
             ticker=ticker,
             exchange=exchange,
             index=index,
-            timestamp=TimeseriesStorage.timestamp_from_score(score),
+            timestamp=TimeseriesStorage.timestamp_from_score(missing_score),
             timestamp_tolerance=0,
-            periods_range=1
+            periods_range=5
         )
 
-        if query_response['values_count'] >= 2 and score == float(query_response['scores'][-1]):
-            # value is not missing
-            continue
-
-        if len(query_response['values']) == 0:
+        if not len(query_response['values']):
             # no previous value to copy
             continue
 
-        q_value = int(query_response['values'][0])
-        q_score = float(query_response['scores'][0])
+        if missing_score == int(float(query_response['scores'][-1])):
+            # value is not actaully missing, skip
+            continue
 
-        # logger.debug(f"working with {score} == timestamp {TimeseriesStorage.timestamp_from_score(score)}")
-        # logger.debug("printing query response >>>")
-        # logger.debug(query_response)
+        copied_value = int(query_response['values'][-1])
+        copied_score = float(query_response['scores'][-1])
+
+
+        logger.debug("printing query response >>>")
+        logger.debug(query_response)
 
         assert 'warning' in query_response
-        assert float(query_response['earliest_timestamp']) == float(query_response['latest_timestamp'])
-        assert float(query_response['latest_timestamp']) == TimeseriesStorage.timestamp_from_score(score - 1)
-        assert q_score == score - 1
+        assert float(query_response['earliest_timestamp']) <= float(query_response['latest_timestamp'])
+        assert float(query_response['latest_timestamp']) <= TimeseriesStorage.timestamp_from_score(missing_score - 1)
+        assert copied_score <= missing_score - 1
 
         storage = storage_class(ticker=ticker,
                                 exchange=exchange,
-                                timestamp=TimeseriesStorage.timestamp_from_score(score),
+                                timestamp=TimeseriesStorage.timestamp_from_score(missing_score),
                                 index=index)
 
         # save value equal to previous score's value
-        storage.value = q_value
-        storage.save()
-        logger.debug("Filled the gap on score " + str(score))
+        storage.value = copied_value
+        storage.save(publish=True)
+        logger.debug("Filled the gap on score " + str(missing_score))
 
 
 def test_force_plug_pv_storage_data_gaps():

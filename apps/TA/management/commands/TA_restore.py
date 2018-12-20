@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 
 from django.core.management.base import BaseCommand
 
-from apps.TA.management.commands.TA_fill_gaps import price_history_to_price_storage
 from apps.TA.storages.abstract.ticker_subscriber import timestamp_is_near_5min
 from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, default_price_indexes
 from apps.common.utilities.multithreading import multithread_this_shit
@@ -62,29 +61,8 @@ def restore_db_to_redis(start_datetime, end_datetime):
             # logger.debug("couldn't sum all of it: " + str(e))
             total_results = 'unknown'
 
-        # for ph_object in price_history_objects:
-        #     if ph_object.transaction_currency not in transaction_currencies:
-        #         continue
-        #     pipeline = save_pv_histories_to_redis(ph_object)
-        # database_response = pipeline.execute()
-        # total_results = sum(database_response)
-
         logger.info(f"{total_results} values added to Redis")
 
-        # if total_results < 4*60*5: #  minute data for 1 ticker
-        #     continue
-        #
-        # price_history_to_price_storage(
-        #     ticker_exchanges=[
-        #         (f'{pho.transaction_currency}_{pho.get_counter_currency_display()}', pho.get_source_display())
-        #         # (ticker, exchange) as strings
-        #         for pho in price_history_objects
-        #     ],
-        #     start_score=TimeseriesStorage.score_from_timestamp(
-        #         (process_datetime - timedelta(hours=num_hours_per_query)).timestamp()
-        #     ),
-        #     end_score=TimeseriesStorage.score_from_timestamp(process_datetime.timestamp())
-        # )
 
 
 ### PULL PRICE HISTORY RECORDS FROM CORE PRICE HISTORY DATABASE ###

@@ -37,9 +37,10 @@ class Command(BaseCommand):
         # refill_pv_storages()
 
         # try to fix yourself inside Redis only
-        fill_data_gaps(SQL_fill=False, force_fill=False)
+        # fill_data_gaps(SQL_fill=False, force_fill=False)
         # final pass, pulling from SQL and forcing values if demanded in arg
-        fill_data_gaps(SQL_fill=True, force_fill=(arg=='force_fill_gaps'))
+        fill_data_gaps(SQL_fill=False, force_fill=True)
+        # fill_data_gaps(SQL_fill=True, force_fill=(arg=='force_fill_gaps'))
 
 
 def fill_data_gaps(SQL_fill = False, force_fill=False):
@@ -63,10 +64,10 @@ def fill_data_gaps(SQL_fill = False, force_fill=False):
 
     logger.warning(f"{missing_scores_count} scores could not be recovered and are still missing.")
 
-    if SQL_fill:
-        results = multithread_this_shit(condensed_fill_SQL_gaps, method_params)
-        missing_scores_count = sum([len(result) for result in results])
-        logger.warning(f"{missing_scores_count} scores could not be recovered and are still missing.")
+    # if SQL_fill:
+    #     results = multithread_this_shit(condensed_fill_SQL_gaps, method_params)
+    #     missing_scores_count = sum([len(result) for result in results])
+    #     logger.warning(f"{missing_scores_count} scores could not be recovered and are still missing.")
 
     if force_fill:
         logger.warning("STARTING FORCE FILL OF THESE VALUES...")
@@ -74,30 +75,30 @@ def fill_data_gaps(SQL_fill = False, force_fill=False):
         for missing_scores in results:
             missing_data.force_plug_pv_storage_data_gaps(ticker, exchange, index, missing_scores)
 
-# def refill_pv_storages():
-#
-#     from apps.TA.storages.abstract.timeseries_storage import TimeseriesStorage
-#     from apps.TA.storages.utils.pv_resampling import generate_pv_storages
-#     from apps.TA.storages.utils.memory_cleaner import clear_pv_history_values
-#
-#     start_score = int(TimeseriesStorage.score_from_timestamp(datetime(2018,1,1).timestamp()))
-#     end_score = int(TimeseriesStorage.score_from_timestamp(datetime.now().timestamp()))  # 206836 is Dec 20
-#
-#     tei_processed = {}
-#
-#     for key in database.keys("BTC_USDT*PriceVolumeHistoryStorage*"):
-#         logger.info("running pv refill for " + str(key))
-#         [ticker, exchange, object_class, index] = key.decode("utf-8").split(":")
-#
-#         for score in range(start_score, end_score):
-#             generate_pv_storages(ticker, exchange, index, score)
-#
-#             if not (ticker + exchange) in tei_processed:
-#                 tei_processed[ticker + exchange] = []  # initialize with 0 indexes
-#
-#             tei_processed[ticker + exchange].append(index)  # add indexes
-#             if len(tei_processed[ticker + exchange]) >= 5:  # vol + price hloc
-#                 clear_pv_history_values(ticker, exchange, score)
+def refill_pv_storages():
+
+    from apps.TA.storages.abstract.timeseries_storage import TimeseriesStorage
+    from apps.TA.storages.utils.pv_resampling import generate_pv_storages
+    from apps.TA.storages.utils.memory_cleaner import clear_pv_history_values
+
+    start_score = int(TimeseriesStorage.score_from_timestamp(datetime(2018,1,1).timestamp()))
+    end_score = int(TimeseriesStorage.score_from_timestamp(datetime.now().timestamp()))  # 206836 is Dec 20
+
+    tei_processed = {}
+
+    for key in database.keys("BTC_USDT*PriceVolumeHistoryStorage*"):
+        logger.info("running pv refill for " + str(key))
+        [ticker, exchange, object_class, index] = key.decode("utf-8").split(":")
+
+        for score in range(start_score, end_score):
+            generate_pv_storages(ticker, exchange, index, score)
+
+            if not (ticker + exchange) in tei_processed:
+                tei_processed[ticker + exchange] = []  # initialize with 0 indexes
+
+            tei_processed[ticker + exchange].append(index)  # add indexes
+            if len(tei_processed[ticker + exchange]) >= 5:  # vol + price hloc
+                clear_pv_history_values(ticker, exchange, score)
 
 
 def condensed_fill_redis_gaps(ugly_tuple):
@@ -107,37 +108,3 @@ def condensed_fill_redis_gaps(ugly_tuple):
 def condensed_fill_SQL_gaps(ugly_tuple):
     (ticker, exchange, index, back_to_the_backlog) = ugly_tuple
     return missing_data.find_pv_storage_data_gaps(ticker, exchange, index, back_to_the_backlog=True)
-
-### OLD todo: rewrite to run much much faster, batching redis queries ###
-
-### RESAMPLE PRICES TO 5 MIN PRICE STORAGE RECORDS ###
-@start_new_thread
-def price_history_to_price_storage(ticker_exchanges, start_score=None, end_score=None):
-    from apps.TA.storages.utils.pv_resampling import generate_pv_storages
-    from apps.TA.storages.utils.memory_cleaner import clear_pv_history_values
-    from apps.TA.storages.data.pv_history import default_price_indexes
-
-    if not start_score:
-        # start_score = 0  # this is jan 1 2017
-        start_score = int(
-            (datetime(2018, 9, 1).timestamp() - datetime(2017, 1, 1).timestamp()) / 300
-        )  # this is Sep 1 2018
-    processing_score = start_score
-
-    if not end_score:
-        end_score = TimeseriesStorage.score_from_timestamp((datetime.today() - timedelta(hours=2)).timestamp())
-
-    logger.debug(f"STARTING price resampling for scores {start_score} to {end_score}")
-
-    while processing_score < end_score:
-        processing_score += 1
-
-        for ticker, exchange in ticker_exchanges:
-            for index in default_price_indexes:
-                if generate_pv_storages(ticker, exchange, index, processing_score):
-                    if index == "close_price":
-                        clear_pv_history_values(ticker, exchange, processing_score)
-
-    logger.debug(f"FINISHED price resampling for scores {start_score} to {end_score}")
-    # returns nothing - can be threaded with collection of results
-### END RESAMPLE FOR PRICE STORAGE RECORDS ###
