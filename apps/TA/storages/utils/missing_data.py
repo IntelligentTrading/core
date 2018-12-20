@@ -114,6 +114,7 @@ def force_plug_pv_storage_data_gaps(ticker: str, exchange: str, index: str, scor
         storage_class = PriceStorage
     elif index in VOLUME_INDEXES:
         storage_class = VolumeStorage
+        return  # todo: turn this back on later
     else:
         raise Exception("unknown index")
 
@@ -128,11 +129,15 @@ def force_plug_pv_storage_data_gaps(ticker: str, exchange: str, index: str, scor
             periods_range=1
         )
 
-        if query_response['values_count'] > 0 and score == float(query_response['scores'][-1]):
+        if query_response['values_count'] >= 2 and score == float(query_response['scores'][-1]):
             # value is not missing
             continue
 
-        q_value = int(query_response['values'][0]) # todo: handle index error
+        if len(query_response['values']) == 0:
+            # no previous value to copy
+            continue
+
+        q_value = int(query_response['values'][0])
         q_score = float(query_response['scores'][0])
 
         # logger.debug(f"working with {score} == timestamp {TimeseriesStorage.timestamp_from_score(score)}")

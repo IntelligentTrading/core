@@ -59,8 +59,8 @@ def fill_data_gaps(SQL_fill = False, force_fill=False):
     logger.info(f"{len(method_params)} tickers ready to fill gaps")
 
     results = multithread_this_shit(condensed_fill_redis_gaps, method_params)
-
     missing_scores_count = sum([len(result) for result in results])
+
     logger.warning(f"{missing_scores_count} scores could not be recovered and are still missing.")
 
     if SQL_fill:

@@ -9,6 +9,8 @@ from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, PriceVol
 ticker1 = "TOM_BTC"
 ticker2 = "CWC_ETH"
 
+btc_usdt = "BTC_USDT"
+
 timestamp = int(time.time())
 old_timestamp = timestamp - (200 * 24 * 3600)  # 200 days
 index = "close_price"

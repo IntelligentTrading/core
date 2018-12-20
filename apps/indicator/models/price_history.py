@@ -27,8 +27,8 @@ class PriceHistory(models.Model):
     open_p = models.BigIntegerField(null=True) # open_p because open is built-in name in Python
     high = models.BigIntegerField(null=True)
     low = models.BigIntegerField(null=True)
-    close = models.BigIntegerField(null=True) # please use this as price
-    volume = models.FloatField(null=True) # base volume
+    close = models.BigIntegerField(null=True)  # please use this as price
+    volume = models.FloatField(null=True)  # base volume
 
     timestamp = models.DateTimeField(null=False) # store UTC, timestamp=datetime.datetime.utcfromtimestamp(float(timestamp)/1000.0)
 
