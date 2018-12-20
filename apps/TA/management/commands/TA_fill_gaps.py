@@ -24,15 +24,6 @@ class Command(BaseCommand):
 
         arg = options['arg']
 
-        # fill_data_gaps(SQL_fill=False, force_fill=False)
-        #
-        # from apps.TA.management.commands.TA_restore import restore_db_to_redis
-        # for month in range(4,11):
-        #     restore_db_to_redis(
-        #         datetime(2018, month, 1),
-        #         datetime(2018, month+1, 1),
-        #     )
-
         # See if the worker missed generating PV values
         # refill_pv_storages()
 

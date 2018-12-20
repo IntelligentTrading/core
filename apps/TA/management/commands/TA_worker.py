@@ -82,6 +82,7 @@ class Command(BaseCommand):
 
 def get_subscriber_classes():
 
+
     from apps.TA.storages.data.price import PriceSubscriber
     # from apps.TA.storages.data.volume import VolumeSubscriber
     # only PriceStorage:close_price is publishing. All other p and v indexes are muted
