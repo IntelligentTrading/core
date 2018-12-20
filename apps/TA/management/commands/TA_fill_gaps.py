@@ -85,11 +85,13 @@ def refill_pv_storages():
     start_score = int(TimeseriesStorage.score_from_timestamp(datetime(2018,1,1).timestamp()))  # 206836 is Dec 20
     end_score = int(TimeseriesStorage.score_from_timestamp(datetime.now().timestamp()))  # 206836 is Dec 20
 
-    for score in range(start_score, end_score):
-        tei_processed = {}
-        for key in database.keys("BTC_USDT*PriceVolumeHistoryStorage*"):
-            logger.info("running pv refill for " + str(key))
-            [ticker, exchange, object_class, index] = key.decode("utf-8").split(":")
+    tei_processed = {}
+
+    for key in database.keys("BTC_USDT*PriceVolumeHistoryStorage*"):
+        logger.info("running pv refill for " + str(key))
+        [ticker, exchange, object_class, index] = key.decode("utf-8").split(":")
+
+        for score in range(start_score, end_score):
             generate_pv_storages(ticker, exchange, index, score)
 
             if not (ticker + exchange) in tei_processed:
