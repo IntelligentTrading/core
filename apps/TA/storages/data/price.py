@@ -90,4 +90,4 @@ class PriceSubscriber(TickerSubscriber):
         if score_is_near_5min(score):
             if generate_pv_storages(ticker, exchange, index, score):
                 if index == "close_price":
-                    clear_pv_history_values(ticker, exchange, score)
+                    pass # clear_pv_history_values(ticker, exchange, score)
