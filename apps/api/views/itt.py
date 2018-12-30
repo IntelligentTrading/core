@@ -1,4 +1,6 @@
 import ccxt
+import urllib.request, json
+
 from cache_memoize import cache_memoize
 
 from rest_framework.views import APIView
@@ -12,10 +14,19 @@ class ITTPriceView(APIView):
     """
 
     def get(self, request, format=None):
-        return Response(get_itt_token_price())
+#        return Response(get_itt_token_price())
+        return Response(get_itt_token_price_from_ryptocompare_com())
 
 
 # Helpers methods
+
+# Cache for 2 hours.
+@cache_memoize(2*60*60)
+def get_itt_token_price_from_ryptocompare_com():
+    with urllib.request.urlopen("https://min-api.cryptocompare.com/data/pricemulti?fsyms=ITT&tsyms=BTC,USD") as url:
+        data = json.loads(url.read().decode())
+    return {'symbol': 'ITT/USD', 'close': data['ITT']['USD']}
+
 
 # Cache for 8 hours.
 @cache_memoize(8*60*60)
