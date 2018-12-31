@@ -27,18 +27,15 @@ class Command(BaseCommand):
         # See if the worker missed generating PV values
         # refill_pv_storages()
 
-        # try to fix yourself inside Redis only
-        # fill_data_gaps(SQL_fill=False, force_fill=False)
-        # final pass, pulling from SQL and forcing values if demanded in arg
-        fill_data_gaps(SQL_fill=False, force_fill=True)
+        fill_data_gaps(SQL_fill=True, force_fill=False)
         # fill_data_gaps(SQL_fill=True, force_fill=(arg=='force_fill_gaps'))
+        fill_data_gaps(SQL_fill=False, force_fill=True)
 
 
-def fill_data_gaps(SQL_fill = False, force_fill=False):
-
+def fill_data_gaps(SQL_fill=False, force_fill=False):
     method_params = []
 
-    for ticker in ["BTC_USDT",]:  # ["*_USDT", "*_BTC"]:
+    for ticker in ["BTC_USDT", ]:  # ["*_USDT", "*_BTC"]:
         for exchange in ["binance", ]:  # ["binance", "poloniex", "bittrex"]:
             for index in ['close_volume', 'open_price', 'high_price', 'low_price', 'close_price']:
 
@@ -66,13 +63,13 @@ def fill_data_gaps(SQL_fill = False, force_fill=False):
         for missing_scores in results:
             missing_data.force_plug_pv_storage_data_gaps(ticker, exchange, index, missing_scores)
 
-def refill_pv_storages():
 
+def refill_pv_storages():
     from apps.TA.storages.abstract.timeseries_storage import TimeseriesStorage
     from apps.TA.storages.utils.pv_resampling import generate_pv_storages
     from apps.TA.storages.utils.memory_cleaner import clear_pv_history_values
 
-    start_score = int(TimeseriesStorage.score_from_timestamp(datetime(2018,1,1).timestamp()))
+    start_score = int(TimeseriesStorage.score_from_timestamp(datetime(2018, 1, 1).timestamp()))
     end_score = int(TimeseriesStorage.score_from_timestamp(datetime.now().timestamp()))  # 206836 is Dec 20
 
     tei_processed = {}
@@ -95,6 +92,7 @@ def refill_pv_storages():
 def condensed_fill_redis_gaps(ugly_tuple):
     (ticker, exchange, index, back_to_the_backlog) = ugly_tuple
     return missing_data.find_pv_storage_data_gaps(ticker, exchange, index, back_to_the_backlog=False)
+
 
 def condensed_fill_SQL_gaps(ugly_tuple):
     (ticker, exchange, index, back_to_the_backlog) = ugly_tuple
