@@ -118,3 +118,5 @@ node_modules/
 bootstrap-theme/docs/
 bootstrap-theme/scss/
 *.rdb
+Pipfile
+Pipfile.lock

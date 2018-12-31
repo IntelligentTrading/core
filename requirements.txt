@@ -28,7 +28,7 @@ python-binary-memcached==0.26.1
 python-dateutil==2.6.0
 python-memcached==1.59
 python-telegram-bot==10.1.0
-psycopg2==2.7.5
+psycopg2-binary==2.7.6.1
 pytz==2016.10
 PyYAML==3.12
 redis==2.10.6
