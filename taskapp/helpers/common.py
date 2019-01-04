@@ -1,6 +1,7 @@
-import time
+import datetime
 
-from apps.indicator.models import Price
+from apps.indicator.models import PriceHistory
+
 
 from settings import SOURCE_CHOICES, EXCHANGE_MARKETS, BLACKLISTED_COINS
 
@@ -16,8 +17,8 @@ def get_currency_pairs(source, period_in_seconds=4*60*60, blacklisted_coins=None
     """
     if blacklisted_coins is None:
         blacklisted_coins = BLACKLISTED_COINS
-    get_from_time = time.time() - period_in_seconds
-    price_objects = Price.objects.values('transaction_currency', 'counter_currency').filter(source=source).filter(timestamp__gte=get_from_time).distinct()
+    get_from_time = datetime.datetime.now() - datetime.timedelta(seconds=period_in_seconds)
+    price_objects = PriceHistory.objects.values('transaction_currency', 'counter_currency').filter(source=source).filter(timestamp__gte=get_from_time).distinct()
     return [(item['transaction_currency'], item['counter_currency']) for item in price_objects if item['transaction_currency'] not in blacklisted_coins]
 
 def get_source_name(source_code):
@@ -31,8 +32,8 @@ def get_source_trading_pairs(back_in_time_seconds=4*60*60, blacklisted_coins=Non
     """
     if blacklisted_coins is None:
         blacklisted_coins = BLACKLISTED_COINS
-    get_from_time = time.time() - back_in_time_seconds
-    price_objects = Price.objects.values('source', 'transaction_currency', 'counter_currency').filter(timestamp__gte=get_from_time).distinct()
+    get_from_time = datetime.datetime.now() - datetime.timedelta(seconds=back_in_time_seconds)
+    price_objects = PriceHistory.objects.values('source', 'transaction_currency', 'counter_currency').filter(timestamp__gte=get_from_time).distinct()
     return [(item['source'], item['transaction_currency'], item['counter_currency']) for item in price_objects if item['transaction_currency'] not in blacklisted_coins]
 
 def quad_formatted(source, transaction_currency, counter_currency, resample_period):

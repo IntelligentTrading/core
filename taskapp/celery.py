@@ -38,13 +38,7 @@ app.autodiscover_tasks()
 def setup_periodic_tasks(sender, **_):
     from taskapp import tasks
 
-    # Pull poloniex data every minute
-    #EVERY_MINUTE = 60
-    #sender.add_periodic_task(EVERY_MINUTE, tasks.pull_poloniex_data.s(), name='every %is' % EVERY_MINUTE)
-
     # Process data and send signals
-
-
     # FIRST - calculate ANN for SHORT period at every hour and half OO:30, 01:30 ...
     # @Alex: I put it back to 00:00 because the time stamp is a key and should match hours
     # move it back if server performance sufferrs, but make sure to pass a right timestamp
