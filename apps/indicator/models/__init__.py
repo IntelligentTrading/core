@@ -10,7 +10,7 @@ from apps.indicator.models.price_history import PriceHistory
 
 
 __all__ = [
-#    'Price',
+    'Price',
     'Volume',
     'PriceResampl',
     'Sma',
