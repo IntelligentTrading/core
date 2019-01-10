@@ -14,5 +14,7 @@ def window(seq, n=2):
 
 
 def missing_elements(L):
+    L = list(set(L))
+    L.sort()
     missing = chain.from_iterable(range(x + 1, y) for x, y in window(L) if (y - x) > 1)
     return list(missing)
