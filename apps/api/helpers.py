@@ -58,7 +58,7 @@ def filter_queryset_by_timestamp(self, queryset=None):
         queryset = queryset.filter(timestamp__lte=enddate)
     return queryset
 
-def queryset_for_list_without_resample_period(self): # for Price and Volume
+def queryset_for_list_without_resample_period(self): # for Volume
     source = self.request.query_params.get('source', None) # Return from the all sources by default
     transaction_currency = self.kwargs['transaction_currency']
     counter_currency = default_counter_currency(transaction_currency)

@@ -6,12 +6,12 @@ import pandas as pd
 import boto
 import boto.sns
 from boto.sqs.message import Message
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.db.models.signals import post_save, pre_save
 
 from apps.common.behaviors import Timestampable
-from apps.indicator.models import Price
+from apps.indicator.models.price_history import PriceHistory
 from settings import QUEUE_NAME, AWS_OPTIONS, BETA_QUEUE_NAME, TEST_QUEUE_NAME, PERIODS_LIST
 from settings import SOURCE_CHOICES, POLONIEX, COUNTER_CURRENCY_CHOICES, BTC
 from settings import SNS_SIGNALS_TOPIC_ARN, EMIT_SIGNALS
@@ -129,13 +129,14 @@ class Signal(Timestampable, models.Model):
         if self.price and self.price_change:
             return self.price
 
-        price_object = Price.objects.filter(transaction_currency=self.transaction_currency,
+        price_object = PriceHistory.objects.filter(transaction_currency=self.transaction_currency,
                                             source=self.source,
                                             counter_currency = self.counter_currency,
-                                            timestamp__lte=self.timestamp
+                                            timestamp__lte=self.timestamp,
+                                            timestamp__gte=self.timestamp-timedelta(weeks=1) # for performance
                                             ).order_by('-timestamp').first()
         if price_object:
-            self.price = price_object.price
+            self.price = price_object.close
             self.price_change = price_object.price_change
         return self.price
 

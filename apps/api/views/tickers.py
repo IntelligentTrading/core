@@ -5,7 +5,7 @@ from rest_framework.response import Response
 
 from settings import EXCHANGE_MARKETS, COUNTER_CURRENCIES
 
-from apps.indicator.models import Price
+from apps.indicator.models import PriceHistory
 
 from apps.api.helpers import group_items, replace_exchange_code_with_name, get_counter_currency_index, get_source_index
 
@@ -31,8 +31,8 @@ class TransactionCurrenciesView(APIView):
         exchange = request.query_params.get('exchange', None)
         transaction_currency = request.query_params.get('transaction_currency', None)
 
-        timestamp_qs = Price.objects.values('timestamp').order_by('-timestamp')
-        res_qs = Price.objects.values('source', 'transaction_currency', 'counter_currency')
+        timestamp_qs = PriceHistory.objects.values('timestamp').order_by('-timestamp')
+        res_qs = PriceHistory.objects.values('source', 'transaction_currency', 'counter_currency')
 
         if (exchange is not None) and (exchange in EXCHANGE_MARKETS):
             source =  get_source_index(exchange)
