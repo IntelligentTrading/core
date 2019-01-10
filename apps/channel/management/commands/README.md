@@ -2,7 +2,7 @@
 
 * `python manage.py poll_queue`
 
-Read price information from SQS queue (INCOMING_SQS_QUEUE) and save it to Price, Volume (messages with subject: prices_volumes) and PriceHistory (subject: ohlc_prices) models. 
+Read price information from SQS queue (INCOMING_SQS_QUEUE) and save it to PriceHistory (subject: ohlc_prices) model. 
 
 Note: we should remove fetching and saving prices to the Price, Volume in future when a transition to PriceHistory will be completed.
 

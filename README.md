@@ -50,8 +50,8 @@
  - `$ python manage.py shell`
  
     ```
-    > from apps.indicator.models import Price
-    > eth_price = Price.objects.filter(currency="ETH").order_by('-timestamp').first()
-    > print(eth_price.satoshis)
+    > from apps.indicator.models import PriceHistory
+    > eth_price = PriceHistory.objects.filter(currency="ETH").order_by('-timestamp').first()
+    > print(eth_price.close)
     ```
  
