@@ -41,8 +41,6 @@ Defined in api/urls.py
 * /v2/history-prices/
 * /v2/resampled-prices/
 * /v2/signals/
-* /v2/prices/
-* /v2/volumes/
 * /v2/rsi/
 * /v2/sma/
 * /v2/events-elementary/
@@ -54,7 +52,3 @@ Defined in api/urls.py
 * /v2/tickers/exchanges/
 * /v2/tickers/counter-currencies/
 * /v2/itt/
-
-### Old API for ITF models
-* /v1/price
-* /v1/volumes
