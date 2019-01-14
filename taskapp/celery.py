@@ -73,11 +73,12 @@ def setup_periodic_tasks(sender, **_):
         name='at the beginning of every 4 hours',
         )
 
-    # calculate LONG period daily at midnight.
+    # calculate LONG period.
+    # At 5:10 is better than at 0:00 because fo no overlapping with the medium period. 
     sender.add_periodic_task(
-        crontab(minute=0, hour=0),
+        crontab(minute=10, hour=5),
         tasks.compute_indicators_for_all_sources.s(resample_period=LONG),
-        name='daily at midnight',
+        name='daily at 5:10',
         )
 
     # LAST - run backtesting daily
