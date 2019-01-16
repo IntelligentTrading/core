@@ -40,21 +40,6 @@ class PriceHistory(models.Model):
         ]
         unique_together = ('timestamp', 'transaction_currency', 'counter_currency', 'source')
 
-    @property
-    def price_change(self):
-        current_price = self.close or self.get_price()
-        if current_price:
-            last_week = datetime.now() - timedelta(weeks=1)
-            fifteen_min_older_price = PriceHistory.objects.filter(
-                source=self.source,
-                transaction_currency=self.transaction_currency,
-                counter_currency=self.counter_currency,
-                timestamp__lte=self.timestamp - timedelta(minutes=1440),
-                timestamp__gte=last_week # improve performance by limit data
-            ).order_by('-timestamp').first()
-        if current_price and fifteen_min_older_price:
-            return float(current_price - fifteen_min_older_price.close)  / fifteen_min_older_price.close
-
 
 # get n last price records
 def get_n_last_prices_ts(n, source, transaction_currency, counter_currency ):

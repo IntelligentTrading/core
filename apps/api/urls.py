@@ -2,10 +2,9 @@ from django.conf.urls import url
 from rest_framework_swagger.views import get_swagger_view
 
 from apps.api.views import ann_price_classification, events_elementary, events_logical, \
-    history_price, resampled_price, rsi, signal, sma, sentiment
+    history_price, resampled_price, rsi, signal, sma, volume, price, sentiment
 from apps.api.views import tickers, itt
-
-
+from apps.api.views import v1_price, v1_volume, v1_user, v1_csv
 
 app_name = 'api'
 
@@ -13,10 +12,32 @@ schema_view = get_swagger_view(title='ITT Core API')
 
 urlpatterns = [
 
+#    url(r'^user$', v1_user.User.as_view(), name='v1_user'),
+#    url(r'^users$', v1_user.Users.as_view(), name='v1_users'),
+
+    url(r'^price$', v1_price.Price.as_view(), name='v1_price'),
+    url(r'^volume$', v1_volume.Volume.as_view(), name='v1_volume'),
+
+    url(r'^csv$', v1_csv.CSV.as_view(), name='v1_csv'),
+
+#    url(r'^v1/user$', v1_user.User.as_view(), name='v1_user'),
+#    url(r'^v1/users$', v1_user.Users.as_view(), name='v1_users'),
+
+    url(r'^v1/price$', v1_price.Price.as_view(), name='v1_price'),
+    url(r'^v1/volume$', v1_volume.Volume.as_view(), name='v1_volume'),
+
+    url(r'^v1/csv$', v1_csv.CSV.as_view(), name='v1_csv'),
+
+#   url(r'^sma$', views.sma.SMA.as_view(), name='sma'),
+
     url(r'^v2/signals/coins-with-most-signals/$', signal.CoinsWithMostSignals.as_view(), name='coins-with-most-signals'),
     url(r'^v2/signals/$', signal.ListSignals.as_view(), name='signals'), 
 
     url(r'^v2/resampled-prices/$', resampled_price.ListPrices.as_view(), name='resampled-prices'),
+
+    url(r'^v2/prices/$', price.ListPrices.as_view(), name='prices'),
+
+    url(r'^v2/volumes/$', volume.ListVolumes.as_view(), name='volumes'),
 
     url(r'^v2/rsi/$', rsi.ListRsis.as_view(), name='rsis'),
 

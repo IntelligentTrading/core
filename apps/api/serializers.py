@@ -3,7 +3,7 @@ import json
 from rest_framework import serializers
 
 from apps.signal.models import Signal
-from apps.indicator.models import AnnPriceClassification, EventsElementary, EventsLogical, PriceHistory, PriceResampl, Rsi, Sma
+from apps.indicator.models import AnnPriceClassification, EventsElementary, EventsLogical, PriceHistory, PriceResampl, Rsi, Sma, Volume, Price
 from apps.sentiment.models import Sentiment
 
 
@@ -63,6 +63,18 @@ class EventsLogicalSerializer(serializers.ModelSerializer):
         model = EventsLogical
         fields = ['source', 'resample_period', 'transaction_currency', 'counter_currency', 'timestamp',\
                     'event_name', 'event_value']
+
+# Price (model: Price)
+class PriceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Price
+        fields = ['source', 'transaction_currency', 'counter_currency', 'timestamp', 'price']
+
+# Volume
+class VolumeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Volume
+        fields = ['source', 'transaction_currency', 'counter_currency', 'timestamp', 'volume']
 
 # PriceHistory
 class HistoryPriceSerializer(serializers.ModelSerializer):

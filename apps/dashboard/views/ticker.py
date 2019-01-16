@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.views.generic import View
 
-from apps.indicator.models import PriceHistory
+from apps.indicator.models import Price, Volume
 from apps.signal.models import Signal
 from settings import COUNTER_CURRENCY_CHOICES, USDT, BINANCE
 
@@ -23,7 +23,12 @@ class Ticker(View):
             if cc[1] == counter_currency:
                 counter_currency_int = cc[0]
 
-        price = PriceHistory.objects.filter(transaction_currency=transaction_currency,
+        price = Price.objects.filter(transaction_currency=transaction_currency,
+                                    counter_currency=counter_currency_int,
+                                    source=BINANCE
+                                    ).order_by('-timestamp').first()
+
+        volume = Volume.objects.filter(transaction_currency=transaction_currency,
                                     counter_currency=counter_currency_int,
                                     source=BINANCE
                                     ).order_by('-timestamp').first()
@@ -37,6 +42,7 @@ class Ticker(View):
             "transaction_currency": transaction_currency,
             "counter_currency": counter_currency,
             "price": price,
+            "volume": volume,
             "tv_ticker_symbol": ticker_symbol.replace("_", ""),
             "signals": signals,
         }
