@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand
 from django.db import IntegrityError
 
 from apps.channel.incoming_queue import SqsListener
-from apps.indicator.models import PriceHistory
+from apps.indicator.models import Price, Volume, PriceHistory
 
 from taskapp.helpers.common import get_source_name
 
@@ -58,9 +58,38 @@ def process_message_from_queue(message_body):
             continue # skip this source or counter_currency
 
         if subject == 'prices_volumes' and item['category'] == 'price':
-            pass
+            try:
+                price = int(float(item['value']) * 10 ** 8) # convert to satoshi
+
+                Price.objects.create(
+                    source=source_code,
+                    transaction_currency=transaction_currency,
+                    counter_currency=counter_currency_code,
+                    price=price,
+                    timestamp=item['timestamp']
+                )
+                #processed.append("{}/{}".format(transaction_currency, counter_currency_code))
+                # logger.debug(">>> Price saved: source={}, transaction_currency={}, counter_currency={}, price={}, timestamp={}".format(
+                #            source_code, transaction_currency, counter_currency_code, price, item['timestamp']))
+            except Exception as e:
+                logger.debug(f">>>> Error saving Price for {item['symbol']} from: {item['source']}. {e}")
+
         elif subject == 'prices_volumes' and item['category'] == 'volume':
-            pass
+            try:
+                volume = float(item['value'])
+
+                Volume.objects.create(
+                    source=source_code,
+                    transaction_currency=transaction_currency,
+                    counter_currency=counter_currency_code,
+                    volume=volume,
+                    timestamp=item['timestamp']
+                )
+                # logger.debug(">>> Volume saved: source={}, transaction_currency={}, counter_currency={}, volume={}, timestamp={}".format(
+                #            source_code, transaction_currency, counter_currency_code, volume, item['timestamp']))
+            except Exception as e:
+                logger.debug(f">>>> Error saving Volume for {item['symbol']} from: {item['source']}. {e}")
+
         elif subject == 'ohlc_prices':
             try:
                 PriceHistory.objects.create(
