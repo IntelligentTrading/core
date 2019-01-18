@@ -25,8 +25,8 @@ def symbol_in_whitelist(source, transaction_currency, counter_currency_index, us
     if source == BINANCE:
         return f"{transaction_currency}/{counter_currency_name}" in BINANCE_WHITELIST
     else:
-        # allow all symbols from Poloniex and Bittrex
-        return True
+        # deny all symbols from Poloniex and Bittrex
+        return False
 
 def get_tickers(source='all', period_in_seconds=4*60*60, blacklisted_coins=None, use_whitelist=True):
     """
