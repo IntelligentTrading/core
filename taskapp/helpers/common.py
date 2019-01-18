@@ -28,7 +28,7 @@ def symbol_in_whitelist(source, transaction_currency, counter_currency_index, us
         # whitelist all symbols from Poloniex and Bittrex
         return True
 
-def get_currency_pairs(source, period_in_seconds=4*60*60, blacklisted_coins=None, use_whitelist=True):
+def get_tickers(source, period_in_seconds=4*60*60, blacklisted_coins=None, use_whitelist=True):
     """
     set blacklisted_coins or they will loads from settings
     set use_whitelist to False if you want to disable whitelist (allow all pairs)

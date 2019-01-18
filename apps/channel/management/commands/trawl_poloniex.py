@@ -7,11 +7,11 @@ from django.core.management.base import BaseCommand
 from settings import POLONIEX, SHORT, MEDIUM, USDT
 from settings import time_speed  # 1 / 10
 
-from taskapp.helpers.poloniex import _pull_poloniex_data
+#from taskapp.helpers.poloniex import _pull_poloniex_data
 from taskapp.helpers.indicators import _compute_indicators_for, _compute_ann
 from taskapp.helpers.backtesting import _backtest_all_strategies
 from taskapp.helpers.sentiment_analysis import _analyze_sentiment
-from taskapp.helpers.common import get_currency_pairs
+from taskapp.helpers.common import get_tickers
 
 
 
@@ -39,7 +39,7 @@ class Command(BaseCommand):
                                     source=POLONIEX, resample_period=SHORT)
 
         elif arg == 'compute_indicators':
-            for (t_currency, c_currency) in get_currency_pairs(source=POLONIEX, period_in_seconds=1*60*60):
+            for (t_currency, c_currency) in get_tickers(source=POLONIEX, period_in_seconds=1*60*60):
                 _compute_indicators_for(source=POLONIEX, transaction_currency=t_currency,
                                         counter_currency=c_currency, resample_period=MEDIUM)  # SHORT
         elif arg == 'ann':

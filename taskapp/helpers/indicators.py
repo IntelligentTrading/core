@@ -11,7 +11,7 @@ from apps.indicator.models.sma import Sma
 from apps.strategy.models.strategy_ref import get_all_strategy_classes
 from apps.user.models.user import get_horizon_value_from_string
 from settings import SHORT, MEDIUM, HORIZONS_TIME2NAMES, RUN_ANN, MODIFY_DB
-from taskapp.helpers.common import get_currency_pairs, quad_formatted
+from taskapp.helpers.common import get_tickers, quad_formatted
 
 # from taskapp.helpers.backtesting import _backtest_all_strategies
 
@@ -36,7 +36,7 @@ def _compute_ann(source, resample_period):
     # TODO: get pairs from def(SOURCE)
     # pairs_to_iterate = [(itm,Price.USDT) for itm in USDT_COINS] + [(itm,Price.BTC) for itm in BTC_COINS]
 
-    pairs_to_iterate = get_currency_pairs(source=source, period_in_seconds=resample_period * 60 * 2)
+    pairs_to_iterate = get_tickers(source=source, period_in_seconds=resample_period * 60 * 2)
     # logger.debug("## Pairs to iterate: " + str(pairs_to_iterate))
 
     timestamp = time.time() // (1 * 60) * (1 * 60)  # rounded to a minute
