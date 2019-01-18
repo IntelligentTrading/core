@@ -25,37 +25,32 @@ def symbol_in_whitelist(source, transaction_currency, counter_currency_index, us
     if source == BINANCE:
         return f"{transaction_currency}/{counter_currency_name}" in BINANCE_WHITELIST
     else:
-        # whitelist all symbols from Poloniex and Bittrex
+        # allow all symbols from Poloniex and Bittrex
         return True
 
-def get_tickers(source, period_in_seconds=4*60*60, blacklisted_coins=None, use_whitelist=True):
+def get_tickers(source='all', period_in_seconds=4*60*60, blacklisted_coins=None, use_whitelist=True):
     """
     set blacklisted_coins or they will loads from settings
-    set use_whitelist to False if you want to disable whitelist (allow all pairs)
-    Return: [('BTC', 0), ('PINK', 0), ('ETH', 0),....]
+    set use_whitelist to False if you want to disable whitelist
+
+    set source to 'all' to return tickers with source, like [(0, 'BTC', 0), (1, 'BTC', 0), (2, 'BTC', 0),....] from all exchanges/sources
+    otherwise return: [('BTC', 0), ('PINK', 0), ('ETH', 0),....]
     """
     if blacklisted_coins is None:
         blacklisted_coins = BLACKLISTED_COINS
     get_from_time = datetime.datetime.now() - datetime.timedelta(seconds=period_in_seconds)
-    price_objects = PriceHistory.objects.values('transaction_currency', 'counter_currency').filter(source=source).filter(timestamp__gte=get_from_time).distinct()
-    return [(item['transaction_currency'], item['counter_currency'])\
-        for item in price_objects\
-            if symbol_in_whitelist(source, item['transaction_currency'], item['counter_currency'], use_whitelist)\
-            and item['transaction_currency'] not in blacklisted_coins]
-
-def get_source_trading_pairs(back_in_time_seconds=4*60*60, blacklisted_coins=None, use_whitelist=True):
-    """
-    Return[(source, transaction_currency, counter_currency), (source1, transaction_currency, counter_currency) ...]
-    Return: [(0, 'BTC', 0), (1, 'BTC', 0), (2, 'BTC', 0),....]
-    """
-    if blacklisted_coins is None:
-        blacklisted_coins = BLACKLISTED_COINS
-    get_from_time = datetime.datetime.now() - datetime.timedelta(seconds=back_in_time_seconds)
     price_objects = PriceHistory.objects.values('source', 'transaction_currency', 'counter_currency').filter(timestamp__gte=get_from_time).distinct()
-    return [(item['source'], item['transaction_currency'], item['counter_currency'])\
-        for item in price_objects\
-            if symbol_in_whitelist(item['source'], item['transaction_currency'], item['counter_currency'], use_whitelist)\
-            and (item['transaction_currency'] not in blacklisted_coins)]
+    if source == 'all':
+        return [(item['source'], item['transaction_currency'], item['counter_currency'])\
+            for item in price_objects\
+                if symbol_in_whitelist(item['source'], item['transaction_currency'], item['counter_currency'], use_whitelist)\
+                and (item['transaction_currency'] not in blacklisted_coins)]
+    else:
+        price_objects = price_objects.filter(source=source)
+        return [(item['transaction_currency'], item['counter_currency'])\
+            for item in price_objects\
+                if symbol_in_whitelist(source, item['transaction_currency'], item['counter_currency'], use_whitelist)\
+                and item['transaction_currency'] not in blacklisted_coins]
 
 def quad_formatted(source, transaction_currency, counter_currency, resample_period):
     return f"{get_source_name(source)}_{transaction_currency}_{counter_currency}_{resample_period}"

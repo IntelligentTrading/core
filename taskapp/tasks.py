@@ -13,9 +13,9 @@ logger = logging.getLogger(__name__)
 ############ Indicators
 @celery_app.task(retry=False)
 def compute_indicators_for_all_sources(resample_period):
-    from taskapp.helpers.common import get_source_trading_pairs
-    #logger.info(f"Trading trios: {get_source_trading_pairs()}")
-    for (source, transaction_currency, counter_currency) in get_source_trading_pairs():
+    from taskapp.helpers.common import get_tickers
+    #logger.info(f"Tickers: {get_tickers(source='all')}")
+    for (source, transaction_currency, counter_currency) in get_tickers(source='all'):
         compute_indicators_for.delay(source, transaction_currency, counter_currency, resample_period)
 
 @celery_app.task(retry=False)
