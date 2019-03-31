@@ -113,6 +113,7 @@ from corsheaders.defaults import default_headers #, default_methods
 # CORS_ALLOW_METHODS = default_methods
 CORS_ALLOW_HEADERS = default_headers + (
     'API-KEY',
+    'Authorization',
 )
 
 CORS_ORIGIN_ALLOW_ALL = True

@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand
 
 from apps.TA import PRICE_INDEXES
 from apps.TA.storages.abstract.timeseries_storage import TimeseriesStorage
-from apps.common.utilities.multithreading import start_new_thread, multithread_this_shit
+from apps.common.utilities.multithreading import start_new_thread, run_all_multithreaded
 from apps.TA.storages.utils import missing_data
 from settings.redis_db import database
 
@@ -47,13 +47,13 @@ def fill_data_gaps(SQL_fill=False, force_fill=False):
 
     logger.info(f"{len(method_params)} tickers ready to fill gaps")
 
-    results = multithread_this_shit(condensed_fill_redis_gaps, method_params)
+    results = run_all_multithreaded(condensed_fill_redis_gaps, method_params)
     missing_scores_count = sum([len(result) for result in results])
 
     logger.warning(f"{missing_scores_count} scores could not be recovered and are still missing.")
 
     # if SQL_fill:
-    #     results = multithread_this_shit(condensed_fill_SQL_gaps, method_params)
+    #     results = run_all_multithreaded(condensed_fill_SQL_gaps, method_params)
     #     missing_scores_count = sum([len(result) for result in results])
     #     logger.warning(f"{missing_scores_count} scores could not be recovered and are still missing.")
 

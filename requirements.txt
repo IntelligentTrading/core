@@ -30,7 +30,7 @@ python-memcached==1.59
 python-telegram-bot==10.1.0
 psycopg2-binary==2.7.6.1
 pytz==2016.10
-PyYAML==3.12
+PyYAML>=4.2b1
 redis==2.10.6
 requests-oauthlib==0.8.0
 requests==2.20.1
@@ -39,6 +39,7 @@ simplejson==3.11.1
 six==1.11.0
 TA-Lib==0.4.17
 toolz==0.9.0
+urllib3>=1.23
 waitress==1.0.2
 whitenoise==3.3.1
 

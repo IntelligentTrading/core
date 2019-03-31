@@ -230,9 +230,6 @@ BTC_COINS = [
     "NXC", "BELA", "XPM", "XVC", "XBC", "RADS", "SBD", "PINK", "NMC", "HUC", "BTM"
 ]
 
-# No signals for this coins
-BLACKLISTED_COINS = ['ITT', 'BCC', 'TUSD', ]
-
 # list of the exchanges on which we generate signals. Make it in sync with same list in Data app settings
 #EXCHANGE_MARKETS = ('poloniex', 'binance', 'bittrex', 'bitfinex', 'kucoin')
 EXCHANGE_MARKETS = ('poloniex', 'binance', 'bittrex')

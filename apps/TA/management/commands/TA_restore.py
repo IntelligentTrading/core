@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand
 
 from apps.TA.storages.abstract.ticker_subscriber import timestamp_is_near_5min
 from apps.TA.storages.data.pv_history import PriceVolumeHistoryStorage, default_price_indexes
-from apps.common.utilities.multithreading import multithread_this_shit
+from apps.common.utilities.multithreading import run_all_multithreaded
 from settings import BTC, USDT, BINANCE
 from settings.redis_db import database
 from apps.indicator.models.price_history import PriceHistory
@@ -54,7 +54,7 @@ def restore_db_to_redis(start_datetime, end_datetime):
             # counter_currency__in=[BTC, USDT]
         )
 
-        results = multithread_this_shit(save_pv_histories_to_redis, price_history_objects)
+        results = run_all_multithreaded(save_pv_histories_to_redis, price_history_objects)
         try:
             total_results = sum([sum(result) for result in results])
         except Exception as e:
