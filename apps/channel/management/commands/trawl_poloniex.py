@@ -8,9 +8,7 @@ from settings import POLONIEX, SHORT, MEDIUM, USDT
 from settings import time_speed  # 1 / 10
 
 #from taskapp.helpers.poloniex import _pull_poloniex_data
-from taskapp.helpers.indicators import _compute_indicators_for, _compute_ann
-from taskapp.helpers.backtesting import _backtest_all_strategies
-from taskapp.helpers.sentiment_analysis import _analyze_sentiment
+from taskapp.helpers.indicators import _compute_indicators_for
 from taskapp.helpers.common import get_tickers
 
 
@@ -42,25 +40,11 @@ class Command(BaseCommand):
             for (t_currency, c_currency) in get_tickers(source=POLONIEX, period_in_seconds=1*60*60):
                 _compute_indicators_for(source=POLONIEX, transaction_currency=t_currency,
                                         counter_currency=c_currency, resample_period=MEDIUM)  # SHORT
-        elif arg == 'ann':
-            from taskapp.tasks import compute_ann_for_all_sources
-            #compute_ann_for_all_sources(resample_period=SHORT)
-            #_compute_ann(source=POLONIEX, resample_period=SHORT)
-            _compute_ann(source=POLONIEX, resample_period=MEDIUM)
-
-        elif arg == 'backtest':
-            _backtest_all_strategies()
-
-        elif arg == 'sentiment':
-            _analyze_sentiment()
-
 
         else:
             print(textwrap.dedent("""How to use:
             manage.py trawl_poloniex <arg>, where <arg>:
                 * pull_data - download tickers from POLONIEX. Break when you have enough.
                 * compute_indicators - compute indicators for poloniex (default)
-                * compute_pair - BTC/USDT only 
-                * backtest - backtest all strategies
-                * ann - BE VERY VERY CAREFUL WITH THAT!!!! Because AI is our biggest existential threat.
+                * compute_pair - BTC/USDT only
             """))

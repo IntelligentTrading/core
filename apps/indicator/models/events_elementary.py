@@ -18,7 +18,7 @@ from apps.signal.models.signal import Signal
 
 from apps.user.models.user import get_horizon_value_from_string
 from settings import SHORT
-from settings import HORIZONS_TIME2NAMES, EMIT_RSI, EMIT_SMA, RUN_ANN, MODIFY_DB, MEDIUM, RUN_BEN
+from settings import HORIZONS_TIME2NAMES, EMIT_RSI, EMIT_SMA, MODIFY_DB, MEDIUM, RUN_BEN
 
 
 logger = logging.getLogger(__name__)
@@ -50,20 +50,8 @@ ICHI_ELEMENTARY_EVENTS = [
     'close_below_cloud',
 ]
 
-AI_ELEMENTARY_EVENTS = [
-    'ann_price_2class_simple',
-    'ann_price_anomaly'
-]
-
-BEN_VOLUME_EVENTS = [
-    'vbi_price_cross_from_below',
-    'vbi_price_gt_mean_by_percent',
-    'vbi_volume_cross_from_below',
-    'vbi_volume_gt_mean_by_percent',
-]
-
 # list of all events to return by get_last_elementory_events_df
-ALL_POSSIBLE_ELEMENTARY_EVENTS = SMA_ELEMENTARY_EVENTS + ICHI_ELEMENTARY_EVENTS + AI_ELEMENTARY_EVENTS + BEN_VOLUME_EVENTS
+ALL_POSSIBLE_ELEMENTARY_EVENTS = SMA_ELEMENTARY_EVENTS + ICHI_ELEMENTARY_EVENTS
 
 # dictionary to convert name of sma event to one-number trend
 _col2trend = {
@@ -86,126 +74,6 @@ VBI_PRICE_PERIOD = 50
 VBI_VOLUME_PERIOD = 50
 VBI_PRICE_CROSS_PERCENT = 0.02  # TODO just for the time being it is here, should move later
 VBI_VOLUME_CROSS_PERCENT = 0.02
-
-
-
-def _process_ai_simple(horizon, ann_classif_df, **kwargs):
-    '''
-    very simple strategy: emit signal anytime it changes state from up to down
-    '''
-
-    # NOTE: here I hardcoded two class classification ignoring SAME - should be done on a  model level!!
-
-    # ann_classif_df = get_n_last_ann_classif_df(5, **kwargs)
-    # if ann_classif_df.empty:
-    #     logger.error('  get_n_last_ann: something wrong with AI indicators... we dont have it ...')
-    #     return False
-
-    # choose only two class classification (ignore SAME), then add a new column with the best class
-    df = ann_classif_df[['probability_up','probability_down']]
-    df['class'] = df.idxmax(axis=1)
-
-    df.loc[df['class'] == 'probability_up', 'class_num'] = int(0)
-    df.loc[df['class'] == 'probability_down', 'class_num'] = int(1)
-    df['class_change'] = df['class_num'].diff()   # detect change of state
-
-    # class change is a difference btw previos and current cell of class (which is Up or DOWN)
-    # so in case we have  0 0 0 0 1 1 (change prediction from up to down)
-    # it will generate    0 0 0 0 1 0
-    if df.iloc[-1]['class_change'] != 0:
-        # emit signal
-        try:
-            logger.debug("******************** AI event is detected *****************")
-            # TODO: change to emitting two signals UP and DOWN according to how others events are generated (for ML)
-            new_instance = EventsElementary(
-                **kwargs,
-                event_name="ann_price_2class_simple",
-                event_value= -int(df.iloc[-1]['class_change']),
-            )
-            if MODIFY_DB: new_instance.save()
-            logger.debug("   >>> ANN event detected and saved")
-
-            signal_ai = Signal(
-                **kwargs,
-                signal='ANN_Simple',
-                trend= -int(df.iloc[-1]['class_change']),
-                strength_value= int(3),
-                horizon=horizon,
-                predicted_ahead_for= ann_classif_df.tail(1)['predicted_ahead_for'][0],
-                probability_same = ann_classif_df.tail(1)['probability_same'][0],
-                probability_up = df.tail(1)['probability_up'][0],
-                probability_down = df.tail(1)['probability_down'][0]
-            )
-            if MODIFY_DB: signal_ai.save()
-            logger.debug("   >>> ANN event FIRED!")
-        except Exception as e:
-            logger.error(" Error saving/emitting ANN Event " + e)
-    else:
-        logger.debug("   ... no AI event generated (predicts no changes in price")
-
-
-def _process_ai_anomaly(horizon, ann_classif_df, **kwargs):
-    '''
-    yet another strategy based on ai indicator
-    '''
-
-    # we have a multivariate (3-variate) disctribution of price predictiton, calculate mean, varuance for each
-    # fit Normal distribution to previousd data, calculater parameters: mean vector and covariance matrix
-    # [var_same, var_up, var_down]
-    data = ann_classif_df[0:-1][['probability_same','probability_up','probability_down']]
-    cov = np.array(data.cov())
-    mu = np.array(data.mean(axis=0))
-
-    # get the current data point
-    x = np.array(ann_classif_df.tail(1)[['probability_same','probability_up','probability_down']])
-
-    # calculate single pdf value, for test
-    #p = multivariate_normal.pdf(x, mu, cov, allow_singular=True)
-
-    #### here we calculate an area under 3D Gaussian curve which is probability of current point belonging to this disctibution
-    m_dist_x = np.dot((x - mu), np.linalg.inv(cov))
-    m_dist_x = np.dot(m_dist_x, (x - mu).transpose())
-
-    # here p is probability of upcoming vector of price prediction being inside normal distribution of previous probabilities
-    p = float(1 - stats.chi2.cdf(m_dist_x, 3))
-    logger.info("  || ANOMALY DETECTION: probability of price belong to current distribution p = " + str(p))
-
-    # have to learn that threshold
-    TRESHOLD = 0.06
-
-    if p < TRESHOLD:
-        # emit signal
-        try:
-            logger.debug("******************** ANOMALY THRESHOLD AI event is detected *****************")
-            new_instance = EventsElementary(
-                **kwargs,
-                event_name="ann_price_anomaly",
-                event_value=p,
-            )
-            if MODIFY_DB: new_instance.save()
-
-            signal_ai = Signal(
-                **kwargs,
-                signal='ANN_AnomalyPrc',
-                trend= int(0),
-                strength_value= int(3),
-                horizon=horizon,
-                predicted_ahead_for= ann_classif_df.tail(1)['predicted_ahead_for'][0],
-                probability_same = p,
-                #probability_up = -1,
-                #probability_down = -1
-            )
-            logger.debug("------> AI Anomaly Signal to save:" + str(signal_ai))
-
-            if MODIFY_DB: signal_ai.save()
-            logger.debug("  || Anomaly ANN event FIRED!")
-        except Exception as e:
-            logger.error(" Error saving/emitting Anomaly ANN Event " + e)
-    else:
-        logger.debug(" || no Anomaly AI  detected")
-
-
-
 
 
 def _process_rsi(horizon, **kwargs)->int:
@@ -309,49 +177,6 @@ def _process_sma_crossovers(horizon, prices_df, **kwargs):
                     logger.debug("   >>> FIRED - Event " + event_name)
                 except Exception as e:
                     logger.error(" #Error firing SMA signal ")
-
-
-def _process_ben_volume_based(horizon, price_volume_df, **kwargs):
-    # DESCRIPTION of indicator:
-    # if price crosses the mean by some percent AND volume is already greater than mean by some other percent)
-    # OR (volume crosses the mean by some percent AND price is already greater than mean by some other
-    # percent) we emit a signal
-
-    events_df = pd.DataFrame()
-
-    events_df['vbi_price_cross_from_below'] = np.sign(
-        (1 + VBI_PRICE_CROSS_PERCENT) * price_volume_df.sma_close_price - price_volume_df.close_price
-                                                    ).diff().lt(0)
-    events_df['vbi_price_gt_mean_by_percent'] = np.sign(
-        (1 + VBI_PRICE_CROSS_PERCENT) * price_volume_df.sma_close_price - price_volume_df.close_price
-                                                    ).lt(0)
-
-    events_df['vbi_volume_cross_from_below'] = np.sign(
-        (1 + VBI_VOLUME_CROSS_PERCENT) * price_volume_df.mean_volume - price_volume_df.close_volume
-                                                    ).diff().lt(0)
-    events_df['vbi_volume_gt_mean_by_percent'] = np.sign(
-        (1 + VBI_VOLUME_CROSS_PERCENT) * price_volume_df.mean_volume - price_volume_df.close_volume
-                                                    ).lt(0)
-
-    # get the last events row and account for a small timestamp rounding error
-    last_event_row = events_df.iloc[-1]      # you can you events_df.tail(1) here
-
-    # for each event in last row of all recent events
-    # note: we need this loop because at one moment there might be several events (in contract to RSI)
-    for event_name, event_value in last_event_row.iteritems():
-        if event_value:    # if one of SMA events is TRUE, save and emit
-            # save all elem events
-            try:
-                ben_event = EventsElementary(
-                    **kwargs,
-                    event_name=event_name,
-                    event_value=int(1),
-                )
-                if MODIFY_DB: ben_event.save()
-            except Exception as e:
-                logger.error(" #Error saving Ben elementary event ")
-
-
 
 
 
@@ -547,27 +372,6 @@ class EventsElementary(AbstractIndicator):
                 except Exception as e:
                     logger.error(" Error saving  " + event_name + " elementary event ")
         logger.info(" || Ichi calculation completed, " + str(horizon) + " in time " + str(time.time() - ichi_start_time))
-
-
-
-        ############## calculate and save ANN elementory Events   #################
-        # we have ANN indicators only for SHORT period for now!
-        # TODO: remove SHORT/ MEDIUM when models for 3 horizons will be added!
-        if RUN_ANN and (kwargs['resample_period'] in [SHORT,MEDIUM]):
-            # get recent ai_indicators from DB
-            from apps.indicator.models.ann_future_price_classification import get_n_last_ann_classif_df
-            ann_classif_df = get_n_last_ann_classif_df(200, "PRICE_PREDICT", **kwargs)
-            if ann_classif_df.empty:
-                logger.error('  get_n_last_ann: something wrong with AI indicators... we dont have it ...')
-            else:
-                logger.info("   ... Check  AI Elementary Events for PERIOD: " + str(kwargs['resample_period']))
-                _process_ai_simple(horizon, ann_classif_df, **kwargs)
-                _process_ai_anomaly(horizon, ann_classif_df, **kwargs)
-        else:
-            logger.info("   ... ANN elementary event calculation has been skipped")
-
-
-
 
 
 

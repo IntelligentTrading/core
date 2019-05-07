@@ -38,27 +38,6 @@ app.autodiscover_tasks()
 def setup_periodic_tasks(sender, **_):
     from taskapp import tasks
 
-    # Process data and send signals
-    # FIRST - calculate ANN for SHORT period at every hour and half OO:30, 01:30 ...
-    # @Alex: I put it back to 00:00 because the time stamp is a key and should match hours
-    # move it back if server performance sufferrs, but make sure to pass a right timestamp
-    if RUN_ANN:
-        logger.info("   >>>>>  adding a AI task to queue: compute_ann_for_all_sources")
-        # AI SHORT
-        sender.add_periodic_task(
-            crontab(minute=25, hour='*'),
-            tasks.compute_ann_for_all_sources.s(resample_period=SHORT),
-            name='at the beginning of every hour and half',
-            )
-
-        # AI MEDIUM
-        sender.add_periodic_task(
-            crontab(minute=40, hour='*/4'),
-            tasks.compute_ann_for_all_sources.s(resample_period=MEDIUM),
-            name='40 minutes later then MEDIUM indicators start... every 4.40',
-            )
-
-
     #calculate SHORT period at the start of the hour
     sender.add_periodic_task(
         crontab(minute=0),  # crontab(minute=3, hour='*')
@@ -72,42 +51,3 @@ def setup_periodic_tasks(sender, **_):
         tasks.compute_indicators_for_all_sources.s(resample_period=MEDIUM),
         name='at the beginning of every 4 hours',
         )
-
-    # calculate LONG period.
-    # At 5:10 is better than at 0:00 because fo no overlapping with the medium period. 
-    sender.add_periodic_task(
-        crontab(minute=10, hour=5),
-        tasks.compute_indicators_for_all_sources.s(resample_period=LONG),
-        name='daily at 5:10',
-        )
-
-    # LAST - run backtesting daily
-    if RUN_BACKTESTING:
-        sender.add_periodic_task(
-            crontab(minute=40, hour=13),
-            tasks.backtest_all_strategies.s(),
-            name='daily at 13:40',
-            )
-
-
-    # sentiment analysis
-    if RUN_SENTIMENT:
-        logger.info("   >>>>>  Scheduling sentiment calculation...")
-        sender.add_periodic_task(
-            crontab(minute=37, hour=14),
-            tasks.compute_sentiment,
-            name='daily at 14:37',
-            )
-
-    # Precache info_bot every 4 hours
-    # from settings import INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS
-    #sender.add_periodic_task(INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS, tasks.precache_info_bot.s(), name='every %is' % INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS)
-
-
-## Non periodic tasks
-## Runs tasks, that should start, when worker is ready. Like precaching.
-# from celery.signals import worker_ready
-# @worker_ready.connect
-# def at_start(sender, **kwarg):
-#     with sender.app.connection() as conn:
-#         sender.app.send_task('taskapp.tasks.precache_info_bot', args=None, connection=conn)
