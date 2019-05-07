@@ -269,7 +269,7 @@ A_PRIME_NUMBER = int(os.environ.get('A_PRIME_NUMBER', 12345))
 TEAM_EMOJIS = os.environ.get('TEAM_EMOJIS', "🤖,").split(",")
 ITT_API_KEY = os.environ.get('ITT_API_KEY', "123ABC")
 
-LOAD_TALIB = True  # always True unless doing some temporary server update
+LOAD_TALIB = False  # always True unless doing some temporary server update
 time_speed = 1  # set to 1 for production, 10 for fast debugging
 EMIT_SMA = False
 EMIT_RSI = True
