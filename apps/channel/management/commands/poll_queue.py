@@ -10,7 +10,7 @@ from apps.indicator.models import Price, Volume, PriceHistory
 
 from taskapp.helpers.common import get_source_name
 
-from settings import INCOMING_SQS_QUEUE, SOURCE_CHOICES, COUNTER_CURRENCY_CHOICES
+from settings import INCOMING_SQS_QUEUE, SOURCE_CHOICES, COUNTER_CURRENCY_CHOICES, BINANCE
 
 
 
@@ -49,11 +49,14 @@ def process_message_from_queue(message_body):
     for item in items:
         # logger.debug(f"Save {item['category']} for {item['symbol']} from {item['source']}")
 
-        source_code = next((code for code, source_text in SOURCE_CHOICES if source_text == item['source']), None)
+        # source_code = next((code for code, source_text in SOURCE_CHOICES if source_text == item['source']), None)
+
+        source_code = BINANCE
 
         (transaction_currency, counter_curency_text) = item['symbol'].split('/')
 
         counter_currency_code = next((code for code, counter_currency in COUNTER_CURRENCY_CHOICES if counter_currency == counter_curency_text), None)
+
         if None in (source_code, counter_currency_code):
             continue # skip this source or counter_currency
 
