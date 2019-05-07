@@ -74,7 +74,7 @@ def refill_pv_storages():
 
     tei_processed = {}
 
-    for key in database.keys("BTC_USDT*PriceVolumeHistoryStorage*"):
+    for key in database.keys("*PriceVolumeHistoryStorage*"):
         logger.info("running pv refill for " + str(key))
         [ticker, exchange, object_class, index] = key.decode("utf-8").split(":")
 

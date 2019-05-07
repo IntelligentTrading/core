@@ -20,7 +20,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         logger.info("Starting TA restore script...")
 
-        start_datetime = datetime(2018, 1, 1)
+        start_datetime = datetime(2019, 3, 1)
         end_datetime = datetime.today()
 
         restore_db_to_redis(start_datetime, end_datetime)
@@ -37,6 +37,7 @@ def restore_db_to_redis(start_datetime, end_datetime):
     process_datetime = start_datetime
 
     num_hours_per_query = 4
+    total_results = 0
 
     while process_datetime < end_datetime:
         process_datetime += timedelta(hours=num_hours_per_query)
@@ -47,19 +48,28 @@ def restore_db_to_redis(start_datetime, end_datetime):
             timestamp__gte=process_datetime - timedelta(hours=num_hours_per_query),
             timestamp__lt=process_datetime,
             source=BINANCE,  # Binance only for now
-
-            transaction_currency="BTC",  #temp setting
-            counter_currency=USDT,  # temp setting
-
-            # counter_currency__in=[BTC, USDT]
+            transaction_currency__in=["BTC", "ETH"],
+            counter_currency__in=[USDT]
         )
 
         results = run_all_multithreaded(save_pv_histories_to_redis, price_history_objects)
         try:
-            total_results = sum([sum(result) for result in results])
+            total_results += sum([sum(result) for result in results])
         except Exception as e:
-            # logger.debug("couldn't sum all of it: " + str(e))
-            total_results = 'unknown'
+            pass
+
+        price_history_objects = PriceHistory.objects.filter(
+            timestamp__gte=process_datetime - timedelta(hours=num_hours_per_query),
+            timestamp__lt=process_datetime,
+            source=BINANCE,  # Binance only for now
+            counter_currency__in=[BTC]
+        )
+
+        results = run_all_multithreaded(save_pv_histories_to_redis, price_history_objects)
+        try:
+            total_results += sum([sum(result) for result in results])
+        except Exception as e:
+            pass
 
         logger.info(f"{total_results} values added to Redis")
 
