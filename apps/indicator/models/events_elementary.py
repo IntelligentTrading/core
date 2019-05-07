@@ -3,7 +3,6 @@ import time
 
 import numpy as np
 import pandas as pd
-from scipy import stats
 
 from settings import LOAD_TALIB
 if LOAD_TALIB:
