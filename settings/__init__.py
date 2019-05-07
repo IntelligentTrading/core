@@ -94,6 +94,7 @@ INSTALLED_APPS = [
     'apps.api',
     'apps.TA',
     'taskapp',
+    'apps.ai',
 
     # DJANGO APPS
     'django.contrib.admin',
