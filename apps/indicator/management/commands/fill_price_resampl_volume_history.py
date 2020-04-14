@@ -1,15 +1,11 @@
-from datetime import datetime, timedelta
-import numpy as np
-
 import logging
+from datetime import datetime, timedelta
 
+import numpy as np
 from django.core.management.base import BaseCommand
 
-from apps.indicator.models import PriceResampl, PriceHistory, Volume
-
 from apps.indicator.management.helpers import save_state_to_s3, read_state_from_s3
-
-
+from apps.indicator.models import PriceResampl, PriceHistory
 
 logger = logging.getLogger(__name__)
 

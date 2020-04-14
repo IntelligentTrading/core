@@ -1,8 +1,13 @@
-import time
 import logging
-import pandas as pd
+import time
+
 import numpy as np
-import talib
+import pandas as pd
+from scipy import stats
+
+from settings import LOAD_TALIB
+if LOAD_TALIB:
+    import talib
 
 from django.db import models
 from apps.indicator.models.abstract_indicator import AbstractIndicator
@@ -10,10 +15,9 @@ from apps.indicator.models.price_resampl import get_n_last_resampl_df
 from apps.indicator.models.sma import get_n_last_sma_df
 from apps.indicator.models.rsi import Rsi
 from apps.signal.models.signal import Signal
-from apps.indicator.models.ann_future_price_classification import AnnPriceClassification, get_n_last_ann_classif_df
-from apps.indicator.models.volume import get_n_last_volumes_ts
 
 from apps.user.models.user import get_horizon_value_from_string
+from settings import SHORT
 from settings import HORIZONS_TIME2NAMES, EMIT_RSI, EMIT_SMA, RUN_ANN, MODIFY_DB, MEDIUM, RUN_BEN
 
 
@@ -47,7 +51,8 @@ ICHI_ELEMENTARY_EVENTS = [
 ]
 
 AI_ELEMENTARY_EVENTS = [
-    'ann_price_2class_simple'
+    'ann_price_2class_simple',
+    'ann_price_anomaly'
 ]
 
 BEN_VOLUME_EVENTS = [
@@ -55,9 +60,6 @@ BEN_VOLUME_EVENTS = [
     'vbi_price_gt_mean_by_percent',
     'vbi_volume_cross_from_below',
     'vbi_volume_gt_mean_by_percent',
-    # 'price_crosses_the_mean_up',
-    # 'volume_greater_then_mean',
-    # add mode here
 ]
 
 # list of all events to return by get_last_elementory_events_df
@@ -79,15 +81,26 @@ ichi_param_2_26 = 60
 ichi_param_3_52 = 120
 ichi_displacement = 30
 
-def _process_ai_simple(horizon, **kwargs):
+# VBI parameters
+VBI_PRICE_PERIOD = 50
+VBI_VOLUME_PERIOD = 50
+VBI_PRICE_CROSS_PERCENT = 0.02  # TODO just for the time being it is here, should move later
+VBI_VOLUME_CROSS_PERCENT = 0.02
+
+
+
+def _process_ai_simple(horizon, ann_classif_df, **kwargs):
     '''
     very simple strategy: emit signal anytime it changes state from up to down
     '''
-    # get two reacent objects as a dataframe
 
-    # NOTE: here I hardcoded two class classification ignoring SAME - should be don ona  model level!!
+    # NOTE: here I hardcoded two class classification ignoring SAME - should be done on a  model level!!
 
-    ann_classif_df = get_n_last_ann_classif_df(4, **kwargs)
+    # ann_classif_df = get_n_last_ann_classif_df(5, **kwargs)
+    # if ann_classif_df.empty:
+    #     logger.error('  get_n_last_ann: something wrong with AI indicators... we dont have it ...')
+    #     return False
+
     # choose only two class classification (ignore SAME), then add a new column with the best class
     df = ann_classif_df[['probability_up','probability_down']]
     df['class'] = df.idxmax(axis=1)
@@ -102,6 +115,7 @@ def _process_ai_simple(horizon, **kwargs):
     if df.iloc[-1]['class_change'] != 0:
         # emit signal
         try:
+            logger.debug("******************** AI event is detected *****************")
             # TODO: change to emitting two signals UP and DOWN according to how others events are generated (for ML)
             new_instance = EventsElementary(
                 **kwargs,
@@ -128,6 +142,69 @@ def _process_ai_simple(horizon, **kwargs):
             logger.error(" Error saving/emitting ANN Event " + e)
     else:
         logger.debug("   ... no AI event generated (predicts no changes in price")
+
+
+def _process_ai_anomaly(horizon, ann_classif_df, **kwargs):
+    '''
+    yet another strategy based on ai indicator
+    '''
+
+    # we have a multivariate (3-variate) disctribution of price predictiton, calculate mean, varuance for each
+    # fit Normal distribution to previousd data, calculater parameters: mean vector and covariance matrix
+    # [var_same, var_up, var_down]
+    data = ann_classif_df[0:-1][['probability_same','probability_up','probability_down']]
+    cov = np.array(data.cov())
+    mu = np.array(data.mean(axis=0))
+
+    # get the current data point
+    x = np.array(ann_classif_df.tail(1)[['probability_same','probability_up','probability_down']])
+
+    # calculate single pdf value, for test
+    #p = multivariate_normal.pdf(x, mu, cov, allow_singular=True)
+
+    #### here we calculate an area under 3D Gaussian curve which is probability of current point belonging to this disctibution
+    m_dist_x = np.dot((x - mu), np.linalg.inv(cov))
+    m_dist_x = np.dot(m_dist_x, (x - mu).transpose())
+
+    # here p is probability of upcoming vector of price prediction being inside normal distribution of previous probabilities
+    p = float(1 - stats.chi2.cdf(m_dist_x, 3))
+    logger.info("  || ANOMALY DETECTION: probability of price belong to current distribution p = " + str(p))
+
+    # have to learn that threshold
+    TRESHOLD = 0.06
+
+    if p < TRESHOLD:
+        # emit signal
+        try:
+            logger.debug("******************** ANOMALY THRESHOLD AI event is detected *****************")
+            new_instance = EventsElementary(
+                **kwargs,
+                event_name="ann_price_anomaly",
+                event_value=p,
+            )
+            if MODIFY_DB: new_instance.save()
+
+            signal_ai = Signal(
+                **kwargs,
+                signal='ANN_AnomalyPrc',
+                trend= int(0),
+                strength_value= int(3),
+                horizon=horizon,
+                predicted_ahead_for= ann_classif_df.tail(1)['predicted_ahead_for'][0],
+                probability_same = p,
+                #probability_up = -1,
+                #probability_down = -1
+            )
+            logger.debug("------> AI Anomaly Signal to save:" + str(signal_ai))
+
+            if MODIFY_DB: signal_ai.save()
+            logger.debug("  || Anomaly ANN event FIRED!")
+        except Exception as e:
+            logger.error(" Error saving/emitting Anomaly ANN Event " + e)
+    else:
+        logger.debug(" || no Anomaly AI  detected")
+
+
 
 
 
@@ -234,36 +311,32 @@ def _process_sma_crossovers(horizon, prices_df, **kwargs):
                     logger.error(" #Error firing SMA signal ")
 
 
-def _process_ben_volume_based(horizon, joined_price_and_volume, **kwargs):
+def _process_ben_volume_based(horizon, price_volume_df, **kwargs):
     # DESCRIPTION of indicator:
     # if price crosses the mean by some percent AND volume is already greater than mean by some other percent)
     # OR (volume crosses the mean by some percent AND price is already greater than mean by some other
-    # percent) we emit buy
-
-    # IDEA
-    # we here we emplement elementary events like something crosses something
-    # then in events_logical we will implement logical behaviour with OR / AND and emit signals there
-
-    BEN_PRICE_CROSS_PERCENT = 0.02 # TODO just for the time being it is here, should move later
-    BEN_VOLUME_CROSS_PERCENT = 0.02
+    # percent) we emit a signal
 
     events_df = pd.DataFrame()
 
-    events_df['vbi_price_cross_from_below'] = \
-        np.sign((1+BEN_PRICE_CROSS_PERCENT)*joined_price_and_volume.mean_price - joined_price_and_volume.close_price).diff().lt(0)
-    events_df['vbi_price_gt_mean_by_percent'] = \
-        np.sign((1+BEN_PRICE_CROSS_PERCENT)*joined_price_and_volume.mean_price - joined_price_and_volume.close_price).lt(0)
+    events_df['vbi_price_cross_from_below'] = np.sign(
+        (1 + VBI_PRICE_CROSS_PERCENT) * price_volume_df.sma_close_price - price_volume_df.close_price
+                                                    ).diff().lt(0)
+    events_df['vbi_price_gt_mean_by_percent'] = np.sign(
+        (1 + VBI_PRICE_CROSS_PERCENT) * price_volume_df.sma_close_price - price_volume_df.close_price
+                                                    ).lt(0)
 
-    events_df['vbi_volume_cross_from_below'] = \
-        np.sign((1 + BEN_VOLUME_CROSS_PERCENT)*joined_price_and_volume.mean_volume - joined_price_and_volume.volume).diff().lt(0)
-    events_df['vbi_volume_gt_mean_by_percent'] = \
-        np.sign((1 + BEN_VOLUME_CROSS_PERCENT) * joined_price_and_volume.mean_volume - joined_price_and_volume.volume).lt(0)
+    events_df['vbi_volume_cross_from_below'] = np.sign(
+        (1 + VBI_VOLUME_CROSS_PERCENT) * price_volume_df.mean_volume - price_volume_df.close_volume
+                                                    ).diff().lt(0)
+    events_df['vbi_volume_gt_mean_by_percent'] = np.sign(
+        (1 + VBI_VOLUME_CROSS_PERCENT) * price_volume_df.mean_volume - price_volume_df.close_volume
+                                                    ).lt(0)
 
     # get the last events row and account for a small timestamp rounding error
     last_event_row = events_df.iloc[-1]      # you can you events_df.tail(1) here
-    time_of_last_row = events_df.index[-1]
 
-    # for each event in last row of all recents events
+    # for each event in last row of all recent events
     # note: we need this loop because at one moment there might be several events (in contract to RSI)
     for event_name, event_value in last_event_row.iteritems():
         if event_value:    # if one of SMA events is TRUE, save and emit
@@ -277,7 +350,7 @@ def _process_ben_volume_based(horizon, joined_price_and_volume, **kwargs):
                 if MODIFY_DB: ben_event.save()
             except Exception as e:
                 logger.error(" #Error saving Ben elementary event ")
-    # Now we have elementary events in events_elementary table and can get them in event_logical to combune by OR/AND
+
 
 
 
@@ -316,7 +389,7 @@ class EventsElementary(AbstractIndicator):
 
         logger.info('   ::::  Start analysing ELEMENTARY events ::::')
 
-        ###### check for rsi events, save and emit signal
+        ############## check for RSI events, save and emit signal
         logger.info("   ... Check RSI Events: ")
         _process_rsi(horizon, **kwargs)
 
@@ -339,56 +412,27 @@ class EventsElementary(AbstractIndicator):
 
         # todo - add return value, and say if any crossovers have happend
         _process_sma_crossovers(horizon, small_prices_df, **kwargs)
+        
 
         ############### check Ben Volume Based events ###############
         logger.info("   ... Check Ben Elementary Events: ")
 
-        if RUN_BEN and kwargs['resample_period'] <= MEDIUM: # can't handle volume data for 1440
-            ben_num_records = SMA_LOW * 4 # last_records, because of faulty data we make sure to get a bit more
-            PRICE_MEAN_TIME_PERIOD = 50#SMA_LOW
-            VOLUME_MEAN_TIME_PERIOD = 50#SMA_LOW
+        if RUN_BEN and kwargs['resample_period'] <= MEDIUM: # can't handle volume data for 1440 until we use PriceHistory
+            prices_avg = get_n_last_sma_df(last_records, VBI_PRICE_PERIOD, **no_time_params)
 
-            # the safest way to make sure that we get all the price info we need
-            # TODO: reuse existing Ichimoku prices_df if it turns out that Ichimoku always gets more records than we need
-            prices_df = get_n_last_resampl_df(ben_num_records, **no_time_params)
-            volumes_ts = get_n_last_volumes_ts(ben_num_records*kwargs['resample_period'],  # TODO change number of records
-                                               kwargs['source'],
-                                               kwargs['transaction_currency'],
-                                               kwargs['counter_currency'])
+            # TODO: read resampled volumes from the DB when they're live
+            volumes_avg = talib.SMA(np.array(prices_df['close_volume'], dtype=float),
+                                    timeperiod=VBI_VOLUME_PERIOD)
+            prices_df['mean_volume'] = pd.Series(volumes_avg, index=prices_df.index)
 
-            if volumes_ts is None:
-                logger.error("BEN VBI CRITICAL: NO VOLUME DATA!!!")
+            prices_df = prices_df.join(prices_avg).dropna()
 
-            if len(prices_df) == 0:
-                logger.error("BEN VBI CRITICAL: NO PRICE DATA!!!")
-
-            if volumes_ts is not None and len(prices_df) != 0:
-                prices_avg = talib.SMA(np.array(prices_df.close_price, dtype=float), timeperiod=PRICE_MEAN_TIME_PERIOD)
-                prices_df['mean_price'] = pd.Series(prices_avg, index=prices_df.index)
-
-                volumes_df = volumes_ts.to_frame('volume')
-                if not volumes_df.index.is_unique:
-                    logger.warning("Duplicate index values encountered in volume data, pruning...")
-                    start_len = len(volumes_df)
-                    volumes_df = volumes_df[~volumes_df.index.duplicated(keep='first')]
-                    logger.warning(" --> reduced size of volume dataframe from {} to {} because of duplicate data.".format(
-                        start_len, len(volumes_df)
-                    ))
-
-                volumes_reindexed_df = volumes_df.reindex(prices_df.index, method='nearest')  # TODO find a better way
-                volumes_reindexed_df = volumes_reindexed_df[~volumes_reindexed_df.index.duplicated()]
-
-                joined_price_and_volume_df = prices_df.join(volumes_reindexed_df, how='inner')  # to make sure timestamps match
-                volumes_avg = talib.SMA(np.array(joined_price_and_volume_df['volume'], dtype=float),
-                                        timeperiod=VOLUME_MEAN_TIME_PERIOD)
-
-                joined_price_and_volume_df['mean_volume'] = pd.Series(volumes_avg, index=joined_price_and_volume_df.index)
-
-                _process_ben_volume_based(horizon, joined_price_and_volume_df, **kwargs)
+            _process_ben_volume_based(horizon, prices_df, **kwargs)
 
 
         ############## calculate and save ICHIMOKU elementary events
         logger.info("   ... Check Ichimoku Elementary Events: ")
+        ichi_start_time = time.time()
 
         # correct shift in 10 min , so resumple again
         # shall be removed as soon as we have time by exact hours
@@ -502,13 +546,26 @@ class EventsElementary(AbstractIndicator):
                     if MODIFY_DB: ichi_event.save()
                 except Exception as e:
                     logger.error(" Error saving  " + event_name + " elementary event ")
+        logger.info(" || Ichi calculation completed, " + str(horizon) + " in time " + str(time.time() - ichi_start_time))
 
 
 
-        ############## calculate and save ANN Events   #################
-        if RUN_ANN:
-            logger.info("   ... Check AI Elementary Events: ")
-            _process_ai_simple(horizon, **kwargs)
+        ############## calculate and save ANN elementory Events   #################
+        # we have ANN indicators only for SHORT period for now!
+        # TODO: remove SHORT/ MEDIUM when models for 3 horizons will be added!
+        if RUN_ANN and (kwargs['resample_period'] in [SHORT,MEDIUM]):
+            # get recent ai_indicators from DB
+            from apps.indicator.models.ann_future_price_classification import get_n_last_ann_classif_df
+            ann_classif_df = get_n_last_ann_classif_df(200, "PRICE_PREDICT", **kwargs)
+            if ann_classif_df.empty:
+                logger.error('  get_n_last_ann: something wrong with AI indicators... we dont have it ...')
+            else:
+                logger.info("   ... Check  AI Elementary Events for PERIOD: " + str(kwargs['resample_period']))
+                _process_ai_simple(horizon, ann_classif_df, **kwargs)
+                _process_ai_anomaly(horizon, ann_classif_df, **kwargs)
+        else:
+            logger.info("   ... ANN elementary event calculation has been skipped")
+
 
 
 

@@ -67,6 +67,7 @@ ALL_SIGNALS = {
 
     'ann_simple_bull': SignalType('ANN_Simple', 1, 3),  # price cross sma200 up
     'ann_simple_bear': SignalType('ANN_Simple', -1, 3),
+    'ann_price_anomaly': SignalType('ANN_AnomalyPrc', 0, 3),
 
     'vbi_buy': SignalType('VBI', 1, 3),
 
@@ -173,7 +174,6 @@ class Signal(Timestampable, models.Model):
 
 
         # todo: call send in a post_save signal?? is there any reason to delay or schedule a signal?
-
 
         # TODO: please use common/utilities/sqs.send_sqs
 
@@ -283,7 +283,7 @@ def _get_signal_idname(signal):
 
 
 def get_all_signals_names_now(**kwargs):
-    # get all signals happened just now (in current temestamp from **kwargs)
+    # get all signals happened just now (in current timestamp from **kwargs)
 
 
     # for PRODUCTION
@@ -317,7 +317,6 @@ def get_all_signals_names_now(**kwargs):
                                                      # TODO @Alex please review and fix if needed
 
     return signals_set
-
 
 
 def get_prevous_signal_name(**kwargs):

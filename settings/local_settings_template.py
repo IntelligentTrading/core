@@ -1,7 +1,5 @@
 SECRET_KEY = ''
 
-REST_API_SECRET_KEY = 'secret' # Key for accessing REST API
-
 # https://docs.djangoproject.com/en/1.7/ref/settings/#databases
 DATABASES = {
     'default': {
@@ -31,4 +29,11 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
         'LOCATION': '127.0.0.1:11211',
     }
+}
+
+# Disable auth for REST API
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (),
+    'DEFAULT_PERMISSION_CLASSES': (),
+    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
 }

@@ -8,6 +8,7 @@ from apps.indicator.models.price_resampl import PriceResampl
 from apps.indicator.models.ann_future_price_classification import AnnPriceClassification
 from apps.indicator.models.price_history import PriceHistory
 
+
 __all__ = [
     'Price',
     'Volume',

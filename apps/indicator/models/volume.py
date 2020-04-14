@@ -1,8 +1,13 @@
+#######################################################################################
+# DELETE THIS CLASS AFTER SEPTEMBER 2018 - after make sure PriceHistory works fine!!  #
+#######################################################################################
+# volume now is in price_history table
+
 from django.db import models
 from unixtimestampfield.fields import UnixTimeStampField
 
 #from apps.channel.models.exchange_data import SOURCE_CHOICES
-from apps.indicator.models.price import Price
+#from apps.indicator.models.price import Price
 
 from settings import SOURCE_CHOICES, COUNTER_CURRENCY_CHOICES, BTC
 
@@ -27,6 +32,7 @@ class Volume(models.Model):
 
     # MODEL FUNCTIONS
 
+#TODO: @Karla, we need to use Volume resampled here.. and switch to PriceHistory
 def get_n_last_volumes_ts(n, source, transaction_currency, counter_currency):
     back_in_time_records = list(Volume.objects.filter(
         source=source,

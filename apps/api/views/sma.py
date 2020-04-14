@@ -1,7 +1,6 @@
 from rest_framework.generics import ListAPIView
 
 from apps.api.serializers import SmaSerializer
-from apps.api.permissions import RestAPIPermission
 from apps.api.paginations import StandardResultsSetPagination
 
 from apps.api.helpers import filter_queryset_by_timestamp
@@ -36,7 +35,6 @@ class ListSma(ListAPIView):
 
     """
 
-    permission_classes = (RestAPIPermission, )
     pagination_class = StandardResultsSetPagination
     serializer_class = SmaSerializer
 

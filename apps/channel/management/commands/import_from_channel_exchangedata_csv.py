@@ -22,13 +22,14 @@ from settings import BASE_DIR, COUNTER_CURRENCY_CHOICES, COUNTER_CURRENCIES, SOU
 
 csv.field_size_limit(sys.maxsize)
 class Command(BaseCommand):
-    help = 'Read historical data from core "channel_exchangedata" from Core and Data app in csv format.'
+    help = 'Import historical pricess from ExchangeData model (from Core and Data App) stored in csv file.'
 
     # def add_arguments(self, parser):
     #     "filename like: binance-ADA-BNB.csv"
     #     parser.add_argument('filename', type=str)
 
     def handle(self, *args, **options):
+        pass
         ## import price history from Core app  channel exchange data csv
         #read_from_core_channel_exchange_data_poloniex()
 
@@ -155,57 +156,3 @@ def get_volume(value):
         return float(value)
     except:
         return None
-
-
-
-# def import_db_data_channel_exchangedata():
-#     #start_time = time.time()
-#     logger.info(f"Starting reading data from Data App")
-#     records = ExchangeData.objects.order_by('timestamp').iterator()
-#     #print(record.__dict__)
-#     #source_txt = record.source
-#     #print(source_txt)
-
-#     j = 0
-#     for record in records:
-#         source = source_code_from_name(record.source)
-#         print("ID:", record.id, "Source:", source)
-#         for coin, coin_value in record.data.items():
-#             print(f"record: {record.id}, counter: {j}, coin: {coin}")
-#             j += 1
-#             try:
-#                 transaction_currency, counter_currency_txt  = coin.split("/")
-#             except: # skip
-#                 continue
-#             #print(f"coin:{coin} tc:{transaction_currency} cc:{counter_currency_txt}")
-#             if counter_currency_txt not in COUNTER_CURRENCIES:
-#                 print("Skipping:", coin)
-#                 continue
-#             print(f"Processsing coin:{coin} tc:{transaction_currency} cc:{counter_currency_txt} from: {record.source}")
-
-#             timestamp = coin_value['timestamp']/1000
-#             counter_currency = counter_currency_code_from_name(counter_currency_txt)
-
-#             print(coin_value)
-#             # Dry run
-#             # f"""
-#             PriceHistory.objects.create(
-#                 timestamp = {timestamp},
-#                 source = {source},
-#                 transaction_currency = {transaction_currency},
-#                 counter_currency = {counter_currency},
-#                 open_price = {to_satoshi_int(coin_value['open'])},
-#                 high_price = {to_satoshi_int(coin_value['high'])},
-#                 low_price = {to_satoshi_int(coin_value['low'])},
-#                 close_price = {to_satoshi_int(coin_value['close'])},
-#                 base_volume = {coin_value['baseVolume']},
-#                 extra = 2,
-#             """
-
-
-#         #counter_currency_code = next((code for code, cc_text in COUNTER_CURRENCY_CHOICES if counter_text==cc_text), None)
-
-#         # skip None Counter currency and check if it in CC list
-#         #print(coin, transaction_currency, counter_currency_code)
-
-#         #break

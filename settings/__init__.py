@@ -43,6 +43,8 @@ if LOCAL:
     log_level = logging.DEBUG
 elif PRODUCTION:
     log_level = logging.INFO
+elif STAGE:
+    log_level = logging.DEBUG
 else:
     log_level = logging.DEBUG
 
@@ -91,11 +93,13 @@ INSTALLED_APPS = [
     'apps.ai',
     'apps.signal',
     'apps.api',
+    'apps.TA',
     'apps.info_bot',
     'taskapp',
     'apps.backtesting',
     'apps.strategy',
     'apps.dashboard',
+    'apps.sentiment',
 
     # DJANGO APPS
     'django.contrib.admin',
@@ -112,6 +116,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'rest_framework_swagger',
+    'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
@@ -225,9 +230,6 @@ BTC_COINS = [
     "NXC", "BELA", "XPM", "XVC", "XBC", "RADS", "SBD", "PINK", "NMC", "HUC", "BTM"
 ]
 
-# No signals for this coins
-BLACKLISTED_COINS = ['ITT', ]
-
 # list of the exchanges on which we generate signals. Make it in sync with same list in Data app settings
 #EXCHANGE_MARKETS = ('poloniex', 'binance', 'bittrex', 'bitfinex', 'kucoin')
 EXCHANGE_MARKETS = ('poloniex', 'binance', 'bittrex')
@@ -259,7 +261,7 @@ COUNTER_CURRENCY_CHOICES = (
 
 # mapping from bin size to a name short/medium
 # CHANGES TO THESE VALUES REQUIRE MAKING AND RUNNING DB MIGRATIONS
-PERIODS_LIST = list([60,240,1440])
+PERIODS_LIST = list([60,240,1440])  # minutes, so 1hr, 4hr, 24hr
 # CHANGES TO THESE VALUES REQUIRE MAKING AND RUNNING DB MIGRATIONS
 (SHORT, MEDIUM, LONG) = PERIODS_LIST
 HORIZONS_TIME2NAMES = {
@@ -272,27 +274,48 @@ HORIZONS_TIME2NAMES = {
 A_PRIME_NUMBER = int(os.environ.get('A_PRIME_NUMBER', 12345))
 TEAM_EMOJIS = os.environ.get('TEAM_EMOJIS', "🤖,").split(",")
 ITT_API_KEY = os.environ.get('ITT_API_KEY', "123ABC")
-REST_API_SECRET_KEY = os.environ.get('REST_API_SECRET_KEY', "123ABC")
 
-
+LOAD_TALIB = True  # always True unless doing some temporary server update
 time_speed = 1  # set to 1 for production, 10 for fast debugging
 EMIT_SMA = True
 EMIT_RSI = True
-RUN_ANN = True
+RUN_ANN = True  # temporarily, while I am thinking :)
 RUN_BEN = True
+RUN_SENTIMENT = os.environ.get('RUN_SENTIMENT', False)
+RUN_BACKTESTING = os.environ.get('RUN_BACKTESTING', False)
 MODIFY_DB = True
 
 EMIT_SIGNALS = os.environ.get("EMIT_SIGNALS", "true").lower() == "true" # emit if no variable set or when it set to 'true', env variables are strings
 
 # @Alexander REST Framework settings
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAdminUser', # Very secure by default:  only admin can access, overwrite on per-view basis
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
     ),
+    'DEFAULT_PERMISSION_CLASSES': (
+         'rest_framework.permissions.IsAuthenticated',
+     ),
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
 }
 
+
 INFO_BOT_ADMIN_USERNAME = '' # Telegram info-bot admin disabled
+
+
+# Sentiment-related stuff
+
+(REDDIT, BITCOINTALK, TWITTER) = list(range(3))
+SENTIMENT_SOURCE_CHOICES = (
+    (REDDIT, 'reddit'),
+    (BITCOINTALK, 'bitcointalk'),
+    (TWITTER, 'twitter'),
+)
+
+(VADER, NN_SENTIMENT) = list(range(2))
+SENTIMENT_MODEL_CHOICES = (
+    (VADER, 'vader'),
+    (NN_SENTIMENT, 'nn_sentiment'),
+)
 
 
 if LOCAL:
@@ -302,3 +325,4 @@ if LOCAL:
     except:
         logger.error("Could not successfully import local_settings.py. This is necessary if you are running locally. This file should be in version control.")
         raise
+

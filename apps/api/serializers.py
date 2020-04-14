@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from apps.signal.models import Signal
 from apps.indicator.models import AnnPriceClassification, EventsElementary, EventsLogical, PriceHistory, PriceResampl, Rsi, Sma, Volume, Price
+from apps.sentiment.models import Sentiment
 
 
 # ResampledPrice (model: PriceResampl)
@@ -87,3 +88,9 @@ class AnnPriceClassificationSerializer(serializers.ModelSerializer):
         model = AnnPriceClassification
         fields = ['source', 'counter_currency', 'transaction_currency', 'timestamp', 'resample_period', 'predicted_ahead_for',\
                     'probability_same', 'probability_up', 'probability_down', 'ann_model_id']
+
+# Sentiment
+class SentimentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Sentiment
+        fields = ['sentiment_source', 'topic', 'model', 'positive', 'negative', 'neutral', 'compound', 'timestamp']

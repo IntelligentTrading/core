@@ -46,7 +46,6 @@ if not LOCAL:
             'PASSWORD': os.environ['RDS_PASSWORD'],
             'HOST': os.environ['RDS_HOSTNAME'],
             'PORT': os.environ['RDS_PORT'],
-            #  'CONN_MAX_AGE': 20000 # we need it for bots because mysql drop connection after 28800 secs of idling
         }
     }
 
@@ -114,6 +113,18 @@ from corsheaders.defaults import default_headers #, default_methods
 # CORS_ALLOW_METHODS = default_methods
 CORS_ALLOW_HEADERS = default_headers + (
     'API-KEY',
+    'Authorization',
 )
 
 CORS_ORIGIN_ALLOW_ALL = True
+
+# Sentiment API keys
+if not LOCAL:
+    SENTIMENT_TWITTER_CONSUMER_KEY = os.environ.get('SENTIMENT_TWITTER_CONSUMER_KEY')
+    SENTIMENT_TWITTER_CONSUMER_SECRET = os.environ.get('SENTIMENT_TWITTER_CONSUMER_SECRET')
+    SENTIMENT_TWITTER_ACCESS_TOKEN = os.environ.get('SENTIMENT_TWITTER_ACCESS_TOKEN')
+    SENTIMENT_TWITTER_ACCESS_TOKEN_SECRET = os.environ.get('SENTIMENT_TWITTER_ACCESS_TOKEN_SECRET')
+
+    SENTIMENT_REDDIT_CLIENT_ID = os.environ.get('SENTIMENT_REDDIT_CLIENT_ID')
+    SENTIMENT_REDDIT_CLIENT_SECRET = os.environ.get('SENTIMENT_REDDIT_CLIENT_SECRET')
+    SENTIMENT_REDDIT_USER_AGENT = os.environ.get('SENTIMENT_REDDIT_USER_AGENT')

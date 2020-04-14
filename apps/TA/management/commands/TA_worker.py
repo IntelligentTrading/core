@@ -1,0 +1,93 @@
+import logging
+import time
+
+from django.core.management.base import BaseCommand
+
+from apps.TA.storages.utils.memory_cleaner import redisCleanup
+from settings.rabbitmq import WorkQueue
+from settings.redis_db import database
+
+logger = logging.getLogger(__name__)
+
+try:
+    earliest_price_score = int(float(database.zrangebyscore("BTC_USDT:bittrex:PriceStorage:close_price", 0, "inf", 0, 1)[0].decode("utf-8").split(":")[0]))
+except:
+    from apps.TA.storages.abstract.timeseries_storage import TimeseriesStorage
+    earliest_price_score = TimeseriesStorage.score_from_timestamp(int(time.time()))
+
+
+# todo for making this more efficient
+# ✅ - only 5min price history, all else can be generated on demand
+# ✅ def compress(timestamp): return (timestamp - JAN_1_2017_TIMESTAMP)/300
+# 🚫 - floor all prices to 6 sig-figs (saving up to 6 digits for XX_USDT prices) on TickerStorage
+# ✅  - but maybe no because we like operating with satoshis always
+# ✅ - cast scores on indicators to integers (saving 2 digits)
+# ✅ - use rabbitmq as a centralized task queue so workers can scale horizontally
+# ✅ - reduce number of tickers being processed
+# 
+# firehose download historical data
+# resampling and missing data
+# Get pubsub thing working
+# Send signals to SNS
+# Confirm new signals are same as old
+# Fully replace old signals with new
+# turn signals into votes for portfolio
+# Autotrade on portfolio
+#
+# Next week:
+# Push all updates live
+# Stop using old Aurora database
+
+class Command(BaseCommand):
+    help = 'Run Redis Subscribers for TA'
+
+    def handle(self, *args, **options):
+        logger.info("Starting TA worker.")
+
+        subscribers = {}
+        for subscriber_class in get_subscriber_classes():
+            subscribers[subscriber_class.__name__] = subscriber_class()
+            logger.debug(f'added subscriber {subscriber_class}')
+            logger.debug(f'new subscriber is {subscribers[subscriber_class.__name__]}')
+
+        for s in subscribers:
+            logger.debug(f'latest channels: {subscribers[s].database.pubsub_channels()}')
+
+        logger.info("Pubsub clients are ready.")
+
+        while True:
+            for class_name in subscribers:
+                # logger.debug(f'checking subscription {class_name}: {subscribers[class_name]}')
+                try:
+                    subscribers[class_name]()  # run subscriber class
+                except Exception as e:
+                    logger.error(str(e))
+                    logger.debug(subscribers[class_name].__dict__)
+
+                time.sleep(0.001)  # be nice to the system :)
+
+
+    # def new_handle(self, *args, **options):
+    #     topics = [subscriber_class.class_describer for subscriber_class in get_subscriber_classes()]
+    #
+    #     work_queues = []
+    #     for topic in set(topics):
+    #         work_queues.append(WorkQueue(topic=topic))
+    #     for queue in work_queues:
+    #         queue.process_tasks_async()
+    #
+    #     while True:
+    #         time.sleep(5)  # wait for the world to end
+
+
+def get_subscriber_classes():
+
+
+    from apps.TA.storages.data.price import PriceSubscriber
+    # from apps.TA.storages.data.volume import VolumeSubscriber
+    # only PriceStorage:close_price is publishing. All other p and v indexes are muted
+
+    return [
+        PriceSubscriber,
+        # VolumeSubscriber,  # the PriceSubscriber handles volume resampling
+    ]

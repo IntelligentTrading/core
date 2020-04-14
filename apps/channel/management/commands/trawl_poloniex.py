@@ -4,13 +4,14 @@ import time
 
 from django.core.management.base import BaseCommand
 
-from settings import POLONIEX, SHORT, USDT
+from settings import POLONIEX, SHORT, MEDIUM, USDT
 from settings import time_speed  # 1 / 10
 
-from taskapp.helpers.poloniex import _pull_poloniex_data
+#from taskapp.helpers.poloniex import _pull_poloniex_data
 from taskapp.helpers.indicators import _compute_indicators_for, _compute_ann
 from taskapp.helpers.backtesting import _backtest_all_strategies
-from taskapp.helpers.common import get_currency_pairs
+from taskapp.helpers.sentiment_analysis import _analyze_sentiment
+from taskapp.helpers.common import get_tickers
 
 
 
@@ -27,24 +28,32 @@ class Command(BaseCommand):
         arg = options['arg']
 
         if arg == 'pull_data':
-            logger.info("Getting ready to trawl Poloniex...\n>>> Break it when you'll get enough samples <<<")
-            while True:
-                _pull_poloniex_data()
-                time.sleep(60/time_speed)
+            logger.info("This command was disabled. Please don't use it")
+            # logger.info("Getting ready to trawl Poloniex...\n>>> Break it when you'll get enough samples <<<")
+            # while True:
+            #     _pull_poloniex_data()
+            #     time.sleep(60/time_speed)
 
         elif arg == 'compute_pair':
             _compute_indicators_for(transaction_currency='BTC', counter_currency=USDT,
                                     source=POLONIEX, resample_period=SHORT)
 
         elif arg == 'compute_indicators':
-            for (t_currency, c_currency) in get_currency_pairs(source=POLONIEX, period_in_seconds=1*60*60):
+            for (t_currency, c_currency) in get_tickers(source=POLONIEX, period_in_seconds=1*60*60):
                 _compute_indicators_for(source=POLONIEX, transaction_currency=t_currency,
-                                        counter_currency=c_currency, resample_period=SHORT)
+                                        counter_currency=c_currency, resample_period=MEDIUM)  # SHORT
         elif arg == 'ann':
-            _compute_ann(source=POLONIEX, resample_period=SHORT)
+            from taskapp.tasks import compute_ann_for_all_sources
+            #compute_ann_for_all_sources(resample_period=SHORT)
+            #_compute_ann(source=POLONIEX, resample_period=SHORT)
+            _compute_ann(source=POLONIEX, resample_period=MEDIUM)
 
         elif arg == 'backtest':
             _backtest_all_strategies()
+
+        elif arg == 'sentiment':
+            _analyze_sentiment()
+
 
         else:
             print(textwrap.dedent("""How to use:

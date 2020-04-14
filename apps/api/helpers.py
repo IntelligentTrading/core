@@ -30,16 +30,17 @@ def filter_queryset_by_timestamp_history(self, queryset=None):
     if queryset is None:
         queryset = self.model.objects
 
-    if startdate is not None:
-        startdate = parse(startdate) # Because DRF has problems with dates formatted like 2018-02-12T09:09:15
-        queryset = queryset.filter(timestamp__gte=startdate)
     if enddate is not None:
         enddate = parse(enddate)
         queryset = queryset.filter(timestamp__lte=enddate)
+    else:
+        enddate = datetime.datetime.now()
 
-    if startdate is None and enddate is None: # our index contain timestamp, so queries run faster when timestamp present
-        month_ago = datetime.datetime.now() + relativedelta(months=-1)
-        queryset = queryset.filter(timestamp__gte=month_ago)
+    if startdate is not None:
+        startdate = parse(startdate) # Because DRF has problems with dates formatted like 2018-02-12T09:09:15
+    else:
+        startdate = enddate - relativedelta(days=3) # limit when no srtdate given
+    queryset = queryset.filter(timestamp__gte=startdate)
     return queryset
 
 
@@ -50,36 +51,17 @@ def filter_queryset_by_timestamp(self, queryset=None):
     if queryset is None:
         queryset = self.model.objects
 
-    if startdate is not None:
-        startdate = parse(startdate) # Because DRF has problems with dates formatted like 2018-02-12T09:09:15
-        queryset = queryset.filter(timestamp__gte=startdate)
     if enddate is not None:
         enddate = parse(enddate)
         queryset = queryset.filter(timestamp__lte=enddate)
-    return queryset
-
-
-def queryset_for_list_with_resample_period(self):
-    source = self.request.query_params.get('source', None) # Return from the all sources by default
-    transaction_currency = self.kwargs['transaction_currency']
-    counter_currency = default_counter_currency(transaction_currency)
-    resample_period = self.request.query_params.get('resample_period', SHORT) # SHORT resample period by default
-
-    if source:
-        queryset = self.model.objects.filter(
-            source = source,
-            resample_period = resample_period,
-            transaction_currency=transaction_currency,
-            counter_currency=counter_currency,
-        )
     else:
-        queryset = self.model.objects.filter(
-            resample_period = resample_period,
-            transaction_currency=transaction_currency,
-            counter_currency=counter_currency,
-        )
+        enddate = datetime.datetime.now()
 
-    queryset = filter_queryset_by_timestamp(self, queryset)
+    if startdate is not None:
+        startdate = parse(startdate) # Because DRF has problems with dates formatted like 2018-02-12T09:09:15
+    else:
+        startdate = enddate - relativedelta(days=3) # limit when no srtdate given
+    queryset = queryset.filter(timestamp__gte=startdate)
     return queryset
 
 def queryset_for_list_without_resample_period(self): # for Price and Volume

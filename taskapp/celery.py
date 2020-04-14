@@ -1,12 +1,13 @@
 from __future__ import absolute_import, unicode_literals
 import os
+import logging
 
 from celery import Celery
 from celery.schedules import crontab
 
-from settings import SHORT, MEDIUM, LONG
+from settings import SHORT, MEDIUM, LONG, RUN_ANN, RUN_SENTIMENT, RUN_BACKTESTING
 
-
+logger = logging.getLogger(__name__)
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'settings')
@@ -37,11 +38,26 @@ app.autodiscover_tasks()
 def setup_periodic_tasks(sender, **_):
     from taskapp import tasks
 
-    # Pull poloniex data every minute
-    #EVERY_MINUTE = 60
-    #sender.add_periodic_task(EVERY_MINUTE, tasks.pull_poloniex_data.s(), name='every %is' % EVERY_MINUTE)
-
     # Process data and send signals
+    # FIRST - calculate ANN for SHORT period at every hour and half OO:30, 01:30 ...
+    # @Alex: I put it back to 00:00 because the time stamp is a key and should match hours
+    # move it back if server performance sufferrs, but make sure to pass a right timestamp
+    if RUN_ANN:
+        logger.info("   >>>>>  adding a AI task to queue: compute_ann_for_all_sources")
+        # AI SHORT
+        sender.add_periodic_task(
+            crontab(minute=25, hour='*'),
+            tasks.compute_ann_for_all_sources.s(resample_period=SHORT),
+            name='at the beginning of every hour and half',
+            )
+
+        # AI MEDIUM
+        sender.add_periodic_task(
+            crontab(minute=40, hour='*/4'),
+            tasks.compute_ann_for_all_sources.s(resample_period=MEDIUM),
+            name='40 minutes later then MEDIUM indicators start... every 4.40',
+            )
+
 
     #calculate SHORT period at the start of the hour
     sender.add_periodic_task(
@@ -57,26 +73,31 @@ def setup_periodic_tasks(sender, **_):
         name='at the beginning of every 4 hours',
         )
 
-    # calculate LONG period daily at midnight.
+    # calculate LONG period.
+    # At 5:10 is better than at 0:00 because fo no overlapping with the medium period. 
     sender.add_periodic_task(
-        crontab(minute=0, hour=0),
+        crontab(minute=10, hour=5),
         tasks.compute_indicators_for_all_sources.s(resample_period=LONG),
-        name='daily at midnight',
+        name='daily at 5:10',
         )
 
-    # calculate ANN for SHORT period at every hour and half OO:30, 01:30 ...
-    sender.add_periodic_task(
-        crontab(minute=30, hour='*'),
-        tasks.compute_ann_for_all_sources.s(resample_period=SHORT),
-        name='at the beginning of every hour and half',
-        )
+    # LAST - run backtesting daily
+    if RUN_BACKTESTING:
+        sender.add_periodic_task(
+            crontab(minute=40, hour=13),
+            tasks.backtest_all_strategies.s(),
+            name='daily at 13:40',
+            )
 
-    # run backtesting daily
-    sender.add_periodic_task(
-        crontab(minute=40, hour=13),
-        tasks.backtest_all_strategies.s(),
-        name='daily at 13:40',
-        )
+
+    # sentiment analysis
+    if RUN_SENTIMENT:
+        logger.info("   >>>>>  Scheduling sentiment calculation...")
+        sender.add_periodic_task(
+            crontab(minute=37, hour=14),
+            tasks.compute_sentiment,
+            name='daily at 14:37',
+            )
 
     # Precache info_bot every 4 hours
     # from settings import INFO_BOT_CACHE_TELEGRAM_BOT_SECONDS
