@@ -41,7 +41,7 @@ TA-Lib==0.4.17
 toolz==0.9.0
 twython==3.7.0
 urllib3>=1.23
-waitress==1.4.2
+waitress==1.4.3
 whitenoise==3.3.1
 
 tensorflow
