@@ -33,7 +33,7 @@ pytz==2016.10
 PyYAML>=4.2b1
 redis==2.10.6
 requests-oauthlib==0.8.0
-requests==2.20.1
+requests==2.20.0
 schedule==0.4.3
 simplejson==3.11.1
 six==1.11.0
