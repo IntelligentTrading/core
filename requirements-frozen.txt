@@ -18,7 +18,7 @@ cchardet==2.1.1
 ccxt==1.13.38
 celery==4.1.1
 celery-redbeat==0.11.1
-certifi==2018.10.15
+certifi==2022.12.7
 chardet==3.0.4
 coreapi==2.3.3
 coreschema==0.0.4
